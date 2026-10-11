@@ -1,0 +1,152 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: authdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora -d authdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+    # NOTE: no published ports — services reach Postgres over the compose
+    # network only. Publish 5432 locally only for debugging.
+
+  auth:
+    build:
+      context: .
+      args:
+        SERVICE: auth
+    env_file: .env
+    environment:
+      PORT: 8101
+      DATABASE_URL: ${AUTH_DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8101/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+
+  curriculum:
+    build:
+      context: .
+      args:
+        SERVICE: curriculum
+    env_file: .env
+    environment:
+      PORT: 8102
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8102/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+
+  progress:
+    build:
+      context: .
+      args:
+        SERVICE: progress
+    env_file: .env
+    environment:
+      PORT: 8103
+      DATABASE_URL: ${PROGRESS_DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8103/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+
+  execution:
+    build:
+      context: .
+      args:
+        SERVICE: execution
+    env_file: .env
+    environment:
+      PORT: 8104
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8104/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: "1.0"
+    pids_limit: 256
+    # NOTE: the docker runner needs /var/run/docker.sock mounted. It is
+    # deliberately NOT mounted here: enable it only on hosts you control,
+    # understanding a container escape via the socket is a real risk.
+
+  tutor:
+    build:
+      context: .
+      args:
+        SERVICE: tutor
+    env_file: .env
+    environment:
+      PORT: 8105
+      DATABASE_URL: ${TUTOR_DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8105/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+
+  gateway:
+    build:
+      context: .
+      args:
+        SERVICE: gateway
+    env_file: .env
+    environment:
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      auth:
+        condition: service_healthy
+      curriculum:
+        condition: service_healthy
+      progress:
+        condition: service_healthy
+      execution:
+        condition: service_healthy
+      tutor:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+
+volumes:
+  pgdata:

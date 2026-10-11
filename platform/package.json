@@ -1,0 +1,21 @@
+{
+  "name": "nexora-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@nexora/contracts && npm run build --workspace=@nexora/service-kit && npm run build --workspace=@nexora/gateway && npm run build --workspace=@nexora/auth && npm run build --workspace=@nexora/curriculum && npm run build --workspace=@nexora/progress && npm run build --workspace=@nexora/execution && npm run build --workspace=@nexora/tutor",
+    "dev:gateway": "npm run dev --workspace=@nexora/gateway",
+    "verify": "node --test scripts/verify.mjs",
+    "verify:e2e": "node --test scripts/verify.e2e.mjs",
+    "sync:curriculum": "node scripts/sync-curriculum.mjs"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@theme {
+  --color-graphite: #10161d;
+  --color-elevated: #18222b;
+  --color-elevated-2: #1f2c37;
+  --color-line: #2a3947;
+  --color-ink: #f1f5f7;
+  --color-muted: #a5b3bc;
+  --color-mint: #55e6c1;
+  --color-mint-dim: #2fa98d;
+  --color-success: #57d6a0;
+  --color-warning: #f3bc65;
+  --color-error: #ff7777;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono",
+    Menlo, Consolas, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-graphite);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--color-mint);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes node-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes draw-route {
+  from { stroke-dashoffset: 240; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes toast-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-node-pop { animation: node-pop 0.35s ease-out both; }
+.animate-toast-in { animation: toast-in 0.25s ease-out both; }
+
+/* Code editor: transparent textarea over highlighted <pre> */
+.code-field {
+  caret-color: var(--color-mint);
+}
+.code-field::selection {
+  background: rgba(85, 230, 193, 0.28);
+}
+
+/* Thin scrollbars for panels */
+.nice-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.nice-scroll::-webkit-scrollbar-thumb {
+  background: #2a3947;
+  border-radius: 8px;
+  border: 2px solid #18222b;
+}
+.nice-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* Lesson prose */
+.prose-nexora p { margin: 0 0 0.75rem; line-height: 1.65; color: #d7e0e6; }
+.prose-nexora p:last-child { margin-bottom: 0; }
+.prose-nexora h4 { font-weight: 650; margin: 1rem 0 0.5rem; color: var(--color-ink); }
+.prose-nexora ul, .prose-nexora ol { margin: 0 0 0.75rem 1.25rem; line-height: 1.65; color: #d7e0e6; }
+.prose-nexora ul { list-style: disc; }
+.prose-nexora ol { list-style: decimal; }
+.prose-nexora code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: #0c1218;
+  border: 1px solid #2a3947;
+  border-radius: 5px;
+  padding: 0.05rem 0.35rem;
+  color: var(--color-mint);
+}
+.prose-nexora strong { color: var(--color-ink); font-weight: 650; }
+
+/* Native details accordions (hint ladder) */
+details.nexora-details > summary { list-style: none; }
+details.nexora-details > summary::-webkit-details-marker { display: none; }
