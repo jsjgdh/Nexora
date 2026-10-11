@@ -1,6 +1,6 @@
 import type { LearnerState, Mission, NodeState } from "./types";
 import { ALL_MISSIONS, missionById } from "./missions";
-import { DIAGNOSTIC_ITEMS, htmlStartIndex } from "./diagnostic";
+import { DIAGNOSTIC_ITEMS, placementStartMissionId } from "./diagnostic";
 import { actionVerb } from "./format";
 
 /* Explicit, inspectable adaptation rules (PRD §9.3). The engine decides
@@ -21,7 +21,11 @@ export function prereqsMet(mission: Mission, state: LearnerState): boolean {
   return mission.prereqIds.every((id) => {
     if (isCompleted(id, state)) return true;
     const pIdx = ALL_MISSIONS.findIndex((m) => m.id === id);
-    return pIdx !== -1 && pIdx < sIdx;
+    // Referenced but not shipped yet (a declared preview): it cannot be
+    // completed, so it cannot unlock — and it must not silently waive
+    // either, or learners would walk into tracks they never placed into.
+    if (pIdx === -1) return false;
+    return pIdx < sIdx;
   });
 }
 
@@ -39,15 +43,14 @@ export function isMastered(missionId: string, state: LearnerState): boolean {
   return !!state.missions[missionId]?.masteredAt;
 }
 
-/** Diagnostic-derived entry point into Stage 1 (mission id). */
+/** Diagnostic-derived entry point into the path (mission id). */
 export function diagnosticStartMissionId(state: LearnerState): string {
   if (!state.diagnostic.completedAt) return ALL_MISSIONS[0].id;
-  const aligned = DIAGNOSTIC_ITEMS.map((item) => {
+  const probes = DIAGNOSTIC_ITEMS.map((item) => {
     const r = state.diagnostic.results.find((x) => x.itemId === item.id);
-    return { correct: r?.correct ?? false, skipped: !r || r.skipped };
+    return { itemId: item.id, correct: r?.correct ?? false, skipped: !r || r.skipped };
   });
-  const idx = htmlStartIndex(aligned);
-  return ALL_MISSIONS[Math.min(idx, ALL_MISSIONS.length - 1)].id;
+  return placementStartMissionId(probes);
 }
 
 export interface Recommendation {
@@ -123,12 +126,17 @@ export function recommend(state: LearnerState): Recommendation {
     };
   }
 
+  // Finished means every authored mission is complete — never merely
+  // "nothing eligible right now" (a placed learner waiting on unshipped
+  // content is not done, they are early).
+  const finished = ALL_MISSIONS.every((m) => isCompleted(m.id, state));
   return {
     primaryId: null,
     refresherIds: [],
-    reason:
-      "Stage 1 complete. Stages 2–10 open next — CSS Foundations is on the horizon.",
-    done: true,
+    reason: finished
+      ? "Every authored mission on the path is done. The remaining stages are previews — the next one opens as it ships."
+      : "Your foundations path is still being written. Explore the roadmap — it opens as its missions ship.",
+    done: finished,
   };
 }
 
@@ -195,5 +203,9 @@ export function continueTarget(state: LearnerState): {
       detail: m.title,
     };
   }
-  return { href: "/projects", label: "View portfolio", detail: "Stage 1 complete" };
+  if (!rec.done) {
+    // Placed but nothing authored yet: browse, don't celebrate.
+    return { href: "/roadmap", label: "Browse the roadmap", detail: "Your next missions are still being written" };
+  }
+  return { href: "/projects", label: "View portfolio", detail: "Every authored mission complete" };
 }

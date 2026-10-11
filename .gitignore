@@ -5,3 +5,16 @@ build/
 out/
 *.log
 .DS_Store
+.env
+.env.local
+
+# Compiled output. Both images build from source (see nexora-svelte/Dockerfile
+# and platform/Dockerfile), so nothing generated belongs in history.
+dist/
+*.tsbuildinfo
+
+# tsc emit that leaked next to sources instead of into dist/.
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map

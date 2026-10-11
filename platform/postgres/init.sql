@@ -2,4 +2,5 @@
 -- Runs once at first volume init.
 CREATE DATABASE progressdb OWNER nexora;
 CREATE DATABASE tutordb OWNER nexora;
+CREATE DATABASE billingdb OWNER nexora;
 -- authdb is created by POSTGRES_DB on first boot.

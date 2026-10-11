@@ -7,12 +7,16 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
     "start": "node build",
-    "verify": "tsx scripts/verify.ts"
+    "verify": "tsx scripts/verify.ts",
+    "verify:a11y": "tsx scripts/verify-a11y.ts",
+    "verify:viz": "tsx scripts/verify-viz.ts"
   },
   "dependencies": {
+    "@clerk/clerk-js": "6.39.0",
     "@sveltejs/kit": "^2.0.0",
+    "@webcontainer/api": "^1.0.0",
     "svelte": "^5.0.0"
   },
   "devDependencies": {
@@ -21,7 +25,9 @@
     "@tailwindcss/vite": "^4.0.0",
     "@types/jsdom": "^30.0.0",
     "@types/node": "^22.0.0",
+    "axe-core": "^4.14.0",
     "jsdom": "^26.0.0",
+    "playwright": "^1.64.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.0.0",

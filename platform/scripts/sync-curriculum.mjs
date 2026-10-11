@@ -1,0 +1,153 @@
+#!/usr/bin/env node
+/* Syncs frontend curriculum content into backend services.
+   Single source of truth stays in nexora-svelte/src/lib; services embed a
+   version-stamped snapshot (no cross-project imports at runtime). Run:
+     npm run sync:curriculum
+   The verify harness fails if snapshots drift (hash mismatch). */
+import { createHash } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const src = join(root, "..", "nexora-svelte", "src", "lib");
+
+const TARGETS = {
+  "../services/curriculum/src/data": [
+    "types.ts",
+    "curriculum.ts",
+    "diagnostic.ts",
+    "missions.ts",
+    "missions-a.ts",
+    "missions-b.ts",
+    "missions-c.ts",
+    "missions-d.ts",
+    "missions-e.ts",
+    "missions-f.ts",
+    "missions-g.ts",
+    "missions-h.ts",
+    "missions-i.ts",
+    "missions-j.ts",
+    "missions-k.ts",
+    "missions-l.ts",
+    "missions-m.ts",
+    "missions-n.ts",
+    "missions-o.ts",
+    "missions-p.ts",
+    "missions-q.ts",
+    "missions-r.ts",
+    "missions-orientation.ts",
+  ],
+  "../services/progress/src/vendor": [
+    "types.ts",
+    "curriculum.ts",
+    "diagnostic.ts",
+    "missions.ts",
+    "missions-a.ts",
+    "missions-b.ts",
+    "missions-c.ts",
+    "missions-d.ts",
+    "missions-e.ts",
+    "missions-f.ts",
+    "missions-g.ts",
+    "missions-h.ts",
+    "missions-i.ts",
+    "missions-j.ts",
+    "missions-k.ts",
+    "missions-l.ts",
+    "missions-m.ts",
+    "missions-n.ts",
+    "missions-o.ts",
+    "missions-p.ts",
+    "missions-q.ts",
+    "missions-r.ts",
+    "missions-orientation.ts",
+    "format.ts",
+    "recommend.ts",
+    "progress-core.ts",
+    // Execution-check verdicts must be the same code in the browser and on the
+    // server: the server recomputes what the learner's screen showed, so a
+    // second implementation of the same rules would be a second truth.
+    "run-evidence.ts",
+    // Same reason for document checks: the progress service re-derives them
+    // from the saved draft with its own parser, using the very interpreter the
+    // browser runs.
+    "document-rules.ts",
+  ],
+  "../services/tutor/src/vendor": [
+    "types.ts",
+    "missions.ts",
+    "missions-a.ts",
+    "missions-b.ts",
+    "missions-c.ts",
+    "missions-d.ts",
+    "missions-e.ts",
+    "missions-f.ts",
+    "missions-g.ts",
+    "missions-h.ts",
+    "missions-i.ts",
+    "missions-j.ts",
+    "missions-k.ts",
+    "missions-l.ts",
+    "missions-m.ts",
+    "missions-n.ts",
+    "missions-o.ts",
+    "missions-p.ts",
+    "missions-q.ts",
+    "missions-r.ts",
+    "missions-orientation.ts",
+  ],
+};
+
+// Services compile under NodeNext, which requires explicit .js extensions
+// on relative imports (the SvelteKit frontend resolves extensionless fine).
+// The transform is deterministic, so drift detection still works on source.
+function nodeNext(content) {
+  return content.replace(/(from\s+["'])(\.[^"']+)(["'])/g, (m, pre, p, post) => {
+    if (p.endsWith(".js") || p.endsWith(".json")) return m;
+    return pre + p + ".js" + post;
+  });
+}
+
+// Order-stable global digest: every file, sorted, hashed together.
+const hash = createHash("sha256");
+const jobs = [];
+for (const [dir, files] of Object.entries(TARGETS).sort(([a], [b]) => (a < b ? -1 : 1))) {
+  for (const f of [...files].sort()) {
+    const content = await readFile(join(src, f), "utf8");
+    hash.update(dir + "/" + f + "\n" + content + "\n");
+    jobs.push({ dir, f, content });
+  }
+}
+const version = hash.digest("hex").slice(0, 12);
+
+for (const [dir] of Object.entries(TARGETS)) {
+  const outDir = join(root, "scripts", dir);
+  await mkdir(outDir, { recursive: true });
+}
+for (const { dir, f, content } of jobs) {
+  await writeFile(join(root, "scripts", dir, f), nodeNext(content));
+}
+for (const dir of Object.keys(TARGETS)) {
+  // version.ts (not .version.json) so tsc carries it into dist builds.
+  const file = join(root, "scripts", dir, "version.ts");
+  /* The stamp says when this content was last snapshotted, so it must not move
+     when the content does not. A wall-clock value rewritten on every run makes
+     the drift checks — `git diff --exit-code` in CI, and verify.mjs's snapshot
+     assertion — fail on a tree that is perfectly in sync, and a check that can
+     never pass is worse than no check. Keeping the previous stamp when the
+     content hash is unchanged makes the sync idempotent. */
+  const previous = await readFile(file, "utf8").catch(() => "");
+  const previousHash = /CONTENT_VERSION = "([^"]+)"/.exec(previous)?.[1];
+  const previousStamp = /CONTENT_SYNCED_AT = "([^"]+)"/.exec(previous)?.[1];
+  const syncedAt =
+    previousHash === version && previousStamp ? previousStamp : new Date().toISOString();
+  await writeFile(
+    file,
+    `// Generated by npm run sync:curriculum — do not edit by hand.\n` +
+      `export const CONTENT_VERSION = ${JSON.stringify(version)};\n` +
+      `export const CONTENT_SYNCED_AT = ${JSON.stringify(syncedAt)};\n` +
+      `export const CONTENT_SOURCE = "nexora-svelte/src/lib";\n`
+  );
+}
+console.log(`curriculum synced (version ${version}).`);

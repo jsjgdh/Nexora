@@ -22,7 +22,9 @@ services:
       context: .
       args:
         SERVICE: auth
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: 8101
       DATABASE_URL: ${AUTH_DATABASE_URL}
@@ -30,7 +32,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8101/health/live"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8101/health/live"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -43,11 +45,13 @@ services:
       context: .
       args:
         SERVICE: curriculum
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: 8102
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8102/health/live"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8102/health/live"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -60,7 +64,9 @@ services:
       context: .
       args:
         SERVICE: progress
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: 8103
       DATABASE_URL: ${PROGRESS_DATABASE_URL}
@@ -68,7 +74,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8103/health/live"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8103/health/live"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -81,11 +87,23 @@ services:
       context: .
       args:
         SERVICE: execution
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: 8104
+      # This service's own sandboxed runners are the only tier there is: the
+      # course now runs on the learner's machine, and a hosted run is our
+      # runner in here — never a third party's. Which tier of our own
+      # (subprocess, or one container per job) is EXECUTION_RUNNER in .env.
+      # Shared Go build cache baked into this image at build time. Modern Go
+      # ships no precompiled standard library, so without this every learner's
+      # first program pays the cost of compiling `fmt` from scratch.
+      # Cache keys are content-addressed; see runners/subprocess.ts for the
+      # tradeoff. Leave unset to give every job a private cache instead.
+      EXECUTION_GO_CACHE: /opt/gocache
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8104/health/live"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8104/health/live"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -102,7 +120,9 @@ services:
       context: .
       args:
         SERVICE: tutor
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: 8105
       DATABASE_URL: ${TUTOR_DATABASE_URL}
@@ -110,7 +130,30 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8105/health/live"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8105/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+
+  billing:
+    build:
+      context: .
+      args:
+        SERVICE: billing
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: 8106
+      DATABASE_URL: ${BILLING_DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8106/health/live"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -123,7 +166,9 @@ services:
       context: .
       args:
         SERVICE: gateway
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: 8080
     ports:
@@ -139,10 +184,37 @@ services:
         condition: service_healthy
       tutor:
         condition: service_healthy
+      billing:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/live"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health/live"]
       interval: 10s
       timeout: 3s
+      retries: 6
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+
+  frontend:
+    # Canonical NEXORA client (SvelteKit production build). Browser-facing;
+    # PUBLIC_API_URL must be reachable FROM THE BROWSER, not the container.
+    build:
+      context: ../nexora-svelte
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: 3000
+      PUBLIC_API_URL: http://127.0.0.1:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 5s
       retries: 6
     restart: unless-stopped
     mem_limit: 256m

@@ -93,8 +93,10 @@
     {#if b.type === "h"}
       <h4>{@html inlineHtml(b.text)}</h4>
     {:else if b.type === "code"}
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex: focusable code lets keyboard users scroll horizontally -->
       <pre
-        class="nice-scroll mb-3 overflow-x-auto rounded-lg border border-line bg-[#0c1218] p-3 font-mono text-[13px] leading-relaxed text-ink"
+        class="nice-scroll mb-3 overflow-x-auto border border-rule bg-raised p-3 font-mono text-[13px] leading-relaxed text-ink"
+        tabindex="0"
       ><code>{b.text}</code></pre>
     {:else if b.type === "ul"}
       <ul>

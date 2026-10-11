@@ -1,5 +1,12 @@
-import type { CheckDef, HarnessObs } from "./types";
+import type { CheckDef, HarnessObs, RunOutcome } from "./types";
 import { evaluateAssertions } from "./harness";
+import { evaluateRunAssertions } from "./run-evidence";
+import { evalDocumentRule, type DocLike } from "./document-rules";
+
+/* The run-evidence verdicts live in run-evidence.ts (pure, DOM-free) because
+   the progress service recomputes execution checks with the same code. They are
+   re-exported here so callers keep one import for “decide these checks”. */
+export { evaluateRunAssertions } from "./run-evidence";
 
 export interface CheckOutcome {
   checkId: string;
@@ -19,17 +26,21 @@ export interface CheckOutcome {
  *   computed styles from it is a safe, deterministic observation.
  * @param scriptObs Optional harness observations keyed by check id, used by
  *   `scripted` rules. Absent observations fail closed (press Check to run).
+ * @param runObs Optional real-execution outcomes keyed by check id, used by
+ *   `runs` rules. Absent, failed, or unrun outcomes fail closed: a check can
+ *   never pass without the evidence it asks for.
  */
 export function runChecks(
   code: string,
   checks: CheckDef[],
   liveDoc: Document | null = null,
-  scriptObs: Map<string, HarnessObs[]> | null = null
+  scriptObs: Map<string, HarnessObs[]> | null = null,
+  runObs: Map<string, RunOutcome> | null = null
 ): CheckOutcome[] {
   const doc = new DOMParser().parseFromString(code, "text/html");
   return checks.map((check) => {
     try {
-      const passed = evalRule(doc, check.rule, liveDoc, check.id, scriptObs);
+      const passed = evalRule(doc, check.rule, liveDoc, check.id, scriptObs, runObs);
       return {
         checkId: check.id,
         label: check.label,
@@ -47,71 +58,29 @@ export function runChecks(
   });
 }
 
-function first(doc: Document, selector: string): Element | null {
-  return doc.querySelector(selector);
-}
-
+/**
+ * One rule, one document. The document kinds are interpreted by
+ * `document-rules.ts` — the same module the progress service runs when it
+ * re-derives a submission — and the two kinds that need equipment this file
+ * has are decided here: `scripted` from the harness round-trip, `runs` from a
+ * real execution (the client reads that from a signed receipt).
+ *
+ * Absent evidence fails closed in both cases: a check can never pass without
+ * what it asks for.
+ */
 function evalRule(
   doc: Document,
   rule: CheckDef["rule"],
   liveDoc: Document | null,
   checkId: string,
-  scriptObs: Map<string, HarnessObs[]> | null
+  scriptObs: Map<string, HarnessObs[]> | null,
+  runObs: Map<string, RunOutcome> | null
 ): boolean {
+  // The narrow surface the shared interpreter declares; the browser's DOM is a
+  // superset of it, so this cast is about variance, not about a mismatch.
+  const verdict = evalDocumentRule(doc as unknown as DocLike, rule, liveDoc as unknown as DocLike);
+  if (verdict !== null) return verdict;
   switch (rule.kind) {
-    case "has-element":
-      return first(doc, rule.selector) !== null;
-    case "missing-element":
-      return first(doc, rule.selector) === null;
-    case "count-min":
-      return doc.querySelectorAll(rule.selector).length >= rule.min;
-    case "count-exact":
-      return doc.querySelectorAll(rule.selector).length === rule.exact;
-    case "text-match": {
-      const el = first(doc, rule.selector);
-      if (!el || !el.textContent) return false;
-      return new RegExp(rule.pattern, "i").test(el.textContent);
-    }
-    case "doc-text-match": {
-      const text = doc.body?.textContent ?? "";
-      return new RegExp(rule.pattern, "i").test(text);
-    }
-    case "attr-match": {
-      const el = first(doc, rule.selector);
-      if (!el) return false;
-      const value = el.getAttribute(rule.attr) ?? "";
-      return new RegExp(rule.pattern, "i").test(value);
-    }
-    case "nested": {
-      const ancestors = Array.from(doc.querySelectorAll(rule.ancestor));
-      return ancestors.some((a) => a.querySelector(rule.child) !== null);
-    }
-    case "labeled-inputs":
-      return allInputsLabeled(doc);
-    case "no-placeholder-links": {
-      const links = Array.from(doc.querySelectorAll("a[href]"));
-      return links.every((a) => {
-        const href = (a.getAttribute("href") ?? "").trim();
-        return href !== "" && href !== "#" && !href.toLowerCase().startsWith("javascript:");
-      });
-    }
-    case "style-text-match": {
-      const css = Array.from(doc.querySelectorAll("style"))
-        .map((s) => s.textContent ?? "")
-        .join("\n");
-      return new RegExp(rule.pattern, "is").test(css);
-    }
-    case "computed-style": {
-      // Needs the rendered preview; without it the rule cannot be observed.
-      if (!liveDoc || !liveDoc.defaultView) return false;
-      const el = liveDoc.querySelector(rule.selector);
-      if (!el) return false;
-      const value = liveDoc.defaultView
-        .getComputedStyle(el)
-        .getPropertyValue(rule.property)
-        .trim();
-      return new RegExp(rule.pattern, "i").test(value);
-    }
     case "scripted": {
       // Observations come from the harness round-trip; missing data fails
       // closed so a check can never pass without executing.
@@ -121,32 +90,16 @@ function evalRule(
       const byId = new Map(obs.map((o) => [o.id, o]));
       return evaluateAssertions(byId, rule.assertions);
     }
-  }
-}
-
-function allInputsLabeled(doc: Document): boolean {
-  const fields = Array.from(
-    doc.querySelectorAll("input, textarea, select")
-  ).filter((el) => {
-    if (el.tagName === "INPUT") {
-      const type = (el.getAttribute("type") ?? "text").toLowerCase();
-      return !["hidden", "submit", "button", "reset", "image"].includes(type);
+    case "runs": {
+      // The program must actually have run, and the assertions read what it
+      // did. No run, no pass — the same fail-closed rule as `scripted`.
+      if (!runObs) return false;
+      const outcome = runObs.get(checkId);
+      if (!outcome || !outcome.ran) return false;
+      return evaluateRunAssertions(outcome, rule.assertions);
     }
-    return true;
-  });
-  if (fields.length === 0) return false; // a form mission with no fields is not done
-  return fields.every((field) => {
-    if (field.closest("label")) return true;
-    const aria = field.getAttribute("aria-label") ?? field.getAttribute("aria-labelledby") ?? "";
-    if (aria.trim().length > 0) return true;
-    const id = field.getAttribute("id");
-    if (!id) return false;
-    // Match <label for> without CSS.escape (unavailable in some DOM
-    // implementations and unnecessary here): compare attributes directly.
-    const labels = Array.from(doc.querySelectorAll("label[for]"));
-    return labels.some(
-      (label) =>
-        label.getAttribute("for") === id && (label.textContent ?? "").trim().length > 0
-    );
-  });
+    // evalDocumentRule returned false rather than null for every other kind.
+    default:
+      return false;
+  }
 }

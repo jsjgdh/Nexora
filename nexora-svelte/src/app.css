@@ -1,41 +1,341 @@
 @import "tailwindcss";
 
+/* NEXORA — The Night Desk.
+   Learners code at night, so the ground is a dark, desaturated slate-green
+   desk. The interface's own artifact — the answer pad — is the only light
+   surface on the page, and the brass lamp marks what is reachable next.
+   State hues are inks, each meaning one thing: brass = open/next, green =
+   passed, amber = under review, rose = needs work, violet = approved. No
+   gradients, no glows, one shadow in the whole build (the pad, on the desk). */
 @theme {
-  --color-graphite: #10161d;
-  --color-elevated: #18222b;
-  --color-elevated-2: #1f2c37;
-  --color-line: #2a3947;
-  --color-ink: #f1f5f7;
-  --color-muted: #a5b3bc;
-  --color-mint: #55e6c1;
-  --color-mint-dim: #2fa98d;
-  --color-success: #57d6a0;
-  --color-warning: #f3bc65;
-  --color-error: #ff7777;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono",
-    Menlo, Consolas, monospace;
+  --color-ground: #0e1512;
+  --color-panel: #151e1a;
+  --color-raised: #1c2723;
+  --color-raised-2: #24322c;
+  --color-rule: #2c3a34;
+  --color-rule-strong: #3f514a;
+
+  --color-control: #7d9089;
+
+  --color-ink: #eef2ed;
+  --color-muted: #a9b7b0;
+  --color-faint: #8fa09a;
+
+  /* State channels — meaning is fixed, never decorative */
+  --color-accent: #c9a227;
+  --color-accent-bright: #e0b63f;
+  --color-accent-dim: #a8871f;
+  --color-added: #56c08d;
+  --color-review: #e0913c;
+  --color-removed: #f48075;
+  --color-approved: #9d8df1;
+
+  /* The answer pad — the one light surface in the product. Paper, paper ink,
+     the red pen that marks it, and the green ink that approves it. */
+  --color-paper: #e9e7dc;
+  --color-paper-2: #f3f2ea;
+  --color-paper-ink: #1b2420;
+  --color-paper-muted: #55635c;
+  --color-pen: #b2301f;
+  --color-pass: #1f6b45;
+
+  --font-sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --font-display: "Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
+  --font-mono: "Courier Prime", ui-monospace, "SF Mono", "Cascadia Mono",
+    monospace;
 }
 
 html {
   color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+/* The 4-point scale, by name. Every padding, gap and margin in the build is
+   one of these values — no ad-hoc rems. (Deliberately outside @theme so it
+   stays a plain custom property rather than a Tailwind spacing namespace.) */
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+  --space-18: 4.5rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-28: 7rem;
 }
 
 body {
-  background: var(--color-graphite);
+  background: var(--color-ground);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: clip;
 }
 
-/* Visible keyboard focus everywhere */
+
+/* Data, gutters, counts and captions are tabular and mono. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Browser surfaces are part of the world ---------- */
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 32%, transparent);
+  color: var(--color-ink);
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-mint);
+  outline: 1px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
-/* Respect reduced motion */
+/* One pixel of rule, never a halo. */
+:where(a, button, summary, [role="tab"]):focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+a {
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.code-field {
+  caret-color: var(--color-accent);
+}
+.code-field::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+.nice-scroll {
+  scrollbar-color: var(--color-rule-strong) transparent;
+  scrollbar-width: thin;
+}
+.nice-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.nice-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-rule-strong);
+  border: 0;
+}
+.nice-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-faint);
+}
+.nice-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- Diff rows ----------
+    The roadmap's atom: a mark gutter, a mono position, a name, a state word.
+    Form carries the state; the tint is a reinforcement, never the message. */
+
+.diffrows {
+  border: 1px solid var(--color-rule);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  border-top: 1px solid var(--color-rule);
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  min-height: 3rem;
+}
+.row:first-child {
+  border-top: 0;
+}
+
+.row-mark {
+  font-family: var(--font-mono);
+  text-align: right;
+  color: var(--color-faint);
+  font-size: 13px;
+  user-select: none;
+}
+
+/* State lives in line FORM before hue: solid = demonstrated, dashed = pending,
+   dotted = not in this change, struck = locked. Every row also prints the
+   state as a word, so nothing depends on colour to be readable. */
+.row[data-state="completed"] {
+  border-left: 1px solid var(--color-added);
+}
+.row[data-state="mastered"] {
+  border-left: 1px solid var(--color-approved);
+}
+.row[data-state="recommended"] {
+  border-left: 1px solid var(--color-accent);
+}
+.row[data-state="in-progress"] {
+  border-left: 1px dashed var(--color-review);
+}
+.row[data-state="needs-practice"] {
+  border-left: 1px solid var(--color-removed);
+}
+.row[data-state="available"] {
+  border-left: 1px dashed var(--color-rule-strong);
+}
+.row[data-state="optional"] {
+  border-left: 1px dotted var(--color-rule-strong);
+}
+.row[data-state="locked"] {
+  border-left: 1px dotted var(--color-rule);
+}
+.row[data-state="locked"] .row-title,
+.row[data-state="locked"] .row-meta {
+  color: var(--color-faint);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-rule-strong);
+}
+
+/* A hunk header: the layer above the change you are shipping. */
+.hunk {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  column-gap: 0.75rem;
+  align-items: baseline;
+  border-top: 1px solid var(--color-rule);
+  background: var(--color-raised);
+  padding: 0.4rem 0.75rem 0.4rem 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+/* The reviewer's thread: one pixel of spine, no bubble, no shadow. */
+.thread {
+  border-left: 1px solid var(--color-rule);
+  padding-left: 0.875rem;
+}
+
+/* An approval stamp: printed monospace label, natural casing, clean tracking. */
+.stamp {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Registration crosshair — anchors a plate corner. */
+.crosshair {
+  position: relative;
+}
+.crosshair::before,
+.crosshair::after {
+  content: "";
+  position: absolute;
+  background: var(--color-rule-strong);
+}
+.crosshair::before {
+  left: 0;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+}
+.crosshair::after {
+  left: -4px;
+  top: 0;
+  width: 9px;
+  height: 1px;
+}
+
+/* ---------- The one authored moment ----------
+    The pen circle drawn around the next requested change. */
+
+/* Shapes that animate use pathLength="100", so the dash space is normalised
+   and the pen stroke reads correctly at any row width. */
+@keyframes draw-circle {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.pen-circle {
+  animation: draw-circle 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes row-settle {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.row-settle {
+  animation: row-settle 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---------- Lesson prose ---------- */
+
+.prose-nexora p {
+  margin: 0 0 0.75rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.prose-nexora p:last-child {
+  margin-bottom: 0;
+}
+.prose-nexora h4 {
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+  color: var(--color-ink);
+}
+.prose-nexora ul,
+.prose-nexora ol {
+  margin: 0 0 0.75rem 1.25rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.prose-nexora ul {
+  list-style: disc;
+}
+.prose-nexora ol {
+  list-style: decimal;
+}
+.prose-nexora code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--color-raised);
+  border: 1px solid var(--color-rule);
+  border-radius: 3px;
+  padding: 0.05rem 0.3rem;
+  color: var(--color-ink);
+}
+.prose-nexora strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+details.nexora-details > summary {
+  list-style: none;
+}
+details.nexora-details > summary::-webkit-details-marker {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -44,6 +344,22 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Compat: the mission workspace, editor, header, and supporting screens
+   address these learning-UI tokens and motions. The night-desk theme above is
+   authoritative for new work; this block keeps shipped screens rendering
+   until they migrate, on the same palette rather than a second one. */
+@theme {
+  --color-mint: #c9a227;
+  --color-mint-dim: #a8871f;
+  --color-graphite: #0e1512;
+  --color-elevated: #151e1a;
+  --color-elevated-2: #1c2723;
+  --color-line: #2c3a34;
+  --color-success: #56c08d;
+  --color-warning: #e0913c;
+  --color-error: #f48075;
 }
 
 @keyframes node-pop {
@@ -65,41 +381,31 @@ body {
 .animate-node-pop { animation: node-pop 0.35s ease-out both; }
 .animate-toast-in { animation: toast-in 0.25s ease-out both; }
 
-/* Code editor: transparent textarea over highlighted <pre> */
-.code-field {
-  caret-color: var(--color-mint);
-}
-.code-field::selection {
-  background: rgba(85, 230, 193, 0.28);
+/* ---------- NEXORA desk surfaces ----------
+    Structural hairlines only. Panels declare elevation by border or
+    background, never by shadow or blur. One authored moment: the
+    recommended-node ring (see .active-focus-card). */
+
+.deck-panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-rule);
 }
 
-/* Thin scrollbars for panels */
-.nice-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
-.nice-scroll::-webkit-scrollbar-thumb {
-  background: #2a3947;
-  border-radius: 8px;
-  border: 2px solid #18222b;
+.deck-row {
+  background: var(--color-panel);
+  border: 1px solid var(--color-rule);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
 }
-.nice-scroll::-webkit-scrollbar-track { background: transparent; }
 
-/* Lesson prose */
-.prose-nexora p { margin: 0 0 0.75rem; line-height: 1.65; color: #d7e0e6; }
-.prose-nexora p:last-child { margin-bottom: 0; }
-.prose-nexora h4 { font-weight: 650; margin: 1rem 0 0.5rem; color: var(--color-ink); }
-.prose-nexora ul, .prose-nexora ol { margin: 0 0 0.75rem 1.25rem; line-height: 1.65; color: #d7e0e6; }
-.prose-nexora ul { list-style: disc; }
-.prose-nexora ol { list-style: decimal; }
-.prose-nexora code:not(pre code) {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-  background: #0c1218;
-  border: 1px solid #2a3947;
-  border-radius: 5px;
-  padding: 0.05rem 0.35rem;
-  color: var(--color-mint);
+.deck-row:hover {
+  background: var(--color-raised);
+  border-color: var(--color-rule-strong);
 }
-.prose-nexora strong { color: var(--color-ink); font-weight: 650; }
 
-/* Native details accordions (hint ladder) */
-details.nexora-details > summary { list-style: none; }
-details.nexora-details > summary::-webkit-details-marker { display: none; }
+/* The single authored moment: a 1px brass ring on the recommended node. */
+.active-focus-card {
+  background: var(--color-raised);
+  border: 1px solid var(--color-accent);
+}

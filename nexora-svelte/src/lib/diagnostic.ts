@@ -2,9 +2,61 @@ import type { DiagnosticItem } from "./types";
 
 /* Practical diagnostic (PRD §5.3): short tasks, not self-ratings.
    Skipping is allowed and never punished — a skip records "unknown",
-   which routes the learner to the introductory material. */
+   which routes the learner to the introductory material.
+
+   The order matters: the first three items probe the FOUNDATIONS layers, so a
+   learner with no programming experience is placed into the language path
+   rather than dropped into a web track they never asked for. The remaining
+   items probe the application track and only move a learner deeper once the
+   language layer has been demonstrated. */
 
 export const DIAGNOSTIC_ITEMS: DiagnosticItem[] = [
+  {
+    id: "diag-lang-order",
+    layerId: "language",
+    competencyId: "go-control-flow",
+    skill: "Reading a program",
+    prompt: "What does this program print, exactly?",
+    code: "total := 0\nfor i := 1; i <= 3; i++ {\n    total = total + i\n}\nfmt.Println(total)",
+    options: ["3", "6", "10", "It does not compile"],
+    answer: 1,
+    explanation:
+      "The loop adds 1, 2 and 3: the total is 6. Following execution in order is the whole skill this item probes.",
+  },
+  {
+    id: "diag-lang-type",
+    layerId: "language",
+    competencyId: "go-values",
+    skill: "Values and types",
+    prompt: "What happens when this runs?",
+    code: "age := 30\nfmt.Println(age + \" years old\")",
+    options: [
+      "It prints 30 years old",
+      "It fails to compile: mismatched types int and string",
+      "It prints an error at runtime",
+      "It prints years old",
+    ],
+    answer: 1,
+    explanation:
+      "Go has no implicit number-to-text conversion, so the compiler stops you and asks you to convert deliberately.",
+  },
+  {
+    id: "diag-lang-func",
+    layerId: "language",
+    competencyId: "go-functions",
+    skill: "Functions and errors",
+    prompt: "What is the second returned value in this function for?",
+    code: "func parse(s string) (int, error) {\n    ...\n}",
+    options: [
+      "It is the length of s",
+      "It reports whether the conversion succeeded",
+      "It is a second result value",
+      "It makes the function run faster",
+    ],
+    answer: 1,
+    explanation:
+      "Go returns errors as ordinary values, so a function hands back the result and the reason it might not exist.",
+  },
   {
     id: "diag-html-structure",
     competencyId: "html-structure",
@@ -92,11 +144,72 @@ export const DIAGNOSTIC_ITEMS: DiagnosticItem[] = [
   },
 ];
 
-/** Map average diagnostic performance to a starting mission. */
-export function htmlStartIndex(results: { correct: boolean; skipped: boolean }[]): number {
-  const htmlItems = [0, 1]; // indices into DIAGNOSTIC_ITEMS assessing HTML
-  const htmlCorrect = htmlItems.filter((i) => results[i] && results[i].correct).length;
-  if (htmlCorrect === 2) return 3; // start at links-and-navigation, intros optional
-  if (htmlCorrect === 1) return 1;
-  return 0;
+/* ---------- Placement ----------
+   Placement walks the layers in order. A learner is placed at the EARLIEST
+   layer they have not demonstrated, which is what keeps a true beginner out of
+   a specialisation they never chose. */
+
+export interface DiagnosticProbe {
+  itemId: string;
+  correct: boolean;
+  skipped: boolean;
+}
+
+/** Items that probe the language layer — the gate onto the whole Go path. */
+export const LANGUAGE_ITEM_IDS: string[] = DIAGNOSTIC_ITEMS.filter(
+  (i) => i.layerId === "language"
+).map((i) => i.id);
+
+/** Items that probe document structure, which sets the depth inside the web track. */
+export const HTML_ITEM_IDS: string[] = DIAGNOSTIC_ITEMS.filter(
+  (i) => i.competencyId === "html-structure"
+).map((i) => i.id);
+
+/** Items that probe the application track as a whole. */
+export const WEB_ITEM_IDS: string[] = DIAGNOSTIC_ITEMS.filter(
+  (i) => i.layerId !== "language"
+).map((i) => i.id);
+
+/** The mission a result set places the learner at. */
+export function placementStartMissionId(probes: DiagnosticProbe[]): string {
+  const passed = (id: string) => probes.some((p) => p.itemId === id && p.correct);
+  const languageScore = LANGUAGE_ITEM_IDS.filter(passed).length;
+  const htmlScore = HTML_ITEM_IDS.filter(passed).length;
+  const webScore = WEB_ITEM_IDS.filter(passed).length;
+
+  // The second persona: someone who already builds for the web. Demonstrated
+  // application competence outranks an incomplete language layer, because the
+  // diagnostic exists precisely so capable learners are not made to re-walk
+  // foundations they can already apply. The bar is deliberately high — both
+  // document-structure items and four more — so a lucky guess cannot fire it.
+  if (htmlScore === 2 && webScore >= 4) return "links-and-navigation";
+
+  // Layer 1 — no programming demonstrated at all. Start before syntax.
+  if (languageScore === 0) return "how-programs-run";
+  // Layer 2 — partial fluency: enter Go where the material still teaches.
+  if (languageScore === 1) return "go-values";
+  if (languageScore === 2) return "go-functions";
+
+  // The language layer is demonstrated but the web track is not. The
+  // document-structure items set the depth if there is any exposure at all.
+  if (htmlScore === 2) return "links-and-navigation";
+  if (htmlScore === 1) return "first-page";
+
+  // Can program, no web exposure: algorithms come before any track.
+  return "go-slices";
+}
+
+/** Cell-prose version of the intent above, shown on the results screen. */
+export function placementExplanation(probes: DiagnosticProbe[]): string {
+  const startId = placementStartMissionId(probes);
+  const foundationStarts = [
+    "how-programs-run",
+    "go-values",
+    "go-functions",
+    "go-slices",
+  ];
+  if (foundationStarts.includes(startId)) {
+    return "You are starting in the foundations layer: one language, then how to reason about data with it. The application track opens when you get there — you will choose it with evidence, not a guess.";
+  }
+  return "You demonstrated the language layer, so your path starts in the web track. The foundations stages stay open as review rather than being locked away.";
 }

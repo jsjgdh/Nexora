@@ -299,7 +299,7 @@ export const MISSIONS_B: Mission[] = [
         id: "labeled",
         label: "Every input is programmatically labeled",
         feedback:
-          "An input is missing its label. Use <label for=\"id\"> with a matching id on each input and the textarea — placeholders don't count.",
+          "A field has no accessible name. Use a visible <label for=\"id\"> with a matching id, or a non-empty aria-label/aria-labelledby that names real text. Placeholders alone don't count.",
         rule: { kind: "labeled-inputs" },
       },
       {
@@ -327,7 +327,7 @@ export const MISSIONS_B: Mission[] = [
       "Which example line connects a label to its input? Look at the for and id attributes.",
       "Each field needs: <label for=\"x\">…</label> + <input id=\"x\" …>. The email input needs type=\"email\" and required.",
       "You need at least: name (text), email (type=email, required), message (textarea, required), all labeled, plus <button type=\"submit\">.",
-      "If the labeled-inputs check fails, inspect each input: does its id exactly match a label's for? Placeholders and aria-less inputs don't count.",
+      "If the labeled-inputs check fails, inspect each field: does a visible label target its id, or does a non-empty ARIA name resolve to real text? A placeholder alone is not a label.",
       "Solution shape is the example extended with a name field. Transfer: tab through your form with only the keyboard — every field should announce its label. That test catches most form bugs.",
     ],
     misconceptions: [
@@ -418,7 +418,7 @@ export const MISSIONS_B: Mission[] = [
       {
         id: "boss-form-labeled",
         label: "All form inputs are labeled",
-        feedback: "Every form input needs a matching <label for> — placeholders don't count.",
+        feedback: "Every form field needs an accessible name from a visible <label> or a valid ARIA label — placeholders don't count.",
         rule: { kind: "labeled-inputs" },
       },
       {

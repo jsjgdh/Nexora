@@ -1,0 +1,18 @@
+# Normalize every text file to LF in the repository, whatever the machine that
+# committed it. This repo has contributors on Windows and CI on Linux; without
+# this, `core.autocrlf` differences produce whole-tree diffs and a "changed"
+# status that means nothing. Local checkouts may still use CRLF.
+* text=auto eol=lf
+
+# Generated or opaque — keep byte-exact, never normalised.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.gz binary
+*.tgz binary
+*.zip binary

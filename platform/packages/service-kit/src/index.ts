@@ -3,6 +3,16 @@ import helmet from "@fastify/helmet";
 import { randomUUID } from "node:crypto";
 import type { ZodType } from "zod";
 
+export { createPool, migrate, newId, sha256 } from "./db.js";
+export {
+  RECEIPT_MAX_AGE_MS,
+  codeSha256,
+  receiptFresh,
+  receiptKey,
+  signReceipt,
+  verifyReceiptSignature,
+} from "./receipt.js";
+
 /* Shared service chassis: logging, request ids, security headers, health
    probes, error envelopes, mesh authentication, graceful shutdown. Every
    service gets identical production posture from one call. */
@@ -109,9 +119,10 @@ export async function createService(name: string, opts: ServiceOptions = {}): Pr
         error: { code: err.code, message: err.message, requestId: req.id, details: err.details },
       });
     }
-    if (typeof err?.statusCode === "number" && err.statusCode < 500) {
-      return reply.code(err.statusCode).send({
-        error: { code: "bad_request", message: err.message ?? "Bad request.", requestId: req.id },
+    const e = err as Partial<{ statusCode: number; message: string }>;
+    if (typeof e.statusCode === "number" && e.statusCode < 500) {
+      return reply.code(e.statusCode).send({
+        error: { code: "bad_request", message: e.message ?? "Bad request.", requestId: req.id },
       });
     }
     req.log.error({ err }, "unhandled error");

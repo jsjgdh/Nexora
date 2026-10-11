@@ -2,6 +2,7 @@ import { browser } from "$app/environment";
 import type {
   DiagnosticResult,
   LearnerState,
+  MissionReflection,
   MissionProgress,
   Profile,
 } from "./types";
@@ -13,16 +14,25 @@ import {
   computeFinalization,
   defaultMissionProgress,
   defaultState,
+  normalizeReflections,
   todayKey,
 } from "./progress-core";
 
 /* Reactive progress store (Svelte 5 runes). Single module-level instance is
    shared across all routes client-side; progress persists to localStorage
-   under the same keys as the React build, so learners keep their progress. */
+   under the same keys as the React build, so learners keep their progress.
+   Learner-driven changes also notify onChange subscribers — the cloud sync
+   engine uses this to push drafts, completions, and profile updates. */
+
+export type ProgressEvent =
+  | { kind: "profile" }
+  | { kind: "diagnostic" }
+  | { kind: `mission:${string}` };
 
 class ProgressStore {
   state = $state<LearnerState>(defaultState());
   loaded = $state(false);
+  private listeners = new Set<(e: ProgressEvent) => void>();
 
   constructor() {
     if (!browser) return;
@@ -30,7 +40,9 @@ class ProgressStore {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as LearnerState;
-        if (parsed && parsed.version === 1) this.state = parsed;
+        if (parsed && parsed.version === 1) {
+          this.state = normalizeReflections(parsed);
+        }
       }
     } catch {
       /* corrupted storage → start fresh */
@@ -47,13 +59,31 @@ class ProgressStore {
     this.loaded = true;
   }
 
-  private persist() {
+  private persist(event?: ProgressEvent) {
     if (!browser) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
     } catch {
       /* storage full/blocked → session-only */
     }
+    if (event) {
+      for (const l of [...this.listeners]) l(event);
+    }
+  }
+
+  /** Subscribe to learner-driven changes. Sync adoptions never notify —
+      pulling server state must never re-trigger a push. */
+  onChange(fn: (e: ProgressEvent) => void): () => void {
+    this.listeners.add(fn);
+    return () => {
+      this.listeners.delete(fn);
+    };
+  }
+
+  /** Replace the whole state with a merged/cloud result, silently. */
+  adopt(next: LearnerState) {
+    this.state = next;
+    this.persist();
   }
 
   private cur(missionId: string): MissionProgress {
@@ -72,7 +102,7 @@ class ProgressStore {
 
   saveProfile(p: Partial<Profile> & { completedAt?: string | null }) {
     this.state = { ...this.state, profile: { ...this.state.profile, ...p } };
-    this.persist();
+    this.persist({ kind: "profile" });
   }
 
   saveDiagnostic(results: DiagnosticResult[]) {
@@ -91,7 +121,7 @@ class ProgressStore {
       diagnostic: { completedAt: new Date().toISOString(), results },
       competencies,
     };
-    this.persist();
+    this.persist({ kind: "diagnostic" });
   }
 
   progressOf(missionId: string): MissionProgress {
@@ -102,13 +132,25 @@ class ProgressStore {
     const cur = this.cur(missionId);
     if (cur.startedAt) return;
     this.setCur(missionId, { ...cur, startedAt: new Date().toISOString() });
-    this.persist();
+    this.persist({ kind: `mission:${missionId}` });
   }
 
   saveCode(missionId: string, code: string) {
     const cur = this.cur(missionId);
     if (cur.code === code) return;
     this.setCur(missionId, { ...cur, code });
+    this.persist({ kind: `mission:${missionId}` });
+  }
+
+  /** Keep reflection beside the local draft without sending it to cloud sync. */
+  saveReflection(missionId: string, field: keyof MissionReflection, value: string) {
+    const cur = this.cur(missionId);
+    const reflection = cur.reflection ?? { expected: "", observed: "", nextChange: "" };
+    if (reflection[field] === value) return;
+    this.setCur(missionId, {
+      ...cur,
+      reflection: { ...reflection, [field]: value },
+    });
     this.persist();
   }
 
@@ -120,7 +162,7 @@ class ProgressStore {
       checksPassed: passedCheckIds,
       startedAt: cur.startedAt ?? new Date().toISOString(),
     });
-    this.persist();
+    this.persist({ kind: `mission:${missionId}` });
   }
 
   recordHint(missionId: string, level: number) {
@@ -131,7 +173,7 @@ class ProgressStore {
       maxHintLevel: Math.max(cur.maxHintLevel, level),
       startedAt: cur.startedAt ?? new Date().toISOString(),
     });
-    this.persist();
+    this.persist({ kind: `mission:${missionId}` });
   }
 
   answerQuestion(missionId: string, questionId: string, selected: number): boolean {
@@ -145,7 +187,7 @@ class ProgressStore {
       questionsCorrect: { ...cur.questionsCorrect, [questionId]: correct },
       startedAt: cur.startedAt ?? new Date().toISOString(),
     });
-    this.persist();
+    this.persist({ kind: `mission:${missionId}` });
     return correct;
   }
 
@@ -181,7 +223,7 @@ class ProgressStore {
         ? Array.from(new Set([...this.state.practiceQueue, missionId]))
         : this.state.practiceQueue,
     };
-    this.persist();
+    this.persist({ kind: `mission:${missionId}` });
     return { completed: true, mastered, xpGained };
   }
 

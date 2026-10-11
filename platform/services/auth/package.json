@@ -1,0 +1,24 @@
+{
+  "name": "@nexora/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@nexora/contracts": "*",
+    "@nexora/service-kit": "*",
+    "bcryptjs": "^3.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "pg": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/pg": "^8.0.0"
+  }
+}

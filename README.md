@@ -1,0 +1,106 @@
+# NEXORA
+
+A personalized programming-education platform whose promise is **real engineers, not tutorial
+followers**: the learner always knows what to learn next, why it matters, and can prove they
+learned it.
+
+Two applications live here.
+
+| Path | What it is | Stack |
+|---|---|---|
+| [`nexora-svelte/`](nexora-svelte) | The learner app — roadmap, lesson workspace, assessment, progress | SvelteKit 5 (Svelte 5 runes), Tailwind v4, adapter-node |
+| [`platform/`](platform) | The service mesh — auth, curriculum, progress, execution, tutor, billing behind one gateway | Fastify + TypeScript, Postgres per service, Docker Compose |
+
+Design and product truth live at the root: [`PRODUCT.md`](PRODUCT.md) (who it is for, what it
+promises), [`DESIGN.md`](DESIGN.md) (the visual world and its state grammar),
+[`TODO.md`](TODO.md) (what is left before launch), and [`prd.md`](prd.md) (the original
+requirements).
+
+## The idea in one screen
+
+The path is four layers, in the order a beginner actually needs them:
+
+```
+Foundations → one Language (Go) → Algorithms → Application tracks (Web)
+```
+
+You do not pick a specialisation first. The diagnostic places you at the earliest layer you have
+**not** demonstrated, so a fluent learner skips ahead and a total beginner is never thrown into a
+framework. See `LAYERS` / `TRACKS` in
+[`nexora-svelte/src/lib/curriculum.ts`](nexora-svelte/src/lib/curriculum.ts).
+
+Assessment is deterministic: declarative checks interpreted against the learner's own output, no
+LLM in the grading path. AI may explain, never grade.
+
+## Run the learner app
+
+The public entry is `/`. The learner roadmap lives at `/roadmap`; sign-up and account-free lesson
+flows both return learners there.
+
+```bash
+cd nexora-svelte
+npm ci
+npm run dev            # http://localhost:5173  (npm run dev -- --port 5199 to choose a port)
+```
+
+With no configuration the app runs in **local mode**: everything (progress, drafts, evidence)
+stays in the browser. No account, no network, fully functional — this is the product's default
+resilience, not a degraded state. See [`nexora-svelte/.env.example`](nexora-svelte/.env.example)
+for the one variable that turns the cloud on.
+
+## Run the platform
+
+```bash
+cd platform
+cp .env.example .env      # fill in secrets; every value has a documented default
+npm ci
+npm run build
+npm run verify            # in-process suite — no Docker, no Postgres required
+```
+
+Full stack (Postgres + seven services + the app behind one gateway on `:8080`):
+
+```bash
+docker compose up --build --wait
+npm run verify:e2e        # drives the real HTTP surface end to end
+```
+
+`PUBLIC_API_URL` must be reachable **from the browser**, not from inside the container. Point the
+learner app at the gateway (`http://127.0.0.1:8080`) to switch it from local mode to cloud mode.
+
+## Verify before you ship
+
+Every suite in this repo is meant to be run, not admired:
+
+```bash
+cd nexora-svelte && npm run check       # svelte-check: types across every component
+cd nexora-svelte && npm run verify      # assertion suite over curriculum, checks, placement, sync
+cd platform && npm run verify           # contracts, crypto, gateway, execution, tutor, billing
+cd platform && npm run verify:e2e       # the compose stack over real HTTP
+```
+
+CI runs the first three on every push and PR (see [`.github/workflows/verify.yml`](.github/workflows/verify.yml));
+the compose e2e runs nightly and on demand.
+
+## Conventions that are not negotiable
+
+These are product decisions, not preferences — changing them changes what the product claims:
+
+1. **Evidence over activity.** XP, streaks and completions never stand in for demonstrated skill.
+   If the engine cannot verify it, the UI must not claim it.
+2. **Deterministic assessment.** Checks are data interpreted by an inspectable engine. No model
+   ever decides pass or fail.
+3. **Local-first.** The app works fully with no account and no network. The cloud strengthens
+   learning; it never gates it.
+4. **Dark-first.** Learners study at night. The dark environment is a binding constraint, not a
+   theme toggle.
+5. **Never make the learner feel stupid.** No shaming copy, no punishment for breaks, hints or
+   misses. A failed check is deliberate practice.
+6. **Curriculum has one source of truth** — `nexora-svelte/src/lib/`. Backend services embed a
+   version-stamped snapshot; run `npm run sync:curriculum` in `platform/` after editing it, and
+   the suite will fail if the snapshots drift.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow, the content-authoring rules, and what
+"done" means for a mission.

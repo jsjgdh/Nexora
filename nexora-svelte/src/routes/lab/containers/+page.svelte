@@ -2,6 +2,8 @@
   import type { WebContainer } from "@webcontainer/api";
   import Button from "$lib/components/Button.svelte";
   import { cn } from "$lib/format";
+  import PageHead from "$lib/components/PageHead.svelte";
+  import { pageTitle } from "$lib/seo";
 
   /* Prototype lab: WebContainer spike for Stage 6 / P1 planning.
      Unlisted route (no nav link): /lab/containers */
@@ -111,8 +113,17 @@ server.listen(3111, () => console.log('ready'));
   }
 </script>
 
+<!-- Unlisted and not part of the curriculum: kept out of the sitemap and marked
+     noindex here, so the two agree and a crawler never indexes a prototype. -->
+<PageHead
+  title={pageTitle("Container lab")}
+  description="An internal prototype: a Node server running inside the browser tab. Unlisted, and not part of the curriculum."
+  path="/lab/containers"
+  noindex
+/>
+
 <div class="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-  <p class="text-xs font-bold tracking-widest text-mint uppercase">Lab · prototype</p>
+  <p class="text-xs font-bold tracking-widest text-accent uppercase">Lab · prototype</p>
   <h1 class="mt-1 text-2xl font-bold sm:text-3xl">WebContainer spike</h1>
   <p class="mt-1 text-sm leading-relaxed text-muted">
     Evaluates in-browser Node for future backend missions. Boots on click only — booting is
@@ -120,34 +131,34 @@ server.listen(3111, () => console.log('ready'));
     in Chromium.
   </p>
 
-  <div class="mt-4 rounded-xl border border-line bg-elevated p-4">
+  <div class="mt-4 rounded-xl border border-rule bg-panel p-4">
     <h2 class="text-sm font-bold tracking-wider text-muted uppercase">Environment</h2>
     {#if !diag}
       <p class="mt-1 text-sm text-muted">Loading…</p>
     {:else}
       <ul class="mt-2 grid gap-1.5 text-sm sm:grid-cols-2">
-        <li class="flex items-center gap-2 rounded-lg border border-line bg-[#0c1218] px-2.5 py-1.5">
+        <li class="flex items-center gap-2 rounded-lg border border-rule bg-panel px-2.5 py-1.5">
           {@render diagGlyph(diag.isolated)}
           <span>
             <span class="block font-mono text-xs font-semibold">crossOriginIsolated: {diag.isolated ? "yes" : "no"}</span>
             <span class="block text-[11px] text-muted">COOP/COEP headers active</span>
           </span>
         </li>
-        <li class="flex items-center gap-2 rounded-lg border border-line bg-[#0c1218] px-2.5 py-1.5">
+        <li class="flex items-center gap-2 rounded-lg border border-rule bg-panel px-2.5 py-1.5">
           {@render diagGlyph(diag.sab)}
           <span>
             <span class="block font-mono text-xs font-semibold">SharedArrayBuffer: {diag.sab ? "yes" : "no"}</span>
             <span class="block text-[11px] text-muted">threading primitive present</span>
           </span>
         </li>
-        <li class="flex items-center gap-2 rounded-lg border border-line bg-[#0c1218] px-2.5 py-1.5">
+        <li class="flex items-center gap-2 rounded-lg border border-rule bg-panel px-2.5 py-1.5">
           {@render diagGlyph(diag.chromium)}
           <span>
             <span class="block font-mono text-xs font-semibold">Chromium engine: {diag.chromium ? "yes" : "no"}</span>
             <span class="block text-[11px] text-muted">best-supported runtime</span>
           </span>
         </li>
-        <li class="flex items-center gap-2 rounded-lg border border-line bg-[#0c1218] px-2.5 py-1.5">
+        <li class="flex items-center gap-2 rounded-lg border border-rule bg-panel px-2.5 py-1.5">
           {@render diagGlyph(diag.online)}
           <span>
             <span class="block font-mono text-xs font-semibold">Network online: {diag.online ? "yes" : "no"}</span>
@@ -155,7 +166,7 @@ server.listen(3111, () => console.log('ready'));
           </span>
         </li>
       </ul>
-      <p class="mt-2 break-all font-mono text-[11px] text-muted/70">{diag.ua}</p>
+      <p class="mt-2 break-all font-mono text-[11px] text-muted">{diag.ua}</p>
     {/if}
   </div>
 
@@ -168,7 +179,7 @@ server.listen(3111, () => console.log('ready'));
     </Button>
     {#if phase === "ready"}
       <span
-        class="inline-flex items-center rounded-lg border border-success/50 px-3 py-2 text-sm font-semibold text-success"
+        class="inline-flex items-center rounded-lg border border-added/50 px-3 py-2 text-sm font-semibold text-added"
         role="status"
       >
         Live
@@ -177,14 +188,14 @@ server.listen(3111, () => console.log('ready'));
   </div>
 
   {#if lines.length > 0}
-    <div class="mt-3 rounded-xl border border-line bg-elevated p-4">
+    <div class="mt-3 rounded-xl border border-rule bg-panel p-4">
       <h2 class="text-sm font-bold tracking-wider text-muted uppercase">Log</h2>
       <ol class="nice-scroll mt-2 max-h-64 space-y-1 overflow-y-auto font-mono text-xs leading-relaxed" aria-live="polite">
         {#each lines as l}
           <li
             class={cn(
-              l.kind === "err" && "text-error",
-              l.kind === "ok" && "text-success",
+              l.kind === "err" && "text-removed",
+              l.kind === "ok" && "text-added",
               l.kind === "out" && "text-muted",
               l.kind === "info" && "text-ink"
             )}
@@ -197,7 +208,7 @@ server.listen(3111, () => console.log('ready'));
   {/if}
 
   {#if evalOut || files.length > 0}
-    <div class="mt-3 rounded-xl border border-line bg-elevated p-4 text-sm">
+    <div class="mt-3 rounded-xl border border-rule bg-panel p-4 text-sm">
       <h2 class="text-sm font-bold tracking-wider text-muted uppercase">Evidence</h2>
       {#if evalOut}
         <p class="mt-2 font-mono text-[13px]">
@@ -213,8 +224,8 @@ server.listen(3111, () => console.log('ready'));
   {/if}
 
   {#if previewUrl}
-    <div class="mt-3 overflow-hidden rounded-xl border border-line bg-elevated">
-      <p class="border-b border-line px-4 py-2 font-mono text-xs text-muted">Preview · {previewUrl}</p>
+    <div class="mt-3 overflow-hidden rounded-xl border border-rule bg-panel">
+      <p class="border-b border-rule px-4 py-2 font-mono text-xs text-muted">Preview · {previewUrl}</p>
       <iframe title="WebContainer server preview" src={previewUrl} class="h-64 w-full bg-white"></iframe>
     </div>
   {/if}
@@ -231,7 +242,7 @@ server.listen(3111, () => console.log('ready'));
     aria-hidden="true"
     class={cn(
       "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold",
-      ok ? "bg-success/15 text-success" : "bg-error/15 text-error"
+      ok ? "bg-added/15 text-added" : "bg-removed/15 text-removed"
     )}
   >
     {ok ? "✓" : "✗"}

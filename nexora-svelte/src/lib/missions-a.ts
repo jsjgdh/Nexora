@@ -16,7 +16,10 @@ export const MISSIONS_A: Mission[] = [
       "Distinguish the roles of HTML, CSS, and JavaScript",
       "Identify the head and body of a document",
     ],
-    prereqIds: [],
+    // The application track opens only once the foundations layer is done.
+    // A diagnostic-placed learner is unaffected: placement waives every
+    // prerequisite that lies before their starting point.
+    prereqIds: ["go-errors"],
     competencyIds: ["html-structure"],
     whyItMatters:
       "Every debugging session for the rest of your career starts with the same mental model: the browser reads your document and builds a page from it. Get this right once and layout bugs stop feeling like magic.",

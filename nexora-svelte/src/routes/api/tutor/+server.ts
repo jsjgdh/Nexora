@@ -17,6 +17,7 @@ export const POST: RequestHandler = async ({ request }) => {
     missionId?: string;
     code?: string;
     failingChecks?: string[];
+    errorOutput?: string;
     hintLevel?: number;
   };
   try {
@@ -42,6 +43,11 @@ export const POST: RequestHandler = async ({ request }) => {
         `**${LEVEL_NAMES[level - 1]} (level ${level} of 5).** ${ladderText}` +
         (body.failingChecks?.length
           ? `\n\nCurrently failing: ${body.failingChecks.map((c) => `“${c}”`).join(", ")}.`
+          : "") +
+        // No model configured: quote the compiler rather than pretend we saw
+        // nothing. The learner's error is the most useful thing in the room.
+        (body.errorOutput
+          ? `\n\nYour last run reported:\n\n\`\`\`\n${body.errorOutput.slice(0, 600)}\n\`\`\``
           : ""),
       source: "curriculum",
     });
@@ -49,7 +55,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
   const code = (body.code ?? "").slice(0, 4000);
   const system =
-    "You are a Socratic programming tutor for HTML beginners. " +
+    "You are a Socratic programming tutor for beginners learning to write and debug code. " +
     "Rules: never output the full corrected solution; ask one guiding question first, then give at most one small concrete pointer. " +
     "Only discuss the failing requirements listed by the user — never claim code passes or fails beyond what is stated. " +
     "Keep replies under 120 words, formatted in simple markdown.";
@@ -58,6 +64,14 @@ export const POST: RequestHandler = async ({ request }) => {
     `Objectives: ${mission.objectives.join("; ")}\n` +
     `Hint level requested: ${level} (${LEVEL_NAMES[level - 1]})\n` +
     `Failing requirements: ${(body.failingChecks ?? []).join("; ") || "none reported"}\n` +
+    (body.errorOutput
+      ? `Output from the learner's last run (compiler or program, verbatim):\n` +
+        "```\n" +
+        body.errorOutput.slice(0, 2000) +
+        "\n```\n" +
+        "Explain what this output means and name the one thing to look at. Do not claim the " +
+        "program now passes or fails.\n"
+      : "") +
     `Learner code:\n${code}`;
 
   try {

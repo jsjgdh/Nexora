@@ -1,0 +1,110 @@
+# The project's CI contract. Every job here is a suite that exists in the repo
+# and passes locally. If a job is red, the change is not shippable — do not
+# merge around it.
+#
+# Design notes:
+# - No secrets are needed. The platform suite runs in-process (no Postgres, no
+#   Docker), so it is safe and fast on a clean runner.
+# - The compose e2e job is nightly and manual: booting nine containers plus
+#   Postgres on every PR would dominate CI time for little marginal signal.
+name: verify
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: learner app — types + assertions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nexora-svelte
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: nexora-svelte/package-lock.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - run: npm ci
+      # svelte-check is the type gate. It runs its own `svelte-kit sync` first.
+      - name: type check
+        run: npm run check
+      - name: assertion suite
+        run: npx tsx scripts/verify.ts
+      - name: production build
+        run: npm run build
+      - name: install accessibility browser
+        run: npx playwright install --with-deps chromium
+      - name: axe accessibility scan
+        run: npm run verify:a11y
+
+  platform:
+    name: service mesh — build + tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+      # Go is required by the execution service tests: the suite runs a real
+      # `go run` when the toolchain is present. Install it so the Go runner is
+      # exercised in CI rather than silently skipped.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - run: npm ci
+      - run: npm run build
+      - name: suite
+        run: npm run verify
+      # Vendored curriculum snapshots must match the frontend source exactly.
+      - name: curriculum snapshots in sync
+        run: |
+          npm run sync:curriculum
+          git diff --exit-code -- services/*/src/vendor services/curriculum/src/data
+
+  # Boots the whole mesh (Postgres + seven services + the app) and drives the
+  # real HTTP surface. Too slow for every push; runs nightly and on demand.
+  e2e:
+    name: compose stack — e2e
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: boot the mesh
+        run: docker compose up -d --build --wait
+      - name: e2e
+        run: npm run verify:e2e
+      - name: logs on failure
+        if: failure()
+        run: docker compose logs --tail=200
+      - name: tear down
+        if: always()
+        run: docker compose down -v

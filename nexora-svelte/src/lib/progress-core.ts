@@ -12,6 +12,27 @@ import { COMPETENCIES } from "./curriculum";
 
 export const STORAGE_KEY = "nexora-state-v1";
 
+/** Additive local-storage migration for reflection added after state v1 shipped. */
+export function normalizeReflections(state: LearnerState): LearnerState {
+  const missions = Object.fromEntries(
+    Object.entries(state.missions ?? {}).map(([id, mission]) => {
+      const legacy = mission.reflection as Partial<MissionProgress["reflection"]> | undefined;
+      return [
+        id,
+        {
+          ...mission,
+          reflection: {
+            expected: legacy?.expected ?? "",
+            observed: legacy?.observed ?? "",
+            nextChange: legacy?.nextChange ?? "",
+          },
+        },
+      ];
+    })
+  );
+  return { ...state, missions };
+}
+
 function defaultProfile(): Profile {
   return {
     name: "",
@@ -61,6 +82,7 @@ export function defaultMissionProgress(
   return {
     missionId,
     code: starterCode,
+    reflection: { expected: "", observed: "", nextChange: "" },
     startedAt: null,
     attempts: 0,
     checksPassed: [],

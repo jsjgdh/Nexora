@@ -3,8 +3,52 @@ import { MISSIONS_A } from "./missions-a";
 import { MISSIONS_B } from "./missions-b";
 import { MISSIONS_C } from "./missions-c";
 import { MISSIONS_D } from "./missions-d";
+import { MISSIONS_E } from "./missions-e";
+import { MISSIONS_F } from "./missions-f";
+import { MISSIONS_G } from "./missions-g";
+import { MISSIONS_H } from "./missions-h";
+import { MISSIONS_I } from "./missions-i";
+import { MISSIONS_J } from "./missions-j";
+import { MISSIONS_K } from "./missions-k";
+import { MISSIONS_L } from "./missions-l";
+import { MISSIONS_M } from "./missions-m";
+import { MISSIONS_N } from "./missions-n";
+import { MISSIONS_O } from "./missions-o";
+import { MISSIONS_P } from "./missions-p";
+import { MISSIONS_Q } from "./missions-q";
+import { MISSIONS_R } from "./missions-r";
+import { MISSIONS_ORIENTATION } from "./missions-orientation";
 
-export const ALL_MISSIONS: Mission[] = [...MISSIONS_A, ...MISSIONS_B, ...MISSIONS_C, ...MISSIONS_D];
+/* Array order IS the canonical path: foundations first, then the application
+   tracks. Placement, prerequisite waiving, and the next-step recommendation
+   all read positions from this list, so it must stay in path order —
+   orientation, the language layer (go-basics, go-practice), the algorithms
+   layer, and only then the application tracks. */
+export const ALL_MISSIONS: Mission[] = [
+  // 1. How software works — the mental model, and the stage that needs no
+  //    language or runner at all.
+  ...MISSIONS_ORIENTATION,
+  // 2-3. The language layer: one program, then the vocabulary to change it.
+  ...MISSIONS_G,
+  ...MISSIONS_H,
+  ...MISSIONS_I,
+  ...MISSIONS_J,
+  ...MISSIONS_K,
+  ...MISSIONS_O,
+  ...MISSIONS_P,
+  ...MISSIONS_Q,
+  ...MISSIONS_R,
+  // 4. The algorithms layer, in Go.
+  ...MISSIONS_L,
+  ...MISSIONS_M,
+  ...MISSIONS_N,
+  ...MISSIONS_A,
+  ...MISSIONS_B,
+  ...MISSIONS_C,
+  ...MISSIONS_D,
+  ...MISSIONS_E,
+  ...MISSIONS_F,
+];
 
 export function missionById(id: string): Mission | undefined {
   return ALL_MISSIONS.find((m) => m.id === id);

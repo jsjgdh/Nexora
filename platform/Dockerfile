@@ -12,6 +12,7 @@ COPY services/curriculum/package.json ./services/curriculum/package.json
 COPY services/progress/package.json ./services/progress/package.json
 COPY services/execution/package.json ./services/execution/package.json
 COPY services/tutor/package.json ./services/tutor/package.json
+COPY services/billing/package.json ./services/billing/package.json
 RUN npm ci
 
 FROM deps AS build
@@ -35,6 +36,7 @@ COPY services/curriculum/package.json ./services/curriculum/package.json
 COPY services/progress/package.json ./services/progress/package.json
 COPY services/execution/package.json ./services/execution/package.json
 COPY services/tutor/package.json ./services/tutor/package.json
+COPY services/billing/package.json ./services/billing/package.json
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=build /app/packages/service-kit/dist ./packages/service-kit/dist
@@ -44,8 +46,28 @@ COPY --from=build /app/services/curriculum/dist ./services/curriculum/dist
 COPY --from=build /app/services/progress/dist ./services/progress/dist
 COPY --from=build /app/services/execution/dist ./services/execution/dist
 COPY --from=build /app/services/tutor/dist ./services/tutor/dist
-USER app
+COPY --from=build /app/services/billing/dist ./services/billing/dist
+COPY --from=build /app/services/auth/migrations ./services/auth/migrations
+COPY --from=build /app/services/progress/migrations ./services/progress/migrations
+COPY --from=build /app/services/tutor/migrations ./services/tutor/migrations
+COPY --from=build /app/services/billing/migrations ./services/billing/migrations
+
+# The execution service is the one image that must run learner code, and Go is
+# the product's teaching language, so only that image pays for the toolchain.
+# The standard library is compiled into a shared cache at build time: modern Go
+# ships no precompiled std, and without this every learner's first program would
+# pay several seconds of cold compilation.
 ARG SERVICE
+RUN if [ "$SERVICE" = "execution" ]; then \
+      apk add --no-cache go && \
+      mkdir -p /opt/gocache /opt/warm && \
+      cd /opt/warm && go mod init warm > /dev/null 2>&1 && \
+      CGO_ENABLED=0 GOCACHE=/opt/gocache GOFLAGS=-mod=mod GOTOOLCHAIN=local go build std && \
+      rm -rf /opt/warm && \
+      chown -R app:app /opt/gocache ; \
+    fi
+
 ENV SERVICE=${SERVICE}
+USER app
 EXPOSE 8080 8101 8102 8103 8104 8105
 CMD ["sh", "-c", "node services/${SERVICE}/dist/index.js"]

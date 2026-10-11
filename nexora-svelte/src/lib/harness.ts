@@ -37,16 +37,27 @@ function (doc, win, op) {
       if (!op.selector) return fail('click needs a selector');
       var el = doc.querySelector(op.selector);
       if (!el) return fail('not found: ' + op.selector);
-      var evt;
-      if (typeof win.MouseEvent === 'function') {
-        evt = new win.MouseEvent('click', { bubbles: true, cancelable: true });
-      } else if (typeof doc.createEvent === 'function') {
-        evt = doc.createEvent('MouseEvents');
-        evt.initEvent('click', true, true);
-      } else {
-        return fail('cannot synthesize clicks here');
+      // Prefer the platform's own activation (el.click): it performs the
+      // same default actions a real click does — including submitting a
+      // form, which a bare dispatched event does not reliably trigger.
+      try {
+        if (typeof el.click === 'function') {
+          el.click();
+        } else {
+          var evt;
+          if (typeof win.MouseEvent === 'function') {
+            evt = new win.MouseEvent('click', { bubbles: true, cancelable: true });
+          } else if (typeof doc.createEvent === 'function') {
+            evt = doc.createEvent('MouseEvents');
+            evt.initEvent('click', true, true);
+          } else {
+            return fail('cannot synthesize clicks here');
+          }
+          el.dispatchEvent(evt);
+        }
+      } catch (err) {
+        return fail(String((err && err.message) || err));
       }
-      el.dispatchEvent(evt);
       return { id: op.id, ok: true, value: 'clicked' };
     }
     if (op.act === 'fill') {
@@ -64,7 +75,19 @@ function (doc, win, op) {
       if (!op.fn) return fail('call needs a function name');
       var fn = win[op.fn];
       if (typeof fn !== 'function') return fail('not a function: ' + op.fn);
-      var out = fn.apply(null, op.args || []);
+      var out;
+      try { out = fn.apply(null, op.args || []); }
+      catch (err) { return fail(String((err && err.message) || err)); }
+      // Promise results settle through the driver's chain (may resolve or
+      // reject — rejection becomes a failed observation, assertable via
+      // expectError). Sync results pass through untouched.
+      if (out && typeof out.then === 'function') {
+        return out.then(function (v) {
+          return { id: op.id, ok: true, value: v === undefined ? null : v };
+        }, function (e) {
+          return { id: op.id, ok: false, error: String((e && e.message) || e) };
+        });
+      }
       return { id: op.id, ok: true, value: out === undefined ? null : out };
     }
     if (op.act === 'read') {
@@ -115,7 +138,16 @@ export function evaluateAssertions(
   if (assertions.length === 0) return false;
   return assertions.every((a) => {
     var r = obsById.get(a.op);
-    if (!r || !r.ok) return false;
+    if (!r) return false;
+    if (a.expectError !== undefined) {
+      if (r.ok) return false;
+      try {
+        return new RegExp(a.expectError).test(String(r.error === undefined || r.error === null ? "" : r.error));
+      } catch {
+        return false;
+      }
+    }
+    if (!r.ok) return false;
     if (a.truthy !== undefined) {
       if (!!r.value !== a.truthy) return false;
     }
@@ -157,11 +189,12 @@ export function buildDriverSource(): string {
     "        var ms = Math.max(0, Math.min(op.ms || 0, " + HARNESS_MAX_WAIT_MS + "));\n" +
     "        return sleep(ms).then(function () { results.push({ id: op.id, ok: true, value: 'waited' }); });\n" +
     "      }\n" +
-    "      var obs;\n" +
-    "      try { obs = RUN_OP(document, window, op); }\n" +
-    '      catch (err) { obs = { id: (op && op.id) || ("op" + i), ok: false, error: String((err && err.message) || err) }; }\n' +
-    "      obs.value = sanitize(obs.value);\n" +
-    "      results.push(obs);\n" +
+    "      return Promise.resolve().then(function () { return RUN_OP(document, window, op); }).then(function (obs) {\n" +
+    "        obs.value = sanitize(obs.value);\n" +
+    "        results.push(obs);\n" +
+    "      }, function (err) {\n" +
+    '        results.push({ id: (op && op.id) || ("op" + i), ok: false, error: String((err && err.message) || err) });\n' +
+    "      });\n" +
     "    });\n" +
     "  });\n" +
     "  chain.then(function () {\n" +
