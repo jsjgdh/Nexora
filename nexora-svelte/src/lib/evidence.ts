@@ -1,8 +1,9 @@
 import { COMPETENCIES, stageById } from "./curriculum";
+import { isClientReported } from "./document-rules";
 import { ALL_MISSIONS, missionById } from "./missions";
 import { openMistakes, resolvedMistakes, type PracticeState } from "./practice-core";
 import { APPROVED_LEVELS, proficiencyWord } from "./review";
-import type { LearnerState, Proficiency } from "./types";
+import type { LearnerState, Mission, Proficiency } from "./types";
 
 /* "Proof of skill" is the positioning claim, and until now it was not
    portable: the evidence lived in one browser's localStorage and nothing
@@ -37,6 +38,13 @@ export interface EvidenceMission {
   attempts: number;
   hintsUsed: number;
   checksPassed: string[];
+  /**
+   * The subset of `checksPassed` that only the learner's own browser could
+   * decide (`computed-style` and `scripted`; see `KIND_AUTHORITY` in
+   * `document-rules.ts`). The platform never re-ran these, so a reader has to
+   * be able to tell them apart from the requirements it recomputed.
+   */
+  learnerReported: string[];
   xpAwarded: number;
 }
 
@@ -78,8 +86,19 @@ export interface EvidenceDocument {
 export const EVIDENCE_CAVEAT =
   "Generated from assessed work in this learner's own copy of NEXORA: checks passed, " +
   "requirements re-derived from the saved drafts and runs, and the missions' own words for " +
-  "what each level means. It is not a certificate, not an accredited qualification, and it " +
-  "excludes the checks this build could not decide (invite the reader to re-run them).";
+  "what each level means. It is not a certificate and not an accredited qualification. " +
+  "Requirements the platform did not re-check because only the learner's own browser could " +
+  "decide them are marked as such (invite the reader to re-run those).";
+
+/** Which of a mission's met requirements only the learner's browser could decide. */
+function learnerReportedOf(mission: Mission, checksPassed: string[]): string[] {
+  return checksPassed
+    .filter((id) => {
+      const check = mission.checks.find((c) => c.id === id);
+      return check !== undefined && isClientReported(check.rule);
+    })
+    .sort();
+}
 
 export function buildEvidence(
   state: LearnerState,
@@ -116,6 +135,7 @@ export function buildEvidence(
       attempts: p.attempts,
       hintsUsed: p.hintsUsed,
       checksPassed: [...p.checksPassed].sort(),
+      learnerReported: learnerReportedOf(m, p.checksPassed),
       xpAwarded: p.xpAwarded,
     };
   });
@@ -211,8 +231,18 @@ export function evidenceMarkdown(doc: EvidenceDocument): string {
         m.independent ? ", unaided" : ", with guidance"
       } · attempts ${m.attempts} · hints ${m.hintsUsed}`
     );
-    if (m.checksPassed.length > 0) {
-      lines.push(`  - requirements met: ${m.checksPassed.join(", ")}`);
+    // Two lists, never one: a requirement the platform recomputed and a
+    // requirement this learner's own browser reported are different claims, and
+    // a reader deciding what to believe has to be able to see which is which.
+    const platformDecided = m.checksPassed.filter((c) => !m.learnerReported.includes(c));
+    if (platformDecided.length > 0) {
+      lines.push(`  - requirements met: ${platformDecided.join(", ")}`);
+    }
+    if (m.learnerReported.length > 0) {
+      lines.push(
+        "  - reported by this learner's own browser, not re-checked by the platform: " +
+          m.learnerReported.join(", ")
+      );
     }
   }
   lines.push("");

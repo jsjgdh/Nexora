@@ -10,6 +10,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
     "start": "node build",
     "verify": "tsx scripts/verify.ts",
+    "trust:report": "tsx scripts/trust-report.ts",
     "verify:a11y": "tsx scripts/verify-a11y.ts",
     "verify:viz": "tsx scripts/verify-viz.ts"
   },

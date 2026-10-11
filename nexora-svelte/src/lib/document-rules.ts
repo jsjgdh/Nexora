@@ -36,37 +36,79 @@ export interface DocLike {
 }
 
 /**
- * Which rule kinds the platform can decide for itself from the stored draft.
+ * Who decides a rule kind.
  *
- * These read the document's own structure and text, so a parser is enough and
- * both sides reach the same answer. The two kinds absent from this list are
- * absent for a reason, and it is a limitation rather than a preference:
+ * - `platform` — decided from the draft the platform stores, by the parser
+ *   below. These read the document's own structure and text, so a parser is
+ *   enough and both sides reach the same answer.
+ * - `receipt` — decided from a signed run receipt the execution service issued
+ *   (`verify-runs.ts`). The platform re-judges it; the client only forwards it.
+ * - `client` — the learner's own browser is the only witness. Both such kinds
+ *   are here for a reason, and it is a limitation rather than a preference:
+ *   `computed-style` needs a *rendering* engine (a real cascade with real
+ *   default styles, which no parser reproduces faithfully), and `scripted`
+ *   needs the page to be driven — clicks, input, reads.
  *
- * - `computed-style` needs a *rendering* engine. The browser answers it from a
- *   real cascade with real default styles; no parser reproduces that
- *   faithfully, and guessing server-side would mean refusing work the learner
- *   can see is correct.
- * - `scripted` needs the page to be driven — clicks, input, reads. That is a
- *   browser-shaped job and it stays where the sandbox is.
- *
- * Both remain the client's own report for now (TODO 2.2).
+ * Anything the client decides is *recorded*, never presented as a platform
+ * verdict. `TRUST-MODEL.md` carries the shipped counts and `npm run
+ * trust:report` regenerates them; the assertion suite fails if the two
+ * disagree.
  */
-export const SERVER_DECIDABLE_KINDS = [
-  "has-element",
-  "missing-element",
-  "count-min",
-  "count-exact",
-  "text-match",
-  "doc-text-match",
-  "attr-match",
-  "nested",
-  "labeled-inputs",
-  "no-placeholder-links",
-  "style-text-match",
-] as const;
+export type RuleAuthority = "platform" | "receipt" | "client";
+
+/**
+ * Every kind in the `CheckRule` union, classified. The `Record<kind, …>` type
+ * is the enforcement: add a kind to the union without deciding who owns it and
+ * the type gate (`npm run check`) fails, rather than the kind quietly defaulting
+ * to nobody's responsibility.
+ */
+export const KIND_AUTHORITY: Record<CheckRule["kind"], RuleAuthority> = {
+  "has-element": "platform",
+  "missing-element": "platform",
+  "count-min": "platform",
+  "count-exact": "platform",
+  "text-match": "platform",
+  "doc-text-match": "platform",
+  "attr-match": "platform",
+  "nested": "platform",
+  "labeled-inputs": "platform",
+  "no-placeholder-links": "platform",
+  "style-text-match": "platform",
+  "computed-style": "client",
+  "scripted": "client",
+  runs: "receipt",
+};
+
+const kindsWithAuthority = (authority: RuleAuthority): string[] =>
+  (Object.keys(KIND_AUTHORITY) as CheckRule["kind"][])
+    .filter((kind) => KIND_AUTHORITY[kind] === authority)
+    .sort();
+
+/** Which rule kinds the platform can decide for itself from the stored draft. */
+export const SERVER_DECIDABLE_KINDS = kindsWithAuthority("platform");
+
+/** Which rule kinds only the learner's own browser can answer. */
+export const CLIENT_REPORTED_KINDS = kindsWithAuthority("client");
+
+/** Which rule kinds are decided from a signed run receipt. */
+export const RECEIPT_DECIDED_KINDS = kindsWithAuthority("receipt");
+
+/** The authority for a rule, for callers that need to say who decided it. */
+export function authorityOf(rule: CheckRule): RuleAuthority {
+  return KIND_AUTHORITY[rule.kind];
+}
 
 export function isServerDecidable(rule: CheckRule): boolean {
-  return (SERVER_DECIDABLE_KINDS as readonly string[]).includes(rule.kind);
+  return KIND_AUTHORITY[rule.kind] === "platform";
+}
+
+/**
+ * True when the learner's own device is the only witness for this rule. A
+ * caller holding evidence that the learner can see should say so; a caller
+ * presenting it as the platform's verdict is overclaiming.
+ */
+export function isClientReported(rule: CheckRule): boolean {
+  return KIND_AUTHORITY[rule.kind] === "client";
 }
 
 /**

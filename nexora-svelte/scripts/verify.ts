@@ -76,6 +76,14 @@ import {
   sitemapPaths,
   sitemapXml,
 } from "../src/lib/seo";
+import {
+  CLIENT_REPORTED_KINDS,
+  KIND_AUTHORITY,
+  RECEIPT_DECIDED_KINDS,
+  SERVER_DECIDABLE_KINDS,
+  isClientReported,
+} from "../src/lib/document-rules";
+import { currentTrustBlock, renderTrustBlock } from "./trust-report";
 import { draftOf, mergeStates, meaningfulWork, protectCompleted, receiptEvidenceFor } from "../src/lib/sync-core";
 import { recommend, nodeStateFor, prereqsMet, continueTarget, missionActionLabel } from "../src/lib/recommend";
 import { actionVerb } from "../src/lib/format";
@@ -2140,6 +2148,75 @@ console.log("\n== the practice log: what beat you, and what you do about it ==")
     blank.summary.skillsApproved === 0 &&
       blank.missions.length === 0 &&
       evidenceMarkdown(blank).includes("None completed yet.")
+  );
+
+  // The assessment split, stated where it can be checked. The export above is
+  // the artefact a learner sends to a stranger, so the difference between "the
+  // platform recomputed this" and "my own browser said so" has to survive the
+  // trip — and the document that promises to state it has to match the content.
+  const cssOnlyMission = missionById("css-selectors")!;
+  const platformMission = missionById("first-page")!;
+  const splitState = defaultState();
+  splitState.profile = { ...splitState.profile, name: "Ada" };
+  splitState.missions[cssOnlyMission.id] = {
+    ...defaultMissionProgress(cssOnlyMission.id, ""),
+    completedAt: "2026-02-03T00:00:00.000Z",
+    checksPassed: cssOnlyMission.checks.map((c) => c.id),
+  };
+  splitState.missions[platformMission.id] = {
+    ...defaultMissionProgress(platformMission.id, ""),
+    completedAt: "2026-02-04T00:00:00.000Z",
+    checksPassed: [platformMission.checks[0].id],
+  };
+  const splitDoc = buildEvidence(splitState, null, new Date("2026-03-02T00:00:00.000Z"));
+  const cssEntry = splitDoc.missions.find((m) => m.id === cssOnlyMission.id)!;
+  ok(
+    "a requirement only the browser could decide travels as the learner's report",
+    cssEntry.learnerReported.length === cssOnlyMission.checks.length &&
+      cssOnlyMission.checks.every((c) => isClientReported(c.rule))
+  );
+  ok(
+    "a requirement the platform recomputed is not marked as the learner's",
+    splitDoc.missions.find((m) => m.id === platformMission.id)!.learnerReported.length === 0
+  );
+  const splitLines = evidenceMarkdown(splitDoc).split("\n");
+  const cssAt = splitLines.findIndex((l) => l.includes(`**${cssOnlyMission.title}**`));
+  const cssBlock = splitLines.slice(cssAt, cssAt + 4).join("\n");
+  ok(
+    "a wholly client-reported mission claims no platform-verified requirement",
+    cssAt !== -1 &&
+      !cssBlock.includes("requirements met:") &&
+      cssBlock.includes("reported by this learner's own browser")
+  );
+  ok(
+    "and the caveat describes what the export does, not what it wishes it did",
+    !/excludes the checks/i.test(EVIDENCE_CAVEAT)
+  );
+
+  const authorities = new Set(Object.values(KIND_AUTHORITY));
+  ok(
+    "every rule kind has exactly one authority, and no kind is unclassified",
+    authorities.size === 3 &&
+      Object.keys(KIND_AUTHORITY).length ===
+        SERVER_DECIDABLE_KINDS.length + RECEIPT_DECIDED_KINDS.length + CLIENT_REPORTED_KINDS.length
+  );
+  const trustDoc = readFileSync(new URL("../../TRUST-MODEL.md", import.meta.url), "utf8");
+  ok(
+    "TRUST-MODEL.md states the split the shipped content actually has",
+    currentTrustBlock() === renderTrustBlock()
+  );
+  const numberWord = ["zero", "one", "two", "three", "four"][authorities.size]!;
+  ok(
+    "and names as many authorities as the code defines",
+    trustDoc.includes(
+      `${numberWord.charAt(0).toUpperCase()}${numberWord.slice(1)} authorities decide verdicts today`
+    )
+  );
+  const shippedChecks = ALL_MISSIONS.flatMap((m) => m.checks);
+  const shippedClient = shippedChecks.filter((c) => isClientReported(c.rule)).length;
+  ok(
+    `the client's share is stated, not assumed (${shippedClient} of ${shippedChecks.length})`,
+    renderTrustBlock().includes(`| **All ${ALL_MISSIONS.length} missions** | **${shippedChecks.length}** | **${shippedClient}** (`)
   );
 
   // 8.4 SEO basics: titles and social cards in the shell, plus crawler files.

@@ -131,25 +131,64 @@ Two rule kinds are the client's word, and the code says why instead of pretendin
 - **`scripted` needs a page to be driven** — clicks, input, reads. That is a browser-shaped job and it
   stays where the sandbox is.
 
-The consequences, stated per mission (counted from the shipped content files, `missions-c.ts` and
-`missions-d.ts`):
+The consequences, per mission, generated from the shipped content instead of counted by hand. A
+hand-maintained disclosure drifts — this one did, understating the client's share by thirteen rules
+and omitting eight missions — so the table below is written by `npm run trust:report` and
+`npm run verify` fails when it stops matching the content:
 
-| Mission | Checks | Client-reported | Platform-decidable |
+<!-- BEGIN GENERATED: assessment authorities — written by `npm run trust:report`, checked by `npm run verify` -->
+
+Every mission that ships a requirement only the learner's browser can decide. A rule the
+platform cannot re-run is *recorded and named*; it is never presented as the platform's
+verdict.
+
+| Mission | Checks | Client-reported | Platform-decided |
 |---|---|---|---|
-| `css-selectors` | 3 | 3 `computed-style` | **0** |
+| `css-selectors` | 3 | 3 `computed-style` | 0 |
 | `css-box-model` | 4 | 3 `computed-style` | 1 |
 | `css-flexbox` | 4 | 3 `computed-style` | 1 |
 | `css-grid` | 4 | 1 `computed-style` | 3 |
-| `css-responsive` | 4 | 0 | 4 |
-| `css-variables` | 4 | 0 | 4 |
 | `css-debug` | 4 | 2 `computed-style` | 2 |
 | `css-landing` | 11 | 2 `computed-style` | 9 |
 | `js-counter` | 3 | 1 `scripted` | 2 |
+| `js-logic` | 3 | 2 `scripted` | 1 |
+| `js-state` | 3 | 2 `scripted` | 1 |
+| `js-arrays` | 3 | 2 `scripted` | 1 |
+| `js-dom` | 3 | 1 `scripted` | 2 |
+| `js-forms` | 4 | 2 `scripted` | 2 |
+| `js-async` | 3 | 2 `scripted` | 1 |
+| `js-debug` | 3 | 1 `scripted` | 2 |
+| `js-boss` | 6 | 1 `scripted` | 5 |
+| **All 46 missions** | **124** | **28** (22.6 %) | **96** |
 
-Across the content set that is **14 `computed-style` rules and 1 `scripted` rule**. Two of these
-missions are worth naming plainly: `css-selectors` is saved entirely on the client's report, and any
-mission that mixes these kinds with decidable rules is *half-decided* rather than wholly trusted —
-`css-landing` is 9 of 11, not 11 of 11.
+Who decides each rule kind, and how much of it the content actually ships:
+
+| Rule kind | Decided by | Rules shipped |
+|---|---|---|
+| `attr-match` | platform, from the stored draft | 3 |
+| `computed-style` | the learner's browser | 14 |
+| `count-exact` | platform, from the stored draft | 2 |
+| `count-min` | platform, from the stored draft | 12 |
+| `doc-text-match` | platform, from the stored draft | 0 |
+| `has-element` | platform, from the stored draft | 23 |
+| `labeled-inputs` | platform, from the stored draft | 2 |
+| `missing-element` | platform, from the stored draft | 0 |
+| `nested` | platform, from the stored draft | 3 |
+| `no-placeholder-links` | platform, from the stored draft | 1 |
+| `runs` | platform, from a signed run receipt | 18 |
+| `scripted` | the learner's browser | 14 |
+| `style-text-match` | platform, from the stored draft | 16 |
+| `text-match` | platform, from the stored draft | 16 |
+
+11 kinds are the platform's from the stored draft, 1 from a signed receipt, and 2 (`computed-style`, `scripted`) are the learner's own browser — 28 of 124 shipped requirements, 22.6 %.
+
+<!-- END GENERATED: assessment authorities -->
+
+Two entries in that table are worth naming plainly. `css-selectors` is saved entirely on the
+client's report — every one of its requirements is a cascade question the server cannot answer —
+and any mission that mixes these kinds with decided ones is *half-decided* rather than wholly
+trusted, not `n` of `n`. The `js` stage is where most of this lives now: the whole layer is
+browser-reported behaviour, so its completions are the learner's word about their own page.
 
 Question answers travel the same way. The progress service says so itself (`routes.ts:202`): the
 answers, `computed-style` and `scripted` remain the client's own report until there is a tier that can
@@ -186,7 +225,11 @@ server the equipment it currently lacks: a real cascade for `computed-style`, an
 
 ## Not verified here
 
-This document was written by reading the files it cites. The per-mission counts above were counted
-from the shipped content files, not from a running suite. The `422` refusal status for document
-checks and the exact quote in `routes.ts:202` are stated as the service states them in its own
-comments; the route bodies were not re-read in full for this pass.
+The `422` refusal status for document checks and the exact quote in `routes.ts:202` are stated as
+the service states them in its own comments; the route bodies were not re-read in full for this
+pass.
+
+The generated block is the exception, and deliberately so: it is derived from the shipped content
+by `npm run trust:report`, and `scripts/verify.ts` asserts that this document still matches what the
+content produces and that every rule kind in the `CheckRule` union has an owner in `KIND_AUTHORITY`.
+The edited-by-hand prose around it is not machine-checked beyond that.

@@ -129,7 +129,8 @@
       <p class="mr-auto max-w-xl text-[13px] leading-relaxed text-muted">
         Export what is below as a document you can keep or send: each skill with its level, the
         criterion that level means, and the missions whose requirements you met. It prints what it
-        is not — a certificate — and names the checks this build could not decide.
+        is not — a certificate — and separates the requirements the platform re-checked from the
+        ones only your own browser could decide.
       </p>
       <button
         class="cursor-pointer border border-rule px-3 py-1.5 text-[13px] text-ink hover:border-accent hover:text-accent"
