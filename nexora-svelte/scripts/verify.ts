@@ -2713,6 +2713,34 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     "its upgrade path is the shared checkout, and prices live on the provider's page",
     pricingSrc.includes("startCheckout") && pricingSrc.includes("Dodo Payments")
   );
+  // D-012's billing-trust rules. These are promises the product makes before it
+  // has a price to sell, so the loudest reputational failure in this category
+  // cannot be reintroduced silently by a copy edit: a page that quietly drops
+  // "cancel in two clicks" fails here. The guarantee is only as good as the
+  // assertion guarding it.
+  // Svelte wraps this prose across lines, so the source is compared with
+  // whitespace collapsed: the assertion is about the promise being stated, not
+  // about how the formatter happened to break the line.
+  const pricingFlat = pricingSrc.replace(/\s+/g, " ");
+  ok(
+    "pricing states the billing commitments: no surprise renewal, two-click cancel, visible PPP",
+    pricingFlat.includes("The renewal date is shown before you pay") &&
+      pricingFlat.includes("Cancel in two clicks.") &&
+      pricingFlat.includes("applied as a discount you can see")
+  );
+  ok(
+    "and it promises that no check is ever behind the paywall",
+    pricingFlat.includes("No check is ever behind the paywall")
+  );
+  // The free tier is the moat's front door: if a check ever became a paid
+  // feature, the claim we sell — that our verdicts are real — would be gone.
+  // Asserted on the page because that is where the promise is made to a learner.
+  ok(
+    "the free tier still promises every mission, the diagnostic, and the evidence export",
+    pricingSrc.includes("All 46 missions") &&
+      pricingSrc.includes("Diagnostic placement") &&
+      pricingSrc.includes("Evidence export")
+  );
 
   const profileSrc = readFileSync(new URL("../src/routes/profile/+page.svelte", import.meta.url), "utf8");
   ok(

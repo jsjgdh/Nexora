@@ -135,9 +135,40 @@
           </ul>
           <p class="mt-3 text-[12px] leading-relaxed text-faint">
             Prices are shown on the secure checkout (Dodo Payments) before anything is charged.
+            The renewal date is on that page too, before you pay — not only at the point of
+            cancelling.
           </p>
         {/if}
       </div>
     </section>
   </div>
+
+  <!-- The billing promises. Written before there is a price to sell, on purpose:
+       the loudest thing anyone says about a competitor in this category is that
+       they felt cheated on money rather than that the teaching was bad. These
+       are commitments the product has to keep, so the suite asserts them here
+       where they are stated. Refund window marked for legal review. -->
+  <section class="mt-8 border border-rule" aria-label="Billing commitments">
+    <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">
+      how billing works here
+    </h2>
+    <ul class="space-y-2 px-3 py-3 text-[13px] leading-relaxed text-muted">
+      <li>
+        <span class="text-ink">No surprise renewals.</span> The renewal date is shown before
+        you pay and in your profile, every time — never only at the point of cancelling.
+      </li>
+      <li>
+        <span class="text-ink">Cancel in two clicks.</span> Self-serve, in this product. No
+        email, no retention maze, no "are you sure?" loop.
+      </li>
+      <li>
+        <span class="text-ink">One visible price.</span> Purchasing-power discounts are applied
+        as a discount you can see, never as a higher local price.
+      </li>
+      <li>
+        <span class="text-ink">No check is ever behind the paywall.</span> Assessment stays
+        free — a verdict you have to pay for is not a verdict you can trust.
+      </li>
+    </ul>
+  </section>
 </div>
