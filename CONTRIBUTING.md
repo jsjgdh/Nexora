@@ -85,7 +85,9 @@ before moving a check between the two sides.
 
 ## Interface rules
 
-The visual world is documented in [`DESIGN.md`](DESIGN.md). The two that contributors break most:
+The visual grammar below is implemented in `nexora-svelte/src/app.css`; its
+origin blueprint (`design.md`) is preserved in git history (commit `e1ad7b9`).
+The rules contributors break most:
 
 1. **State is carried by form before hue.** Solid/dashed/dotted/struck line rules *and* a printed
    word. Colour reinforces; it never carries meaning alone.

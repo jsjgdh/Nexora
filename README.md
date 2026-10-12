@@ -11,10 +11,13 @@ Two applications live here.
 | [`nexora-svelte/`](nexora-svelte) | The learner app — roadmap, lesson workspace, assessment, progress | SvelteKit 5 (Svelte 5 runes), Tailwind v4, adapter-node |
 | [`platform/`](platform) | The service mesh — auth, curriculum, progress, execution, tutor, billing behind one gateway | Fastify + TypeScript, Postgres per service, Docker Compose |
 
-Design and product truth live at the root: [`PRODUCT.md`](PRODUCT.md) (who it is for, what it
-promises), [`DESIGN.md`](DESIGN.md) (the visual world and its state grammar),
-[`TODO.md`](TODO.md) (what is left before launch), and [`prd.md`](prd.md) (the original
-requirements).
+Contributor-facing truth lives at the root: [`TODO.md`](TODO.md) (what is left
+before launch), [`TRUST-MODEL.md`](TRUST-MODEL.md) (which verdicts the platform
+computes and which it only reports), [`SCENARIOS.md`](SCENARIOS.md) (what a
+learner actually does), and [`CONTRIBUTING.md`](CONTRIBUTING.md) (the design and
+code rules). The pre-pivot design blueprint (`design.md`) and the original
+requirements (`prd.md`) described the retired Next.js classroom and are preserved
+in git history (commit `e1ad7b9`), not linked as current truth.
 
 ## The idea in one screen
 
