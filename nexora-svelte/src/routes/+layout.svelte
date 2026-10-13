@@ -2,11 +2,21 @@
   import "../app.css";
   import { page } from "$app/state";
   import { afterNavigate } from "$app/navigation";
-  import type { Snippet } from "svelte";
+  import { onMount, type Snippet } from "svelte";
   import Header from "$lib/components/Header.svelte";
+  import { session } from "$lib/session.svelte";
   import { SITE_NAME } from "$lib/seo";
 
   let { children }: { children: Snippet } = $props();
+
+  /* Once per page load, in the browser only: the stored access token may be past
+     its (now short) life while the HttpOnly refresh cookie is still good. Without
+     this a learner who returns after a few minutes meets a sign-in form for a
+     session the server still considers live. It never runs on the server, where
+     there is no cookie to spend and nothing to restore. */
+  onMount(() => {
+    void session.restore();
+  });
 
   afterNavigate(({ from, to }) => {
     if (to?.url.pathname && from?.url.pathname === to.url.pathname) return;
@@ -27,7 +37,7 @@
      document, and the crawler would pick one of them. No claims, logos,
      statistics or images are invented to fill any of these out. -->
 <svelte:head>
-  <meta name="theme-color" content="#0e1512" />
+  <meta name="theme-color" content="#060605" />
   <meta property="og:site_name" content={SITE_NAME} />
   <meta name="twitter:card" content="summary" />
 </svelte:head>

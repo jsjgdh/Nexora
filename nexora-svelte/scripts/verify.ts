@@ -3,10 +3,10 @@
 import { JSDOM } from "jsdom";
 import assert from "node:assert";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 // jsdom globals for the DOM-dependent check engine
 const dom = new JSDOM("", { url: "http://localhost/" });
@@ -85,6 +85,7 @@ import {
 } from "../src/lib/document-rules";
 import { currentTrustBlock, renderTrustBlock } from "./trust-report";
 import { draftOf, mergeStates, meaningfulWork, protectCompleted, receiptEvidenceFor } from "../src/lib/sync-core";
+import { isExpiring, parseSessionStart, refreshDelayMs, tokenExpiryMs } from "../src/lib/session-core";
 import { recommend, nodeStateFor, prereqsMet, continueTarget, missionActionLabel } from "../src/lib/recommend";
 import { actionVerb } from "../src/lib/format";
 
@@ -108,8 +109,8 @@ function fails(missionId: string, code: string): string[] {
 
 console.log("== content integrity ==");
 ok(
-  "46 missions on the path: 2 orientation entries, 15 Go language and algorithms missions, 26 web missions, and 3 engineering scenarios",
-  ALL_MISSIONS.length === 46
+  "60 missions on the path: 2 orientation entries, 15 Go language and algorithms missions, 29 web missions (including backend), and 3 engineering scenarios",
+  ALL_MISSIONS.length === 60
 );
 ok(
   "the three engineering scenarios are the non-web, non-Go missions",
@@ -118,8 +119,8 @@ ok(
 const goWorkspaceMissions = ALL_MISSIONS.filter((m) => m.language === "go");
 const webWorkspaceMissions = ALL_MISSIONS.filter((m) => m.language !== "go" && m.language !== "node" && m.stageId !== "orientation");
 const legacyWorkspaceMissions = ALL_MISSIONS.filter((m) => m.language !== "node");
-ok("the legacy cohort remains 15 Go missions and 26 web missions", goWorkspaceMissions.length === 15 && webWorkspaceMissions.length === 26);
-ok("every legacy mission still resolves to exactly one editable source at its original path", legacyWorkspaceMissions.length === 43 && legacyWorkspaceMissions.every((m) => {
+ok("the cohort has 26 Go missions and 29 web missions (including new backend missions)", goWorkspaceMissions.length === 26 && webWorkspaceMissions.length === 29);
+ok("every mission resolves to exactly one editable source at its original path", legacyWorkspaceMissions.length === 57 && legacyWorkspaceMissions.every((m) => {
   const files = workspaceFilesFor(m);
   return files.length === 1 && files[0].editable && files[0].path === (m.fileName ?? "index.html") && files[0].content === m.starterCode;
 }));
@@ -1394,7 +1395,13 @@ console.log("== execution router: where does this work run? ==");
 
 console.log("== go missions execute the learner's own program ==");
 {
-  const goMissions = ALL_MISSIONS.filter((m) => m.language === "go");
+  // The language and algorithms layers only. The application layers' Go missions
+  // are proven the same way, in their own pass further down.
+  const isFoundationsLayer = (m: (typeof ALL_MISSIONS)[number]) => {
+    const layer = stageById(m.stageId)?.layerId;
+    return layer === "language" || layer === "dsa";
+  };
+  const goMissions = ALL_MISSIONS.filter((m) => m.language === "go" && isFoundationsLayer(m));
   if (goMissions.length === 0) {
     console.log("-- skipped: no Go missions authored yet");
   } else {
@@ -2434,9 +2441,9 @@ console.log("\n== a learner is never left without a next step ==");
 
   const landing = readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8");
   ok(
-    "the public entry links to the real account-free first mission",
-    landing.includes('const firstMission = "/mission/how-programs-run"') &&
-      landing.includes('href={firstMission}')
+    "the public entry leads with the IDE download, not a browser mission",
+    landing.includes('const downloadHref = "/download"') &&
+      landing.includes("href={downloadHref}")
   );
   const roadmap = readFileSync(new URL("../src/routes/roadmap/+page.svelte", import.meta.url), "utf8");
   const summary = roadmap.slice(roadmap.indexOf('aria-label="Reviewer command gutter"'));
@@ -2452,30 +2459,31 @@ console.log("\n== a learner is never left without a next step ==");
 
 console.log("\n== the front door describes the real product ==");
 {
-  // 6.1 The root is the public entry, the learner roadmap lives at
-  // /roadmap, the preview lists real layers with authored counts, and the
-  // primary call opens the real account-free first mission. Every number on
-  // the page is computed from the curriculum source it names.
+  // The pivot: there is one way to learn, and it is the desktop IDE. The root
+  // sells the download (with the base course inside it), the browser sign-in,
+  // and the tier unlock — never a browser mission. These pin that shape so a
+  // copy edit cannot quietly reintroduce the second way to learn.
   const landing = readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8");
   ok(
-    "the preview lists the real layers, stages and authored counts from the curriculum source",
-    landing.includes("LAYERS") &&
-      landing.includes("stagesInLayer") &&
-      landing.includes("ALL_MISSIONS.filter") &&
-      landing.includes("{stages.map((stage) => stage.title).join")
+    "the page names no browser mission as a way to learn",
+    !landing.includes("/mission/") && !landing.includes("firstMission")
   );
   ok(
-    "the mission count is computed, not a hardcoded claim",
-    landing.includes("{ALL_MISSIONS.length} missions are written today")
+    "every call on the page opens the download",
+    landing.includes('const downloadHref = "/download"') &&
+      landing.split("href={downloadHref}").length - 1 >= 3
   );
   ok(
-    "every call on the page opens the same real first mission",
-    landing.includes('const firstMission = "/mission/how-programs-run"') &&
-      landing.split("href={firstMission}").length - 1 >= 3
+    "the page states the base course ships inside the download",
+    landing.includes("Base course included") && landing.includes("bundled")
   );
   ok(
-    "the page states the honest runner constraint where the learner meets it",
-    landing.includes("Running Go code needs the") && landing.includes("the app says so when it is unavailable")
+    "the page explains the browser sign-in: the IDE opens this site",
+    landing.includes("opens this site") && landing.includes("approve")
+  );
+  ok(
+    "the page states the tier decides which courses appear in the IDE",
+    landing.includes("tier") && landing.includes("appear inside the IDE")
   );
 }
 
@@ -2679,14 +2687,114 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       sessionSrc.includes("/api/auth/link")
   );
 
-  const headerSrc = readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8");
+  // L-3 + M-1. A session is two credentials with two homes: a minutes-long
+  // access token the page holds, and a thirty-day refresh token in an HttpOnly
+  // cookie the page cannot read. Either half alone is the failure those findings
+  // described — a cookie nothing spends, or a client holding a credential it can
+  // never renew.
+  const brokerSrc = readFileSync(new URL("../src/lib/server/session-broker.ts", import.meta.url), "utf8");
   ok(
-    "the header runs sync exactly while a token exists — start on sign-in, stop on sign-out",
-    headerSrc.includes("syncRunningFor") && headerSrc.includes("sync.stop()") && headerSrc.includes("sync.start()")
+    "the refresh token lives in an HttpOnly cookie, scoped to the session endpoints",
+    brokerSrc.includes('REFRESH_COOKIE = "nexora_refresh"') &&
+      brokerSrc.includes("httpOnly: true") &&
+      brokerSrc.includes('sameSite: "lax"') &&
+      brokerSrc.includes('COOKIE_PATH = "/auth/session"')
   );
   ok(
-    "an account switch restarts the engine rather than inheriting it",
-    headerSrc.includes("sync.stop()") && headerSrc.includes("account switch")
+    "and the app's own server sets it, so the cookie is same-site by construction",
+    brokerSrc.includes("GATEWAY_URL") && brokerSrc.includes("gatewayBase")
+  );
+  ok(
+    "every session endpoint exists on the app's origin",
+    ["login", "register", "refresh", "logout", "logout-all"].every((name) =>
+      existsSync(new URL(`../src/routes/auth/session/${name}/+server.ts`, import.meta.url))
+    )
+  );
+  ok(
+    "the sign-in reply carries the access token and never the refresh token",
+    (() => {
+      const src = readFileSync(new URL("../src/routes/auth/session/login/+server.ts", import.meta.url), "utf8");
+      const reply = src.slice(src.lastIndexOf("return json({"));
+      return reply.includes("accessToken") && !reply.includes("refreshToken");
+    })()
+  );
+  ok(
+    "the client stores no refresh token and renews through the cookie",
+    !sessionSrc.includes("refreshToken") &&
+      sessionSrc.includes('SESSION_BASE = "/auth/session"') &&
+      sessionSrc.includes("REFRESH_PATH") &&
+      sessionSrc.includes("LOGOUT_PATH")
+  );
+  // Sign-out has to end the credential, not just the ability to renew it. The
+  // page sends the access token it is holding to its own server, which passes it
+  // to the service; the service records that token's jti and the gateway refuses
+  // it from the next request on. Drop either half of that hand-off and sign-out
+  // silently goes back to "the token keeps working for the rest of its TTL" —
+  // which is exactly the gap this closes, so both halves are asserted here.
+  const logoutRouteSrc = readFileSync(
+    new URL("../src/routes/auth/session/logout/+server.ts", import.meta.url),
+    "utf8"
+  );
+  ok(
+    "signing out presents the access token, so the server can revoke that exact credential",
+    sessionSrc.includes("authorization: `Bearer ${token}`") && logoutRouteSrc.includes("accessToken: presented")
+  );
+  // "Sign out everywhere" needs the same hand-off for the same reason, and it is
+  // the one account action that has to report failure: the sessions it ends are on
+  // devices the learner cannot see, so a silent failure would tell them everyone
+  // else was signed out when nobody was.
+  ok(
+    "signing out everywhere names the account with a real token and reports what happened",
+    sessionSrc.includes("async logoutEverywhere(") &&
+      sessionSrc.includes("LOGOUT_ALL_PATH") &&
+      sessionSrc.includes('headers: { authorization: `Bearer ${token}` }') &&
+      sessionSrc.includes("may still be signed in") &&
+      readFileSync(
+        new URL("../src/routes/auth/session/logout-all/+server.ts", import.meta.url),
+        "utf8"
+      ).includes("accessToken: presented")
+  );
+  // The access token is memory-only. What makes that worth asserting is that it is
+  // easy to undo by accident — one line adding persistence would look harmless and
+  // would put a bearer credential back where any script on the origin can read it
+  // (Missing Security Controls #4).
+  ok(
+    "the access token is never written to storage, and the old key is dropped",
+    !sessionSrc.includes("setItem") && sessionSrc.includes("LEGACY_TOKEN_KEY")
+  );
+  ok(
+    "so a reload re-earns the session from the cookie — and says so, rather than claiming signed out",
+    sessionSrc.includes("async restore(") &&
+      sessionSrc.includes("await this.refresh()") &&
+      sessionSrc.includes("restoring")
+  );
+  // Every rendering surface that can say "you have no session" has to wait for the
+  // answer, or a signed-in learner meets a sign-in prompt on every reload for as
+  // long as the round trip takes. (Non-rendering consumers — sync's `enabled`, the
+  // runner's precondition — are preconditions, not claims, and correctly just wait
+  // for a token.)
+  const claimsASession = srcFiles.filter(
+    (f) => f.endsWith(".svelte") && readFileSync(f, "utf8").includes("session.loggedIn")
+  );
+  ok(
+    `every surface that can claim a session is missing waits until it is known (${claimsASession.length} surfaces)`,
+    claimsASession.length >= 4 && claimsASession.every((f) => readFileSync(f, "utf8").includes("session.restoring"))
+  );
+  ok(
+    "it renews on a timer as well as retrying a 401, so a stale token is replaced rather than surfaced",
+    sessionSrc.includes("setTimeout") && sessionSrc.includes("this.refresh()") && sessionSrc.includes("resolveToken")
+  );
+
+  const headerSrc = readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8");
+  ok(
+    "the header is a front door, not a classroom: it never starts the progress-sync engine",
+    !headerSrc.includes("sync.start()") && !headerSrc.includes("syncRunningFor")
+  );
+  ok(
+    "and it links no browser mission, search, or resume CTA",
+    !headerSrc.includes('href="/mission') &&
+      !headerSrc.includes("site-search") &&
+      !headerSrc.includes("recommend(")
   );
 
   const authSrc = readFileSync(new URL("../src/routes/auth/+page.svelte", import.meta.url), "utf8");
@@ -2919,6 +3027,122 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
     `every class the editor paints code with is a theme token (${editorClasses.length} syntax roles)`,
     editorClasses.length >= 4 && strayClasses.length === 0
   );
+}
+
+console.log("\n== a five-minute access token does not end a session: the renewal is scheduled, not hoped for ==");
+{
+  // The server issues an access token that lives minutes and a refresh
+  // credential that lives thirty days, so a learner must never meet the end of
+  // the short one. The client renews *before* it dies — asserted here on the
+  // arithmetic, because this is the part that can silently stop being true.
+  // This is L-3's prevention note: a credential the server issues and the client
+  // ignores has to fail in CI rather than in someone's lesson.
+  const now = 1_800_000_000_000;
+  const TTL_MS = 5 * 60 * 1000;
+  const delay = refreshDelayMs(now + TTL_MS, now);
+  ok(
+    "the store renews before the token expires, with room for a slow request",
+    delay !== null && delay > 0 && delay < TTL_MS
+  );
+  ok("a five-minute token is renewed after four minutes", delay === 240_000);
+  ok(
+    "a token inside the window counts as expiring; an unknown lifetime is left alone",
+    isExpiring(now + 30_000, now) && !isExpiring(now + 2 * 60_000, now) && !isExpiring(null, now)
+  );
+  ok(
+    "a delay is never zero or negative — a timer that fires immediately would loop",
+    refreshDelayMs(now + 1_000, now) === 1_000 && refreshDelayMs(null, now) === null
+  );
+  const jwtLike = (claims: Record<string, unknown>): string =>
+    `x.${Buffer.from(JSON.stringify(claims)).toString("base64url")}.y`;
+  ok(
+    "the token's own exp is the clock, not a stored copy of it",
+    tokenExpiryMs(jwtLike({ exp: 1_800_000_100 })) === 1_800_000_100_000
+  );
+  ok(
+    "an opaque or damaged token yields no expiry rather than a wrong one",
+    tokenExpiryMs("not-a-jwt") === null &&
+      tokenExpiryMs(null) === null &&
+      tokenExpiryMs(jwtLike({ exp: "soon" })) === null
+  );
+  const start = parseSessionStart({ accessToken: "t", expiresIn: 300, user: { id: "u", email: "e", name: null } });
+  ok("the broker's reply is validated before it becomes a session", start?.expiresIn === 300 && start?.user?.id === "u");
+  ok(
+    "and a reply with a string, zero, or absent lifetime is refused rather than stored",
+    parseSessionStart({ accessToken: "t", expiresIn: "300" }) === null &&
+      parseSessionStart({ accessToken: "t", expiresIn: 0 }) === null &&
+      parseSessionStart({ accessToken: "", expiresIn: 300 }) === null &&
+      parseSessionStart(null) === null
+  );
+}
+
+{
+  // The IDE download surface. The desktop app is a real product, but a build is
+  // advertised only when one exists: the page reads one switch and, when it is
+  // unset, says so plainly instead of rendering a dead link. These assert that
+  // honesty and that the surface is reachable from where the courses are shown.
+  const downloadSrc = readFileSync(new URL("../src/routes/download/+page.svelte", import.meta.url), "utf8");
+  ok(
+    "the download page reads the one switch that says a build exists",
+    downloadSrc.includes("PUBLIC_IDE_DOWNLOAD_URL")
+  );
+  ok(
+    "and names no browser fallback when no build is published — the IDE is the only way to learn",
+    downloadSrc.includes("not published yet") &&
+      !downloadSrc.includes("Start in the browser") &&
+      downloadSrc.includes('href="/pricing"')
+  );
+  ok(
+    "the real link comes from the configured URL, never a placeholder href",
+    downloadSrc.includes("href={downloadUrl}") && !downloadSrc.includes('href="#"')
+  );
+  ok(
+    "the download is stated to be free, with later phases gated per entitlement",
+    /download is free/i.test(downloadSrc) && /per entitlement/i.test(downloadSrc)
+  );
+
+  const headerSrc = readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8");
+  ok(
+    "the shared nav reaches the download page",
+    headerSrc.includes('{ href: "/download", label: "Get the IDE" }')
+  );
+
+  const homeSrc = readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8");
+  ok("the home footer links the IDE download", homeSrc.includes('href="/download"'));
+
+  const pricingDlSrc = readFileSync(new URL("../src/routes/pricing/+page.svelte", import.meta.url), "utf8");
+  ok("pricing links the IDE download from the free plan", pricingDlSrc.includes('href="/download"'));
+  ok(
+    "and its billing effect latches on failure, so an unreachable service is asked once",
+    /\.finally\(\(\) => \{[^}]*loaded = true;/.test(pricingDlSrc) &&
+      !/plans = p\.plans;\s*loaded = true;/.test(pricingDlSrc)
+  );
+
+  ok("the download page is in the sitemap", sitemapPaths().includes("/download"));
+
+  // The GitHub-style browser sign-in for the IDE: the IDE shows a code, the
+  // learner approves it here, and the tier decides which courses appear there.
+  // These pin the page's shape: it approves through the session (never a pasted
+  // token), refuses unknown codes without saying why, and states the tier rule
+  // from the public manifest rather than inventing it.
+  const ideSrc = readFileSync(new URL("../src/routes/auth/ide/+page.svelte", import.meta.url), "utf8");
+  ok(
+    "the IDE sign-in page approves a typed code through the signed-in session",
+    ideSrc.includes("session.approveDevice") && ideSrc.includes('path="/auth/ide"')
+  );
+  ok(
+    "it refuses unknown codes without an oracle, and names the expiry",
+    ideSrc.includes("not valid") && ideSrc.includes("15 minutes")
+  );
+  ok(
+    "it shows what each tier unlocks from the public manifest, not from copy",
+    ideSrc.includes("session.ideManifest") && ideSrc.includes("per entitlement")
+  );
+  ok(
+    "the account page points IDE learners at it",
+    readFileSync(new URL("../src/routes/auth/+page.svelte", import.meta.url), "utf8").includes('href="/auth/ide"')
+  );
+  ok("the IDE sign-in page is in the sitemap", sitemapPaths().includes("/auth/ide"));
 }
 
 console.log(`\nALL ${passed} ASSERTIONS PASSED`);

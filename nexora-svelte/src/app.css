@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
-/* NEXORA — The Night Desk.
-   Learners code at night, so the ground is a dark, desaturated slate-green
-   desk. The interface's own artifact — the answer pad — is the only light
-   surface on the page, and the brass lamp marks what is reachable next.
-   State hues are inks, each meaning one thing: brass = open/next, green =
+/* NEXORA — Black Desk.
+   Learners code at night, so the ground is black and every surface above it is
+   a warm charcoal step. The interface's own artifact — the answer pad — is the
+   only light surface on the page, and the brass lamp marks what is reachable
+   next. State hues are inks, each meaning one thing: brass = open/next, green =
    passed, amber = under review, rose = needs work, violet = approved. No
    gradients, no glows, one shadow in the whole build (the pad, on the desk). */
 @theme {
-  --color-ground: #0e1512;
-  --color-panel: #151e1a;
-  --color-raised: #1c2723;
-  --color-raised-2: #24322c;
-  --color-rule: #2c3a34;
-  --color-rule-strong: #3f514a;
+  --color-ground: #060605;
+  --color-panel: #0e0e0c;
+  --color-raised: #151513;
+  --color-raised-2: #1e1e1a;
+  --color-rule: #262622;
+  --color-rule-strong: #3e3d37;
 
-  --color-control: #7d9089;
+  --color-control: #8f8e87;
 
-  --color-ink: #eef2ed;
-  --color-muted: #a9b7b0;
-  --color-faint: #8fa09a;
+  --color-ink: #f2f1ec;
+  --color-muted: #abaaa3;
+  --color-faint: #8d8c85;
 
   /* State channels — meaning is fixed, never decorative */
   --color-accent: #c9a227;
@@ -347,16 +347,16 @@ details.nexora-details > summary::-webkit-details-marker {
 }
 
 /* Compat: the mission workspace, editor, header, and supporting screens
-   address these learning-UI tokens and motions. The night-desk theme above is
+   address these learning-UI tokens and motions. The black-desk theme above is
    authoritative for new work; this block keeps shipped screens rendering
    until they migrate, on the same palette rather than a second one. */
 @theme {
   --color-mint: #c9a227;
   --color-mint-dim: #a8871f;
-  --color-graphite: #0e1512;
-  --color-elevated: #151e1a;
-  --color-elevated-2: #1c2723;
-  --color-line: #2c3a34;
+  --color-graphite: #060605;
+  --color-elevated: #0e0e0c;
+  --color-elevated-2: #151513;
+  --color-line: #262622;
   --color-success: #56c08d;
   --color-warning: #e0913c;
   --color-error: #f48075;

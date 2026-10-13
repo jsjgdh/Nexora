@@ -1,7 +1,14 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { apiConfigured, session } from "$lib/session.svelte";
-  import { clerkConfigured, clerkStatus, mountClerkAuth, signOutEverywhere } from "$lib/clerk";
+  // Aliased: this page has its own `signOutEverywhere` (the account-wide control
+  // below), and importing Clerk's helper under the same name would collide with it.
+  import {
+    clerkConfigured,
+    clerkStatus,
+    mountClerkAuth,
+    signOutEverywhere as signOutOfClerk,
+  } from "$lib/clerk";
   import Button from "$lib/components/Button.svelte";
   import { cn } from "$lib/format";
   import PageHead from "$lib/components/PageHead.svelte";
@@ -19,6 +26,12 @@
   let name = $state("");
   let error = $state<string | null>(null);
   let busy = $state(false);
+
+  /** Account-wide sign-out: armed by one click, performed by the next. */
+  let confirmEverywhere = $state(false);
+  let everywhereBusy = $state(false);
+  let everywhereError = $state<string | null>(null);
+  let everywhereNote = $state<string | null>(null);
 
   let clerkTab = $state<"sign-in" | "sign-up">("sign-in");
   let clerkNode: HTMLDivElement | null = $state(null);
@@ -68,14 +81,51 @@
   }
 
   async function signOut() {
-    if (clerkConfigured) await signOutEverywhere();
+    if (clerkConfigured) await signOutOfClerk();
     else session.logout();
+  }
+
+  /**
+   * "Sign out everywhere": end every session this account has, not just this one.
+   *
+   * Two clicks, like the reset control on the profile page, because it is the one
+   * account action a learner cannot undo for the devices they are not holding —
+   * every other tab and phone will have to sign in again. The notes live outside
+   * the signed-in branch: this page stops being signed in the moment the call
+   * starts, and the learner still needs to read the answer.
+   *
+   * Offered in local mode only (see the template): the platform cut-off is judged
+   * on a token's `jti`, and a Clerk token carries none the gateway can look up, so
+   * for those accounts the sessions live in Clerk and this call would be answered
+   * 401 by a service that never issued them.
+   */
+  async function signOutEverywhere() {
+    if (!confirmEverywhere) {
+      confirmEverywhere = true;
+      everywhereError = null;
+      return;
+    }
+    confirmEverywhere = false;
+    everywhereBusy = true;
+    everywhereError = null;
+    everywhereNote = null;
+    try {
+      const ended = await session.logoutEverywhere();
+      everywhereNote =
+        ended > 0
+          ? `Every session for this account is ended (${ended} ended just now). Sign in again wherever you need to.`
+          : "Every session for this account is ended. Sign in again wherever you need to.";
+    } catch (err) {
+      everywhereError = err instanceof Error ? err.message : "Could not end your other sessions.";
+    } finally {
+      everywhereBusy = false;
+    }
   }
 </script>
 
 <PageHead
   title={pageTitle("Account")}
-  description="Sign in to sync your progress across devices, or keep working locally — every mission, check and export works without an account."
+  description="Sign in to unlock IDE courses per your tier, or keep the bundled base course locally — it works without an account."
   path="/auth"
 />
 
@@ -84,6 +134,8 @@
   <h1 class="mt-2 text-[26px] font-semibold tracking-[-0.02em] sm:text-[32px]">
     {#if session.loggedIn}
       You are signed in
+    {:else if session.restoring}
+      One moment
     {:else if clerkConfigured && apiConfigured}
       Welcome
     {:else if mode === "login"}
@@ -93,11 +145,43 @@
     {/if}
   </h1>
   <p class="mt-2 text-[14px] leading-relaxed text-muted">
-    An account backs your progress up and lets you continue on another device. The curriculum is
-    fully usable without one.
+    An account unlocks IDE courses per your tier. The base course bundled in
+    the IDE works without one.
   </p>
 
-  {#if !apiConfigured}
+  <div class="thread mt-6">
+    <p class="stamp text-accent">signing in the IDE</p>
+    <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
+      In the IDE, choose sign-in: it shows a short code and opens this site.
+      Approve the code at <a href="/auth/ide" class="text-accent underline underline-offset-4">IDE sign-in</a>
+      and the IDE signs itself in — your password is typed here and nowhere else.
+    </p>
+  </div>
+
+  <!-- Outside the signed-in branch on purpose: ending every session signs this page
+       out too, and the learner still has to see whether it worked. -->
+  {#if everywhereNote}
+    <p class="mt-4 border border-approved/40 bg-approved/5 px-3 py-2 text-[13px] leading-relaxed text-ink" role="status">
+      {everywhereNote}
+    </p>
+  {/if}
+  {#if everywhereError}
+    <p class="mt-4 border border-removed/40 bg-removed/5 px-3 py-2 text-[13px] leading-relaxed text-ink" role="alert">
+      {everywhereError}
+    </p>
+  {/if}
+
+  {#if session.restoring}
+    <!-- Shown before the sign-in form, never instead of the account: the session
+         is a cookie the page cannot read, so the form would be a guess. -->
+    <div class="thread mt-6">
+      <p class="stamp text-muted">checking your session</p>
+      <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
+        Your session lives in a cookie this page cannot read, so it asks the server before it can
+        say whether you are signed in. One moment.
+      </p>
+    </div>
+  {:else if !apiConfigured}
     <div class="thread mt-6">
       <p class="stamp text-review">cloud accounts not connected</p>
       <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
@@ -127,7 +211,25 @@
             Open the roadmap
           </a>
           <Button variant="ghost" onclick={signOut}>Sign out</Button>
+          {#if !clerkConfigured}
+            <Button variant="outline" disabled={everywhereBusy} onclick={signOutEverywhere}>
+              {everywhereBusy
+                ? "Ending every session…"
+                : confirmEverywhere
+                  ? "Click again to end every session"
+                  : "Sign out everywhere"}
+            </Button>
+          {/if}
         </div>
+        <p class="mt-3 text-[12px] leading-relaxed text-faint">
+          {#if clerkConfigured}
+            Sessions on this account are managed by Clerk, so ending them on every device is done
+            from its dashboard — signing out here ends this device.
+          {:else}
+            “Sign out everywhere” ends every session on this account — every tab and every device,
+            including this one — for a device you no longer hold or trust.
+          {/if}
+        </p>
       </div>
     </div>
   {:else if clerkConfigured}

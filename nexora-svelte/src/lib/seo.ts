@@ -21,15 +21,15 @@ export const SITE_URL_FALLBACK = "http://localhost:5173";
 export const SITE_NAME = "NEXORA";
 
 /** The shell's title, and the title any page without its own falls back to. */
-export const SITE_TITLE = "NEXORA — From the basics to building for real";
+export const SITE_TITLE = "NEXORA — Download the IDE. Base course included.";
 
 /** The shell's description: the promise with its framing clause. */
 export const SITE_DESCRIPTION =
-  "A personalized programming curriculum: learn one language properly, then algorithms, then an application track — with every step decided by evidence, not by time served.";
+  "NEXORA teaches programming inside a desktop IDE: download it with the base course bundled, sign in through the browser, and unlock courses per your tier.";
 
 /** The same promise without the frame — what a social card has room for. */
 export const SITE_TAGLINE =
-  "Learn one language properly, then algorithms, then an application track — with every step decided by evidence, not by time served.";
+  "Learn programming inside a desktop IDE — with every step decided by evidence, not by time served.";
 
 /** Crawlers truncate around here; a description longer than this is wasted. */
 export const META_DESCRIPTION_LIMIT = 160;
@@ -63,6 +63,9 @@ const PUBLIC_PATHS = [
   "/onboarding",
   "/diagnostic",
   "/auth",
+  "/auth/ide",
+  "/verify",
+  "/download",
 ];
 
 /** Every indexable path: the public pages, then one URL per mission. */

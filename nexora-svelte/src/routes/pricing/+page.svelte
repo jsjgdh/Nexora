@@ -18,11 +18,19 @@
     currentPeriodEnd: string | null;
   } | null>(null);
   let loaded = $state(false);
+  let attemptedEpoch = $state(-1);
   let loading = $state(false);
   let error = $state<string | null>(null);
   let busy = $state<string | null>(null);
 
   $effect(() => {
+    // Re-arm on an identity change (sign-in / account switch), never on a token
+    // renewal — `session.epoch` is exactly that signal (see session.svelte.ts).
+    const epoch = session.epoch;
+    if (epoch !== attemptedEpoch) {
+      attemptedEpoch = epoch;
+      loaded = false;
+    }
     if (apiConfigured && session.loggedIn && !loaded && !loading) {
       loading = true;
       error = null;
@@ -30,12 +38,15 @@
         .then(([s, p]) => {
           subscription = s.subscription;
           plans = p.plans;
-          loaded = true;
         })
         .catch((e) => {
           error = e instanceof Error ? e.message : "Could not load plans.";
         })
         .finally(() => {
+          // Latch whether it worked or not: one attempt per account, even when
+          // the service is unreachable, so a failure cannot re-trigger this
+          // effect in a loop (the old code latched `loaded` only on success).
+          loaded = true;
           loading = false;
         });
     }
@@ -63,9 +74,9 @@
   <p class="stamp text-accent">pricing</p>
   <h1 class="mt-2 text-[26px] font-semibold tracking-[-0.02em] sm:text-[32px]">Free to learn. Pro to run more.</h1>
   <p class="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted">
-    The curriculum, the diagnostic, local learning, assessment, accounts and sync stay free.
-    Pro only ever adds a larger metered allowance for hosted services — never gates, certificates
-    or outcomes.
+    Learning happens in the IDE: the base course ships inside the download and
+    stays free, and assessment is never gated. Pro unlocks the further courses
+    per your tier — they appear inside the IDE you already have.
   </p>
 
   <div class="mt-8 grid gap-4 sm:grid-cols-2">
@@ -79,12 +90,18 @@
           <li>Evidence export of everything you prove</li>
           <li>Account with cross-device sync</li>
         </ul>
-        <div class="mt-4">
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a
+            href="/download"
+            class="inline-flex border border-accent bg-accent/10 px-4 py-2 text-[13px] font-medium text-accent hover:bg-accent/20"
+          >
+            Get the IDE
+          </a>
           <a
             href="/roadmap"
             class="inline-flex border border-rule px-4 py-2 text-[13px] font-medium text-ink hover:border-accent hover:text-accent"
           >
-            Start learning
+            Browse the curriculum
           </a>
         </div>
       </div>
@@ -97,6 +114,10 @@
           <p class="text-[13px] leading-relaxed text-muted">
             This build runs in local mode. Pro plans appear here once a platform is connected.
           </p>
+        {:else if session.restoring}
+          <!-- Not "sign in to see plans": on a fresh load we do not yet know
+               whether this learner is signed in — the cookie is unreadable here. -->
+          <p class="stamp text-muted">checking your session…</p>
         {:else if !session.loggedIn}
           <p class="text-[13px] leading-relaxed text-muted">
             <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to see Pro
