@@ -30,6 +30,8 @@ const gwConfig = await import("../services/gateway/dist/config.js");
 const gwAuth = await import("../services/gateway/dist/auth.js");
 const gwLimits = await import("../services/gateway/dist/limits.js");
 const gwProxy = await import("../services/gateway/dist/proxy.js");
+const gwEntitlement = await import("../services/gateway/dist/entitlement.js");
+const gwRevocation = await import("../services/gateway/dist/revocation.js");
 const execValidate = await import("../services/execution/dist/validate.js");
 const execSub = await import("../services/execution/dist/runners/subprocess.js");
 const execDocker = await import("../services/execution/dist/runners/docker.js");
@@ -95,6 +97,32 @@ describe("service-kit", () => {
       assert.ok(Array.isArray(e.details));
     }
   });
+  it("assertSecret refuses short values and the documented placeholders", () => {
+    // A secret that passes validation while being the value published in
+    // .env.example is an impersonation primitive, not a weak password: the JWT
+    // secret mints a token for any user id, and the mesh key also seeds the
+    // run-receipt signing key.
+    assert.equal(kit.assertSecret("X", "a".repeat(32)).length, 32);
+    assert.throws(() => kit.assertSecret("X", "short"), /32 characters/);
+    assert.throws(() => kit.assertSecret("X", ""), /32 characters/);
+    assert.throws(
+      () => kit.assertSecret("X", "change-me-to-32-plus-random-characters"),
+      /placeholder/
+    );
+    assert.ok(kit.isPlaceholderSecret("change-me-internal-mesh-key"), "the shipped mesh placeholder is not a key");
+    assert.ok(kit.isPlaceholderSecret("replace_me_with_a_real_one"), "underscored variant");
+    assert.equal(kit.isPlaceholderSecret(SECRET), false, "generated hex is not a placeholder");
+  });
+  it("clientIp prefers the gateway's header over the caller's own view", () => {
+    // A service must key its limiter on what the gateway resolved. req.ip there
+    // is derived from X-Forwarded-For, which the gateway strips, so it is the
+    // gateway's address for every request — one bucket for the whole internet.
+    assert.equal(kit.clientIp({ headers: { "x-client-ip": "203.0.113.9" }, ip: "10.0.0.1" }), "203.0.113.9");
+    assert.equal(kit.clientIp({ headers: { "x-client-ip": ["203.0.113.9"] }, ip: "10.0.0.1" }), "203.0.113.9");
+    assert.equal(kit.clientIp({ headers: {}, ip: "10.0.0.1" }), "10.0.0.1", "direct access falls back to req.ip");
+    assert.equal(kit.clientIp({ headers: { "x-client-ip": "   " }, ip: "10.0.0.1" }), "10.0.0.1", "blank is not an address");
+    assert.equal(kit.clientIp({ headers: {} }), "unknown");
+  });
   it("requireUserId reads gateway header, 401 without it", () => {
     assert.equal(kit.requireUserId({ headers: { "x-user-id": "u1" } }), "u1");
     try {
@@ -123,6 +151,18 @@ describe("auth crypto", () => {
     assert.throws(() => authCrypto.signAccessToken("u"), /32 characters/);
     process.env.AUTH_JWT_SECRET = SECRET;
   });
+  it("refuses to sign with the documented placeholder secret", async () => {
+    const saved = process.env.AUTH_JWT_SECRET;
+    try {
+      process.env.AUTH_JWT_SECRET = "change-me-to-32-plus-random-characters";
+      // 38 characters — long enough for the old length-only check, and exactly
+      // what the README's `cp .env.example .env` would have produced.
+      assert.throws(() => authCrypto.signAccessToken("u"), /placeholder/);
+    } finally {
+      if (saved === undefined) delete process.env.AUTH_JWT_SECRET;
+      else process.env.AUTH_JWT_SECRET = saved;
+    }
+  });
 });
 
 describe("gateway pure units", () => {
@@ -133,6 +173,16 @@ describe("gateway pure units", () => {
     const billing = c.routes.find((r) => r.prefix === "/api/billing");
     assert.deepEqual(billing.publicPaths, ["/api/billing/webhooks/dodo"]);
     assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: "x" }), /32 characters/);
+    // The shipped placeholders are long enough to pass a length check, which is
+    // precisely why they were dangerous. Both must be refused outright.
+    assert.throws(
+      () => gwConfig.loadConfig({ AUTH_JWT_SECRET: "change-me-to-32-plus-random-characters" }),
+      /placeholder/
+    );
+    assert.throws(
+      () => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: "change-me-internal-mesh-key" }),
+      /placeholder/
+    );
     assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, FRONTEND_URL: "notaurl" }), /http/);
     assert.equal(gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, PORT: "18080" }).port, 18080);
     assert.equal(
@@ -140,6 +190,18 @@ describe("gateway pure units", () => {
       19090
     );
     assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, AUTH_MODE: "weird" }), /AUTH_MODE/);
+    // The degradation bound. Default a minute; 0 is a supported value (fail closed
+    // on an unreachable check) and a negative one is not a way to ask for more; the
+    // ceiling keeps a typo from buying availability past the point where the
+    // credentials it covers have expired on their own.
+    assert.equal(c.revocationClearTtlMs, 60_000, "a minute of grace by default");
+    assert.equal(c.revocationTimeoutMs, 2_000);
+    const clearTtl = (v) => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, REVOCATION_CLEAR_TTL_MS: v }).revocationClearTtlMs;
+    assert.equal(clearTtl("0"), 0, "0 means strict: every unanswerable check is a 503");
+    assert.equal(clearTtl("-5000"), 0, "a negative bound is not a request to trust anything");
+    assert.equal(clearTtl("5000"), 5_000);
+    assert.equal(clearTtl("600000"), 300_000, "clamped to the point where the fallback stops covering live credentials");
+    assert.throws(() => clearTtl("soon"), /REVOCATION_CLEAR_TTL_MS/);
     assert.throws(
       () => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, AUTH_MODE: "clerk" }),
       /CLERK_SECRET_KEY or CLERK_JWT_KEY/
@@ -160,14 +222,28 @@ describe("gateway pure units", () => {
     });
     assert.deepEqual(clerkDefault.clerkAuthorizedParties, ["https://app.example.com"]);
   });
-  it("bearer parsing + local verification", async () => {
+  it("bearer parsing + local verification, including the id revocation needs", async () => {
     const jwt = (await import("jsonwebtoken")).default;
     const local = gwAuth.localVerifier(SECRET);
-    const t = jwt.sign({ sub: "u9" }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
-    assert.equal(await gwAuth.bearerUserId(`Bearer ${t}`, local), "u9");
-    assert.equal(await gwAuth.bearerUserId(undefined, local), null);
-    assert.equal(await gwAuth.bearerUserId("Bearer garbage", local), null);
-    assert.equal(await gwAuth.bearerUserId("Basic abc", local), null);
+    const now = Math.floor(Date.now() / 1000);
+    const t = jwt.sign({ sub: "u9", jti: "id-9" }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
+    const id = await gwAuth.bearerIdentity(`Bearer ${t}`, local);
+    assert.equal(id.userId, "u9");
+    assert.equal(id.jti, "id-9", "the edge needs the token's own id to ask about it");
+    assert.ok(id.expiresAtMs > now * 1000, "and when it stops mattering, to bound the cache");
+    assert.equal(await gwAuth.bearerIdentity(undefined, local), null);
+    assert.equal(await gwAuth.bearerIdentity("Bearer garbage", local), null);
+    assert.equal(await gwAuth.bearerIdentity("Basic abc", local), null);
+    // A token minted before ids existed is still verified: it simply cannot be
+    // revoked, and nothing may pretend otherwise.
+    const older = jwt.sign({ sub: "u10" }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
+    const noId = await gwAuth.bearerIdentity(`Bearer ${older}`, local);
+    assert.equal(noId.userId, "u10");
+    assert.equal(noId.jti, null);
+    // A token that states no lifetime reports none, so nothing in the cache
+    // pretends it knows when that id stops mattering.
+    const timeless = jwt.sign({ sub: "u11" }, SECRET, { algorithm: "HS256" });
+    assert.equal((await gwAuth.bearerIdentity(`Bearer ${timeless}`, local)).expiresAtMs, null);
   });
   it("clerk verification against a self-signed RS256 key", async () => {
     const { generateKeyPairSync } = await import("node:crypto");
@@ -189,7 +265,10 @@ describe("gateway pure units", () => {
     };
     const token = jwt.sign(payload, privateKey, { algorithm: "RS256" });
     const v = gwAuth.clerkVerifier({ jwtKey: publicKey, authorizedParties: ["http://localhost:3000"] });
-    assert.equal(await v.verify(token), "user_clerk_1");
+    assert.equal((await v.verify(token)).userId, "user_clerk_1");
+    // Clerk owns revocation for its own sessions; the edge must not invent a
+    // lookup against an id Clerk does not promise to keep stable.
+    assert.equal((await v.verify(token)).jti, null);
     await assert.rejects(v.verify(token + "x"));
     const expired = jwt.sign({ ...payload, iat: now - 600, nbf: now - 600, exp: now - 300 }, privateKey, {
       algorithm: "RS256",
@@ -235,6 +314,19 @@ describe("gateway pure units", () => {
     assert.equal(h["x-internal-key"], MESH);
     assert.equal(h["x-request-id"], "r1");
     assert.equal(h["content-type"], "application/json");
+    // x-entitled is the entitlement gate's verdict: injected only when the gate
+    // cleared the request, and never echoed from a client that sends it.
+    assert.equal(h["x-entitled"], undefined, "not entitled unless the gate says so");
+    const paid = gwProxy.buildForwardHeaders(
+      { "x-entitled": "1" },
+      { userId: "u1", internalKey: MESH, requestId: "r1", entitled: true }
+    );
+    assert.equal(paid["x-entitled"], "1", "the gate's verdict is injected downstream");
+    const forged = gwProxy.buildForwardHeaders(
+      { "x-entitled": "1" },
+      { userId: "u1", internalKey: MESH, requestId: "r1" }
+    );
+    assert.equal(forged["x-entitled"], undefined, "a client-sent x-entitled is stripped, not echoed");
   });
 
   it("a client cannot choose its own identity, mesh key, trace id or proxy hop", () => {
@@ -243,8 +335,10 @@ describe("gateway pure units", () => {
     // a client copy is impersonation the moment any anonymous route asks.
     const spoofed = {
       "x-user-id": "victim",
+      "x-entitled": "1",
       "x-internal-key": "guess",
       "x-request-id": "client-chosen",
+      "x-client-ip": "9.9.9.9",
       "x-forwarded-for": "1.2.3.4",
       "x-forwarded-host": "evil.example",
       "x-forwarded-proto": "http",
@@ -255,17 +349,31 @@ describe("gateway pure units", () => {
     // Anonymous request (e.g. a public webhook path): nothing may survive.
     const anon = gwProxy.buildForwardHeaders(spoofed, { userId: null, internalKey: "", requestId: "r1" });
     assert.equal(anon["x-user-id"], undefined, "no client-chosen identity");
+    assert.equal(anon["x-entitled"], undefined, "no client-chosen entitlement");
     assert.equal(anon["x-internal-key"], undefined, "no client-chosen mesh key");
     assert.equal(anon["x-request-id"], "r1", "the trace id is ours, not theirs");
     for (const h of ["x-forwarded-for", "x-forwarded-host", "x-forwarded-proto", "x-real-ip", "forwarded"]) {
       assert.equal(anon[h], undefined, `${h} must not be forwarded`);
     }
+    // A service keys its limiter on x-client-ip, so a client-chosen address
+    // would let one caller walk around that throttle by inventing a new one.
+    assert.equal(anon["x-client-ip"], undefined, "the address is ours to resolve, not theirs to assert");
     assert.equal(anon["x-custom"], "keep", "unrelated headers still pass through");
     // Authenticated request: identity is the verified one, never the spoof.
     const authed = gwProxy.buildForwardHeaders(spoofed, { userId: "u1", internalKey: MESH, requestId: "r2" });
     assert.equal(authed["x-user-id"], "u1");
+    assert.equal(authed["x-entitled"], undefined, "entitlement comes from the gate, never the header");
     assert.equal(authed["x-internal-key"], MESH);
     assert.equal(authed["x-request-id"], "r2");
+    assert.equal(authed["x-client-ip"], undefined, "no address unless we resolved one");
+    // When we DID resolve one, our value replaces whatever the client sent.
+    const withAddr = gwProxy.buildForwardHeaders(spoofed, {
+      userId: "u1",
+      internalKey: MESH,
+      requestId: "r3",
+      clientIp: "203.0.113.7",
+    });
+    assert.equal(withAddr["x-client-ip"], "203.0.113.7", "our resolved address wins over the client's");
   });
 
   it("proxy trust is opt-in and refuses a blanket true", () => {
@@ -291,22 +399,492 @@ describe("gateway pure units", () => {
   });
 });
 
+describe("gateway entitlement cache", () => {
+  it("caches a grant and lets it expire", async () => {
+    let calls = 0;
+    const cache = new gwEntitlement.EntitlementCache(1000, async () => {
+      calls++;
+      return true;
+    });
+    assert.equal(await cache.get("u", 0), "entitled");
+    assert.equal(await cache.get("u", 500), "entitled");
+    assert.equal(calls, 1, "a fresh grant is served from cache within the TTL");
+    assert.equal(await cache.get("u", 1001), "entitled");
+    assert.equal(calls, 2, "an expired grant is re-asked: a cached grant must not outlive its TTL");
+  });
+  it("caches a denial only until the webhook path invalidates it", async () => {
+    let answer = false;
+    let calls = 0;
+    const cache = new gwEntitlement.EntitlementCache(60_000, async () => {
+      calls++;
+      return answer;
+    });
+    assert.equal(await cache.get("u", 0), "not_entitled");
+    answer = true; // the learner subscribes while the denial is still cached
+    assert.equal(await cache.get("u", 10), "not_entitled", "still the cached denial");
+    assert.equal(calls, 1);
+    cache.invalidate(); // this is what proxying the billing webhook does
+    assert.equal(await cache.get("u", 20), "entitled", "a cached denial must not survive a successful checkout");
+    assert.equal(calls, 2);
+  });
+  it("invalidate can drop a single user", async () => {
+    const seen = [];
+    const cache = new gwEntitlement.EntitlementCache(60_000, async (u) => {
+      seen.push(u);
+      return true;
+    });
+    await cache.get("a", 0);
+    await cache.get("b", 0);
+    cache.invalidate("a");
+    await cache.get("a", 1);
+    await cache.get("b", 1);
+    assert.deepEqual(seen, ["a", "b", "a"], "only the dropped user is re-asked");
+  });
+  it("a billing outage reads as unknown, never a denial, and is not cached", async () => {
+    let calls = 0;
+    const cache = new gwEntitlement.EntitlementCache(60_000, async () => {
+      calls++;
+      throw new Error("billing down");
+    });
+    assert.equal(await cache.get("u", 0), "unknown");
+    assert.equal(await cache.get("u", 1), "unknown");
+    assert.equal(calls, 2, "an outage is retried, not remembered as a denial");
+  });
+  it("billingLookup reads entitled from the subscription view and throws on a non-2xx", async () => {
+    const srv = http.createServer((req, res) => {
+      if (req.url === "/subscription") {
+        const uid = req.headers["x-user-id"];
+        if (uid === "down") {
+          res.statusCode = 503;
+          res.end("{}");
+          return;
+        }
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify({ subscription: { entitled: uid === "yes" } }));
+        return;
+      }
+      res.statusCode = 404;
+      res.end("{}");
+    });
+    await new Promise((r) => srv.listen(18099, "127.0.0.1", r));
+    try {
+      const lookup = gwEntitlement.billingLookup({ url: "http://127.0.0.1:18099", internalKey: MESH, timeoutMs: 2000 });
+      assert.equal(await lookup("yes"), true);
+      assert.equal(await lookup("no"), false);
+      await assert.rejects(() => lookup("down"), /503/);
+    } finally {
+      await new Promise((r) => srv.close(r));
+    }
+  });
+});
+
+describe("gateway revocation (jti denylist)", () => {
+  /* Sign-out has to end the credential in hand, not just the family it renews
+     with. The edge verifies a token by signature and then asks the auth service
+     whether the id it carries was revoked. Three answers, and only two are
+     verdicts — the third is what these tests pin down. */
+
+  /* A check carries the whole subject — the id, the user, and the token's own
+     issue time — because an account-wide sign-out is judged on the last two (see
+     the auth service's revocation-store.ts). The helper keeps these tests about
+     one thing each. */
+  const subject = (jti, extra = {}) => ({
+    jti,
+    userId: null,
+    issuedAtMs: null,
+    expiresAtMs: Date.now() + 300_000,
+    ...extra,
+  });
+  /* The degradation bound these units are exercised with. The production value
+     comes from REVOCATION_CLEAR_TTL_MS (see the config test). */
+  const CLEAR_TTL = 30_000;
+
+  it("a revoked id is remembered; a clear answer is re-asked every time", async () => {
+    const asked = [];
+    const cache = new gwRevocation.RevocationCache(async (s) => {
+      asked.push(s.jti);
+      return { revoked: s.jti === "revoked-1" };
+    }, CLEAR_TTL);
+    const exp = Date.now() + 300_000;
+    const revoked = { verdict: "revoked", reason: "credential", degraded: false };
+    assert.deepEqual(await cache.status(subject("revoked-1", { expiresAtMs: exp })), revoked);
+    assert.deepEqual(await cache.status(subject("revoked-1", { expiresAtMs: exp })), revoked);
+    assert.deepEqual(asked, ["revoked-1"], "a revoked id is asked about once");
+    assert.equal(cache.size, 1, "and only revoked ids are held");
+    // The clear answer must not be cached: caching it would give back exactly the
+    // window this check exists to close — sign out, and the next request sails
+    // through on a verdict from a moment ago.
+    const clear = await cache.status(subject("live-1", { expiresAtMs: exp }));
+    assert.deepEqual(
+      clear,
+      { verdict: "clear", reason: null, degraded: false },
+      "a live token is answered from the service, not from memory"
+    );
+    assert.equal((await cache.status(subject("live-1", { expiresAtMs: exp }))).verdict, "clear");
+    assert.deepEqual(asked, ["revoked-1", "live-1", "live-1"], "a live token is re-asked every request");
+    assert.equal(cache.size, 1);
+  });
+
+  it("remembers a revocation only until the token it names would have expired", async () => {
+    let calls = 0;
+    const cache = new gwRevocation.RevocationCache(async () => {
+      calls += 1;
+      return { revoked: calls === 1 }; // revoked once, then the service says otherwise
+    }, 0);
+    const s = subject("j", { expiresAtMs: 1_000 });
+    assert.equal((await cache.status(s, 0)).verdict, "revoked");
+    assert.equal((await cache.status(s, 0)).verdict, "revoked");
+    assert.equal(calls, 1, "still inside the token's life: answered from the cache");
+    // Past its expiry the id cannot matter again, so the entry is swept and the
+    // same id is asked about rather than answered from a stale verdict.
+    assert.equal((await cache.status(s, 2_000)).verdict, "clear");
+    assert.equal(calls, 2);
+  });
+
+  it("an account cut-off is refused every time, never remembered, and attributed to the account", async () => {
+    /* The cut-off is a moving boundary: the learner signs out everywhere and then
+       signs in again, and the token from that new sign-in is one they asked for.
+       Remembering the refusal against the id would be remembering a fact that is
+       only true until the next sign-in — the failure this test exists to prevent. */
+    const asked = [];
+    const cache = new gwRevocation.RevocationCache(async (s) => {
+      asked.push(s.jti);
+      return { revoked: true, reason: "account" };
+    }, CLEAR_TTL);
+    const cut = subject("pre-cutoff", { userId: "u1", issuedAtMs: 1_000 });
+    assert.deepEqual(await cache.status(cut), { verdict: "revoked", reason: "account", degraded: false });
+    assert.deepEqual(await cache.status(cut), { verdict: "revoked", reason: "account", degraded: false });
+    assert.deepEqual(asked, ["pre-cutoff", "pre-cutoff"], "a boundary that can move is asked about every time");
+    assert.equal(cache.size, 0, "so nothing about it is held");
+    assert.equal(cache.stats().fromCache, 0, "and nothing was answered from memory");
+  });
+
+  it("an unreachable check is unknown, never a verdict, and is not cached", async () => {
+    let calls = 0;
+    const cache = new gwRevocation.RevocationCache(async () => {
+      calls += 1;
+      throw new Error("auth down");
+    }, CLEAR_TTL);
+    assert.equal((await cache.status(subject("j"))).verdict, "unknown");
+    assert.equal((await cache.status(subject("j"))).verdict, "unknown");
+    assert.equal(calls, 2, "an outage is retried, not remembered as a verdict either way");
+    assert.equal(cache.size, 0);
+    assert.equal(cache.stats().unanswered, 2, "an outage is counted, so it can be seen");
+  });
+
+  it("counts refusals, clear answers and outages separately, for the log line", async () => {
+    const cache = new gwRevocation.RevocationCache(async (s) => {
+      if (s.jti === "down") throw new Error("auth down");
+      return { revoked: s.jti === "revoked-1" };
+    }, CLEAR_TTL);
+    assert.deepEqual(
+      cache.stats(),
+      { asked: 0, refused: { credential: 0, account: 0 }, unanswered: 0, degraded: 0, fromCache: 0 },
+      "quiet until something happens — a line every interval would stop being read"
+    );
+    const exp = Date.now() + 300_000;
+    await cache.status(subject("revoked-1", { expiresAtMs: exp })); // asked, refused
+    await cache.status(subject("revoked-1", { expiresAtMs: exp })); // refused from memory
+    await cache.status(subject("live-1")); // asked, clear
+    assert.deepEqual(await cache.status(subject("down")), {
+      verdict: "unknown",
+      reason: null,
+      degraded: false,
+    });
+    assert.deepEqual(cache.stats(), {
+      // `asked` counts definite answers only; the outage is its own number, so
+      // "the service is down" and "everyone is signing out" cannot be confused.
+      asked: 2,
+      refused: { credential: 2, account: 0 },
+      unanswered: 1,
+      degraded: 0,
+      fromCache: 1,
+    });
+  });
+
+  /* The degradation mode, which exists because a check in front of every
+     authenticated request turns an auth-service blip into a product outage. The
+     tests below are as much about what it must NOT do as about what it does. */
+  it("a confirmed clear is a fallback, never a shortcut: the service is asked every time", async () => {
+    const asked = [];
+    const cache = new gwRevocation.RevocationCache(async (s) => {
+      asked.push(s.jti);
+      return { revoked: false };
+    }, CLEAR_TTL);
+    assert.deepEqual(await cache.status(subject("live-1")), {
+      verdict: "clear",
+      reason: null,
+      degraded: false,
+    });
+    assert.equal(cache.clearSize, 1, "the clear answer is recorded…");
+    await cache.status(subject("live-1"));
+    assert.deepEqual(asked, ["live-1", "live-1"], "…but it never answers for the service");
+  });
+
+  it("when the check cannot be answered, a recently confirmed clear carries the request — and says so", async () => {
+    let up = true;
+    const cache = new gwRevocation.RevocationCache(async () => {
+      if (!up) throw new Error("auth down");
+      return { revoked: false };
+    }, CLEAR_TTL);
+    const s = subject("live-1");
+    const now = 1_000_000;
+    assert.equal((await cache.status(s, now)).degraded, false, "confirmed while the service is up");
+
+    up = false;
+    assert.deepEqual(
+      await cache.status(s, now + 1_000),
+      { verdict: "clear", reason: null, degraded: true },
+      "inside the bound the request proceeds — flagged, so the edge logs it"
+    );
+    assert.equal(cache.stats().degraded, 1, "and every degraded allow is counted");
+    assert.equal(cache.stats().unanswered, 0, "it is not also counted as a failure");
+
+    // Past the bound it stops: the entry is a moment, not a policy, so a long
+    // outage converges back to 503 on its own.
+    assert.deepEqual(await cache.status(s, now + CLEAR_TTL + 1), {
+      verdict: "unknown",
+      reason: null,
+      degraded: false,
+    });
+    assert.equal(cache.stats().unanswered, 1);
+  });
+
+  it("an outage is not a blanket allow: a credential nobody confirmed still fails closed", async () => {
+    const cache = new gwRevocation.RevocationCache(async () => {
+      throw new Error("auth down");
+    }, CLEAR_TTL);
+    assert.deepEqual(await cache.status(subject("never-seen")), {
+      verdict: "unknown",
+      reason: null,
+      degraded: false,
+    });
+    assert.equal(cache.stats().degraded, 0, "nothing was degraded, because nothing had been confirmed");
+  });
+
+  it("a refusal always wins over a recorded clear, and 0 disables the fallback", async () => {
+    let mode = "clear";
+    const cache = new gwRevocation.RevocationCache(async () => {
+      if (mode === "down") throw new Error("auth down");
+      return mode === "revoked" ? { revoked: true } : { revoked: false };
+    }, CLEAR_TTL);
+    const s = subject("flip-flop");
+    await cache.status(s); // confirmed clear, recorded
+    mode = "revoked";
+    assert.equal((await cache.status(s)).verdict, "revoked");
+    assert.equal(cache.clearSize, 0, "a refusal drops the recorded clear for that credential");
+    mode = "down";
+    assert.equal(
+      (await cache.status(s)).verdict,
+      "revoked",
+      "so an outage can never serve the answer the service has since contradicted"
+    );
+
+    // An operator who wants the strict reading gets it: no bound, no fallback, and
+    // an unanswerable check is a 503 even for a credential just confirmed.
+    const strict = new gwRevocation.RevocationCache(async () => {
+      throw new Error("auth down");
+    }, 0);
+    assert.equal((await strict.status(subject("anything"))).verdict, "unknown");
+    assert.equal(strict.clearSize, 0, "nothing is recorded when the bound is 0");
+  });
+
+  it("reports its own state, so a monitor without log access can alert on an outage", async () => {
+    let mode = "clear";
+    const cache = new gwRevocation.RevocationCache(async () => {
+      if (mode === "down") throw new Error("auth down");
+      return { revoked: false };
+    }, CLEAR_TTL);
+    const now = 1_000_000;
+    assert.deepEqual(
+      cache.health(now),
+      {
+        authService: "unknown",
+        degraded: false,
+        outageMs: null,
+        clearTtlMs: CLEAR_TTL,
+        counters: { asked: 0, refused: { credential: 0, account: 0 }, unanswered: 0, degraded: 0, fromCache: 0 },
+        fallbackIds: 0,
+        cachedRefusals: 0,
+      },
+      "a fresh process has asked nothing yet, and that is not a failure to report"
+    );
+    await cache.status(subject("live-1"), now);
+    assert.equal(cache.health(now).authService, "reachable");
+    assert.equal(cache.health(now).fallbackIds, 1, "one credential can ride an outage");
+
+    mode = "down";
+    await cache.status(subject("live-1"), now + 1_000);
+    const during = cache.health(now + 1_000);
+    assert.equal(
+      during.authService,
+      "unreachable",
+      "a request served from the fallback is still a failed attempt, and must say so"
+    );
+    assert.equal(during.degraded, true, "the fallback is still buying availability — that is the alert");
+    assert.equal(during.outageMs, 0);
+    assert.equal(during.counters.degraded, 1);
+
+    const stale = cache.health(now + CLEAR_TTL + 1_000);
+    assert.equal(stale.degraded, false, "past the bound it is failing closed, not degrading");
+    assert.equal(stale.authService, "unreachable", "and the outage is still the story the monitor needs");
+    assert.equal(stale.outageMs, CLEAR_TTL, "measured from the first failure, not from the last attempt");
+
+    mode = "clear";
+    await cache.status(subject("live-1"), now + CLEAR_TTL + 2_000);
+    const after = cache.health(now + CLEAR_TTL + 2_000);
+    assert.equal(after.authService, "reachable");
+    assert.equal(after.outageMs, null, "recovery clears the outage clock…");
+    assert.equal(after.counters.degraded, 1, "…but the counters are cumulative since boot, on purpose");
+  });
+
+  it("revocationLookup sends the token's own subject over the mesh and refuses a non-answer", async () => {
+    const seen = [];
+    const srv = http.createServer((req, res) => {
+      let body = "";
+      req.on("data", (c) => (body += c));
+      req.on("end", () => {
+        const sent = JSON.parse(body || "{}") || {};
+        seen.push({ url: req.url, key: req.headers["x-internal-key"], body: sent });
+        if (sent.jti === "down-jti") {
+          res.statusCode = 500;
+          res.end("{}");
+          return;
+        }
+        res.setHeader("content-type", "application/json");
+        // A 200 that does not actually answer: "we could not read it" must not be
+        // read as "not revoked".
+        if (sent.jti === "mumble-jti") {
+          res.end(JSON.stringify({}));
+          return;
+        }
+        if (sent.jti === "account-jti") {
+          res.end(JSON.stringify({ revoked: true, reason: "account" }));
+          return;
+        }
+        res.end(JSON.stringify({ revoked: sent.jti === "revoked-jti" }));
+      });
+    });
+    await new Promise((r) => srv.listen(18098, "127.0.0.1", r));
+    try {
+      const lookup = gwRevocation.revocationLookup({
+        url: "http://127.0.0.1:18098",
+        internalKey: MESH,
+        timeoutMs: 2000,
+      });
+      const wire = (jti) => subject(jti, { userId: "u1", issuedAtMs: 1_700_000_000_000 });
+      assert.deepEqual(await lookup(wire("revoked-jti")), { revoked: true });
+      assert.deepEqual(await lookup(wire("live-jti")), { revoked: false });
+      assert.deepEqual(
+        await lookup(wire("account-jti")),
+        { revoked: true, reason: "account" },
+        "which half of the denylist decided rides back for the edge's log line"
+      );
+      assert.equal(seen[0].url, "/internal/revocations/check");
+      assert.equal(seen[0].key, MESH, "the mesh key is what makes this an internal call");
+      assert.deepEqual(
+        seen.map((s) => s.body.jti),
+        ["revoked-jti", "live-jti", "account-jti"],
+        "the id is what is asked about"
+      );
+      // Without the subject the service can only see the per-credential half of the
+      // denylist, and "sign out everywhere" reads as a no-op. It comes from the
+      // token the gateway just verified — never from anything a client sent.
+      assert.equal(seen[0].body.userId, "u1");
+      assert.equal(seen[0].body.issuedAtMs, 1_700_000_000_000);
+      assert.equal(
+        seen[0].body.expiresAtMs,
+        undefined,
+        "the expiry bounds this cache and nothing else, so it is not sent"
+      );
+      await assert.rejects(() => lookup(wire("down-jti")), /500/);
+      await assert.rejects(() => lookup(wire("mumble-jti")), /verdict/);
+    } finally {
+      await new Promise((r) => srv.close(r));
+    }
+  });
+});
+
 describe("gateway live proxy against stubs", () => {
   let gwProc = null;
+  let gwLog = "";
+  /** The gateway's structured log lines, parsed. A partial line is skipped. */
+  const gwLogLines = () =>
+    gwLog
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        try {
+          return JSON.parse(line);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
   let stubHits = [];
   let stub;
   const GW_PORT = 18080;
+  // Drives the auth service's denylist check, which the gateway asks over the
+  // mesh exactly as it asks billing for entitlement.
+  let revocationDown = false;
+  // Makes the stub fail the per-route `/health/ready` probe, so a mesh member
+  // appearing unhealthy can be exercised without stopping anything.
+  let healthDown = false;
+  // Accepts the connection and never answers, for the command's timeout path.
+  let healthHang = false;
+  const revokedJtis = new Set();
+  let revocationChecks = [];
+  // Stands in for billing's /subscription view so the paid-path tests can drive
+  // entitled / denied / outage per user id. An unlisted user defaults to denied.
+  const subscriptionMode = new Map();
   before(async () => {
     stub = http.createServer((req, res) => {
       let body = "";
       req.on("data", (c) => (body += c));
       req.on("end", () => {
         stubHits.push({ url: req.url, method: req.method, headers: req.headers, body });
+        // The gateway resolves entitlement by calling billing /subscription
+        // directly over the mesh (entitlement.ts). For the paid-path tests this
+        // stub IS billing: it answers from subscriptionMode, keyed by the
+        // x-user-id the gateway injects, so a test can flip a learner between
+        // entitled, denied and "billing is down" without a real billing service.
+        if (healthHang) return; // never answers: the client's own timeout is the only exit
+        if (req.url === "/health/ready" && healthDown) {
+          res.statusCode = 503;
+          res.end("{}");
+          return;
+        }
+        if (req.url === "/internal/revocations/check") {
+          const jti = (JSON.parse(body || "{}") || {}).jti;
+          revocationChecks.push(jti);
+          if (revocationDown) {
+            res.statusCode = 500;
+            res.end("{}");
+            return;
+          }
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ revoked: revokedJtis.has(jti) }));
+          return;
+        }
+        if (req.url === "/subscription") {
+          const mode = subscriptionMode.get(req.headers["x-user-id"]) ?? "denied";
+          if (mode === "down") {
+            res.statusCode = 500;
+            res.end("{}");
+            return;
+          }
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ subscription: { entitled: mode === "entitled" } }));
+          return;
+        }
         res.setHeader("content-type", "application/json");
         res.end(JSON.stringify({ stub: true }));
       });
     });
     await new Promise((r) => stub.listen(18081, "127.0.0.1", r));
+    // stdout/stderr are captured rather than ignored: "log loudly" is part of what
+    // the degradation mode is for, and a log line nobody can assert on is a log line
+    // nobody has read.
     gwProc = spawn("node", ["services/gateway/dist/index.js"], {
       cwd: root,
       env: {
@@ -322,9 +900,14 @@ describe("gateway live proxy against stubs", () => {
         EXECUTION_URL: "http://127.0.0.1:18081",
         TUTOR_URL: "http://127.0.0.1:18081",
         BILLING_URL: "http://127.0.0.1:18081",
+        // Short enough to wait out in a test: the degradation bound is a duration,
+        // and a duration that takes a minute to observe is a duration nobody tests.
+        REVOCATION_CLEAR_TTL_MS: "300",
       },
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "pipe"],
     });
+    gwProc.stdout.on("data", (c) => (gwLog += c));
+    gwProc.stderr.on("data", (c) => (gwLog += c));
     // wait for readiness
     for (let i = 0; i < 100; i++) {
       try {
@@ -471,6 +1054,419 @@ describe("gateway live proxy against stubs", () => {
       pre.headers.get("access-control-expose-headers"),
       "X-Execution-Daily-Remaining, X-Request-Id"
     );
+  });
+
+  // ---- Sign-out ends the credential, not just the session's ability to renew ----
+  // The stub above plays the auth service's denylist: a token that names itself is
+  // asked about before the request is trusted, so signing out takes effect on the
+  // next request rather than at the end of the token's five minutes.
+  const signWithJti = async (sub, jti) => {
+    const jwt = (await import("jsonwebtoken")).default;
+    return jwt.sign({ sub, jti }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
+  };
+
+  it("a signed-out token is refused at the edge and never forwarded", async () => {
+    stubHits = [];
+    revocationChecks = [];
+    revokedJtis.add("revoked-live-1");
+    const t = await signWithJti("u-revoked", "revoked-live-1");
+    const res = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(res.status, 401);
+    assert.equal((await res.json()).error.code, "token_revoked");
+    assert.equal(
+      stubHits.find((h) => h.url === "/summary"),
+      undefined,
+      "a revoked token is never forwarded — the whole point"
+    );
+    assert.deepEqual(revocationChecks, ["revoked-live-1"], "the id is what the service is asked about");
+    assert.equal(
+      stubHits.find((h) => h.url === "/internal/revocations/check").headers["x-internal-key"],
+      MESH,
+      "revocation is resolved over the mesh"
+    );
+
+    // The same token again: refused from the remembered answer without asking a
+    // second time, because a revoked id can never become valid again.
+    const again = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(again.status, 401);
+    assert.equal(revocationChecks.length, 1, "a revoked id is not re-checked");
+  });
+
+  it("a live token is checked on every request and works", async () => {
+    stubHits = [];
+    revocationChecks = [];
+    const t = await signWithJti("u-live-token", "live-live-1");
+    for (let i = 0; i < 2; i++) {
+      const r = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+      assert.equal(r.status, 200);
+    }
+    assert.equal(
+      revocationChecks.length,
+      2,
+      "a clear answer is not cached: that cache would be the window this removes"
+    );
+  });
+
+  it("an unreachable check is 503, never a silent allow", async () => {
+    stubHits = [];
+    revocationChecks = [];
+    revocationDown = true;
+    const t = await signWithJti("u-live-blip", "blip-live-1");
+    const res = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(res.status, 503);
+    assert.equal((await res.json()).error.code, "revocation_unavailable");
+    assert.equal(
+      stubHits.find((h) => h.url === "/summary"),
+      undefined,
+      "a session we cannot vouch for is not forwarded"
+    );
+    // The service recovers; nothing about the outage was remembered, so the very
+    // next request succeeds instead of waiting out a TTL.
+    revocationDown = false;
+    const back = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(back.status, 200, "an outage is not sticky");
+  });
+
+  it("a confirmed session rides out a short outage, and the bound is what ends the grace period", async () => {
+    stubHits = [];
+    revocationChecks = [];
+    const t = await signWithJti("u-degraded", "degraded-live-1");
+    // Confirmed clear while the check is answerable — that confirmation is the only
+    // thing the fallback is ever allowed to act on.
+    const live = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(live.status, 200);
+
+    revocationDown = true;
+    const through = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(through.status, 200, "the auth service is away, but this credential was confirmed moments ago");
+    assert.ok(
+      stubHits.some((h) => h.url === "/summary"),
+      "and the request was really forwarded — this is a degraded allow, not a stub"
+    );
+
+    // An operator has to be able to see this: the request succeeded, so nothing else
+    // in the platform complains, and the only trace of a sign-out that may have gone
+    // unseen for a moment is this line.
+    let degradedLine = null;
+    for (let i = 0; i < 40 && !degradedLine; i++) {
+      degradedLine = gwLogLines().find(
+        (l) => typeof l.msg === "string" && l.msg.includes("bounded stale answer")
+      );
+      if (!degradedLine) await new Promise((r) => setTimeout(r, 50));
+    }
+    assert.ok(degradedLine, "the degraded allow is logged loudly, not silently served");
+    assert.equal(degradedLine.degraded, 1, "and the line says how many requests rode through the window");
+    assert.equal(degradedLine.clearTtlMs, 300, "with the bound in force in the same line, so the exposure is readable");
+
+    // The bound (300 ms in this spawn) is what makes it a window and not a policy:
+    // past it the same token is refused, so a long outage converges back to failing
+    // closed instead of quietly trusting whatever it remembers.
+    await new Promise((r) => setTimeout(r, 400));
+    const after = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(after.status, 503, "the grace period is over, and the edge says so");
+    assert.equal((await after.json()).error.code, "revocation_unavailable");
+
+    // Recovery is immediate: nothing about the outage was remembered, because every
+    // request asks the service again the moment it can.
+    revocationDown = false;
+    const back = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(back.status, 200, "a recovered service is used at once");
+  });
+
+  it("a monitor sees the outage and the degradation without reading a log", async () => {
+    const t = await signWithJti("u-monitor", "monitor-live-1");
+    // Something for the counters to count, and a confirmation for the fallback.
+    const live = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(live.status, 200);
+
+    const healthy = await (await fetch(`${GW}/health/deep`)).json();
+    assert.equal(healthy.status, "ready", JSON.stringify(healthy));
+    assert.equal(healthy.revocations.authService, "reachable");
+    assert.equal(healthy.revocations.degraded, false);
+    assert.equal(healthy.revocations.outageMs, null);
+    assert.equal(healthy.revocations.clearTtlMs, 300, "the bound in force rides with the state it describes");
+    assert.ok(healthy.revocations.counters.asked >= 1, "the same counters the report line carries");
+    assert.ok(healthy.revocations.fallbackIds >= 1, "and the size of what could ride an outage");
+
+    // Reading the state must not itself ask the auth service: a dashboard polling
+    // health should not be part of the traffic it is watching.
+    const askedBefore = healthy.revocations.counters.asked;
+    await fetch(`${GW}/health/deep`);
+    const askedAfter = (await (await fetch(`${GW}/health/deep`)).json()).revocations.counters.asked;
+    assert.equal(askedAfter, askedBefore, "health reads do not perform checks");
+
+    revocationDown = true;
+    const during = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(during.status, 200, "traffic still flows — which is exactly why this needs a dashboard, not a log");
+
+    const degraded = await (await fetch(`${GW}/health/deep`)).json();
+    assert.equal(degraded.status, "degraded", "the edge reports the degradation, not just the mesh");
+    assert.equal(degraded.revocations.authService, "unreachable");
+    assert.equal(degraded.revocations.degraded, true);
+    assert.notEqual(degraded.revocations.outageMs, null, "with how long it has been that way");
+    assert.ok(degraded.revocations.counters.unanswered >= 1);
+    assert.ok(degraded.revocations.counters.degraded >= 1);
+    assert.ok(
+      degraded.checks.every((c) => c.ok),
+      "the mesh itself is fine: this is the revocation path, and the endpoint says so"
+    );
+
+    revocationDown = false;
+    const back = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(back.status, 200);
+    const recovered = await (await fetch(`${GW}/health/deep`)).json();
+    assert.equal(recovered.status, "ready", "and it clears itself once the service answers again");
+    assert.equal(recovered.revocations.authService, "reachable");
+    assert.equal(recovered.revocations.outageMs, null);
+  });
+
+  it("the health-check command fails loudly, and says why", async () => {
+    /* The command is the thing an operator actually runs, so it is exercised the way
+       they would: spawned as a process, with its exit status and its output read.
+       Three states matter — healthy, degraded because the auth service is away, and
+       "could not ask at all" — and the last one has its own status on purpose. */
+    revocationDown = false;
+    healthDown = false;
+    // Spawned, not spawnSync: the stub this gateway fans out to lives in *this*
+    // process, so a blocking child would starve the very requests the deep check
+    // makes — every mesh member would look down, and the test would be measuring
+    // its own harness.
+    const run = (...args) =>
+      new Promise((resolve) => {
+        const child = spawn(process.execPath, [join(root, "scripts", "healthcheck.mjs"), ...args], { cwd: root });
+        let stdout = "";
+        let stderr = "";
+        child.stdout.on("data", (c) => (stdout += c));
+        child.stderr.on("data", (c) => (stderr += c));
+        child.on("close", (status) => resolve({ status, stdout, stderr }));
+      });
+
+    // A confirmed check, so the revocation state reported below is "reachable".
+    const t = await signWithJti("u-health", "health-live-1");
+    const live = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal(live.status, 200);
+
+    const healthy = await run(GW);
+    assert.equal(healthy.status, 0, `expected healthy, got:\n${healthy.stdout}${healthy.stderr}`);
+    assert.match(healthy.stdout, /reports ready/);
+    assert.match(healthy.stdout, /revocation check reachable/, "the summary says what it checked");
+    assert.equal((await run(GW, "--quiet")).stdout, "", "--quiet exists because cron mails stdout");
+
+    // The auth service stops answering: requests still succeed on the bounded
+    // fallback, which is exactly the state a monitor has to be able to see.
+    revocationDown = true;
+    await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const degraded = await run(GW, "--json");
+    assert.equal(degraded.status, 1, `expected exit 1, got:\n${degraded.stdout}${degraded.stderr}`);
+    const parsed = JSON.parse(degraded.stdout);
+    assert.equal(parsed.ok, false);
+    assert.equal(parsed.status, "degraded", "the gateway's own verdict rides along for the monitor");
+    assert.equal(parsed.revocations.authService, "unreachable");
+    assert.ok(
+      parsed.reasons.some((r) => r.includes("auth service is not answering")),
+      `the reason names the auth service: ${degraded.stdout}`
+    );
+    assert.match(JSON.stringify(parsed.reasons), /unanswered/, "and how far the outage has gone");
+
+    const prose = await run(GW);
+    assert.equal(prose.status, 1);
+    assert.match(prose.stderr, /^FAIL /, "a failure goes to stderr, so cron mails it");
+    assert.match(prose.stderr, /auth service is not answering the revocation check/);
+
+    revocationDown = false;
+    await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    assert.equal((await run(GW, "--quiet")).status, 0, "and it clears itself once the service answers again");
+
+    // A mesh member's own check failing is reported by name — the `/health/deep`
+    // half of the command, which the revocation state is only one part of.
+    healthDown = true;
+    const mesh = await run(GW);
+    assert.equal(mesh.status, 1);
+    assert.match(mesh.stderr, /\/api\/auth health check failed/, `expected the failing member named: ${mesh.stderr}`);
+    assert.match(mesh.stderr, /gateway status is "degraded"/);
+    healthDown = false;
+
+    // Canned replies, for the two shapes the live gateway cannot show. A gateway that
+    // has been asked nothing yet is healthy — `unknown` is not a fault, which is the
+    // same judgement the endpoint itself makes.
+    let cannedBody = null;
+    const canned = http.createServer((_req, res) => {
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify(cannedBody));
+    });
+    await new Promise((r) => canned.listen(18078, "127.0.0.1", r));
+    try {
+      cannedBody = {
+        status: "ready",
+        checks: [{ service: "/api/auth", ok: true }],
+        revocations: {
+          authService: "unknown",
+          degraded: false,
+          outageMs: null,
+          clearTtlMs: 60_000,
+          counters: { asked: 0, refused: { credential: 0, account: 0 }, unanswered: 0, degraded: 0, fromCache: 0 },
+          fallbackIds: 0,
+          cachedRefusals: 0,
+        },
+      };
+      const fresh = await run("http://127.0.0.1:18078");
+      assert.equal(fresh.status, 0, `a fresh boot is not degraded: ${fresh.stderr}`);
+
+      // A gateway older than the revocation block must fail loudly rather than pass
+      // by omission: "no news" is precisely what this command cannot assess.
+      cannedBody = { status: "ready", checks: [] };
+      const older = await run("http://127.0.0.1:18078");
+      assert.equal(older.status, 2, `expected exit 2, got:\n${older.stdout}${older.stderr}`);
+      assert.match(older.stderr, /predates the check/);
+    } finally {
+      await new Promise((r) => canned.close(r));
+    }
+
+    // An endpoint that accepts the connection and then says nothing: the command's
+    // own timeout is what stops a crontab entry from piling up, and it has its own
+    // reason so the operator knows which failure they are looking at.
+    healthHang = true;
+    const hung = await run(GW, "--timeout=400");
+    assert.equal(hung.status, 2, `expected exit 2, got:\n${hung.stdout}${hung.stderr}`);
+    assert.match(hung.stderr, /no reply within 400ms/);
+    assert.match(hung.stderr, /exit 2: the check could not do its job/);
+    healthHang = false;
+
+    // Nothing listening at all: a different failure from "degraded", and a different
+    // status, so a monitor can page the right person rather than the on-call for the
+    // platform.
+    const gone = await run("http://127.0.0.1:18079", "--timeout=400");
+    assert.equal(gone.status, 2, `expected exit 2, got:\n${gone.stdout}${gone.stderr}`);
+    assert.match(gone.stderr, /request failed/);
+  });
+
+  it("a token that names no id is still verified — there is nothing to revoke", async () => {
+    stubHits = [];
+    revocationChecks = [];
+    const res = await fetch(`${GW}/api/progress/summary`, {
+      headers: { Authorization: `Bearer ${await sign("u-no-jti")}` },
+    });
+    assert.equal(res.status, 200);
+    assert.equal(revocationChecks.length, 0, "no id, no lookup: an older token is not guessed at");
+  });
+
+  // ---- The paid curriculum path, end to end through the real gateway ----
+  // Entitlement is resolved once, at the edge: a token goes in, billing is
+  // asked, and either the verdict rides downstream (x-entitled) or the request
+  // is denied before a single byte of phase content is forwarded. The stub above
+  // plays billing; subscriptionMode drives its answer per learner.
+  const GW = `http://127.0.0.1:${GW_PORT}`;
+  const sign = async (sub) => {
+    const jwt = (await import("jsonwebtoken")).default;
+    return jwt.sign({ sub }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
+  };
+
+  it("a paid phase with no token is 401 at the edge and never forwarded", async () => {
+    stubHits = [];
+    const res = await fetch(`${GW}/api/curriculum/ide/phases/ui`);
+    assert.equal(res.status, 401);
+    assert.equal((await res.json()).error.code, "unauthorized");
+    assert.equal(stubHits.length, 0, "denied before billing or the service is asked");
+  });
+
+  it("an entitled token reaches the phase with x-entitled injected, bearer stripped", async () => {
+    stubHits = [];
+    subscriptionMode.set("u-live-entitled", "entitled");
+    const res = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { Authorization: `Bearer ${await sign("u-live-entitled")}` },
+    });
+    assert.equal(res.status, 200);
+    const sub = stubHits.find((h) => h.url === "/subscription");
+    assert.ok(sub, "the gateway asked billing before forwarding");
+    assert.equal(sub.headers["x-user-id"], "u-live-entitled");
+    assert.equal(sub.headers["x-internal-key"], MESH, "billing is reached over the mesh");
+    const phase = stubHits.find((h) => h.url === "/ide/phases/ui");
+    assert.ok(phase, "the phase is forwarded only once billing clears it");
+    assert.equal(phase.headers["x-user-id"], "u-live-entitled");
+    assert.equal(phase.headers["x-entitled"], "1", "the gate's verdict rides downstream");
+    assert.equal(phase.headers["authorization"], undefined, "the bearer never reaches a service");
+  });
+
+  it("a non-entitled token is 402 and the phase body is never forwarded", async () => {
+    stubHits = [];
+    subscriptionMode.set("u-live-broke", "denied");
+    const res = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { Authorization: `Bearer ${await sign("u-live-broke")}` },
+    });
+    assert.equal(res.status, 402);
+    assert.equal((await res.json()).error.code, "entitlement_required");
+    assert.ok(stubHits.some((h) => h.url === "/subscription"), "billing was asked");
+    assert.equal(
+      stubHits.find((h) => h.url === "/ide/phases/ui"),
+      undefined,
+      "a denied learner is never forwarded the phase: 402, not content"
+    );
+  });
+
+  it("a client-forged x-entitled cannot open the gate", async () => {
+    stubHits = [];
+    // No token at all, but the client asserts entitlement.
+    const anon = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { "x-entitled": "1" },
+    });
+    assert.equal(anon.status, 401, "entitlement is not a client input");
+    // A real token for a non-entitled learner, plus the forged header.
+    subscriptionMode.set("u-live-forge", "denied");
+    const res = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { Authorization: `Bearer ${await sign("u-live-forge")}`, "x-entitled": "1" },
+    });
+    assert.equal(res.status, 402, "the forged header does not survive the gate");
+    assert.equal(
+      stubHits.find((h) => h.url === "/ide/phases/ui"),
+      undefined,
+      "nothing is forwarded on the strength of a forged header"
+    );
+  });
+
+  it("a billing outage is 503 (never a denial) and is not cached", async () => {
+    stubHits = [];
+    subscriptionMode.set("u-live-down", "down");
+    const t = await sign("u-live-down");
+    const r1 = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    assert.equal(r1.status, 503);
+    assert.equal((await r1.json()).error.code, "entitlement_unavailable");
+    // Billing recovers. Because "unknown" is never cached, the very next request
+    // succeeds with no TTL wait — an outage must not be remembered as a denial.
+    subscriptionMode.set("u-live-down", "entitled");
+    const r2 = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    assert.equal(r2.status, 200, "a transient outage is not sticky");
+  });
+
+  it("a cached denial does not survive a subscription: the webhook drops it", async () => {
+    stubHits = [];
+    subscriptionMode.set("u-live-flip", "denied");
+    const t = await sign("u-live-flip");
+    const denied1 = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    assert.equal(denied1.status, 402, "not subscribed yet");
+    // The learner subscribes; billing now says entitled, but the denial is
+    // cached, so without invalidation this stays 402 until the TTL lapses.
+    subscriptionMode.set("u-live-flip", "entitled");
+    const denied2 = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    assert.equal(denied2.status, 402, "the denial is still cached — exactly what the webhook fixes");
+    // Dodo posts the webhook; the gateway proxies it and drops every verdict.
+    const hook = await fetch(`${GW}/api/billing/webhooks/dodo`, {
+      method: "POST",
+      headers: { "content-type": "application/json", Origin: "http://localhost:3000" },
+      body: JSON.stringify({ type: "subscription.activated" }),
+    });
+    assert.equal(hook.status, 200);
+    const granted = await fetch(`${GW}/api/curriculum/ide/phases/ui`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    assert.equal(granted.status, 200, "a new subscription bites at once, not after the TTL");
   });
 
   // cleanup in e2e file scope is unnecessary; kill here via process exit hook
@@ -1099,6 +2095,63 @@ describe("execution docker args + queue + quotas", () => {
 });
 
 
+describe("execution saturation (in-process)", () => {
+  it("queue refuses work past maxDepth instead of queueing forever", async () => {
+    // "Bounded" used to mean only that concurrency was bounded: the waiting set
+    // grew without limit, each entry holding a socket and a promise for as long
+    // as the runner stayed busy.
+    const q = new execQueue.JobQueue(1, 1);
+    let release;
+    const running = q.run(() => new Promise((r) => { release = r; }));
+    const waiting = q.run(async () => "second");
+    await assert.rejects(
+      () => q.run(async () => "third"),
+      (e) => e instanceof execQueue.QueueSaturated
+    );
+    assert.equal(q.depth, 1, "the refused job was not queued");
+    release();
+    await running;
+    assert.equal(await waiting, "second", "the accepted job still runs FIFO");
+    assert.equal(q.maxObserved.n, 1, "concurrency is still respected");
+  });
+  it("a saturated runner answers 503 with Retry-After and refunds the run", async () => {
+    const routes = await import("../services/execution/dist/routes.js");
+    const app = await kit.createService("test-execution-saturated");
+    const quotas = new execQuotas.Quotas(5, 2);
+    // A queue already at capacity: `run` is what stays the same, so stub it.
+    const saturatedQueue = {
+      concurrency: 1,
+      maxDepth: 1,
+      get depth() {
+        return 1;
+      },
+      maxObserved: { n: 1 },
+      run: async () => {
+        throw new execQueue.QueueSaturated(1);
+      },
+    };
+    routes.registerExecutionRoutes(app, { queue: saturatedQueue, quotas, runner: "subprocess" });
+    await app.ready();
+    try {
+      const r = await app.inject({
+        method: "POST",
+        url: "/execute",
+        headers: { "x-user-id": "u-sat", "content-type": "application/json" },
+        payload: { language: "node", files: [{ path: "main.js", content: 'console.log(1)' }] },
+      });
+      assert.equal(r.statusCode, 503, r.body);
+      assert.equal(r.json().error.code, "runner_saturated");
+      assert.equal(r.headers["retry-after"], "5");
+      // Nothing ran, so nothing is charged: the concurrency slot was released
+      // by the route's finally and the daily run was refunded.
+      assert.equal(quotas.check("u-sat"), null, "no concurrency slot left held");
+      assert.equal(quotas.remaining("u-sat"), 5, "the reserved daily run was given back");
+    } finally {
+      await app.close();
+    }
+  });
+});
+
 describe("curriculum service (in-process)", () => {
   let app;
   before(async () => {
@@ -1149,6 +2202,68 @@ describe("curriculum service (in-process)", () => {
     assert.equal(r.headers["x-content-version"]?.length, 12);
     const n = await app.inject({ method: "GET", url: "/missions/nope" });
     assert.equal(n.statusCode, 404);
+  });
+  it("serves the IDE roadmap publicly: every phase by name and tier, no content", async () => {
+    const r = await app.inject({ method: "GET", url: "/ide/manifest" });
+    assert.equal(r.statusCode, 200, "the roadmap needs no account");
+    const m = r.json().manifest;
+    assert.equal(m.phases.length, 12, "the whole road is visible, not just the free loop");
+    const free = m.phases.filter((p) => p.tier === "free");
+    assert.equal(free.length, 1, "exactly one free phase");
+    assert.equal(free[0].id, "setup", "the free loop is the first phase");
+    // A roadmap row is a name and a size, never the work itself.
+    for (const p of m.phases) {
+      assert.deepEqual(
+        Object.keys(p).sort(),
+        ["activityCount", "authored", "goal", "id", "level", "tier", "title"],
+        `manifest row ${p.id} carries only roadmap fields`
+      );
+    }
+    assert.equal(r.headers["x-ide-content-version"]?.length, 12, "the IDE content version rides along");
+    assert.match(r.headers["cache-control"], /public/, "the roadmap is cacheable");
+  });
+  it("reports the IDE content version and shape", async () => {
+    const r = await app.inject({ method: "GET", url: "/ide/version" });
+    assert.equal(r.statusCode, 200);
+    const b = r.json();
+    assert.match(b.ideVersion, /^[0-9a-f]{12}$/);
+    assert.equal(b.phases, 12);
+    assert.equal(b.freePhases, 1);
+    assert.ok(b.activities > b.phases, "activities outnumber phases");
+  });
+  it("refuses a paid phase without a user, then without entitlement, with distinct codes", async () => {
+    const noUser = await app.inject({ method: "GET", url: "/ide/phases/ui" });
+    assert.equal(noUser.statusCode, 401, "no identity reads as 'sign in'");
+    assert.equal(noUser.json().error.code, "unauthorized");
+    const noEnt = await app.inject({ method: "GET", url: "/ide/phases/ui", headers: { "x-user-id": "u1" } });
+    assert.equal(noEnt.statusCode, 402, "identity but no subscription reads as 'subscribe'");
+    assert.equal(noEnt.json().error.code, "entitlement_required");
+  });
+  it("serves a paid phase to an entitled caller, and never caches it publicly", async () => {
+    const r = await app.inject({
+      method: "GET",
+      url: "/ide/phases/ui",
+      headers: { "x-user-id": "u1", "x-entitled": "1" },
+    });
+    assert.equal(r.statusCode, 200);
+    const b = r.json();
+    assert.equal(b.phase.id, "ui");
+    assert.ok(Array.isArray(b.phase.activities) && b.phase.activities.length > 0);
+    assert.equal(
+      Object.keys(b.activities).length,
+      b.phase.activities.length,
+      "only the activities this phase reaches, never the whole document"
+    );
+    for (const id of b.phase.activities) assert.ok(id in b.activities, `${id} is served with the phase`);
+    assert.match(r.headers["cache-control"], /no-store/, "a paid payload never sits in a shared cache");
+  });
+  it("404s an unknown phase for an entitled caller", async () => {
+    const r = await app.inject({
+      method: "GET",
+      url: "/ide/phases/nope",
+      headers: { "x-user-id": "u1", "x-entitled": "1" },
+    });
+    assert.equal(r.statusCode, 404);
   });
 });
 
@@ -1205,8 +2320,12 @@ describe("billing webhooks (in-process, fake pg)", () => {
         return { rows: has ? [{}] : [], rowCount: has ? 1 : 0 };
       }
       if (sql.startsWith("INSERT INTO billing_events")) {
+        // The atomic claim (M-4): the unique index on event_id is the arbiter,
+        // so a duplicate delivery inserts nothing and reports rowCount 0 — the
+        // same answer Postgres gives `ON CONFLICT DO NOTHING RETURNING`.
+        if (seenEvents.has(params[0])) return { rows: [], rowCount: 0 };
         seenEvents.add(params[0]);
-        return { rows: [], rowCount: 1 };
+        return { rows: [{ event_id: params[0] }], rowCount: 1 };
       }
       if (sql.startsWith("SELECT 1")) return { rows: [{ "?column?": 1 }], rowCount: 1 };
       if (sql.startsWith("SELECT * FROM billing_subscriptions")) return { rows: [], rowCount: 0 };
@@ -1343,6 +2462,66 @@ describe("billing webhooks (in-process, fake pg)", () => {
     assert.deepEqual(replay.json(), { ok: true, duplicate: true });
     const upserts = seen.filter((s) => s.sql.includes("billing_subscriptions"));
     assert.equal(upserts.length, 1, "the replay must not re-apply the subscription");
+  });
+  it("ignores a correctly-signed event from a foreign business_id (B-31)", async () => {
+    // A valid signature proves Dodo sent it, not that it is OUR merchant's.
+    // On a reused secret, a foreign subscription.active must touch no state and
+    // the event ledger, and still 200 (so the vendor stops retrying).
+    process.env.DODO_BUSINESS_ID = "biz_mine";
+    seen.length = 0;
+    const payload = {
+      business_id: "biz_OTHER",
+      type: "subscription.active",
+      timestamp: new Date().toISOString(),
+      data: { id: "sub_foreign", metadata: { user_id: "u-foreign", plan: "pro" } },
+    };
+    const raw = JSON.stringify(payload);
+    const id = "evt_foreign";
+    const ts = String(Math.floor(Date.now() / 1000));
+    const sig = signTestVector("whsec-test-1234567890", id, ts, raw);
+    const res = await app.inject({
+      method: "POST", url: "/webhooks/dodo",
+      headers: { "content-type": "application/json", "webhook-id": id, "webhook-timestamp": ts, "webhook-signature": sig },
+      payload: raw,
+    });
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.json(), { ok: true, ignored: "business_id" });
+    assert.equal(seen.filter((s) => s.sql.includes("billing_subscriptions")).length, 0, "foreign event applied no subscription");
+    assert.equal(seen.filter((s) => s.sql.startsWith("INSERT INTO billing_events")).length, 0, "foreign event not recorded");
+    delete process.env.DODO_BUSINESS_ID;
+  });
+  it("ignores a test-mode event in live mode, but honours a live one (B-30)", async () => {
+    // The cheapest "free Pro" vector: a sandbox payment must never unlock the
+    // live tier. Keyed off DODO_PAYMENTS_BASE (real money), not NODE_ENV.
+    process.env.DODO_PAYMENTS_BASE = "https://live.dodopayments.com";
+    const ts = String(Math.floor(Date.now() / 1000));
+    const post = async (body, id) => {
+      const raw = JSON.stringify(body);
+      const sig = signTestVector("whsec-test-1234567890", id, ts, raw);
+      const res = await app.inject({
+        method: "POST", url: "/webhooks/dodo",
+        headers: { "content-type": "application/json", "webhook-id": id, "webhook-timestamp": ts, "webhook-signature": sig },
+        payload: raw,
+      });
+      return res;
+    };
+    seen.length = 0;
+    const sandbox = await post(
+      { business_id: "b1", test_mode: true, type: "subscription.active", timestamp: new Date().toISOString(), data: { id: "sub_sandbox", metadata: { user_id: "u-sandbox", plan: "pro" } } },
+      "evt_testmode"
+    );
+    assert.equal(sandbox.statusCode, 200);
+    assert.deepEqual(sandbox.json(), { ok: true, ignored: "test_mode" });
+    assert.equal(seen.filter((s) => s.sql.includes("billing_subscriptions")).length, 0, "test-mode event applied no subscription");
+    // And a genuine live (non-test) event still applies — we did not break real money.
+    seen.length = 0;
+    const real = await post(
+      { business_id: "b1", test_mode: false, type: "subscription.active", timestamp: new Date().toISOString(), data: { id: "sub_real", metadata: { user_id: "u-real", plan: "pro" } } },
+      "evt_live"
+    );
+    assert.equal(real.statusCode, 200);
+    assert.ok(seen.some((s) => s.sql.includes("billing_subscriptions")), "live (non-test) event still applies");
+    delete process.env.DODO_PAYMENTS_BASE;
   });
 });
 
@@ -1627,6 +2806,242 @@ describe("auth link (in-process, fake pg)", () => {
   });
 });
 
+describe("auth device flow (in-process, fake pg)", () => {
+  // The GitHub-style browser sign-in for the IDE: a device secret the IDE
+  // polls with, a short user code the learner approves in the browser, and a
+  // token pair issued only after approval. The fake pool stores rows the way
+  // the real schema does, so every query the routes issue has an answer.
+  let app;
+  const devices = new Map();
+  const fakePool = {
+    query: async (sql, params) => {
+      if (sql.startsWith("INSERT INTO device_codes")) {
+        const row = {
+          id: params[0],
+          device_code_hash: params[1],
+          user_code: params[2],
+          created_at: new Date("2026-01-01T00:00:00Z"),
+          expires_at: params[3],
+          approved_user_id: null,
+          approved_at: null,
+          consumed_at: null,
+        };
+        devices.set(row.id, row);
+        return { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("SELECT * FROM device_codes WHERE device_code_hash")) {
+        const hit = [...devices.values()].find((d) => d.device_code_hash === params[0]);
+        return hit ? { rows: [{ ...hit }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("SELECT * FROM device_codes WHERE user_code")) {
+        const hit = [...devices.values()].find((d) => d.user_code === params[0]);
+        return hit ? { rows: [{ ...hit }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("UPDATE device_codes SET approved_user_id")) {
+        const row = devices.get(params[1]);
+        if (row) {
+          row.approved_user_id = params[0];
+          row.approved_at = new Date("2026-01-01T00:00:00Z");
+        }
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("UPDATE device_codes SET consumed_at")) {
+        const row = devices.get(params[0]);
+        if (row && !row.consumed_at) row.consumed_at = new Date("2026-01-01T00:00:00Z");
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT id, email, name, created_at FROM users WHERE id =")) {
+        if (params[0] !== "u-device") return { rows: [], rowCount: 0 };
+        return {
+          rows: [{ id: "u-device", email: "ide@example.com", name: "Ide", created_at: new Date("2026-01-01T00:00:00Z") }],
+          rowCount: 1,
+        };
+      }
+      if (sql.startsWith("INSERT INTO refresh_tokens")) {
+        return { rows: [], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  };
+  before(async () => {
+    process.env.AUTH_JWT_SECRET ??= randomBytes(32).toString("hex");
+    const kit = await import("../packages/service-kit/dist/index.js");
+    const routes = await import("../services/auth/dist/routes.js");
+    app = await kit.createService("test-auth-device");
+    routes.registerAuthRoutes(app, fakePool);
+    await app.ready();
+  });
+  const start = () =>
+    app.inject({ method: "POST", url: "/device/start", headers: { "content-type": "application/json" }, payload: {} });
+  it("start issues a secret, a typable code, and a verification URI", async () => {
+    const res = await start();
+    assert.equal(res.statusCode, 200);
+    const body = res.json();
+    assert.match(body.deviceCode, /^[0-9a-f]{64}$/, "the device secret is 32 random bytes, hex");
+    assert.match(body.userCode, /^[A-Z2-9]{4}-[A-Z2-9]{4}$/, "the user code is 8 unambiguous characters");
+    assert.ok(!/[01IO]/.test(body.userCode.replace("-", "")), "no character the learner can mistype");
+    assert.equal(body.verificationUri, "/auth/ide");
+    assert.equal(body.expiresIn, 900);
+  });
+  it("two codes never collide, and the secret is stored hashed", async () => {
+    const a = (await start()).json();
+    const b = (await start()).json();
+    assert.notEqual(a.deviceCode, b.deviceCode);
+    assert.notEqual(a.userCode, b.userCode);
+    const stored = [...devices.values()].map((d) => d.device_code_hash);
+    assert.ok(!stored.includes(a.deviceCode), "the raw secret is never what is stored");
+  });
+  it("polling before approval stays pending, and an unknown secret does too", async () => {
+    const { deviceCode } = (await start()).json();
+    const pending = await app.inject({
+      method: "POST", url: "/device/poll",
+      headers: { "content-type": "application/json" },
+      payload: { deviceCode },
+    });
+    assert.equal(pending.statusCode, 200);
+    assert.equal(pending.json().status, "pending");
+    const unknown = await app.inject({
+      method: "POST", url: "/device/poll",
+      headers: { "content-type": "application/json" },
+      payload: { deviceCode: "0".repeat(64) },
+    });
+    assert.equal(unknown.json().status, "pending", "an unknown secret is pending, never an error to mine");
+  });
+  it("approve needs a signed-in learner, and a wrong code is a 404", async () => {
+    const anon = await app.inject({
+      method: "POST", url: "/device/approve",
+      headers: { "content-type": "application/json" },
+      payload: { userCode: "AAAA-BBBB" },
+    });
+    assert.equal(anon.statusCode, 401);
+    const wrong = await app.inject({
+      method: "POST", url: "/device/approve",
+      headers: { "content-type": "application/json", "x-user-id": "u-device" },
+      payload: { userCode: "ZZZZ-ZZZZ" },
+    });
+    assert.equal(wrong.statusCode, 404);
+  });
+  it("approve then poll issues exactly one token pair for the approver", async () => {
+    const { deviceCode, userCode } = (await start()).json();
+    const approval = await app.inject({
+      method: "POST", url: "/device/approve",
+      headers: { "content-type": "application/json", "x-user-id": "u-device" },
+      payload: { userCode },
+    });
+    assert.equal(approval.statusCode, 200);
+    assert.equal(approval.json().ok, true);
+    const poll = await app.inject({
+      method: "POST", url: "/device/poll",
+      headers: { "content-type": "application/json" },
+      payload: { deviceCode },
+    });
+    assert.equal(poll.statusCode, 200);
+    const body = poll.json();
+    assert.equal(body.status, "approved");
+    assert.equal(body.user.email, "ide@example.com");
+    assert.ok(body.tokens.accessToken.length > 0 && body.tokens.refreshToken.length > 0);
+    const replay = await app.inject({
+      method: "POST", url: "/device/poll",
+      headers: { "content-type": "application/json" },
+      payload: { deviceCode },
+    });
+    assert.equal(replay.json().status, "pending", "a consumed code cannot mint a second session");
+    const reused = await app.inject({
+      method: "POST", url: "/device/approve",
+      headers: { "content-type": "application/json", "x-user-id": "u-device" },
+      payload: { userCode },
+    });
+    assert.equal(reused.statusCode, 404, "an approved code cannot be approved again");
+  });
+});
+
+describe("auth login throttle (in-process, fake pg)", () => {
+  let app;
+  const PASSWORD = "correct-horse-battery";
+  let passwordHash;
+  const fakePool = {
+    query: async (sql, params) => {
+      if (sql.startsWith("SELECT * FROM users WHERE lower(email)")) {
+        return {
+          rows: [
+            {
+              id: "u-throttle",
+              email: params[0],
+              name: "Throttle",
+              created_at: new Date("2026-01-01T00:00:00Z"),
+              password_hash: passwordHash,
+            },
+          ],
+          rowCount: 1,
+        };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  };
+  before(async () => {
+    passwordHash = await authCrypto.hashPassword(PASSWORD);
+    const kit = await import("../packages/service-kit/dist/index.js");
+    const routes = await import("../services/auth/dist/routes.js");
+    app = await kit.createService("test-auth-throttle");
+    routes.registerAuthRoutes(app, fakePool);
+    await app.ready();
+  });
+  // Each attempt comes from its own address, exactly as the gateway would
+  // forward them, so the address budget can never be what trips a test.
+  const attempt = (password, ip, email = "target@test.dev") =>
+    app.inject({
+      method: "POST",
+      url: "/login",
+      headers: { "content-type": "application/json", "x-client-ip": ip },
+      payload: { email, password },
+    });
+  it("counts failures per account across many addresses, and a success clears it", async () => {
+    const saved = process.env.AUTH_JWT_SECRET;
+    process.env.AUTH_JWT_SECRET = SECRET; // the success path mints a token
+    try {
+      for (let i = 0; i < 9; i++) {
+        const r = await attempt("wrong-password", `198.51.100.${i}`);
+        assert.equal(r.statusCode, 401, `failure ${i} from a fresh address is a plain 401`);
+      }
+      const ok = await attempt(PASSWORD, "198.51.100.200");
+      assert.equal(ok.statusCode, 200, "the right password still works below the threshold");
+      // Nine more failures: they only reach 9 because the success cleared the
+      // count. Without the clear this loop would trip at the first iteration.
+      for (let i = 0; i < 9; i++) {
+        const r = await attempt("wrong-password", `203.0.113.${i}`);
+        assert.equal(r.statusCode, 401, `post-clear failure ${i} is still a plain 401`);
+      }
+      const tenth = await attempt("wrong-password", "203.0.113.250");
+      assert.equal(tenth.statusCode, 401);
+      const locked = await attempt("wrong-password", "203.0.113.251");
+      assert.equal(locked.statusCode, 429, "the account budget trips independently of the address");
+      assert.match(locked.json().error.message, /failed sign-in attempts for this account/);
+      // While locked, the CORRECT password is refused too, so the lock cannot be
+      // used as an oracle for whether a guess was right.
+      const rightWhileLocked = await attempt(PASSWORD, "203.0.113.252");
+      assert.equal(rightWhileLocked.statusCode, 429);
+    } finally {
+      if (saved === undefined) delete process.env.AUTH_JWT_SECRET;
+      else process.env.AUTH_JWT_SECRET = saved;
+    }
+  });
+  it("one address exhausting its own budget does not lock out other addresses", async () => {
+    // The old limiter keyed on req.ip, which for gateway traffic IS the gateway,
+    // so eleven requests a minute denied sign-in to every learner at once.
+    const statuses = [];
+    for (let i = 0; i < 12; i++) {
+      const r = await attempt("wrong-password", "192.0.2.77", "addr-a@test.dev");
+      statuses.push(r.statusCode);
+    }
+    assert.equal(statuses[0], 401, "the budget starts out available");
+    assert.equal(statuses.at(-1), 429, "one address does run out of its own budget");
+    // A different address (and a different account, so the account budget is
+    // fresh) is untouched: the budget is per client, not one global bucket.
+    const other = await attempt("wrong-password", "192.0.2.78", "addr-b@test.dev");
+    assert.equal(other.statusCode, 401, "another client is not collaterally throttled");
+  });
+});
+
 describe("progress state + reset (in-process, fake pg)", () => {
   let app;
   const seen = [];
@@ -1703,6 +3118,183 @@ describe("progress state + reset (in-process, fake pg)", () => {
     ]);
     for (const d of deletes) assert.deepEqual(d.params, ["u1"]);
     assert.ok(seen.some((s) => s.sql === "COMMIT"), "committed");
+  });
+});
+
+/* Attestation judging mirrors the IDE's tap.ts: the server re-judges from TAP
+   it produced itself, with the same line shape and the same present-AND-passing
+   rule. These tests pin the mirror — including the command allowlist that keeps
+   the sandbox behind `node --test` — before any route spends it. */
+describe("attestation judging mirrors the IDE", async () => {
+  const attest = await import("../services/execution/dist/attest.js");
+
+  it("parses TAP the way the extension does", () => {
+    const tap = [
+      "TAP version 13",
+      "ok 1 - a discounted basket totals less than the net",
+      "not ok 2 - the threshold decides which total is returned",
+      "# fail 1 of 2",
+    ].join("\n");
+    assert.deepEqual(attest.parseTap(tap), [
+      { name: "a discounted basket totals less than the net", passed: true },
+      { name: "the threshold decides which total is returned", passed: false },
+    ]);
+    assert.deepEqual(attest.parseTap("no tap here\njust logs\n"), []);
+  });
+
+  it("passes only checks whose every named test ran and passed", () => {
+    const results = attest.parseTap("ok 1 - a\nnot ok 2 - b\n");
+    const [pass, fail, missing] = attest.judgeAttestChecks(
+      [
+        { id: "x", tests: ["a"] },
+        { id: "y", tests: ["b"] },
+        { id: "z", tests: ["never-ran"] },
+      ],
+      results
+    );
+    assert.equal(pass.passed, true);
+    assert.equal(fail.passed, false);
+    assert.equal(missing.passed, false);
+    assert.match(missing.reason, /No run on record/);
+  });
+
+  it("allowlists node --test over relative suites, nothing else", () => {
+    assert.deepEqual(attest.resolveAttestArgv("node --test --test-reporter=tap test/cart.test.mjs"), [
+      "--test",
+      "--test-reporter=tap",
+      "test/cart.test.mjs",
+    ]);
+    for (const bad of [
+      "npm test",
+      "node test/cart.test.mjs",
+      "node --test /etc/passwd.test.mjs",
+      "node --test ../escape.test.mjs",
+      "node --test test/cart.test.mjs; rm -rf /",
+      "node --test",
+    ]) {
+      // ApiError carries the machine code beside the message, so assert on
+      // the property rather than the prose.
+      try {
+        attest.resolveAttestArgv(bad);
+        assert.fail(`accepted a command it must refuse: ${bad}`);
+      } catch (err) {
+        assert.equal(err?.code, "bad_request");
+        assert.equal(err?.status, 400);
+      }
+    }
+  });
+
+  it("contracts accept the IDE submission shape and the verdict shape", () => {
+    const sub = {
+      checkIds: ["covers-discount"],
+      checks: [{ id: "covers-discount", tests: ["a discounted basket"] }],
+      files: [{ path: "src/cart.js", content: "export const x = 1;\n" }],
+      command: "node --test --test-reporter=tap test/cart.test.mjs",
+      localTap: "ok 1 - a discounted basket\n",
+    };
+    assert.ok(contracts.attestSubmissionSchema.safeParse(sub).success);
+    assert.ok(!contracts.attestSubmissionSchema.safeParse({ ...sub, checks: [] }).success);
+    const verdict = {
+      provenance: "attested",
+      outcome: "re-judged server-side",
+      checks: [{ checkId: "covers-discount", passed: true, reason: "Verified." }],
+    };
+    assert.ok(contracts.attestVerdictSchema.safeParse(verdict).success);
+    assert.ok(!contracts.attestVerdictSchema.safeParse({ ...verdict, provenance: "local" }).success);
+  });
+});
+
+/* Attestation re-runs what the learner submits against the platform's own copy
+   of the suite: a passing verdict means this sandbox ran it, not the learner's
+   machine. Fixtures stand in for the canonical suites the fixture sync has not
+   landed yet; the registry lookup — and every refusal around it — is what is
+   under test, so an empty registry must refuse rather than judge. */
+describe("attestation re-judges in this sandbox, never on the learner's word", () => {
+  let app;
+  const KEY = "test-attest-key";
+  const saved = process.env.INTERNAL_API_KEY;
+  const SUITE = [
+    `import test from 'node:test';`,
+    `import assert from 'node:assert/strict';`,
+    `import { add } from '../src/add.js';`,
+    `test('adds two numbers', () => assert.equal(add(2, 3), 5));`,
+    "",
+  ].join("\n");
+
+  before(async () => {
+    process.env.INTERNAL_API_KEY = KEY;
+    const routes = await import("../services/execution/dist/routes.js");
+    app = await kit.createService("test-execution-attest");
+    routes.registerExecutionRoutes(app, {
+      queue: new execQueue.JobQueue(1),
+      quotas: new execQuotas.Quotas(50, 2),
+      runner: "subprocess",
+      attestFixtures: new Map([["test/add.test.mjs", SUITE]]),
+    });
+    await app.ready();
+  });
+  after(() => {
+    if (saved === undefined) delete process.env.INTERNAL_API_KEY;
+    else process.env.INTERNAL_API_KEY = saved;
+  });
+
+  const submit = (files, command = "node --test --test-reporter=tap test/add.test.mjs") =>
+    app.inject({
+      method: "POST",
+      url: "/attest",
+      headers: { "x-user-id": "u-attest", "x-internal-key": KEY, "content-type": "application/json" },
+      payload: {
+        checkIds: ["adds"],
+        checks: [{ id: "adds", tests: ["adds two numbers"] }],
+        files,
+        command,
+        localTap: "ok 1 - adds two numbers\n",
+      },
+    });
+
+  it("attests a correct submission after running the canonical suite itself", async () => {
+    const r = await submit([{ path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" }]);
+    assert.equal(r.statusCode, 200, r.body);
+    const body = r.json();
+    // The verdict shape is exactly what the extension's parseVerdict accepts.
+    assert.ok(contracts.attestVerdictSchema.safeParse(body).success);
+    assert.equal(body.provenance, "attested");
+    assert.deepEqual(body.checks, [
+      { checkId: "adds", passed: true, reason: "Verified against your code, re-run on this platform." },
+    ]);
+  });
+
+  it("fails a broken submission — the learner's own TAP is not evidence", async () => {
+    const r = await submit([{ path: "src/add.js", content: "export function add() { return 0; }\n" }]);
+    assert.equal(r.statusCode, 200, r.body);
+    const body = r.json();
+    // localTap claimed a pass; the sandbox disagrees, and the sandbox wins.
+    assert.equal(body.checks[0].passed, false);
+  });
+
+  it("refuses an unregistered suite instead of judging it", async () => {
+    const r = await submit(
+      [{ path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" }],
+      "node --test --test-reporter=tap test/unknown.test.mjs"
+    );
+    assert.equal(r.statusCode, 503, r.body);
+    assert.equal(r.json().error.code, "attestation_unavailable");
+  });
+
+  it("rejects a learner file shadowing the canonical suite", async () => {
+    const r = await submit([
+      { path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" },
+      { path: "test/add.test.mjs", content: "import test from 'node:test';\ntest('adds two numbers', () => {});\n" },
+    ]);
+    assert.equal(r.statusCode, 400, r.body);
+  });
+
+  it("refuses a non-test command", async () => {
+    const r = await submit(
+      [{ path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" }],
+      "npm test"
+    );
+    assert.equal(r.statusCode, 400, r.body);
   });
 });
 
@@ -1798,6 +3390,39 @@ describe("run receipts: the execution service signs what it ran", () => {
     } finally {
       process.env.INTERNAL_API_KEY = KEY;
     }
+  });
+
+  it("verifies its own receipts for a stranger with no credentials (B-24 public surface)", async () => {
+    const r = await runNode();
+    assert.equal(r.statusCode, 200, r.body);
+    const { receipt } = r.json();
+    // No x-user-id: the gateway fronts this as public and injects only the
+    // mesh key downstream. The service still authenticates the gateway.
+    const v = await app.inject({
+      method: "POST",
+      url: "/verify",
+      headers: { "content-type": "application/json", "x-internal-key": KEY },
+      payload: { receipt },
+    });
+    assert.equal(v.statusCode, 200, v.body);
+    const body = v.json();
+    assert.equal(body.valid, true);
+    assert.equal(body.fresh, true);
+    assert.equal(body.language, "node");
+  });
+
+  it("refuses a forged receipt without leaking the key", async () => {
+    const r = await runNode();
+    const { receipt } = r.json();
+    const forged = { ...receipt, sig: "0".repeat(64) };
+    const v = await app.inject({
+      method: "POST",
+      url: "/verify",
+      headers: { "content-type": "application/json", "x-internal-key": KEY },
+      payload: { receipt: forged },
+    });
+    assert.equal(v.statusCode, 200, v.body);
+    assert.equal(v.json().valid, false);
   });
 });
 
@@ -2564,6 +4189,30 @@ describe("the platform decides document checks with the learner's own interprete
 });
 
 describe("boot fail-fast + migrations + sync + compose", () => {
+  it("execution refuses the non-isolated subprocess runner in production", () => {
+    // Learner code in this tier is a child of the service that holds
+    // INTERNAL_API_KEY and DATABASE_URL, sharing its filesystem and network, so
+    // production must not start it by default. Requests are made to proof the
+    // refusal happens at boot and names the variable rather than at first run.
+    const r = spawnSync("node", ["services/execution/dist/index.js"], {
+      cwd: root,
+      env: {
+        ...process.env,
+        NODE_ENV: "production",
+        EXECUTION_RUNNER: "subprocess",
+        EXECUTION_ALLOW_SUBPROCESS: "",
+        INTERNAL_API_KEY: MESH,
+        PORT: "18993",
+      },
+      timeout: 15000,
+      encoding: "utf8",
+    });
+    assert.notEqual(r.status, 0, "must not boot");
+    const out = r.stderr + r.stdout;
+    assert.match(out, /EXECUTION_RUNNER=subprocess is refused in production/);
+    assert.match(out, /INTERNAL_API_KEY/, "the message says what a learner could reach");
+    assert.match(out, /EXECUTION_ALLOW_SUBPROCESS=1/, "and names the explicit override");
+  });
   it("auth/progress/billing refuse to boot without DATABASE_URL", () => {
     for (const svc of ["auth", "progress", "billing"]) {
       const env = { ...process.env };
@@ -2594,6 +4243,47 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     const auth002 = readFileSync(join(root, "services", "auth", "migrations", "002_clerk_link.sql"), "utf8");
     assert.ok(auth002.includes("provider"), "auth 002 tracks the account provider");
     assert.ok(auth002.includes("DROP NOT NULL"), "auth 002 allows passwordless rows");
+    // Immediate revocation rides a forward-only migration as well: the denylist is
+    // additive, and `expires_at` is what keeps it prunable rather than growing for
+    // the life of the deployment.
+    const auth003 = readFileSync(join(root, "services", "auth", "migrations", "003_revoked_tokens.sql"), "utf8");
+    assert.ok(auth003.includes("CREATE TABLE IF NOT EXISTS revoked_tokens"), "auth 003 records revoked access tokens");
+    assert.ok(auth003.includes("jti TEXT PRIMARY KEY"), "auth 003 keys a revocation by the token's own id");
+    assert.ok(auth003.includes("expires_at TIMESTAMPTZ NOT NULL"), "auth 003 knows when a revocation stops mattering");
+    // Account-wide sign-out rides a forward-only migration of its own: a moment per
+    // account rather than a list of credentials, because a stateless access token
+    // cannot be enumerated. One row per account is also why sign-outs cannot grow
+    // this table, and why it needs no pruning.
+    const auth004 = readFileSync(join(root, "services", "auth", "migrations", "004_user_revocations.sql"), "utf8");
+    assert.ok(auth004.includes("CREATE TABLE IF NOT EXISTS user_revocations"), "auth 004 records an account-wide cut-off");
+    assert.ok(auth004.includes("revoked_before TIMESTAMPTZ NOT NULL"), "auth 004 stores the moment, not a list of ids");
+    assert.ok(auth004.includes("user_id TEXT PRIMARY KEY"), "auth 004 keeps one row per account: the cut-off cannot grow with sign-outs");
+    // The operational half of revocation cannot be exercised from a request: the
+    // prune fires on a fifteen-minute timer and the edge's counters are reported on
+    // one too. Both are therefore asserted at the source, with the alternative in
+    // mind (a test that waits out an interval is a test nobody runs).
+    const authIndexSrc = readFileSync(join(root, "services", "auth", "src", "index.ts"), "utf8");
+    assert.ok(
+      authIndexSrc.includes("pruneRevokedTokens") && authIndexSrc.includes("setInterval"),
+      "the auth service prunes expired denylist rows on a timer rather than on the read path"
+    );
+    assert.ok(
+      authIndexSrc.includes("unref()") && authIndexSrc.includes("void pruneRevocations();"),
+      "and it prunes once at boot, on a timer that cannot hold the process open"
+    );
+    assert.ok(
+      authIndexSrc.includes("REVOCATION_PRUNE_INTERVAL_MS"),
+      "the interval is configurable, so a deployment can trade table size against housekeeping"
+    );
+    const gwIndexSrc = readFileSync(join(root, "services", "gateway", "src", "index.ts"), "utf8");
+    assert.ok(
+      gwIndexSrc.includes("revocation.stats()") && gwIndexSrc.includes("REVOCATION_REPORT_MS"),
+      "the edge reports revocation counters on its own timer"
+    );
+    assert.ok(
+      gwIndexSrc.includes("revocationNotice"),
+      "and logs the first refusal or unanswered check at once, rather than up to an interval later"
+    );
     // Submission history rides a forward-only migration of its own: an existing
     // deployment gains the table without any progress row being touched, and
     // the runner's signature is what keeps one execution to one record.
@@ -2629,6 +4319,85 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     }
     const ver = await import("../services/curriculum/dist/data/version.js");
     assert.equal(ver.CONTENT_VERSION, hash.digest("hex").slice(0, 12));
+  });
+  it("IDE curriculum snapshot matches its source and its own stamp (run sync on drift)", async () => {
+    // The paid phases the platform serves are a snapshot of the IDE's authored
+    // curriculum, generated by sync-curriculum.mjs. Two drift classes must fail
+    // here. (1) A snapshot whose own version stamp no longer matches its content
+    // — a hand-edit that forgot to re-sync — checkable from committed bytes
+    // alone. (2) A snapshot that no longer matches the sibling repo's source,
+    // which needs nexora-ide checked out beside branchcraft.
+    const { createHash } = await import("node:crypto");
+    const { readFile } = await import("node:fs/promises");
+    const ideVer = await import("../services/curriculum/dist/data/ide-version.js");
+    const ideTm = await import("../services/curriculum/dist/data/ide-task-manager.js");
+    const ideMf = await import("../services/curriculum/dist/data/ide-manifest.js");
+
+    // Mirror sync-curriculum.mjs's IDE hash exactly: canonical (compact) JSON,
+    // keyed by the forward-slash relative path, in source order.
+    const ideHashOf = (pairs) => {
+      const h = createHash("sha256");
+      for (const [rel, value] of pairs) h.update("ide/" + rel + "\n" + JSON.stringify(value) + "\n");
+      return h.digest("hex").slice(0, 12);
+    };
+
+    // (1) Self-consistency, always available: the committed content hashes to
+    //     the committed stamp, and the snapshot is internally coherent — the
+    //     roadmap lines up with the authored document, and the free/paid split
+    //     is real (a build with no free loop would ship nothing at all).
+    assert.match(ideVer.IDE_CONTENT_VERSION, /^[0-9a-f]{12}$/);
+    assert.equal(
+      ideHashOf([
+        ["task-manager.json", ideTm.IDE_TASK_MANAGER],
+        ["shipped/manifest.json", ideMf.IDE_MANIFEST],
+      ]),
+      ideVer.IDE_CONTENT_VERSION,
+      "the IDE snapshot hashes to its own version stamp (a hand-edit must re-sync)"
+    );
+    const doc = ideTm.IDE_TASK_MANAGER;
+    const manifest = ideMf.IDE_MANIFEST;
+    assert.deepEqual(
+      manifest.phases.map((p) => p.id),
+      doc.phases.map((p) => p.id),
+      "the roadmap and the authored document list the same phases in the same order"
+    );
+    assert.ok(manifest.phases.some((p) => p.tier === "free"), "at least one phase is free");
+    assert.ok(manifest.phases.some((p) => p.tier === "pro"), "at least one phase is paid");
+
+    // (2) Source match, when the sibling repo is present: regenerate the wrapper
+    //     bytes from source and compare, and re-hash from source. When it is
+    //     absent (a platform-only checkout), say so rather than pass silently.
+    const ideSrc = join(root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum");
+    const sources = [
+      { rel: "task-manager.json", out: "ide-task-manager.ts", symbol: "IDE_TASK_MANAGER" },
+      { rel: join("shipped", "manifest.json"), out: "ide-manifest.ts", symbol: "IDE_MANIFEST" },
+    ];
+    if (!sources.every((s) => existsSync(join(ideSrc, s.rel)))) {
+      process.stdout.write(
+        "      (IDE source drift not checked: nexora-ide sibling absent; committed snapshot self-consistency verified)\n"
+      );
+      return;
+    }
+    const fromSource = [];
+    for (const s of sources) {
+      const canonicalRel = s.rel.split("\\").join("/");
+      const parsed = JSON.parse(await readFile(join(ideSrc, s.rel), "utf8"));
+      fromSource.push([canonicalRel, parsed]);
+      const expected =
+        `// Generated by npm run sync:curriculum — do not edit by hand.\n` +
+        `// Source: nexora-ide/extensions/nexora/curriculum/${canonicalRel}\n` +
+        `export const ${s.symbol}: unknown = ${JSON.stringify(parsed, null, 2)};\n`;
+      const committed = await readFile(
+        join(root, "services", "curriculum", "src", "data", s.out),
+        "utf8"
+      );
+      assert.equal(committed, expected, `${s.out} matches the IDE source (run npm run sync:curriculum)`);
+    }
+    assert.equal(
+      ideHashOf(fromSource),
+      ideVer.IDE_CONTENT_VERSION,
+      "the IDE snapshot matches the sibling repo's source (run npm run sync:curriculum)"
+    );
   });
   it("every relative import in vendor/data ends with .js (NodeNext)", async () => {
     const { readFile, readdir } = await import("node:fs/promises");
@@ -2667,5 +4436,587 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     assert.equal(cfg.services.postgres.ports, undefined, "postgres not published");
     assert.ok(JSON.stringify(cfg.services.gateway.ports).includes("8080"));
     assert.ok(existsSync(join(root, "Dockerfile")));
+  });
+});
+
+describe("access-token lifetime and identity (M-1)", () => {
+  /** Set ACCESS_TOKEN_TTL_SECONDS for one case and hand back the restore. */
+  const withTtl = (value) => {
+    const saved = process.env.ACCESS_TOKEN_TTL_SECONDS;
+    if (value === undefined) delete process.env.ACCESS_TOKEN_TTL_SECONDS;
+    else process.env.ACCESS_TOKEN_TTL_SECONDS = String(value);
+    return () => {
+      if (saved === undefined) delete process.env.ACCESS_TOKEN_TTL_SECONDS;
+      else process.env.ACCESS_TOKEN_TTL_SECONDS = saved;
+    };
+  };
+
+  it("lives five minutes by default, and the clamp holds at both ends", () => {
+    const saved = process.env.AUTH_JWT_SECRET;
+    process.env.AUTH_JWT_SECRET = SECRET;
+    try {
+      // The TTL is the whole revocation story for a stateless token, so both
+      // ends are load-bearing: a minute is the floor (below it the client would
+      // refresh in a loop and a skewed clock would flap), a quarter-hour is the
+      // ceiling (that is the window this finding was about).
+      for (const [value, expected] of [
+        [undefined, 300],
+        ["60", 60],
+        ["300", 300],
+        ["900", 900],
+        ["10", 60],
+        ["86400", 900],
+        ["not-a-number", 300],
+      ]) {
+        const restore = withTtl(value);
+        try {
+          assert.equal(authCrypto.accessTokenTtlSeconds(), expected, `ACCESS_TOKEN_TTL_SECONDS=${value}`);
+          assert.equal(authCrypto.signAccessToken("u").expiresIn, expected);
+        } finally {
+          restore();
+        }
+      }
+    } finally {
+      if (saved === undefined) delete process.env.AUTH_JWT_SECRET;
+      else process.env.AUTH_JWT_SECRET = saved;
+    }
+  });
+
+  it("ids every token separately, so one credential can be named", async () => {
+    const saved = process.env.AUTH_JWT_SECRET;
+    process.env.AUTH_JWT_SECRET = SECRET;
+    try {
+      const jwt = (await import("jsonwebtoken")).default;
+      const a = authCrypto.signAccessToken("user-1");
+      const b = authCrypto.signAccessToken("user-1");
+      const claims = jwt.decode(a.token);
+      assert.equal(claims.sub, "user-1");
+      assert.match(claims.jti, /^[0-9a-f]{32}$/);
+      assert.match(b.jti, /^[0-9a-f]{32}$/);
+      assert.notEqual(a.jti, b.jti, "two tokens for one user are two different credentials");
+      assert.equal(jwt.decode(b.token).jti, b.jti, "and the claim is the one that was returned");
+    } finally {
+      if (saved === undefined) delete process.env.AUTH_JWT_SECRET;
+      else process.env.AUTH_JWT_SECRET = saved;
+    }
+  });
+});
+
+/**
+ * A pg-shaped pool for the auth service's own SQL, answered from maps.
+ *
+ * A map-backed pool rather than a database because these tests are about what the
+ * routes do with each answer — and the fake answers the real statements verbatim,
+ * so a route that starts querying something else gets "no rows" and an assertion
+ * fails instead of the schema quietly diverging from the tests.
+ *
+ * Shared by the lifecycle tests below and the gateway↔auth integration test at the
+ * end of this file, so the two cannot drift into different pictures of the schema.
+ */
+function fakeAuthPool() {
+  const users = new Map(); // id -> row
+  const tokens = new Map(); // token_hash -> row
+  const revoked = new Map(); // jti -> row
+  const cutoffs = new Map(); // user_id -> revoked_before (Date)
+  return {
+    users,
+    tokens,
+    revoked,
+    cutoffs,
+    query: async (sql, params) => {
+      // The prune is a real delete here, not a stub: how many rows it removes is
+      // the behaviour under test, so the fake has to age rows like Postgres does.
+      if (sql.startsWith("DELETE FROM revoked_tokens")) {
+        let n = 0;
+        for (const [jti, row] of revoked) {
+          if (new Date(row.expires_at).getTime() < Date.now()) {
+            revoked.delete(jti);
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("INSERT INTO revoked_tokens")) {
+        revoked.set(params[0], { jti: params[0], user_id: params[1], expires_at: params[2] });
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT 1 FROM revoked_tokens")) {
+        return { rows: [], rowCount: revoked.has(params[0]) ? 1 : 0 };
+      }
+      if (sql.startsWith("INSERT INTO user_revocations")) {
+        const previous = cutoffs.get(params[0]);
+        const at = new Date(params[1]);
+        // GREATEST, exactly as the statement does: a cut-off never moves backwards.
+        cutoffs.set(params[0], previous && previous > at ? previous : at);
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT revoked_before FROM user_revocations")) {
+        const at = cutoffs.get(params[0]);
+        return at ? { rows: [{ revoked_before: at }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("SELECT id FROM users WHERE lower(email)")) {
+        const hit = [...users.values()].find((u) => u.email === params[0]);
+        return hit ? { rows: [{ id: hit.id }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("INSERT INTO users")) {
+        const u = {
+          id: params[0],
+          email: params[1],
+          name: params[2],
+          password_hash: params[3],
+          created_at: new Date("2026-01-01T00:00:00Z"),
+        };
+        users.set(u.id, u);
+        return { rows: [u], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT * FROM users WHERE lower(email)")) {
+        const hit = [...users.values()].find((u) => u.email === params[0]);
+        return hit ? { rows: [hit], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("INSERT INTO refresh_tokens")) {
+        const row = {
+          id: params[0],
+          user_id: params[1],
+          token_hash: params[2],
+          expires_at: params[3],
+          revoked_at: null,
+          replaced_by: null,
+        };
+        tokens.set(row.token_hash, row);
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT * FROM refresh_tokens WHERE token_hash")) {
+        const row = tokens.get(params[0]);
+        return row ? { rows: [row], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("SELECT id FROM refresh_tokens WHERE token_hash")) {
+        const row = tokens.get(params[0]);
+        return row ? { rows: [{ id: row.id }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("UPDATE refresh_tokens SET revoked_at = now(), replaced_by")) {
+        for (const row of tokens.values()) {
+          if (row.id === params[1]) {
+            row.revoked_at = new Date();
+            row.replaced_by = params[0];
+          }
+        }
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash")) {
+        const row = tokens.get(params[0]);
+        if (row) row.revoked_at = new Date();
+        return { rows: [], rowCount: row ? 1 : 0 };
+      }
+      if (sql.startsWith("UPDATE refresh_tokens SET revoked_at = now() WHERE user_id")) {
+        let n = 0;
+        for (const row of tokens.values()) {
+          if (row.user_id === params[0] && !row.revoked_at) {
+            row.revoked_at = new Date();
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  };
+}
+
+describe("auth token lifecycle (in-process, fake pg)", () => {
+  // A refresh-token table small enough to reason about: the service's own SQL,
+  // answered from maps. Rotation and reuse detection are the behaviour under
+  // test, so the fake keeps revoked_at/replaced_by exactly as the schema does.
+  let app;
+  const fakePool = fakeAuthPool();
+  const EMAIL = "lifecycle@test.dev";
+  const PASSWORD = "0123456789abcdef";
+  let calls = 0;
+  const post = (url, payload) =>
+    app.inject({
+      method: "POST",
+      url,
+      headers: { "content-type": "application/json", "x-client-ip": `198.51.100.${(calls += 1)}` },
+      payload,
+    });
+  before(async () => {
+    const saved = process.env.AUTH_JWT_SECRET;
+    process.env.AUTH_JWT_SECRET = SECRET;
+    try {
+      const kitMod = await import("../packages/service-kit/dist/index.js");
+      const routes = await import("../services/auth/dist/routes.js");
+      app = await kitMod.createService("test-auth-lifecycle");
+      routes.registerAuthRoutes(app, fakePool);
+      await app.ready();
+    } finally {
+      if (saved === undefined) delete process.env.AUTH_JWT_SECRET;
+      else process.env.AUTH_JWT_SECRET = saved;
+    }
+  });
+
+  it("a sign-in mints a five-minute, individually identified access token", async () => {
+    const saved = process.env.AUTH_JWT_SECRET;
+    process.env.AUTH_JWT_SECRET = SECRET;
+    try {
+      const reg = await post("/register", { email: EMAIL, password: PASSWORD, name: "Ada" });
+      assert.equal(reg.statusCode, 201);
+      const jwt = (await import("jsonwebtoken")).default;
+      const claims = jwt.decode(reg.json().tokens.accessToken);
+      assert.equal(claims.sub, reg.json().user.id);
+      assert.equal(claims.exp - claims.iat, 300);
+      assert.match(claims.jti, /^[0-9a-f]{32}$/);
+    } finally {
+      if (saved === undefined) delete process.env.AUTH_JWT_SECRET;
+      else process.env.AUTH_JWT_SECRET = saved;
+    }
+  });
+
+  it("refresh rotates both halves; replaying the old one revokes the family", async () => {
+    const login = await post("/login", { email: EMAIL, password: PASSWORD });
+    assert.equal(login.statusCode, 200);
+    const first = login.json().tokens;
+
+    const rotated = await post("/refresh", { refreshToken: first.refreshToken });
+    assert.equal(rotated.statusCode, 200);
+    const second = rotated.json().tokens;
+    // Both halves are new: the access token is a different credential (new jti),
+    // and the refresh token has been replaced rather than reused.
+    assert.notEqual(second.accessToken, first.accessToken);
+    assert.notEqual(second.refreshToken, first.refreshToken);
+    const jwt = (await import("jsonwebtoken")).default;
+    assert.notEqual(jwt.decode(second.accessToken).jti, jwt.decode(first.accessToken).jti);
+
+    // Presenting the superseded token again is indistinguishable from theft.
+    const replay = await post("/refresh", { refreshToken: first.refreshToken });
+    assert.equal(replay.statusCode, 401);
+    assert.equal(replay.json().error.code, "token_reused");
+
+    // …and the family revocation takes the honest successor with it, which is
+    // what makes the theft response worth its false positives.
+    const after = await post("/refresh", { refreshToken: second.refreshToken });
+    assert.equal(after.statusCode, 401);
+    assert.equal(after.json().error.code, "invalid_grant");
+
+    // A fresh sign-in works, and signing out ends both halves: the refresh family
+    // (nothing new can be minted) and the access token in hand — its jti goes on
+    // the denylist, so the credential the learner was holding stops being accepted
+    // at once instead of at the end of its five minutes.
+    const again = await post("/login", { email: EMAIL, password: PASSWORD });
+    assert.equal(again.statusCode, 200);
+    const third = again.json().tokens;
+    const thirdJti = jwt.decode(third.accessToken).jti;
+    const out = await post("/logout", {
+      refreshToken: third.refreshToken,
+      accessToken: third.accessToken,
+    });
+    assert.equal(out.statusCode, 200);
+    assert.deepEqual(out.json(), { ok: true });
+    const dead = await post("/refresh", { refreshToken: third.refreshToken });
+    assert.equal(dead.statusCode, 401);
+    assert.equal(dead.json().error.code, "invalid_grant");
+
+    const check = await post("/internal/revocations/check", { jti: thirdJti });
+    assert.equal(check.statusCode, 200);
+    assert.equal(check.json().revoked, true, "the signed-out token's id is on the denylist");
+    // Another session's token is untouched: revoking one credential must not end
+    // every session the learner has open.
+    const other = await post("/login", { email: EMAIL, password: PASSWORD });
+    const otherJti = jwt.decode(other.json().tokens.accessToken).jti;
+    const untouched = await post("/internal/revocations/check", { jti: otherJti });
+    assert.equal(untouched.json().revoked, false, "revocation is per credential, not per account");
+  });
+
+  it("only a token we signed can put an id on the denylist", async () => {
+    // The signature is checked before any id is recorded. Otherwise presenting
+    // someone else's jti — or a token we never issued — would sign them out.
+    const jwt = (await import("jsonwebtoken")).default;
+    const forged = jwt.sign({ sub: "u-victim", jti: "forged-jti-1" }, "not-our-secret", {
+      algorithm: "HS256",
+      expiresIn: "15m",
+    });
+    const out = await post("/logout", { accessToken: forged });
+    assert.equal(out.statusCode, 200, "sign-out stays idempotent and oracle-free");
+    const check = await post("/internal/revocations/check", { jti: "forged-jti-1" });
+    assert.equal(check.json().revoked, false, "a token we did not sign cannot revoke an id");
+    // Nor can a garbage body: the route must not throw on the sign-out path.
+    const junk = await post("/logout", { accessToken: "not-a-jwt" });
+    assert.equal(junk.statusCode, 200);
+    const empty = await post("/logout", {});
+    assert.equal(empty.statusCode, 200);
+  });
+
+  it("the denylist is pruned by expiry, and says how many rows went", async () => {
+    const store = await import("../services/auth/dist/revocation-store.js");
+    const pool = fakeAuthPool();
+    await store.revokeCredential(pool, { jti: "long-dead", userId: "u1", expiresAtMs: Date.now() - 60_000 });
+    await store.revokeCredential(pool, { jti: "still-live", userId: "u1", expiresAtMs: Date.now() + 60_000 });
+    assert.equal(await store.pruneRevokedTokens(pool), 1, "only rows whose token would have expired are dropped");
+    assert.deepEqual([...pool.revoked.keys()], ["still-live"], "and the row that still matters is kept");
+    assert.equal(await store.pruneRevokedTokens(pool), 0, "a second prune has nothing to do, so nothing is logged");
+  });
+
+  it("the account cut-off only ever moves forward, and only refuses what came before it", async () => {
+    const store = await import("../services/auth/dist/revocation-store.js");
+    const pool = fakeAuthPool();
+    const cutoff = 1_000_000;
+    await store.revokeAccountBefore(pool, "u-cut", new Date(cutoff));
+    // A flaky connection retried "sign out everywhere"; the older attempt must not
+    // move the boundary backwards and resurrect the session the first one ended.
+    await store.revokeAccountBefore(pool, "u-cut", new Date(cutoff - 500_000));
+    assert.equal(pool.cutoffs.get("u-cut").getTime(), cutoff, "GREATEST, not a plain overwrite");
+
+    assert.deepEqual(
+      await store.credentialStatus(pool, { jti: "x", userId: "u-cut", issuedAtMs: cutoff - 1_000 }),
+      { revoked: true, reason: "account" },
+      "a token issued before the moment is refused"
+    );
+    // `iat` has one-second resolution, so the comparison cannot tell "issued just
+    // before" from "issued just after". Of the two mistakes available, signing a
+    // learner straight back out of the session they just created is the worse one.
+    assert.equal(
+      (await store.credentialStatus(pool, { jti: "y", userId: "u-cut", issuedAtMs: cutoff })).revoked,
+      false,
+      "a token minted in the same second as the sign-out survives"
+    );
+    assert.equal(
+      (await store.credentialStatus(pool, { jti: "z", userId: "u-cut", issuedAtMs: cutoff + 1_000 })).revoked,
+      false,
+      "and signing back in is a session the learner asked for"
+    );
+    assert.equal(
+      (await store.credentialStatus(pool, { jti: "w" })).revoked,
+      false,
+      "a check with no subject still gets the per-credential answer"
+    );
+  });
+});
+
+describe("immediate revocation, end to end (real gateway → real auth service)", () => {
+  /* The seam the two layers above cannot cover by themselves.
+   *
+   * The live-proxy tests encode what the *gateway* expects of the check endpoint,
+   * and the lifecycle tests exercise the *auth service's* own route — but if the
+   * two disagreed about the path, the method, the body shape or the mesh header,
+   * both would still pass and the denylist would be quietly decorative in
+   * production. So here the real auth routes listen on a port, the real gateway is
+   * spawned in front of them, and only Postgres is faked. This is also the check
+   * the compose e2e performs, runnable without a Docker daemon (that suite skips
+   * when the daemon is absent, which is why this exists).
+   */
+  const AUTH_PORT = 18097;
+  const STUB_PORT = 18096;
+  const GW_PORT = 18095;
+  let gwProc = null;
+  let authApp = null;
+  let authPool = null;
+  let stub = null;
+  const GW = `http://127.0.0.1:${GW_PORT}`;
+
+  const call = async (method, path, { token, body } = {}) => {
+    const res = await fetch(`${GW}${path}`, {
+      method,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(body ? { "content-type": "application/json" } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    let parsed = null;
+    try {
+      parsed = await res.json();
+    } catch {
+      /* an empty or non-JSON reply: the status is still the answer */
+    }
+    return { status: res.status, body: parsed };
+  };
+
+  before(async () => {
+    const saved = { secret: process.env.AUTH_JWT_SECRET, mesh: process.env.INTERNAL_API_KEY };
+    process.env.AUTH_JWT_SECRET = SECRET;
+    // The mesh key is ON for both sides: the denylist check is an internal route,
+    // and a key the other side does not share must fail loudly (403 → 503), never
+    // read as "not revoked".
+    process.env.INTERNAL_API_KEY = MESH;
+    try {
+      const kitMod = await import("../packages/service-kit/dist/index.js");
+      const routes = await import("../services/auth/dist/routes.js");
+      authPool = fakeAuthPool();
+      authApp = await kitMod.createService("test-auth-integration");
+      routes.registerAuthRoutes(authApp, authPool);
+      await authApp.listen({ port: AUTH_PORT, host: "127.0.0.1" });
+    } finally {
+      if (saved.secret === undefined) delete process.env.AUTH_JWT_SECRET;
+      else process.env.AUTH_JWT_SECRET = saved.secret;
+      if (saved.mesh === undefined) delete process.env.INTERNAL_API_KEY;
+      else process.env.INTERNAL_API_KEY = saved.mesh;
+    }
+
+    // A progress stub: something for an authenticated request to be forwarded to.
+    // The gateway strips the /api/<service> prefix, so it answers /summary.
+    stub = http.createServer((req, res) => {
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ stub: true, path: req.url, user: req.headers["x-user-id"] ?? null }));
+    });
+    await new Promise((r) => stub.listen(STUB_PORT, "127.0.0.1", r));
+
+    gwProc = spawn("node", ["services/gateway/dist/index.js"], {
+      cwd: root,
+      env: {
+        ...process.env,
+        NODE_ENV: "development",
+        PORT: String(GW_PORT),
+        FRONTEND_URL: "http://localhost:3000",
+        AUTH_JWT_SECRET: SECRET,
+        INTERNAL_API_KEY: MESH,
+        AUTH_URL: `http://127.0.0.1:${AUTH_PORT}`,
+        CURRICULUM_URL: `http://127.0.0.1:${STUB_PORT}`,
+        PROGRESS_URL: `http://127.0.0.1:${STUB_PORT}`,
+        EXECUTION_URL: `http://127.0.0.1:${STUB_PORT}`,
+        TUTOR_URL: `http://127.0.0.1:${STUB_PORT}`,
+        BILLING_URL: `http://127.0.0.1:${STUB_PORT}`,
+      },
+      stdio: "ignore",
+    });
+    for (let i = 0; i < 100; i++) {
+      try {
+        const r = await fetch(`${GW}/health/live`);
+        if (r.ok) break;
+      } catch {
+        /* not up yet */
+      }
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  });
+
+  after(async () => {
+    try {
+      gwProc?.kill("SIGKILL");
+    } catch {
+      /* already gone */
+    }
+    try {
+      await authApp?.close();
+    } catch {
+      /* already closed */
+    }
+    try {
+      await new Promise((resolve) => stub?.close(() => resolve(undefined)));
+    } catch {
+      /* already closed */
+    }
+  });
+
+  it("signing out kills the access token on the very next request", async () => {
+    const email = `revoke-${Date.now()}@test.dev`;
+    const password = "0123456789abcdef";
+    const reg = await call("POST", "/api/auth/register", { body: { email, password } });
+    assert.equal(reg.status, 201, JSON.stringify(reg.body));
+    const { accessToken, refreshToken } = reg.body.tokens;
+
+    const before = await call("GET", "/api/progress/summary", { token: accessToken });
+    assert.equal(before.status, 200, "the token works while the session is live");
+    assert.equal(before.body.user, reg.body.user.id, "and it resolves to the right learner");
+
+    // Sign out the way the app's broker does: both credentials in one call.
+    const out = await call("POST", "/api/auth/logout", { body: { refreshToken, accessToken } });
+    assert.equal(out.status, 200);
+
+    const after = await call("GET", "/api/progress/summary", { token: accessToken });
+    assert.equal(after.status, 401, "the token the learner just signed out with is refused at once");
+    assert.equal(after.body.error.code, "token_revoked");
+
+    // The family is dead too, so no replacement can be minted for that session.
+    const refreshed = await call("POST", "/api/auth/refresh", { body: { refreshToken } });
+    assert.equal(refreshed.status, 401);
+
+    // And the learner's next sign-in is unaffected: revocation names one
+    // credential, not the account.
+    const login = await call("POST", "/api/auth/login", { body: { email, password } });
+    assert.equal(login.status, 200);
+    const fresh = await call("GET", "/api/progress/summary", {
+      token: login.body.tokens.accessToken,
+    });
+    assert.equal(fresh.status, 200, "a new session is not collaterally revoked");
+    assert.equal(authPool.revoked.size, 1, "exactly one credential was recorded as revoked");
+
+    // Signing out twice, with the token it just revoked, is still a 200: the route
+    // must stay idempotent and free of an oracle, so the edge exempts it from the
+    // revocation gate. (A learner whose sign-out was retried by a flaky connection
+    // would otherwise meet a 401 they can do nothing about.)
+    const twice = await call("POST", "/api/auth/logout", { body: { refreshToken, accessToken } });
+    assert.equal(twice.status, 200, "a repeated sign-out is not an error");
+    assert.equal(authPool.revoked.size, 1, "and it does not write a second row");
+  });
+
+  it("signing out everywhere ends every device, and the next sign-in is not collateral damage", async () => {
+    /* The property a per-credential sign-out cannot have. Device A's token names a
+       different `jti` than the one that signed out, so it can only be refused
+       through the account cut-off — and the whole point of a cut-off is that the
+       learner can sign back in afterwards. */
+    const email = `everywhere-${Date.now()}@test.dev`;
+    const password = "0123456789abcdef";
+    const a = await call("POST", "/api/auth/register", { body: { email, password } });
+    assert.equal(a.status, 201, JSON.stringify(a.body));
+    const b = await call("POST", "/api/auth/login", { body: { email, password } });
+    assert.equal(b.status, 200);
+
+    // Two devices, two live sessions — otherwise "everywhere" is being claimed
+    // about a session that was already over.
+    for (const t of [a.body.tokens.accessToken, b.body.tokens.accessToken]) {
+      assert.equal((await call("GET", "/api/progress/summary", { token: t })).status, 200);
+    }
+
+    // The cut-off is compared against `iat`, which has one-second resolution, so a
+    // token minted in the same second as the sign-out is deliberately spared (see
+    // revocation-store.ts). Letting that second pass keeps this test about the
+    // cut-off rather than about the clock.
+    await new Promise((r) => setTimeout(r, 1_100));
+
+    // Device B ends them all. The subject comes from the token in the body, never
+    // from anything the caller typed — that is what stops one learner signing
+    // another out everywhere.
+    const out = await call("POST", "/api/auth/logout-all", {
+      body: { accessToken: b.body.tokens.accessToken },
+    });
+    assert.equal(out.status, 200, JSON.stringify(out.body));
+    assert.ok(out.body.sessions >= 1, "the reply says how many sessions were ended");
+
+    // Both devices are refused on their very next request, and the reason is the
+    // account rather than the credential for device A — the half that only exists
+    // because the check carries the subject.
+    for (const t of [a.body.tokens.accessToken, b.body.tokens.accessToken]) {
+      const res = await call("GET", "/api/progress/summary", { token: t });
+      assert.equal(res.status, 401, "every device is out");
+      assert.equal(res.body.error.code, "token_revoked");
+    }
+
+    // Neither family can mint a replacement: "everywhere" also ends the refresh
+    // half, so the sign-out is not just a five-minute deadline.
+    for (const rt of [a.body.tokens.refreshToken, b.body.tokens.refreshToken]) {
+      assert.equal((await call("POST", "/api/auth/refresh", { body: { refreshToken: rt } })).status, 401);
+    }
+
+    // And the learner can come back: a cut-off is a moment, not a ban.
+    const back = await call("POST", "/api/auth/login", { body: { email, password } });
+    assert.equal(back.status, 200);
+    const resumed = await call("GET", "/api/progress/summary", { token: back.body.tokens.accessToken });
+    assert.equal(resumed.status, 200, "a fresh sign-in is not collateral damage");
+  });
+
+  it("the denylist is an internal route: no mesh key, no answer", async () => {
+    // The gateway is the only holder of the key, and this is the check that keeps
+    // an arbitrary caller from asking which ids are revoked — or from being
+    // trusted if it answered.
+    const bare = await fetch(`http://127.0.0.1:${AUTH_PORT}/internal/revocations/check`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jti: "anything" }),
+    });
+    assert.equal(bare.status, 403);
+    const wrong = await fetch(`http://127.0.0.1:${AUTH_PORT}/internal/revocations/check`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-internal-key": "guessed" },
+      body: JSON.stringify({ jti: "anything" }),
+    });
+    assert.equal(wrong.status, 403);
   });
 });

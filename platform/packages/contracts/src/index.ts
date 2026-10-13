@@ -27,6 +27,105 @@ export const refreshSchema = z.object({
 });
 export type RefreshRequest = z.infer<typeof refreshSchema>;
 
+/* Sign-out, and why it carries two credentials.
+ *
+ * The refresh token is the family the sign-out ends, and it is the only
+ * credential the browser itself never holds (it lives in the broker's HttpOnly
+ * cookie). The access token is the half already in the learner's hands — the one
+ * a script on the page could have taken, and the one that would otherwise stay
+ * valid for the rest of its TTL — so if the caller presents it, the service
+ * records its `jti` as revoked and the gateway refuses it from the next request
+ * on. Both are optional: signing out with neither is still a valid, idempotent
+ * request (an unknown token must not be distinguishable from a known one), and
+ * the service simply ends whatever it can name. */
+export const logoutSchema = z.object({
+  refreshToken: z.string().min(32).max(512).optional(),
+  accessToken: z.string().min(1).max(4096).optional(),
+});
+export type LogoutRequest = z.infer<typeof logoutSchema>;
+
+/* Signing out of every device at once.
+ *
+ * The access token is required rather than optional, and that is the point: this
+ * ends sessions the caller cannot see, so the caller has to prove it holds one of
+ * them. The token is verified by the service and its subject decides whose
+ * sessions end — never a body-supplied user id, or one learner could sign another
+ * out everywhere by typing their id. */
+export const logoutAllSchema = z.object({
+  accessToken: z.string().min(1).max(4096),
+});
+export type LogoutAllRequest = z.infer<typeof logoutAllSchema>;
+
+/* IDE device authorization (GitHub-style browser sign-in).
+ *
+ * The IDE cannot hold a password prompt it should not see and cannot read the
+ * browser's HttpOnly session cookie — so it shows a short user code, opens the
+ * browser to /auth/ide, and polls until the signed-in learner approves it.
+ * The browser never sees the device secret and the IDE never sees the password:
+ * each side presents only its own credential.
+ *
+ * Wire shape, deliberately boring:
+ *   POST /device/start   → { deviceCode, userCode, verificationUri, expiresIn }
+ *   POST /device/poll    → { status: "pending" } | { status: "approved", user, tokens }
+ *   POST /device/approve → { ok: true } (authenticated: the approving learner)
+ *
+ * The device code is a bearer credential for one poll loop, so it travels only
+ * in bodies (never query strings that land in logs) and only its sha256 is
+ * stored. The user code is short and human-typed, so approve is rate-limited
+ * like login and a wrong code is indistinguishable from an unknown one. */
+export const devicePollSchema = z.object({
+  deviceCode: z.string().min(32).max(512),
+});
+export type DevicePollRequest = z.infer<typeof devicePollSchema>;
+
+export const deviceApproveSchema = z.object({
+  userCode: z.string().min(4).max(16),
+});
+export type DeviceApproveRequest = z.infer<typeof deviceApproveSchema>;
+
+export interface DeviceStartResponse {
+  deviceCode: string;
+  userCode: string;
+  verificationUri: string;
+  expiresIn: number;
+}
+
+/* Access-token denylist check, gateway → auth over the mesh.
+ *
+ * The gateway verifies tokens by signature alone, which is what keeps it
+ * stateless — and what used to make the lifetime the whole revocation story. It
+ * asks this instead, naming the token's `jti`, and gets one of two answers. The
+ * third answer (the service did not answer) is not representable here on purpose:
+ * it is a failure the gateway must not read as "still valid". */
+export const revocationCheckSchema = z.object({
+  jti: z.string().min(1).max(128),
+  /**
+   * The token's subject. Optional because a caller that only wants the per-token
+   * answer need not send it, but an account-wide sign-out is recorded against a
+   * *person*, so without this the check can only see that half of the denylist.
+   */
+  userId: z.string().min(1).max(128).optional(),
+  /**
+   * The token's own `iat`, in milliseconds. This is what a per-account cut-off is
+   * compared against: a token issued *after* the moment of "sign out everywhere"
+   * is a session the learner asked for, and revoking it would sign them straight
+   * back out. Sent by the gateway from the very token it is asking about, so it is
+   * never a client-supplied claim.
+   */
+  issuedAtMs: z.number().int().nonnegative().optional(),
+});
+export type RevocationCheckRequest = z.infer<typeof revocationCheckSchema>;
+
+export interface RevocationCheckResponse {
+  revoked: boolean;
+  /**
+   * Which denylist row decided, for the edge's log line — never for the message a
+   * client sees, which stays the same either way (no oracle on how a session
+   * ended).
+   */
+  reason?: "credential" | "account";
+}
+
 /* Clerk-mode provisioning: the gateway verified the Clerk session token and
    forwarded its subject as the user id, so this id IS the authenticated
    user. Creates the local profile row on first sight; idempotent after that.
@@ -195,6 +294,50 @@ export function runReceiptPayload(facts: RunFacts, issuedAt: string): string {
     runner: facts.runner,
   });
 }
+
+/* ---------- attestation (IDE re-judging, B-24) ---------- */
+
+/**
+ * What the IDE submits for re-judging. The command is the activity's own
+ * test command; the server allowlists its shape (`node --test ...` over
+ * registered test paths) and runs the platform's own copy of those tests —
+ * never the learner's. `localTap` is context for logs only, never evidence.
+ */
+export const attestSubmissionSchema = z.object({
+  checkIds: z.array(z.string().min(1).max(80)).min(1).max(64),
+  checks: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(80),
+        tests: z.array(z.string().min(1).max(300)).min(1).max(64),
+      })
+    )
+    .min(1)
+    .max(64),
+  files: z
+    .array(z.object({ path: z.string().min(1).max(200), content: z.string().max(256_000) }))
+    .min(1)
+    .max(32),
+  command: z.string().min(1).max(500),
+  localTap: z.string().max(1_100_000).default(""),
+});
+export type AttestSubmission = z.infer<typeof attestSubmissionSchema>;
+
+export const attestVerdictSchema = z.object({
+  provenance: z.literal("attested"),
+  outcome: z.string().min(1).max(500),
+  checks: z
+    .array(
+      z.object({
+        checkId: z.string().min(1).max(80),
+        passed: z.boolean(),
+        reason: z.string().min(1).max(1000),
+      })
+    )
+    .min(1)
+    .max(64),
+});
+export type AttestVerdict = z.infer<typeof attestVerdictSchema>;
 
 export interface ExecutionCapabilities {
   runner: string;
