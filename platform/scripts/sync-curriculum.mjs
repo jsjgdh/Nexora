@@ -1,153 +1,118 @@
 #!/usr/bin/env node
-/* Syncs frontend curriculum content into backend services.
-   Single source of truth stays in nexora-svelte/src/lib; services embed a
-   version-stamped snapshot (no cross-project imports at runtime). Run:
+/* Syncs curriculum content into backend services from one source.
+   The IDE extension (a sibling repo): the whole authored task-manager plus
+   the generated roadmap manifest, so the platform can serve paid phases
+   behind entitlement while the artefact ships only the free loop.
+   Run:
      npm run sync:curriculum
-   The verify harness fails if snapshots drift (hash mismatch). */
+
+   Retired: the web front door used to be a second source — every browser
+   mission under nexora-svelte/src/lib was snapshotted into the curriculum,
+   progress, and tutor services. That classroom is deleted (one way to learn:
+   the desktop IDE), so there is nothing to snapshot and no stamp to check.
+   the committed vendor copies under the services (vendor dirs and the
+   curriculum data dir) remain until the platform pass removes the services' classroom
+   surface; this script no longer reads or writes them. */
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const src = join(root, "..", "nexora-svelte", "src", "lib");
 
-const TARGETS = {
-  "../services/curriculum/src/data": [
-    "types.ts",
-    "curriculum.ts",
-    "diagnostic.ts",
-    "missions.ts",
-    "missions-a.ts",
-    "missions-b.ts",
-    "missions-c.ts",
-    "missions-d.ts",
-    "missions-e.ts",
-    "missions-f.ts",
-    "missions-g.ts",
-    "missions-h.ts",
-    "missions-i.ts",
-    "missions-j.ts",
-    "missions-k.ts",
-    "missions-l.ts",
-    "missions-m.ts",
-    "missions-n.ts",
-    "missions-o.ts",
-    "missions-p.ts",
-    "missions-q.ts",
-    "missions-r.ts",
-    "missions-orientation.ts",
-  ],
-  "../services/progress/src/vendor": [
-    "types.ts",
-    "curriculum.ts",
-    "diagnostic.ts",
-    "missions.ts",
-    "missions-a.ts",
-    "missions-b.ts",
-    "missions-c.ts",
-    "missions-d.ts",
-    "missions-e.ts",
-    "missions-f.ts",
-    "missions-g.ts",
-    "missions-h.ts",
-    "missions-i.ts",
-    "missions-j.ts",
-    "missions-k.ts",
-    "missions-l.ts",
-    "missions-m.ts",
-    "missions-n.ts",
-    "missions-o.ts",
-    "missions-p.ts",
-    "missions-q.ts",
-    "missions-r.ts",
-    "missions-orientation.ts",
-    "format.ts",
-    "recommend.ts",
-    "progress-core.ts",
-    // Execution-check verdicts must be the same code in the browser and on the
-    // server: the server recomputes what the learner's screen showed, so a
-    // second implementation of the same rules would be a second truth.
-    "run-evidence.ts",
-    // Same reason for document checks: the progress service re-derives them
-    // from the saved draft with its own parser, using the very interpreter the
-    // browser runs.
-    "document-rules.ts",
-  ],
-  "../services/tutor/src/vendor": [
-    "types.ts",
-    "missions.ts",
-    "missions-a.ts",
-    "missions-b.ts",
-    "missions-c.ts",
-    "missions-d.ts",
-    "missions-e.ts",
-    "missions-f.ts",
-    "missions-g.ts",
-    "missions-h.ts",
-    "missions-i.ts",
-    "missions-j.ts",
-    "missions-k.ts",
-    "missions-l.ts",
-    "missions-m.ts",
-    "missions-n.ts",
-    "missions-o.ts",
-    "missions-p.ts",
-    "missions-q.ts",
-    "missions-r.ts",
-    "missions-orientation.ts",
-  ],
-};
+/* The IDE curriculum lives in the nexora-ide repo, checked out as a sibling of
+   branchcraft. Two files cross over, and only these two:
+     task-manager.json     every phase and activity — the content an entitled IDE
+                           fetches per session and holds in memory.
+     shipped/manifest.json the roadmap by name and tier, holding no lesson body.
+   The manifest is synced rather than re-derived here on purpose: the free/pro
+   boundary is computed by the extension's own tier.ts, and re-deriving it in
+   this script would be a second place that boundary can be wrong. Syncing the
+   generated manifest keeps one source of truth and lets the drift check catch a
+   stale copy. */
+const ideSrc = join(root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum");
+const ideDataDir = join(root, "services", "curriculum", "src", "data");
+const IDE_SOURCES = [
+  { rel: "task-manager.json", out: "ide-task-manager.ts", symbol: "IDE_TASK_MANAGER" },
+  { rel: join("shipped", "manifest.json"), out: "ide-manifest.ts", symbol: "IDE_MANIFEST" },
+];
 
-// Services compile under NodeNext, which requires explicit .js extensions
-// on relative imports (the SvelteKit frontend resolves extensionless fine).
-// The transform is deterministic, so drift detection still works on source.
-function nodeNext(content) {
-  return content.replace(/(from\s+["'])(\.[^"']+)(["'])/g, (m, pre, p, post) => {
-    if (p.endsWith(".js") || p.endsWith(".json")) return m;
-    return pre + p + ".js" + post;
-  });
-}
+/* The web-classroom snapshot list is intentionally empty: the browser missions
+   it used to copy no longer exist (see the header comment). TARGETS stays as
+   a named empty map — rather than deleting the web loop outright — so the
+   retirement is visible here and the verify harness can assert the sources
+   stay absent instead of silently passing on nothing. */
+const TARGETS = {};
 
-// Order-stable global digest: every file, sorted, hashed together.
-const hash = createHash("sha256");
-const jobs = [];
-for (const [dir, files] of Object.entries(TARGETS).sort(([a], [b]) => (a < b ? -1 : 1))) {
-  for (const f of [...files].sort()) {
-    const content = await readFile(join(src, f), "utf8");
-    hash.update(dir + "/" + f + "\n" + content + "\n");
-    jobs.push({ dir, f, content });
-  }
-}
-const version = hash.digest("hex").slice(0, 12);
-
-for (const [dir] of Object.entries(TARGETS)) {
-  const outDir = join(root, "scripts", dir);
-  await mkdir(outDir, { recursive: true });
-}
-for (const { dir, f, content } of jobs) {
-  await writeFile(join(root, "scripts", dir, f), nodeNext(content));
-}
-for (const dir of Object.keys(TARGETS)) {
-  // version.ts (not .version.json) so tsc carries it into dist builds.
-  const file = join(root, "scripts", dir, "version.ts");
-  /* The stamp says when this content was last snapshotted, so it must not move
-     when the content does not. A wall-clock value rewritten on every run makes
-     the drift checks — `git diff --exit-code` in CI, and verify.mjs's snapshot
-     assertion — fail on a tree that is perfectly in sync, and a check that can
-     never pass is worse than no check. Keeping the previous stamp when the
-     content hash is unchanged makes the sync idempotent. */
-  const previous = await readFile(file, "utf8").catch(() => "");
-  const previousHash = /CONTENT_VERSION = "([^"]+)"/.exec(previous)?.[1];
-  const previousStamp = /CONTENT_SYNCED_AT = "([^"]+)"/.exec(previous)?.[1];
-  const syncedAt =
-    previousHash === version && previousStamp ? previousStamp : new Date().toISOString();
-  await writeFile(
-    file,
-    `// Generated by npm run sync:curriculum — do not edit by hand.\n` +
-      `export const CONTENT_VERSION = ${JSON.stringify(version)};\n` +
-      `export const CONTENT_SYNCED_AT = ${JSON.stringify(syncedAt)};\n` +
-      `export const CONTENT_SOURCE = "nexora-svelte/src/lib";\n`
+// Retired: the web-classroom snapshot list is empty (see TARGETS above), so
+// there is no web digest to compute and no stamp to write. The committed
+// vendor copies and their version stamps stay byte-stable until the platform
+// pass removes the services' classroom surface. If entries ever return here,
+// they must name sources that exist — the verify harness asserts the retired
+// sources stay absent.
+if (Object.keys(TARGETS).length > 0) {
+  throw new Error(
+    "sync-curriculum: web TARGETS are retired with the browser classroom — " +
+      "do not re-add web sources here; the platform pass owns the vendor copies."
   );
 }
-console.log(`curriculum synced (version ${version}).`);
+/* ---- Second source: the IDE curriculum, its own stamp ----
+   Generated as .ts wrappers rather than verbatim .json for two reasons. An
+   explicit `: unknown` annotation keeps tsc from inferring a type the size of
+   the document (declaration: true would otherwise emit it). And re-serializing
+   the parsed value makes the output canonical — the same bytes whatever line
+   endings the sibling repo checks out with (task-manager.json is CRLF there,
+   the manifest is LF), so the committed snapshot and a fresh sync always agree
+   under this repo's `* text=auto eol=lf`. A separate hash and version file
+   because this content has a different source and a different edit cadence than
+   the web missions; folding it into CONTENT_VERSION would rewrite the progress
+   and tutor stamps whenever an IDE phase changed. */
+const ideHash = createHash("sha256");
+const ideJobs = [];
+for (const s of IDE_SOURCES) {
+  const from = join(ideSrc, s.rel);
+  let raw;
+  try {
+    raw = await readFile(from, "utf8");
+  } catch {
+    throw new Error(
+      `cannot sync the IDE curriculum: no file at ${from}\n` +
+        `   nexora-ide must be checked out as a sibling of branchcraft (both under the same parent directory).`
+    );
+  }
+  const parsed = JSON.parse(raw);
+  // Hash the canonical form, never the raw bytes, so a CRLF-vs-LF checkout
+  // difference cannot masquerade as a content change.
+  const canonicalRel = s.rel.split("\\").join("/");
+  ideHash.update("ide/" + canonicalRel + "\n" + JSON.stringify(parsed) + "\n");
+  ideJobs.push({ ...s, parsed, canonicalRel });
+}
+const ideVersion = ideHash.digest("hex").slice(0, 12);
+
+await mkdir(ideDataDir, { recursive: true });
+for (const job of ideJobs) {
+  await writeFile(
+    join(ideDataDir, job.out),
+    `// Generated by npm run sync:curriculum — do not edit by hand.\n` +
+      `// Source: nexora-ide/extensions/nexora/curriculum/${job.canonicalRel}\n` +
+      `export const ${job.symbol}: unknown = ${JSON.stringify(job.parsed, null, 2)};\n`,
+    "utf8"
+  );
+}
+// Same idempotent-stamp rule as CONTENT_VERSION: it records when this content
+// was last snapshotted, so it must not move when the content does not.
+const ideVersionFile = join(ideDataDir, "ide-version.ts");
+const idePrev = await readFile(ideVersionFile, "utf8").catch(() => "");
+const idePrevHash = /IDE_CONTENT_VERSION = "([^"]+)"/.exec(idePrev)?.[1];
+const idePrevStamp = /IDE_CONTENT_SYNCED_AT = "([^"]+)"/.exec(idePrev)?.[1];
+const ideSyncedAt =
+  idePrevHash === ideVersion && idePrevStamp ? idePrevStamp : new Date().toISOString();
+await writeFile(
+  ideVersionFile,
+  `// Generated by npm run sync:curriculum — do not edit by hand.\n` +
+    `export const IDE_CONTENT_VERSION = ${JSON.stringify(ideVersion)};\n` +
+    `export const IDE_CONTENT_SYNCED_AT = ${JSON.stringify(ideSyncedAt)};\n` +
+    `export const IDE_CONTENT_SOURCE = "nexora-ide/extensions/nexora/curriculum";\n`,
+  "utf8"
+);
+console.log(`curriculum synced (ide ${ideVersion}).`);

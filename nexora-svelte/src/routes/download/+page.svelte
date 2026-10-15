@@ -1,23 +1,33 @@
 <script lang="ts">
   import { env } from "$env/dynamic/public";
   import PageHead from "$lib/components/PageHead.svelte";
+  import Headline from "$lib/components/Headline.svelte";
+  import SectionHead from "$lib/components/SectionHead.svelte";
+  import Plate from "$lib/components/Plate.svelte";
+  import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
 
   /* The desktop IDE, honestly.
-
-     The IDE is a real product surface (a VS Code fork), but a downloadable
-     build is only advertised when one actually exists. `PUBLIC_IDE_DOWNLOAD_URL`
-     is the single switch: set it to a hosted installer and this page links to
-     it; leave it unset (the default) and the page says the build is not
-     published yet rather than rendering a dead link or a button that goes
-     nowhere. This is the same rule the pricing page follows for plans and the
-     one D-012 states for the paywall: do not advertise what is not available.
-
-     Read the same defensive way every other public var is read here (see
-     $lib/session.svelte.ts, $lib/seo.ts): absent, empty and whitespace-only all
-     mean "not configured", and an unset variable must never throw. */
+   *
+   * The IDE is a real product surface (a VS Code fork), but a downloadable
+   * build is advertised only when one actually exists. `PUBLIC_IDE_DOWNLOAD_URL`
+   * is the single switch: set it to a hosted installer and this page links to
+   * it; leave it unset (the default) and the page says the build is not
+   * published yet rather than rendering a dead link or a button that goes
+   * nowhere. This is the same rule the pricing page follows for plans, and the
+   * one D-012 states for the paywall: do not advertise what is not available.
+   *
+   * Read the same defensive way every other public variable is read here (see
+   * `$lib/session.svelte.ts`, `$lib/seo.ts`): absent, empty and whitespace-only
+   * all mean "not configured", and an unset variable must never throw. */
   const downloadUrl = ((env.PUBLIC_IDE_DOWNLOAD_URL as string | undefined) ?? "").trim();
   const available = downloadUrl.length > 0;
+
+  const STEPS = [
+    { n: "01", text: "Download the IDE — the base course ships inside it." },
+    { n: "02", text: "Sign in when you want more: the IDE opens this site, you log in here." },
+    { n: "03", text: "Your tier decides which courses appear inside the IDE." },
+  ];
 </script>
 
 <PageHead
@@ -26,71 +36,87 @@
   path="/download"
 />
 
-<div class="mx-auto max-w-3xl px-4 py-10">
-  <p class="stamp text-accent">download</p>
-  <h1 class="mt-2 text-[26px] font-semibold tracking-[-0.02em] sm:text-[32px]">The NEXORA IDE</h1>
-  <p class="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted">
-    The only way to learn NEXORA: a desktop editor with the base course inside
-    it. Install it, open it, and the first judged verdict is minutes away — no
-    account, no browser tab, no second surface to choose between.
+<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+  <Headline
+    as="h1"
+    lines={["Install the editor.", "The course is already in it."]}
+    class="max-w-[18ch] text-[clamp(2.2rem,6.5vw,5rem)] text-ink"
+  />
+  <p class="mt-7 max-w-[52ch] font-serif text-[clamp(1.05rem,2vw,1.5rem)] leading-snug text-muted">
+    A desktop editor with the base course inside it. Install it, open it, and the first judged
+    verdict is minutes away — no account, no browser tab, no second surface to choose between.
   </p>
+</div>
 
-  <section class="mt-8 border border-rule" aria-label="How learning starts">
-    <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">how it goes</h2>
-    <ol class="space-y-2 px-3 py-3 text-[13px] leading-relaxed text-muted">
-      <li><span class="num text-ink">1.</span> Download the IDE — the base course ships inside it.</li>
-      <li><span class="num text-ink">2.</span> Sign in when you want more: the IDE opens this site, you log in here.</li>
-      <li><span class="num text-ink">3.</span> Your tier decides which courses appear inside the IDE.</li>
-    </ol>
-  </section>
+<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
+    <Plate crosshair>
+      <h2 class="display text-[clamp(1.3rem,2.4vw,1.9rem)] text-ink">Get the app</h2>
 
-  <section class="mt-8 border border-rule" aria-label="Get the IDE">
-    <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">get the app</h2>
-    <div class="px-3 py-4">
       {#if available}
-        <a
-          href={downloadUrl}
-          rel="external noopener"
-          class="inline-flex border border-rule px-4 py-2 text-[13px] font-medium text-ink hover:border-accent hover:text-accent"
-        >
-          Download the NEXORA IDE
-        </a>
-        <p class="mt-3 text-[12px] leading-relaxed text-faint">
-          Free to download. Pick the build for your operating system on the download page.
+        <p class="mt-4 max-w-[46ch] text-[14.5px] leading-relaxed text-muted">
+          One installer, the base course bundled. Pick the build for your operating system on the
+          download page — the download is free and needs no account.
         </p>
+        <div class="mt-7">
+          <ActionLink href={downloadUrl} external island>Download the NEXORA IDE</ActionLink>
+        </div>
       {:else}
-        <p class="text-[13px] leading-relaxed text-muted">
-          The desktop build is not published yet. The IDE is the only way to
-          learn, so there is nothing to start in the browser instead — check
-          back for the download rather than a dead link.
+        <p class="mt-4 max-w-[52ch] text-[14.5px] leading-relaxed text-muted">
+          The desktop build is not published yet. The IDE is the only way to learn, so there is
+          nothing to start in the browser instead — check back for the download rather than a dead
+          link.
         </p>
-        <div class="mt-4">
-          <a
-            href="/pricing"
-            class="inline-flex border border-rule px-4 py-2 text-[13px] font-medium text-ink hover:border-accent hover:text-accent"
-          >
-            See pricing while you wait
-          </a>
+        <div class="mt-7">
+          <ActionLink href="/pricing" variant="ghost" island>See pricing while you wait</ActionLink>
         </div>
       {/if}
-    </div>
-  </section>
 
-  <section class="mt-8 border border-rule" aria-label="What is free">
-    <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">what is free</h2>
-    <ul class="space-y-2 px-3 py-3 text-[13px] leading-relaxed text-muted">
-      <li>
-        <span class="text-ink">The download is free.</span> No account and no payment to get the
-        app.
-      </li>
-      <li>
-        <span class="text-ink">The first loop is bundled.</span> It works offline, with no account,
-        straight after install.
-      </li>
-      <li>
-        <span class="text-ink">Later phases are fetched per entitlement.</span> They are loaded for
-        the account signed in, and are never written to disk. Assessment itself stays free.
-      </li>
-    </ul>
-  </section>
+      <ol class="mt-10 grid gap-3 border-t border-rule pt-6">
+        {#each STEPS as step (step.n)}
+          <li class="flex gap-4 text-[14px] leading-relaxed text-ink">
+            <span class="num shrink-0 text-[11px] text-accent">{step.n}</span>
+            <span>{step.text}</span>
+          </li>
+        {/each}
+      </ol>
+    </Plate>
+
+    <div class="grid content-start gap-6">
+      <Plate>
+        <p class="stamp text-[11px] text-faint">what is free</p>
+        <ul class="mt-4 grid gap-4">
+          <li class="text-[13.5px] leading-relaxed text-muted">
+            <span class="text-ink">The download is free.</span> No account and no payment to get the
+            app.
+          </li>
+          <li class="text-[13.5px] leading-relaxed text-muted">
+            <span class="text-ink">The first loop is bundled.</span> It works offline, with no
+            account, straight after install.
+          </li>
+          <li class="text-[13.5px] leading-relaxed text-muted">
+            <span class="text-ink">Later phases are fetched per entitlement.</span> They are loaded
+            for the account signed in and are never written to disk. Assessment itself stays free.
+          </li>
+        </ul>
+      </Plate>
+
+      <Plate>
+        <p class="stamp text-[11px] text-faint">build status</p>
+        <p class="num mt-4 text-[13px] text-ink">
+          {available ? "hosted · linked" : "not published"}
+        </p>
+        <p class="mt-2 text-[12.5px] leading-snug text-faint">
+          One switch decides this: <code class="num text-ink">PUBLIC_IDE_DOWNLOAD_URL</code>.
+        </p>
+      </Plate>
+    </div>
+  </div>
+
+  <div class="mt-16">
+    <SectionHead
+      title="This page is a stub until an installer exists."
+      caption="We set one environment variable when a real build is hosted, and this page turns into a link. Until then it says so, because a download button that goes nowhere costs you more time than it saves."
+    />
+  </div>
 </div>

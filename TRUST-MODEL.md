@@ -1,235 +1,102 @@
 # The trust model
 
-NEXORA claims skills, so every verdict has to name **who decided it**. This document is the
-in-repo version of a trust model that already exists in comments scattered across the check
-engine, the sandbox harness and two services. Read it before adding a check, moving a rule, or
-telling a learner something is proven.
+NEXORA claims skills, so every verdict has to name **who decided it**.
 
-The short version: a learner's device uploads its own progress, so anything it sends is a *claim*.
-Three authorities decide verdicts today, and only two of them are the platform's.
+The short version: there is one way to learn — the desktop IDE — and two
+places a verdict can come from. Work judged on the learner's own machine is
+*practice*: the IDE's own checks, real and local, but the learner owns every
+input, so the product calls it practiced, never proven. Work the platform
+re-ran in its own sandbox and signed is *attested*: the only verdict a
+stranger is asked to trust, verifiable at `/verify`.
 
-## What the client is allowed to decide
+## What the browser does not do
 
-| Rule kind | Decided by | Where |
-|---|---|---|
-| `has-element`, `missing-element`, `count-min`, `count-exact`, `text-match`, `doc-text-match`, `attr-match`, `nested`, `labeled-inputs`, `no-placeholder-links`, `style-text-match` | The platform, recomputed from the stored draft | `platform/services/progress/src/verify-document.ts`, interpreter in `document-rules.ts` |
-| `runs` | The platform, recomputed from a signed run receipt | `platform/services/progress/src/verify-runs.ts`, evaluator in `run-evidence.ts` |
-| `computed-style`, `scripted` | **The client's own report** | `nexora-svelte/src/lib/checks.ts`, `evalRule` |
-| Question answers | **The client's own report** | progress service comment, `routes.ts:202` |
+This site teaches nothing in the browser. There are no missions, no check
+engine, no sandbox harness, and no visualizations here — the classroom routes,
+the `missions-*` content, `checks.ts`, `harness.ts`, `runner.ts`, and the
+`viz/` library were removed, and `scripts/verify.ts` fails if any route
+reintroduces them. Any paragraph below, in any older copy of this document,
+that describes a browser-decided rule kind (`computed-style`, `scripted`) or
+a per-mission client-reported table describes a product that no longer exists.
+The generator that wrote that table (`npm run trust:report`) is deleted with
+it; nothing in this file is generated anymore.
 
-`document-rules.ts` publishes exactly which kinds the platform can decide (`SERVER_DECIDABLE_KINDS`,
-alongside `isServerDecidable`), and its interpreter returns `null` — not a guess — for the kinds it
-does not own. The progress service filters a mission's checks through the same predicate
-(`documentChecks` in `verify-document.ts`), so client and server cannot disagree about *which*
-verdicts are the platform's.
+## The two verdicts
 
-Two properties hold everywhere in the engine:
+### Practice: decided on the learner's machine, by the learner's machine
 
-- **Absent evidence fails closed.** No observation, no run, no receipt, no saved draft → not a pass.
-  `checks.ts` returns `false` when the harness map or run map is missing; `verify-document.ts`
-  refuses a mission with no stored draft; `verify-runs.ts` refuses when there is no receipt.
-- **An empty assertion list is never a pass.** `evaluateAssertions` (`harness.ts`) and
-  `evaluateRunAssertions` (`run-evidence.ts`) both start with `if (assertions.length === 0) return false;`
-  A check that asserts nothing must never be able to complete a mission.
+The IDE runs the course's own suites against the learner's files and records
+the outcome with `local` provenance. Local work is not called worthless — it
+is called the learner's own, which is what it is. The IDE never promotes a
+local record by itself: there is no function in the extension that turns a
+passing local run into an attested one, and the suite fails if any code path
+besides the attestation client names that provenance.
 
-## Why the sandbox is opaque-origin
+### Attested: re-judged by the platform, then readable by a stranger
 
-JavaScript missions run the learner's page in an iframe with `sandbox="allow-scripts"` and
-**without** `allow-same-origin` (`Workspace.svelte`, the preview element). Scripts execute; the frame
-gets an opaque origin and therefore cannot read the parent, touch its storage, or present a fake
-same-origin identity.
+The extension submits a finished run — the check→test mapping, the source
+files, the test command — to `POST /api/execute/attest` (authed,
+quota-spending, like any other run). The execution service allowlists the
+command to `node --test` over registered canonical suites, runs the
+platform's own copies of those suites in its sandbox, judges the TAP names
+with the same present-AND-passing rule the extension uses, and answers
+`{ provenance: 'attested', outcome, checks }`. Three refusals keep it honest:
+a learner-supplied file shadowing a canonical suite is rejected; a suite with
+nothing registered answers 503 `attestation_unavailable` rather than a
+verdict; and the submitted `localTap` is accepted and ignored — evidence here
+is only what this service observed.
 
-The driver is appended to the learner's document last (`injectDriver`), so learner scripts load
-first. The protocol is deliberately narrow:
-
-- The parent posts one message shape, bound to a **per-run nonce** (`postHarnessRun`, `HARNESS_NS`).
-- The parent ignores any reply whose origin is not `"null"` — an opaque frame reports exactly that.
-- The reply is accepted only if it matches the namespace, the kind and the nonce
-  (`isHarnessReply`).
-- The frame returns **raw observations only**: DOM reads, return values, errors — sanitized to
-  JSON-able values (`sanitize`, `RUN_OP_SOURCE`).
-- Timeouts are owned parent-side (`HARNESS_TIMEOUT_MS`, 6000 ms) with a smaller driver-side cap on
-  a single `wait` (`HARNESS_MAX_WAIT_MS`, 2000 ms).
-
-The pass/fail decision is computed **parent-side** by `evaluateAssertions` over those raw
-observations. The frame never says "passed".
-
-None of that makes client-side assessment tamper-proof, and the code says so rather than implying
-otherwise: a hostile page can spoof its own observations, exactly like any Codecademy-style client
-check. The defence is proportionality — the driver accepts one shape, bound to one nonce — plus the
-independent transfer challenge as the backstop for mastery, and server-side execution whenever the
-stakes demand it. The harness is a teaching device, not an authority.
-
-## The two server authorities
-
-### Execution: a signed receipt, re-judged
-
-The execution service signs what it observed. A receipt is `{ v, issuedAt, facts, sig }`, and the
-signature is an HMAC-SHA256 over the facts (`signReceipt` / `verifyReceiptSignature`,
-`platform/packages/service-kit/src/receipt.ts`). The key is **derived** from the mesh key with a
-purpose string (`nexora/run-receipt/v1`, `receiptKey`) rather than being the mesh key: no new secret
-to deploy, and one purpose cannot be replayed as another. Comparison is constant-time.
-
-The progress service re-judges the check from those facts with the *same* evaluator the browser
-uses — `run-evidence.ts` is vendored into the service by `npm run sync:curriculum`, so the two sides
-cannot drift. It refuses, in the learner's own words, when:
-
-- there is no receipt (`has no record of a run from this platform`);
-- the signature is not one this platform issued;
-- the run is older than 30 minutes (`RECEIPT_MAX_AGE_MS`; a forward clock skew of 60 s is tolerated);
-- the run did not include the mission's own entry file (`entryPathFor`: `fileName` or `main.go`);
-- the entry file's `sha256` differs from `codeSha256(draftCode)` of the draft the server holds;
-- it ran, but the output does not satisfy the check's assertions.
-
-That hash comparison is the load-bearing one. `codeSha256` normalizes CRLF line endings (a browser
-and a container genuinely disagree there) and is otherwise byte-exact on purpose: if the learner
-edited after running, the hashes must differ and the completion is refused until they run the code
-they actually have. A receipt is a capability, not learner state — it is forwarded and spent, never
-stored as progress and never handed back to a client.
-
-### Runs are recorded, and a record is not a verdict
-
-The facts inside a receipt are kept: `POST /missions/:id/runs` writes what was run, what it printed,
-and when it died, so a learner who changes device can read their own attempts back
-(`GET /missions/:id/runs`, newest first) and the IDE has transcripts to show. Two rules keep that
-record honest, and neither of them turns it into evidence: a row is only written from a receipt this
-platform signed, and the run must include the mission's own entry file.
-
-Freshness is deliberately **not** one of those rules, where the completion path above does require
-it. A completion is a claim about what the learner can do now, so an old receipt is no answer; a
-history entry is a claim about what happened, so a run recorded an hour later is still a true record
-of that run — and insisting on 30 minutes would lose exactly the attempts a learner made offline.
-The record also stores whether the program that ran still matched the draft the service held
-(`matchesSavedDraft`), which is the same comparison the completion path refuses on, made readable
-instead of hidden.
-
-`receipt_sig` identifies a record and never leaves the service: the same run offered twice — for two
-checks, or after a retry — merges onto one row rather than duplicating facts, and a history read
-returns a description rather than something that could be spent. Nothing in `mission_runs` marks a
-check passed. Run history is durable; evidence is still recomputed.
-
-### Documents: the same interpreter, a real parser
-
-The progress service re-derives document checks from the draft it already stores for the mission,
-using the identical vendored interpreter (`evalDocumentRule`) and the same construction the client
-uses (`parseFromString(code, "text/html")`). The parser is jsdom — an implementation of the HTML
-parsing spec — chosen because a lighter parser moved fragment content and a top-level `<style>`
-between body and head, which made `doc-text-match` answer differently on the two sides. A verdict the
-learner can see is correct must not depend on who parsed the file.
-
-A refusal names the unmet requirement in the mission's own authored words (`verify-document.ts`
-returns `check.feedback`; the reason is used verbatim in the `422`). A rule the interpreter cannot
-evaluate also refuses rather than being skipped.
+A receipt itself can be shown to a stranger without an account, two ways.
+`POST /api/execute/verify` is public through the gateway and answers whether
+this platform issued the receipt and whether it is still fresh, with the
+decoded facts — and it names which signature verified. And a stranger can skip
+the platform entirely: receipts carry an Ed25519 signature over the same bytes
+as the HMAC, and `GET /api/execute/verify-key` publishes the key, so anyone
+re-derives the verdict offline with nothing that mints. The HMAC remains for
+mesh-internal checks and pre-migration receipts.
 
 ## Where it stops being sufficient
 
-Two rule kinds are the client's word, and the code says why instead of pretending otherwise:
+Verification still leans on the platform in two ways. Freshness is the
+platform's word: an Ed25519 signature proves *what ran and when it claims to
+have run*, not that the run is recent — backdating within the 30-minute window
+is undetectable offline, so a stranger who cares about recency asks `/verify`.
+And the published key is trusted on first sight: rotation is named by `keyId`,
+but nothing here pins the key's history, so a key swap mid-dispute is a human
+judgment, not a cryptographic one. The IDE's `attestation-gaps` suite fails
+if anything claims more than this.
 
-- **`computed-style` needs a rendering engine.** The browser answers it from a real cascade with real
-  default styles. No server-side parser reproduces that faithfully, and guessing server-side would
-  mean refusing work the learner can see is correct.
-- **`scripted` needs a page to be driven** — clicks, input, reads. That is a browser-shaped job and it
-  stays where the sandbox is.
+Two properties hold everywhere a verdict is produced:
 
-The consequences, per mission, generated from the shipped content instead of counted by hand. A
-hand-maintained disclosure drifts — this one did, understating the client's share by thirteen rules
-and omitting eight missions — so the table below is written by `npm run trust:report` and
-`npm run verify` fails when it stops matching the content:
-
-<!-- BEGIN GENERATED: assessment authorities — written by `npm run trust:report`, checked by `npm run verify` -->
-
-Every mission that ships a requirement only the learner's browser can decide. A rule the
-platform cannot re-run is *recorded and named*; it is never presented as the platform's
-verdict.
-
-| Mission | Checks | Client-reported | Platform-decided |
-|---|---|---|---|
-| `css-selectors` | 3 | 3 `computed-style` | 0 |
-| `css-box-model` | 4 | 3 `computed-style` | 1 |
-| `css-flexbox` | 4 | 3 `computed-style` | 1 |
-| `css-grid` | 4 | 1 `computed-style` | 3 |
-| `css-debug` | 4 | 2 `computed-style` | 2 |
-| `css-landing` | 11 | 2 `computed-style` | 9 |
-| `js-counter` | 3 | 1 `scripted` | 2 |
-| `js-logic` | 3 | 2 `scripted` | 1 |
-| `js-state` | 3 | 2 `scripted` | 1 |
-| `js-arrays` | 3 | 2 `scripted` | 1 |
-| `js-dom` | 3 | 1 `scripted` | 2 |
-| `js-forms` | 4 | 2 `scripted` | 2 |
-| `js-async` | 3 | 2 `scripted` | 1 |
-| `js-debug` | 3 | 1 `scripted` | 2 |
-| `js-boss` | 6 | 1 `scripted` | 5 |
-| **All 46 missions** | **124** | **28** (22.6 %) | **96** |
-
-Who decides each rule kind, and how much of it the content actually ships:
-
-| Rule kind | Decided by | Rules shipped |
-|---|---|---|
-| `attr-match` | platform, from the stored draft | 3 |
-| `computed-style` | the learner's browser | 14 |
-| `count-exact` | platform, from the stored draft | 2 |
-| `count-min` | platform, from the stored draft | 12 |
-| `doc-text-match` | platform, from the stored draft | 0 |
-| `has-element` | platform, from the stored draft | 23 |
-| `labeled-inputs` | platform, from the stored draft | 2 |
-| `missing-element` | platform, from the stored draft | 0 |
-| `nested` | platform, from the stored draft | 3 |
-| `no-placeholder-links` | platform, from the stored draft | 1 |
-| `runs` | platform, from a signed run receipt | 18 |
-| `scripted` | the learner's browser | 14 |
-| `style-text-match` | platform, from the stored draft | 16 |
-| `text-match` | platform, from the stored draft | 16 |
-
-11 kinds are the platform's from the stored draft, 1 from a signed receipt, and 2 (`computed-style`, `scripted`) are the learner's own browser — 28 of 124 shipped requirements, 22.6 %.
-
-<!-- END GENERATED: assessment authorities -->
-
-Two entries in that table are worth naming plainly. `css-selectors` is saved entirely on the
-client's report — every one of its requirements is a cascade question the server cannot answer —
-and any mission that mixes these kinds with decided ones is *half-decided* rather than wholly
-trusted, not `n` of `n`. The `js` stage is where most of this lives now: the whole layer is
-browser-reported behaviour, so its completions are the learner's word about their own page.
-
-Question answers travel the same way. The progress service says so itself (`routes.ts:202`): the
-answers, `computed-style` and `scripted` remain the client's own report until there is a tier that can
-reproduce them.
-
-## What a headless-browser tier would change
-
-It would move these two kinds from "the client's report" to "the platform's verdict" by giving the
-server the equipment it currently lacks: a real cascade for `computed-style`, and a driven page for
-`scripted`. Done properly, that is a *replacement* of authority, not a third authority:
-
-- The same declarative rules and the same interpreter, so no new vocabulary appears.
-- The same fail-closed rule: no page, no verdict — never a pass by default.
-- Determinism has to be earned, not assumed: a driven page needs network stubs for anything that
-  fetches, a clock it can trust, and a stated timeout, or the tier becomes a source of flaky
-  refusals — which is worse than an honest "the client says so".
-- Until then, this table is the limitation. It is a documented gap, not a licence to move more rules
-  to the client.
+- **Absent evidence fails closed.** No observation, no run, no receipt → not
+  a pass. An empty assertion list is never a pass either.
+- **A receipt is a capability, not learner state** — it is forwarded and
+  spent, never stored as progress and never handed back to a client. Receipts
+  carry a 30-minute freshness bound and are bound to the entry file's sha256,
+  so editing after running refuses until the learner runs the code they
+  actually have.
 
 ## What a contributor may not do
 
-1. **Never move a check from the server to the client for convenience.** If a rule needs equipment the
-   platform lacks, either build the equipment or write the limitation here.
-2. **Never special-case a mission id in the engine.** Rules are data; the engine interprets them
-   generically, and a mission-specific branch is how the engine stops being auditable.
-3. **Never weaken a check to make a mission pass**, and never delete a test (or an assertion in one) to
-   get a green run.
-4. **Never add hidden imperative test code to the client.** Checks stay declarative data interpreted
-   by `checks.ts`.
-5. **Never let the UI claim a verdict, a runtime, or a proof the engine did not produce.** If the work
-   ran in the browser, say so; if a check could not be assessed, say that instead.
-6. **Never treat a parser's answer as a cascade's answer.** A server verdict that contradicts what the
-   learner can see on screen is a bug in the verdict, not in the learner.
+1. **Never move a check from the server to the client for convenience.** If a
+   rule needs equipment the platform lacks, either build the equipment or
+   write the limitation here.
+2. **Never special-case a learner, a course, or a phase id in the engine.**
+   Rules are data; the engine interprets them generically, and a special case
+   is how the engine stops being auditable.
+3. **Never weaken a check to make a course pass**, and never delete a test (or
+   an assertion in one) to get a green run.
+4. **Never let any surface claim a verdict, a runtime, or a proof the engine
+   did not produce.** If the work ran on the learner's machine, say so; if a
+   check could not be assessed, say that instead.
+5. **Never reintroduce browser teaching through a side door.** A route, a
+   component, or a content file that judges learning in the browser is the
+   classroom returning, and the front-door suite fails on it by name.
 
 ## Not verified here
 
-The `422` refusal status for document checks and the exact quote in `routes.ts:202` are stated as
-the service states them in its own comments; the route bodies were not re-read in full for this
-pass.
-
-The generated block is the exception, and deliberately so: it is derived from the shipped content
-by `npm run trust:report`, and `scripts/verify.ts` asserts that this document still matches what the
-content produces and that every rule kind in the `CheckRule` union has an owner in `KIND_AUTHORITY`.
-The edited-by-hand prose around it is not machine-checked beyond that.
+The platform services that vendored the old browser content
+(`services/curriculum`, `services/progress`, `services/tutor`) still carry
+those snapshots; removing the web-mission sync and the services' classroom
+surface is a platform workstream of its own, recorded in the backlog — this
+document does not claim it is done.

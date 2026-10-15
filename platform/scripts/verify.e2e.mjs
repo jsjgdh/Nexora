@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /* Platform verification, part 2: full-stack e2e on real containers.
    Run: npm run verify:e2e
-   Builds all images, boots compose, runs a complete learner journey through
-   the gateway (auth, curriculum, diagnostic, recommendations, progress,
-   submission history, completion, summary, tutor, execution, billing
-   webhooks, isolation, throttling), then tears everything down.
+   Builds all images, boots compose, runs a complete IDE-shaped journey
+   through the gateway (auth, IDE roadmap, paid phases behind entitlement,
+   execution, receipts, attestation availability, billing webhooks,
+   isolation, throttling), then tears everything down.
 
    Requires a Docker daemon, and host ports 8080/3000 free — it publishes the
    same two the dev stack does, so stop `docker compose up` locally first.
@@ -46,15 +46,6 @@ function compose(args, timeout = 1_200_000) {
   });
 }
 const { signingKey } = await import("../services/billing/dist/dodo.js");
-/* The diagnostic's authored answer key, read from the very module the progress
-   service grades with. The suite therefore drives the real placement rules
-   without ever asking the API for an answer, and without a fixture that rots
-   the moment an item's answer is edited — the same trusted-source trick as the
-   billing webhook signature above, and no relaxation of the rule that the
-   wire never carries an answer key. */
-const { DIAGNOSTIC_ITEMS: DIAGNOSTIC_KEY } = await import(
-  "../services/progress/dist/vendor/diagnostic.js"
-);
 const SECRETS = {
   AUTH_JWT_SECRET: randomBytes(32).toString("hex"),
   INTERNAL_API_KEY: randomBytes(32).toString("hex"),
@@ -166,145 +157,23 @@ describe("compose stack", () => {
     assert.equal(me.json.user.email, email);
   });
 
-  it("curriculum: versioned catalog, no answer keys over the wire", async () => {
-    const v = await api("/api/curriculum/version", { token: A.tokens.accessToken });
-    assert.equal(v.json.missions, 46);
-    assert.equal(v.json.stages, 15);
-    const stages = await api("/api/curriculum/stages");
-    assert.equal(stages.json.stages.length, 15);
-    // The total above is pinned here and in the host suite, because it is what
-    // the learner is shown. This is the half that cannot go stale: the counter
-    // must agree with the catalog it summarises, so a mission that ships
-    // without being listed by a stage fails right here instead of drifting
-    // quietly away from the number in the version response.
-    assert.equal(
-      stages.json.stages.reduce((n, s) => n + s.missionIds.length, 0),
-      v.json.missions
-    );
-    const css = await api("/api/curriculum/missions?stage=css");
-    assert.equal(css.json.missions.length, 8);
-    const diag = await api("/api/curriculum/diagnostic/items");
-    assert.equal(diag.json.items.length, 9);
-    for (const item of diag.json.items) assert.equal("answer" in item, false);
-    const one = await api("/api/curriculum/missions/js-counter");
-    assert.ok(one.json.mission.checks.length >= 3);
-  });
-
-  it("diagnostic recomputes placement server-side; recommendations follow", async () => {
-    const items = (await api("/api/curriculum/diagnostic/items")).json.items;
-    const answers = new Map(DIAGNOSTIC_KEY.map((d) => [d.id, d.answer]));
-    assert.equal(items.length, DIAGNOSTIC_KEY.length);
-    for (const item of items) assert.ok(answers.has(item.id), `unkeyed item ${item.id}`);
-
-    // The selections below are the only thing the service trusts: it recomputes
-    // correctness itself, so a client claiming `correct: true` proves nothing.
-    const submit = (selectedFor) => {
-      const results = items.map((d) => {
-        const selected = selectedFor(d.id);
-        return { itemId: d.id, selected, correct: false, skipped: selected === -1 };
-      });
-      return api("/api/progress/diagnostic", {
-        method: "POST",
-        token: A.tokens.accessToken,
-        body: { results },
-      });
-    };
-
-    // Nobody home: every item skipped. Nothing has been demonstrated, so
-    // placement lands before syntax rather than inside a track nobody chose.
-    const beginner = await submit(() => -1);
-    assert.equal(beginner.status, 200);
-    assert.equal(beginner.json.startMissionId, "how-programs-run");
-
-    // A roadmap needs a goal: `recommend()` answers "tell us your goal" until
-    // the profile is filled in, which is why the assertion below needs it.
-    const profile = await api("/api/progress/profile", {
-      method: "PUT",
-      token: A.tokens.accessToken,
-      body: { goal: "build for the web", experience: "some", hoursPerWeek: "5" },
-    });
-    assert.equal(profile.status, 200);
-
-    // Every item answered as the authored key says. This asserts the placement
-    // rule — demonstrated web competence outranks an unfinished language layer
-    // — instead of yesterday's option indexes, so an edited answer key cannot
-    // leave the suite asserting a placement the curriculum no longer implies.
-    const ace = await submit((id) => answers.get(id));
-    assert.equal(ace.status, 200);
-    assert.equal(ace.json.startMissionId, "links-and-navigation");
-
-    const rec = await api("/api/progress/recommendations", { token: A.tokens.accessToken });
-    assert.equal(rec.status, 200);
-    assert.equal(rec.json.primaryId, "links-and-navigation");
-  });
-
-  it("mission draft round-trips; completion is server-computed and idempotent", async () => {
-    // A draft that genuinely satisfies this mission's declarative rules: the
-    // completion route re-derives them from exactly this code (a claimed pass
-    // list no longer completes a web mission on its own).
-    const code = [
-      "<nav>",
-      '  <a href="index.html">Home</a>',
-      '  <a href="projects.html">Projects</a>',
-      '  <a href="https://developer.mozilla.org/">MDN reference</a>',
-      "</nav>",
-      "",
-    ].join("\n");
-    const draft = {
-      code,
-      checksPassed: ["nav-links", "relative-link", "absolute-link", "no-placeholders"],
-      attempts: 1,
-      hintsUsed: 0,
-      maxHintLevel: 0,
-      questionsAnswered: { l1: 0 },
-      questionsCorrect: { l1: true },
-    };
-    const put = await api("/api/progress/missions/links-and-navigation", {
-      method: "PUT",
-      token: A.tokens.accessToken,
-      body: draft,
-    });
-    assert.equal(put.status, 200);
-    assert.equal(put.json.progress.code, code);
-    const get = await api("/api/progress/missions/links-and-navigation", { token: A.tokens.accessToken });
-    assert.equal(get.json.progress.attempts, 1);
-    const done = await api("/api/progress/missions/links-and-navigation/complete", {
-      method: "POST",
-      token: A.tokens.accessToken,
-    });
-    assert.equal(done.status, 200);
-    assert.equal(done.json.mastered, true);
-    assert.equal(done.json.xpGained, 150);
-    const again = await api("/api/progress/missions/links-and-navigation/complete", {
-      method: "POST",
-      token: A.tokens.accessToken,
-    });
-    assert.equal(again.status, 409);
-    const open = await api("/api/progress/missions/personal-website/complete", {
-      method: "POST",
-      token: A.tokens.accessToken,
-    });
-    assert.equal(open.status, 422);
-  });
-
-  it("summary reflects server-side evidence", async () => {
-    const s = await api("/api/progress/summary", { token: A.tokens.accessToken });
-    assert.equal(s.json.xp, 150);
-    assert.equal(s.json.completed, 1);
-    assert.equal(s.json.mastered, 1);
-    const skill = s.json.skills.find((x) => x.id === "html-links-nav");
-    assert.equal(skill?.level, "independent");
-  });
-
-  it("tutor answers from authored hints when unconfigured", async () => {
-    const r = await api("/api/tutor/ask", {
-      method: "POST",
-      token: A.tokens.accessToken,
-      body: { missionId: "first-page", failingChecks: ["missing h1"], hintLevel: 2 },
-    });
-    assert.equal(r.status, 200);
-    assert.equal(r.json.source, "curriculum");
-    assert.match(r.json.text, /Concept/);
+  it("IDE curriculum: public roadmap, paid phases behind entitlement", async () => {
+    // The roadmap is public: a signed-out learner sees the whole road and
+    // what it costs to walk, never a one-item course hiding the rest.
+    const manifest = await api("/api/curriculum/ide/manifest");
+    assert.equal(manifest.status, 200);
+    assert.equal(manifest.json.manifest.phases.length, 12);
+    assert.ok(manifest.json.manifest.phases.some((p) => p.tier === "free"));
+    assert.ok(manifest.json.manifest.phases.some((p) => p.tier === "pro"));
+    // Paid bodies are gated twice: no identity reads as "sign in" (401),
+    // identity without subscription as "subscribe" (402).
+    const anon = await api("/api/curriculum/ide/phases/ui");
+    assert.equal(anon.status, 401);
+    const free = await api("/api/curriculum/ide/phases/ui", { token: A.tokens.accessToken });
+    assert.equal(free.status, 402);
+    const version = await api("/api/curriculum/ide/version");
+    assert.equal(version.status, 200);
+    assert.match(version.json.ideVersion, /^[0-9a-f]{12}$/);
   });
 
   it("execution runs learner code in isolation", async () => {
@@ -321,6 +190,65 @@ describe("compose stack", () => {
     assert.equal(r.json.timedOut, false);
     const caps = await api("/api/execute/capabilities", { token: A.tokens.accessToken });
     assert.ok(caps.json.languages.includes("node"));
+  });
+
+  it("receipts verify without an account; attestation stays authed and honest", async () => {
+    const run = await api("/api/execute/execute", {
+      method: "POST",
+      token: A.tokens.accessToken,
+      body: {
+        language: "node",
+        files: [{ path: "main.js", content: "console.log('verify me');" }],
+      },
+    });
+    assert.equal(run.status, 200, JSON.stringify(run.json));
+    assert.ok(run.json.receipt, "a signed run must come back with its receipt");
+
+    // Public through the gateway: a stranger with the receipt holds no JWT
+    // and still gets the platform's own answer.
+    const stranger = await api("/api/execute/verify", {
+      method: "POST",
+      body: { receipt: run.json.receipt },
+    });
+    assert.equal(stranger.status, 200, JSON.stringify(stranger.json));
+    assert.equal(stranger.json.valid, true);
+    assert.equal(stranger.json.fresh, true);
+
+    const forged = await api("/api/execute/verify", {
+      method: "POST",
+      body: { receipt: { ...run.json.receipt, sig: "0".repeat(64) } },
+    });
+    assert.equal(forged.status, 200, JSON.stringify(forged.json));
+    assert.equal(forged.json.valid, false);
+
+    // Attestation spends sandbox time, so it is never public: no token, no run.
+    const anon = await api("/api/execute/attest", {
+      method: "POST",
+      body: {
+        checkIds: ["adds"],
+        checks: [{ id: "adds", tests: ["adds two numbers"] }],
+        files: [{ path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" }],
+        command: "node --test --test-reporter=tap test/add.test.mjs",
+        localTap: "ok 1 - adds two numbers\n",
+      },
+    });
+    assert.equal(anon.status, 401, JSON.stringify(anon.json));
+
+    // Authed but with no canonical suite registered: the honest 503, never a
+    // verdict the platform did not compute.
+    const bare = await api("/api/execute/attest", {
+      method: "POST",
+      token: A.tokens.accessToken,
+      body: {
+        checkIds: ["adds"],
+        checks: [{ id: "adds", tests: ["adds two numbers"] }],
+        files: [{ path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" }],
+        command: "node --test --test-reporter=tap test/add.test.mjs",
+        localTap: "ok 1 - adds two numbers\n",
+      },
+    });
+    assert.equal(bare.status, 503, JSON.stringify(bare.json));
+    assert.equal(bare.json.error.code, "attestation_unavailable");
   });
 
   it("execution runs real Go: stdout, structured compile errors, and panics", async () => {
@@ -386,102 +314,25 @@ describe("compose stack", () => {
     assert.equal(panicked.json.diagnostics[0].kind, "runtime");
   });
 
-  it("submission history: the run is on record, and re-offering it changes nothing", async () => {
-    // A real Go run through the runner. Its response carries the platform's own
-    // signed record of the run, which is what makes a history entry worth
-    // keeping — the client forwards it, it cannot author one.
-    const run = await api("/api/execute/execute", {
-      method: "POST",
-      token: A.tokens.accessToken,
-      body: {
-        language: "go",
-        files: [
-          {
-            path: "main.go",
-            content:
-              'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("recorded")\n}\n',
-          },
-        ],
-        limits: { timeoutMs: 30000 },
-      },
-    });
-    assert.equal(run.status, 200, JSON.stringify(run.json));
-    assert.ok(run.json.receipt, "a signed run must come back with its receipt");
-
-    const body = { runs: [{ checkId: "run-answer", receipt: run.json.receipt }] };
-    const first = await api("/api/progress/missions/go-first-program/runs", {
-      method: "POST",
-      token: A.tokens.accessToken,
-      body,
-    });
-    assert.equal(first.status, 200, JSON.stringify(first.json));
-    assert.equal(first.json.stored, 1);
-    assert.equal(first.json.duplicates, 0);
-
-    // The same execution offered again is the same record: the unique index on
-    // the runner's signature is what makes a retry harmless.
-    const again = await api("/api/progress/missions/go-first-program/runs", {
-      method: "POST",
-      token: A.tokens.accessToken,
-      body,
-    });
-    assert.equal(again.status, 200, JSON.stringify(again.json));
-    assert.equal(again.json.stored, 0);
-    assert.equal(again.json.duplicates, 1);
-    assert.equal(again.json.total, 1);
-
-    const history = await api("/api/progress/missions/go-first-program/runs", {
-      token: A.tokens.accessToken,
-    });
-    assert.equal(history.status, 200, JSON.stringify(history.json));
-    assert.equal(history.json.total, 1);
-    const entry = history.json.runs[0];
-    assert.equal(entry.stdout.trim(), "recorded");
-    assert.equal(entry.exitCode, 0);
-    assert.equal(entry.language, "go");
-    assert.equal(entry.entryPath, "main.go");
-    assert.deepEqual(entry.checkIds, ["run-answer"]);
-    assert.ok(entry.issuedAt && entry.recordedAt, "when it ran, and when it was kept");
-    // A receipt is a capability: the record describes the run and never hands
-    // back something that could be spent elsewhere.
-    assert.equal("sig" in entry, false);
-
-    // A record is not a verdict: having the run on file completes nothing.
-    const complete = await api("/api/progress/missions/go-first-program/complete", {
-      method: "POST",
-      token: A.tokens.accessToken,
-      body: { runs: [] },
-    });
-    assert.equal(complete.status, 422, "history is not evidence");
-    assert.equal(complete.json.error.code, "run_unverified");
-  });
-
-  it("users cannot touch each other's progress", async () => {
+  it("users cannot touch each other's entitlement", async () => {
     const email = `e2e-b-${Date.now()}@test.dev`;
     const reg = await api("/api/auth/register", {
       method: "POST",
       body: { email, password: "0123456789abcdef" },
     });
     const bt = reg.json.tokens.accessToken;
-    const read = await api("/api/progress/missions/links-and-navigation", { token: bt });
-    assert.equal(read.status, 404);
-    const complete = await api("/api/progress/missions/links-and-navigation/complete", {
-      method: "POST",
-      token: bt,
-    });
-    assert.equal(complete.status, 422);
-    // Nor another learner's run history: the first account has runs on record
-    // for this mission, and none of them belong to this one.
-    const runs = await api("/api/progress/missions/go-first-program/runs", { token: bt });
-    assert.equal(runs.status, 200);
-    assert.equal(runs.json.total, 0);
-    assert.equal(runs.json.runs.length, 0);
+    // A stranger's account has no subscription: paid phases stay 402, and the
+    // roadmap — the public half — still answers.
+    const phase = await api("/api/curriculum/ide/phases/ui", { token: bt });
+    assert.equal(phase.status, 402);
+    const manifest = await api("/api/curriculum/ide/manifest", { token: bt });
+    assert.equal(manifest.status, 200);
   });
 
   it("auth boundaries hold; login throttle trips", async () => {
-    const anon = await api("/api/progress/summary");
+    const anon = await api("/api/execute/capabilities");
     assert.equal(anon.status, 401);
-    const pub = await api("/api/curriculum/stages");
+    const pub = await api("/api/curriculum/ide/manifest");
     assert.equal(pub.status, 200);
     let last = 0;
     for (let i = 0; i < 9; i++) {
@@ -492,6 +343,35 @@ describe("compose stack", () => {
       last = r.status;
     }
     assert.equal(last, 429);
+
+    // Signing out ends the token in hand, not just the session's ability to renew.
+    // The refresh family and the access token's jti are both revoked in one call,
+    // and the gateway — which verifies tokens by signature alone — asks about that
+    // jti from the next request on, so the same bearer is refused at once instead
+    // of working for the rest of its five minutes. (Registration is not throttled,
+    // so the exhausted address budget above does not affect this.)
+    const email = `e2e-revoke-${Date.now()}@test.dev`;
+    const reg = await api("/api/auth/register", {
+      method: "POST",
+      body: { email, password: "0123456789abcdef" },
+    });
+    assert.equal(reg.status, 201, JSON.stringify(reg.json));
+    const token = reg.json.tokens.accessToken;
+    const before = await api("/api/execute/capabilities", { token });
+    assert.equal(before.status, 200, "the token works before sign-out");
+    const out = await api("/api/auth/logout", {
+      method: "POST",
+      body: { refreshToken: reg.json.tokens.refreshToken, accessToken: token },
+    });
+    assert.equal(out.status, 200);
+    const after = await api("/api/execute/capabilities", { token });
+    assert.equal(after.status, 401, "the signed-out access token is dead immediately, not in five minutes");
+    assert.equal(after.json.error.code, "token_revoked");
+    const refreshed = await api("/api/auth/refresh", {
+      method: "POST",
+      body: { refreshToken: reg.json.tokens.refreshToken },
+    });
+    assert.equal(refreshed.status, 401, "and the family cannot mint a replacement");
   });
 
   it("billing: plans, unconfigured checkout, signed webhook → entitlement", async () => {
@@ -539,6 +419,12 @@ describe("compose stack", () => {
       entitled: true,
       currentPeriodEnd: "2027-01-01T00:00:00.000Z",
     });
+    // And the subscription opens the course: the phase that read 402 before
+    // the webhook now serves its body — names, bodies, and checks included.
+    const phase = await api("/api/curriculum/ide/phases/ui", { token: A.tokens.accessToken });
+    assert.equal(phase.status, 200, JSON.stringify(phase.json));
+    assert.equal(phase.json.phase.id, "ui");
+    assert.ok(Array.isArray(phase.json.phase.activities) && phase.json.phase.activities.length > 0);
   });
 
   it("frontend serves the client behind the gateway", async () => {

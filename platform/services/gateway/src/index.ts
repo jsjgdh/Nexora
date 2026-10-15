@@ -2,16 +2,19 @@ import Fastify from "fastify";
 import helmet from "@fastify/helmet";
 import { randomUUID } from "node:crypto";
 import { ApiError } from "@nexora/service-kit";
-import { loadConfig } from "./config.js";
-import { bearerUserId, clerkVerifier, localVerifier, type TokenVerifier } from "./auth.js";
+import { loadConfig, type RouteConfig } from "./config.js";
+import { bearerIdentity, clerkVerifier, localVerifier, type TokenVerifier } from "./auth.js";
 import { FixedWindow } from "./limits.js";
 import { MAX_BODY_BYTES, forward, matchRoute, buildForwardHeaders } from "./proxy.js";
+import { EntitlementCache, billingLookup } from "./entitlement.js";
+import { RevocationCache, revocationLookup } from "./revocation.js";
 
 /* Public edge: CORS, JWT authentication, rate limits, request tracing, and
    reverse proxying to the mesh. Internal services are never exposed
    directly — every byte from a client passes through here. */
 
 const config = loadConfig();
+const isProd = (process.env.NODE_ENV ?? "development") === "production";
 const verifier: TokenVerifier =
   config.authMode === "clerk"
     ? clerkVerifier({
@@ -22,6 +25,121 @@ const verifier: TokenVerifier =
     : localVerifier(config.jwtSecret);
 const globalLimiter = new FixedWindow(config.globalLimit.windowMs, config.globalLimit.max);
 const routeLimiters = new Map(config.routes.map((r) => [r.prefix, new FixedWindow(r.limit.windowMs, r.limit.max)]));
+
+// Entitlement for paid curriculum routes: one cache, resolved against billing,
+// short-lived so a cancellation bites within the TTL and invalidated on the
+// webhook path so a new subscription bites at once. See entitlement.ts.
+const entitlement = new EntitlementCache(
+  config.entitlementTtlMs,
+  billingLookup({ url: config.billingUrl, internalKey: config.internalKey, timeoutMs: 5_000 })
+);
+
+// Revocation: sign-out must end the token in hand, not just the family it renews
+// with, so every request presenting a token that carries an id asks the auth
+// service whether that id was revoked. One lookup per request, and revoked ids are
+// remembered until they expire. See revocation.ts for why a clear answer never
+// replaces a lookup, and why an unreachable check is neither a yes nor a no — with
+// one bounded exception (`revocationClearTtlMs`) so that a blip in the auth service
+// does not take every authenticated request down with it.
+const revocation = new RevocationCache(
+  revocationLookup({ url: config.authUrl, internalKey: config.internalKey, timeoutMs: config.revocationTimeoutMs }),
+  config.revocationClearTtlMs
+);
+
+/* What the edge says about revocations, and how often.
+ *
+ * Three events matter operationally and none can be a line per request: a token
+ * refused (a thief retrying one would write the log on the attacker's schedule), a
+ * check that could not be answered (every authenticated request fails, so the line
+ * is the same one thousands of times), and a request allowed on a stale answer
+ * while the service is down — the last is the one nothing else complains about,
+ * because the requests succeed. All three therefore go through a counter, reported
+ * on a timer as one structured line — and the *first* after a quiet period is
+ * logged at once, because an outage that is invisible for a minute is a minute of
+ * requests nobody is watching, whether they failed or quietly degraded.
+ */
+const REVOCATION_REPORT_MS = Number(process.env.REVOCATION_REPORT_MS ?? 60_000);
+let reported = { refused: 0, unanswered: 0, degraded: 0 };
+let lastRevocationReport = Date.now();
+
+function revocationNotice(
+  verdict: "revoked" | "unknown" | "degraded",
+  reason: "credential" | "account" | null,
+  url: string
+): void {
+  const now = Date.now();
+  const firstSinceReport = now - lastRevocationReport >= REVOCATION_REPORT_MS;
+  lastRevocationReport = now;
+  const stats = revocation.stats();
+  const failed = stats.unanswered;
+  if (verdict === "unknown" && (firstSinceReport || failed === 1)) {
+    app.log.error(
+      { unanswered: failed, url },
+      "revocation check could not be answered — authenticated requests are being refused"
+    );
+    return;
+  }
+  // The degraded allow is the quieter half of an outage and the half an operator
+  // most needs to see: requests are succeeding, so nothing else complains — the
+  // only record that a sign-out could go unseen for a moment is this line.
+  if (verdict === "degraded" && (firstSinceReport || stats.degraded === 1)) {
+    app.log.error(
+      {
+        degraded: stats.degraded,
+        unanswered: stats.unanswered,
+        clearTtlMs: config.revocationClearTtlMs,
+        url,
+      },
+      "revocation check could not be answered — serving a bounded stale answer, so a sign-out in this window may not be seen yet"
+    );
+    return;
+  }
+  if (verdict === "revoked" && firstSinceReport) {
+    app.log.warn(
+      { reason, refused: { ...stats.refused }, fromCache: stats.fromCache, url },
+      "revoked access token refused"
+    );
+  }
+}
+
+if (Number.isFinite(REVOCATION_REPORT_MS) && REVOCATION_REPORT_MS > 0) {
+  const timer = setInterval(() => {
+    const stats = revocation.stats();
+    const refused = stats.refused.credential + stats.refused.account;
+    const delta = {
+      refused: refused - reported.refused,
+      unanswered: stats.unanswered - reported.unanswered,
+      degraded: stats.degraded - reported.degraded,
+    };
+    reported = { refused, unanswered: stats.unanswered, degraded: stats.degraded };
+    // Silence when nothing moved: a line per minute saying "no revocations" is how
+    // a log stops being read, and an operator who wants the totals has the line
+    // below whenever anything changes.
+    if (delta.refused === 0 && delta.unanswered === 0 && delta.degraded === 0) return;
+    const level = delta.unanswered > 0 || delta.degraded > 0 ? "error" : "info";
+    app.log[level](
+      {
+        ...delta,
+        totals: { asked: stats.asked, fromCache: stats.fromCache, refused: stats.refused },
+        cachedIds: revocation.size,
+        // How many credentials are currently rideable through an outage: the size
+        // of the exposure, in the same line as how often it was used.
+        fallbackIds: revocation.clearSize,
+        clearTtlMs: config.revocationClearTtlMs,
+        windowMs: REVOCATION_REPORT_MS,
+      },
+      "revocation activity"
+    );
+  }, REVOCATION_REPORT_MS);
+  // Housekeeping must never hold the process open, exactly as in the auth
+  // service's prune.
+  timer.unref();
+}
+
+/** True when `path` is at or under one of the route's paid prefixes. */
+function isPaidPath(route: RouteConfig, path: string): boolean {
+  return (route.paidPrefixes ?? []).some((p) => path === p || path.startsWith(p + "/"));
+}
 
 const app = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? "info", base: { service: "gateway" } },
@@ -54,6 +172,22 @@ app.addHook("onRequest", async (req, reply) => {
 
 app.get("/health/live", async () => ({ status: "ok", service: "gateway" }));
 app.get("/health/ready", async () => ({ status: "ready", service: "gateway" }));
+/* The one endpoint this deployment has for "is it healthy, and why not".
+ *
+ * It carries the revocation state as well as the mesh checks, because that state is
+ * the difference between an incident an operator can see from a monitor and one they
+ * can only see by reading logs they do not have: the check sits in front of every
+ * authenticated request, so an auth service that has stopped answering degrades
+ * *this* edge — first by serving bounded stale answers, then by refusing requests
+ * outright — long before anything downstream looks unhealthy. (This is the shape
+ * TODO 5.2 asks for; until a real metrics system exists, the health endpoints are
+ * the dashboard.)
+ *
+ * `authService: "unknown"` is not a failure: it means no token has been presented
+ * since boot, so nothing has been asked yet. `/health/ready` deliberately stays a
+ * plain process check — a revocation outage must not make an orchestrator restart a
+ * gateway that is still serving public traffic, which is the opposite of help.
+ */
 app.get("/health/deep", async () => {
   const checks = await Promise.all(
     config.routes.map(async (r) => {
@@ -66,7 +200,9 @@ app.get("/health/deep", async () => {
     })
   );
   const allOk = checks.every((c) => c.ok);
-  return { status: allOk ? "ready" : "degraded", checks };
+  const revocations = revocation.health();
+  const revocationsOk = revocations.authService !== "unreachable";
+  return { status: allOk && revocationsOk ? "ready" : "degraded", checks, revocations };
 });
 
 app.route({
@@ -91,16 +227,89 @@ app.route({
     }
 
     let userId: string | null = null;
+    let identity: Awaited<ReturnType<typeof bearerIdentity>> = null;
     const publicPath = route.publicPaths?.includes(path) ?? false;
     if (route.auth && !publicPath) {
-      userId = await bearerUserId(req.headers.authorization, verifier);
-      if (!userId) throw new ApiError(401, "unauthorized", "Valid access token required.");
+      identity = await bearerIdentity(req.headers.authorization, verifier);
+      if (!identity) throw new ApiError(401, "unauthorized", "Valid access token required.");
+      userId = identity.userId;
     } else if (!publicPath && req.headers.authorization) {
       // Optional-auth routes (e.g. /api/auth/me): a presented token is still
       // verified and forwarded as identity, so account-scoped handlers work
       // on public prefixes. A bad token is rejected — never silently dropped.
-      userId = await bearerUserId(req.headers.authorization, verifier);
-      if (!userId) throw new ApiError(401, "unauthorized", "Invalid access token.");
+      identity = await bearerIdentity(req.headers.authorization, verifier);
+      if (!identity) throw new ApiError(401, "unauthorized", "Invalid access token.");
+      userId = identity.userId;
+    }
+
+    /* Sign-out has to end the credential, not just the session's ability to
+       renew: without this the token a learner was holding kept working until it
+       expired, which is exactly the window a thief needs. A token that names
+       itself (`jti`) is checked against the auth service's denylist; Clerk tokens
+       carry no id we can look up, so Clerk's own revocation stands for them and
+       nothing is invented here. Three answers, and the third is not a verdict:
+       revoked → 401, clear → continue, unreachable → 503 rather than a silent
+       allow. "Unreachable" has one bounded exception — a credential confirmed clear
+       within `revocationClearTtlMs` continues, and the request says so in the log
+       (`degraded`) — because refusing every request for as long as the auth service
+       is away is an outage of a different, larger kind, and a credential nobody
+       confirmed inside the window still gets the 503.
+
+       The sign-out route itself is exempt, and only it: its whole job is to revoke
+       credentials, so refusing it a token that is *already* revoked would turn a
+       request that must stay idempotent (and oracle-free) into a 401 the client can
+       do nothing with — signing out twice is not an error. Nothing is weakened by
+       that: a revoked bearer can influence nothing at /auth/logout beyond rows that
+       are already dead, and the route forwards no identity it did not verify. */
+    const isSignOutPath = route.prefix === "/api/auth" && path === "/api/auth/logout";
+    if (identity?.jti && !isSignOutPath) {
+      const { verdict, reason, degraded } = await revocation.status({
+        jti: identity.jti,
+        userId: identity.userId,
+        issuedAtMs: identity.issuedAtMs,
+        expiresAtMs: identity.expiresAtMs,
+      });
+      if (verdict === "revoked") {
+        // A refusal is a security event worth a line, and the reason says which
+        // half did it: one credential signed out, or the whole account. Rate
+        // limited below, because a thief retrying a dead token would otherwise
+        // write the log themselves.
+        revocationNotice(verdict, reason, req.url);
+        throw new ApiError(401, "token_revoked", "This session was signed out. Sign in again.");
+      }
+      if (verdict === "unknown") {
+        revocationNotice(verdict, null, req.url);
+        throw new ApiError(
+          503,
+          "revocation_unavailable",
+          "We can't confirm your session right now. Try again shortly."
+        );
+      }
+      // Clear — and if it only stands because the last *confirmed* answer is still
+      // inside its bound, the request proceeds but the outage is logged: a
+      // degraded allow is the one path where the platform answers without having
+      // heard from the service, so silence here would hide it completely.
+      if (degraded) revocationNotice("degraded", null, req.url);
+    }
+
+    /* Paid curriculum: a token is mandatory — the optional-auth branch above
+       leaves userId null when none is presented, which is fine for a public
+       prefix but not for content behind the paywall — and billing must confirm
+       the subscription before a byte is forwarded. Three distinct answers so the
+       extension can tell "sign in" (401) from "subscribe" (402) from "we can't
+       check right now" (503); none of them may read as a failed check. */
+    const paidPath = isPaidPath(route, path);
+    let entitled = false;
+    if (paidPath) {
+      if (!userId) throw new ApiError(401, "unauthorized", "Sign in to access the paid curriculum.");
+      const verdict = await entitlement.get(userId);
+      if (verdict === "unknown") {
+        throw new ApiError(503, "entitlement_unavailable", "We can't confirm your subscription right now. Try again shortly.");
+      }
+      if (verdict !== "entitled") {
+        throw new ApiError(402, "entitlement_required", "This content is part of the paid curriculum. Subscribe to unlock it.");
+      }
+      entitled = true;
     }
 
     let body: Buffer | null = null;
@@ -120,6 +329,11 @@ app.route({
       userId,
       internalKey: config.internalKey,
       requestId: req.id,
+      entitled,
+      // req.ip here is our own view of the caller (trustProxy-aware, and the
+      // client's X-Forwarded-For was stripped above), so downstream limiters
+      // can key on a real client instead of on this proxy's address.
+      clientIp: req.ip,
     });
     // Body-less requests (GET/DELETE) must not claim a JSON body — strict
     // parsers downstream reject an empty payload with content-type set.
@@ -135,6 +349,13 @@ app.route({
         body,
         timeoutMs: route.timeoutMs,
       });
+      // A billing webhook just changed subscription state. It carries no user id
+      // we recognise (Dodo's, not ours), so drop every cached verdict; the next
+      // paid request re-asks billing and sees the new state at once instead of
+      // after the TTL. Only on success — a rejected webhook changed nothing.
+      if (upstream.status < 300 && route.prefix === "/api/billing" && path === "/api/billing/webhooks/dodo") {
+        entitlement.invalidate();
+      }
       for (const [k, v] of Object.entries(upstream.headers)) reply.header(k, v);
       reply.header("X-Request-Id", req.id);
       return reply.code(upstream.status).send(upstream.body);
@@ -187,8 +408,14 @@ app.setErrorHandler((err, req, reply) => {
     return reply.code(statusCode).send({
       error: {
         code: "bad_request",
+        // The parser's own message ("Unexpected token } in JSON at position 3")
+        // tells a prober exactly which parser and where it stopped, and it is
+        // never something a client can act on. Development keeps it; production
+        // says only that the request was malformed.
         message:
-          typeof malformed.message === "string" ? malformed.message : "Malformed request.",
+          !isProd && typeof malformed.message === "string"
+            ? malformed.message
+            : "Malformed request.",
         requestId: req.id,
       },
     });

@@ -3,7 +3,10 @@ import { createServer } from "node:net";
 import { createRequire } from "node:module";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright";
-import { ALL_MISSIONS } from "../src/lib/missions";
+
+/* Accessibility over the front door only: the download, the account, the
+   tier, and the proof. There is one way to learn — the desktop IDE — so no
+   classroom route exists to scan. */
 
 declare global {
   interface Window {
@@ -27,19 +30,13 @@ const require = createRequire(import.meta.url);
 const axePath = require.resolve("axe-core/axe.min.js");
 const allRoutes = [
   "/",
-  "/roadmap",
-  "/onboarding",
-  "/diagnostic",
-  "/auth",
-  "/profile",
-  "/projects",
-  "/skills",
-  "/practice",
   "/pricing",
-  "/lab/containers",
-  "/visualizations",
+  "/auth",
+  "/auth/ide",
+  "/profile",
+  "/verify",
+  "/download",
   "/route-that-does-not-exist",
-  ...ALL_MISSIONS.map((mission) => `/mission/${mission.id}`),
 ];
 const routes = process.env.AXE_ROUTES
   ? process.env.AXE_ROUTES.split(",").map((route) => route.trim()).filter(Boolean)

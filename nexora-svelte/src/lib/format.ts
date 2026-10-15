@@ -2,30 +2,8 @@ export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
 }
 
-import type { NodeState } from "./types";
-
-/* Action verbs per node state (stolen from a good design concept: every
-   state answers "what do I do here?" with one verb, not a generic Open). */
-export function actionVerb(state: NodeState): string {
-  switch (state) {
-    case "locked":
-      return "";
-    case "available":
-      return "Start mission";
-    case "recommended":
-      return "Continue learning";
-    case "in-progress":
-      return "Resume mission";
-    case "completed":
-      return "Revisit";
-    case "mastered":
-      return "Review";
-    case "needs-practice":
-      return "Start the drill";
-    case "optional":
-      return "Start mission";
-  }
-}
+/* Small display helpers: classnames, durations, relative time. No course
+   model lives here — the site is a front door, not a classroom. */
 
 export function minutesLabel(min: number): string {
   if (min < 60) return `${min} min`;

@@ -3,7 +3,11 @@
   import { startCheckout } from "$lib/billing";
   import Button from "$lib/components/Button.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
+  import Headline from "$lib/components/Headline.svelte";
+  import Plate from "$lib/components/Plate.svelte";
+  import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
+  import { BILLING_COMMITMENTS, FREE_TIER_POINTS } from "$lib/content/site";
 
   /* Pricing backed by the real plans feed — never hardcoded copy. The API
      names plans only (no amounts travel through it), so prices live where
@@ -66,52 +70,54 @@
 
 <PageHead
   title={pageTitle("Pricing")}
-  description="NEXORA's curriculum, diagnostic and checks are free. Pro adds a larger metered allowance for hosted execution and tutoring when plans are published."
+  description="The base course in the IDE and every check are free. Pro unlocks the further IDE courses per your tier when plans are published."
   path="/pricing"
 />
 
-<div class="mx-auto max-w-3xl px-4 py-10">
-  <p class="stamp text-accent">pricing</p>
-  <h1 class="mt-2 text-[26px] font-semibold tracking-[-0.02em] sm:text-[32px]">Free to learn. Pro to run more.</h1>
-  <p class="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted">
-    Learning happens in the IDE: the base course ships inside the download and
-    stays free, and assessment is never gated. Pro unlocks the further courses
-    per your tier — they appear inside the IDE you already have.
+<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+  <Headline
+    as="h1"
+    lines={["Free to learn.", "Pro to run more."]}
+    class="text-[clamp(2.2rem,6.5vw,5rem)] text-ink"
+  />
+  <p class="mt-7 max-w-[54ch] font-serif text-[clamp(1.05rem,2vw,1.5rem)] leading-snug text-muted">
+    Learning happens in the IDE. The base course ships inside the download and stays free, and
+    assessment is never gated.
   </p>
+</div>
 
-  <div class="mt-8 grid gap-4 sm:grid-cols-2">
-    <section class="border border-rule" aria-label="Free plan">
-      <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">free — forever</h2>
-      <div class="px-3 py-3">
-        <p class="num text-[22px] text-ink">$0</p>
-        <ul class="mt-3 space-y-1.5 text-[13px] leading-relaxed text-muted">
-          <li>All 46 missions, questions and deterministic checks</li>
-          <li>Diagnostic placement and the practice log</li>
-          <li>Evidence export of everything you prove</li>
-          <li>Account with cross-device sync</li>
-        </ul>
-        <div class="mt-4 flex flex-wrap gap-2">
-          <a
-            href="/download"
-            class="inline-flex border border-accent bg-accent/10 px-4 py-2 text-[13px] font-medium text-accent hover:bg-accent/20"
-          >
-            Get the IDE
-          </a>
-          <a
-            href="/roadmap"
-            class="inline-flex border border-rule px-4 py-2 text-[13px] font-medium text-ink hover:border-accent hover:text-accent"
-          >
-            Browse the curriculum
-          </a>
-        </div>
+<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
+  <div class="grid gap-6 lg:grid-cols-2">
+    <!-- Free -->
+    <Plate crosshair label="Free plan">
+      <div class="flex items-baseline justify-between gap-4">
+        <h2 class="display text-[clamp(1.3rem,2.4vw,1.9rem)] text-ink">Free</h2>
+        <span class="stamp text-[11px] text-added">forever</span>
       </div>
-    </section>
+      <p class="num mt-5 text-[clamp(2rem,4vw,2.75rem)] leading-none text-ink">$0</p>
+      <ul class="mt-6 grid gap-3 border-t border-rule pt-6">
+        {#each FREE_TIER_POINTS as point, i (`free-${i}`)}
+          <li class="flex gap-3 text-[13.5px] leading-relaxed text-muted">
+            <span class="num shrink-0 text-[11px] text-added">+</span>
+            <span>{point}</span>
+          </li>
+        {/each}
+      </ul>
+      <div class="mt-7">
+        <ActionLink href="/download" island>Get the IDE</ActionLink>
+      </div>
+    </Plate>
 
-    <section class="border border-rule" aria-label="Pro plan">
-      <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">pro — metered</h2>
-      <div class="px-3 py-3">
+    <!-- Pro -->
+    <Plate crosshair label="Pro plan">
+      <div class="flex items-baseline justify-between gap-4">
+        <h2 class="display text-[clamp(1.3rem,2.4vw,1.9rem)] text-ink">Pro</h2>
+        <span class="stamp text-[11px] text-accent">metered</span>
+      </div>
+
+      <div class="mt-5">
         {#if !apiConfigured}
-          <p class="text-[13px] leading-relaxed text-muted">
+          <p class="text-[14px] leading-relaxed text-muted">
             This build runs in local mode. Pro plans appear here once a platform is connected.
           </p>
         {:else if session.restoring}
@@ -119,14 +125,14 @@
                whether this learner is signed in — the cookie is unreadable here. -->
           <p class="stamp text-muted">checking your session…</p>
         {:else if !session.loggedIn}
-          <p class="text-[13px] leading-relaxed text-muted">
+          <p class="text-[14px] leading-relaxed text-muted">
             <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to see Pro
             plans. Everything you can learn stays free either way.
           </p>
         {:else if loading}
           <p class="stamp text-muted">loading plans…</p>
         {:else if error}
-          <p role="alert" class="text-[13px] text-removed">{error}</p>
+          <p role="alert" class="text-[14px] text-removed">{error}</p>
         {:else if subscription?.entitled}
           <p class="flex flex-wrap items-baseline gap-x-3 text-[14px]">
             <span class="stamp text-approved">pro active</span>
@@ -136,60 +142,48 @@
                 : ""}
             </span>
           </p>
-          <p class="mt-2 text-[12px] leading-relaxed text-faint">
-            Manage or cancel from your <a href="/profile" class="text-accent underline underline-offset-4">profile</a>.
+          <p class="mt-3 text-[12.5px] leading-relaxed text-faint">
+            Manage or cancel from your
+            <a href="/profile" class="text-accent underline underline-offset-4">profile</a>.
           </p>
         {:else if plans.length === 0}
-          <p class="text-[13px] leading-relaxed text-muted">
+          <p class="text-[14px] leading-relaxed text-muted">
             No paid plans published yet — everything stays free until they are.
           </p>
         {:else}
-          <ul class="space-y-2">
+          <ul class="grid gap-3">
             {#each plans as pl (pl.slug)}
-              <li class="flex flex-wrap items-center justify-between gap-2 border-t border-rule pt-2 first:border-t-0 first:pt-0">
+              <li class="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-3 first:border-t-0 first:pt-0">
                 <span class="text-[14px] text-ink">{pl.name}</span>
-                <Button size="sm" variant="outline" onclick={() => upgrade(pl.slug)} disabled={busy !== null}>
+                <Button size="sm" variant="ghost" onclick={() => upgrade(pl.slug)} disabled={busy !== null}>
                   {busy === pl.slug ? "Redirecting…" : `Choose ${pl.name}`}
                 </Button>
               </li>
             {/each}
           </ul>
-          <p class="mt-3 text-[12px] leading-relaxed text-faint">
-            Prices are shown on the secure checkout (Dodo Payments) before anything is charged.
-            The renewal date is on that page too, before you pay — not only at the point of
-            cancelling.
+          <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
+            Prices are shown on the secure checkout (Dodo Payments) before anything is charged. The
+            renewal date is on that page too, before you pay — not only at the point of cancelling.
           </p>
         {/if}
       </div>
-    </section>
+    </Plate>
   </div>
 
   <!-- The billing promises. Written before there is a price to sell, on purpose:
        the loudest thing anyone says about a competitor in this category is that
        they felt cheated on money rather than that the teaching was bad. These
-       are commitments the product has to keep, so the suite asserts them here
-       where they are stated. Refund window marked for legal review. -->
-  <section class="mt-8 border border-rule" aria-label="Billing commitments">
-    <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">
-      how billing works here
-    </h2>
-    <ul class="space-y-2 px-3 py-3 text-[13px] leading-relaxed text-muted">
-      <li>
-        <span class="text-ink">No surprise renewals.</span> The renewal date is shown before
-        you pay and in your profile, every time — never only at the point of cancelling.
-      </li>
-      <li>
-        <span class="text-ink">Cancel in two clicks.</span> Self-serve, in this product. No
-        email, no retention maze, no "are you sure?" loop.
-      </li>
-      <li>
-        <span class="text-ink">One visible price.</span> Purchasing-power discounts are applied
-        as a discount you can see, never as a higher local price.
-      </li>
-      <li>
-        <span class="text-ink">No check is ever behind the paywall.</span> Assessment stays
-        free — a verdict you have to pay for is not a verdict you can trust.
-      </li>
-    </ul>
+       are commitments the product has to keep, so the suite asserts them where
+       they are stated. Refund window marked for legal review. -->
+  <section class="mt-16" aria-label="Billing commitments">
+    <h2 class="display text-[clamp(1.5rem,2.8vw,2.1rem)] text-ink">How billing works here.</h2>
+    <div class="grid gap-8 border-t border-rule pt-8 sm:grid-cols-2">
+      {#each BILLING_COMMITMENTS as item, i (`bill-${i}`)}
+        <div class="max-w-[46ch]">
+          <h3 class="text-[15px] font-semibold text-ink">{item.title}</h3>
+          <p class="mt-2 text-[13.5px] leading-relaxed text-muted">{item.body}</p>
+        </div>
+      {/each}
+    </div>
   </section>
 </div>

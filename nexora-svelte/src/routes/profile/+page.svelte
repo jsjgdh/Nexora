@@ -1,22 +1,32 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { progress } from "$lib/store.svelte";
-  import { COMPETENCIES, layerById, stageById } from "$lib/curriculum";
-  import { ALL_MISSIONS } from "$lib/missions";
   import { apiConfigured, session } from "$lib/session.svelte";
   import { openBillingPortal, startCheckout } from "$lib/billing";
-  import { sync } from "$lib/sync.svelte";
   import Button from "$lib/components/Button.svelte";
-  import { isCompleted } from "$lib/recommend";
-  import { cn, timeAgo } from "$lib/format";
   import PageHead from "$lib/components/PageHead.svelte";
+  import Plate from "$lib/components/Plate.svelte";
+  import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
 
-  let confirmReset = $state(false);
-  let exported = $state(false);
+  /* The account page, after the pivot: there is one way to learn, and it is
+     the desktop IDE. This page holds the account, the plan, the billing
+     portal, and verified proof the platform itself attested — never browser
+     progress, XP, diagnostics, or a curriculum record. Practice stays in the
+     IDE; what this site shows as verified is only what its own signatures
+     verify, re-derivable at /verify. */
 
   // Billing state (cloud only; loaded lazily when signed in).
+  // `billingLoaded` means "an attempt has settled for the current account" — it
+  // is set in the effect's `finally`, so a FAILED attempt latches too. That is
+  // the whole point: an unreachable billing service is asked exactly once, not
+  // re-triggered by the very effect that ran it (the old code set `billingLoaded`
+  // only on success, so a failure left the guard open and the `finally` flipping
+  // `billingLoading` back to false re-ran the effect in a loop).
+  // `billingAttemptedEpoch` records the `session.epoch` the latch belongs to, so
+  // a sign-in or account switch re-arms exactly one fresh attempt, while a token
+  // renewal — which never bumps `epoch` — does not re-hit billing.
   let billingLoaded = $state(false);
+  let billingAttemptedEpoch = $state(-1);
   let billingLoading = $state(false);
   let billingError = $state<string | null>(null);
   let plans = $state<{ slug: string; name: string }[]>([]);
@@ -31,21 +41,52 @@
   // Kept apart from `billingError`: a portal call failing is not the plan
   // failing to load, and it must not hide the plan the learner already has.
   let portalError = $state<string | null>(null);
+  // Verified proof, latched by the same one-attempt-per-account rule: rows
+  // come only from the attested endpoint, never synthesized locally.
+  let proofs = $state<{ competencyId: string; level: string; kind: string; issuedAt: string }[]>([]);
+  let proofsError = $state<string | null>(null);
 
   $effect(() => {
+    // Re-arm on an identity change (sign-in / account switch), never on a token
+    // renewal — `session.epoch` is exactly that signal (see session.svelte.ts).
+    const epoch = session.epoch;
+    if (epoch !== billingAttemptedEpoch) {
+      billingAttemptedEpoch = epoch;
+      billingLoaded = false;
+    }
     if (apiConfigured && session.loggedIn && !billingLoaded && !billingLoading) {
       billingLoading = true;
       billingError = null;
-      Promise.all([session.subscription(), session.plans()])
-        .then(([s, p]) => {
-          subscription = s.subscription;
-          plans = p.plans;
-          billingLoaded = true;
-        })
-        .catch((e) => {
-          billingError = e instanceof Error ? e.message : "Could not load billing.";
+      proofsError = null;
+      // Settled separately: billing failing must not hide verified proof that
+      // loaded, and proofs failing must not hide the plan — same latch, two
+      // independent answers.
+      Promise.allSettled([session.subscription(), session.plans(), session.myProofs()])
+        .then(([s, p, v]) => {
+          if (s.status === "fulfilled" && p.status === "fulfilled") {
+            subscription = s.value.subscription;
+            plans = p.value.plans;
+          } else {
+            const first = [s, p].find((r) => r.status === "rejected");
+            billingError =
+              first && first.status === "rejected"
+                ? first.reason instanceof Error
+                  ? first.reason.message
+                  : "Could not load billing."
+                : "Could not load billing.";
+          }
+          if (v.status === "fulfilled") {
+            proofs = v.value.proofs;
+          } else {
+            proofsError =
+              v.reason instanceof Error ? v.reason.message : "Could not load verified proof.";
+          }
         })
         .finally(() => {
+          // Latch whether it worked or not: one attempt per account, even when
+          // the service is unreachable. A manual re-check (the checkout-return
+          // button) clears `billingLoaded` to try again.
+          billingLoaded = true;
           billingLoading = false;
         });
     }
@@ -86,141 +127,51 @@
    * builds this URL (see lib/billing.ts).
    */
   const checkoutReturn = $derived(page.url.searchParams.get("checkout") === "done");
-
-  const missions = $derived(Object.values(progress.state.missions));
-  const added = $derived(missions.filter((m) => m.completedAt).length);
-  const approved = $derived(missions.filter((m) => m.masteredAt).length);
-  const approvedSkills = $derived(
-    COMPETENCIES.filter((c) =>
-      ["demonstrated", "independent", "strong"].includes(
-        progress.state.competencies[c.id]?.level ?? "unseen"
-      )
-    ).length
-  );
-
-  /** Where along the four layers this learner currently sits. */
-  const currentLayer = $derived.by(() => {
-    const inProgress = Object.keys(progress.state.missions).find((id) => {
-      const p = progress.state.missions[id];
-      return p.startedAt && !p.completedAt;
-    });
-    const missionId = inProgress ?? ALL_MISSIONS.find((m) => isCompleted(m.id, progress.state))?.id;
-    const mission = missionId ? ALL_MISSIONS.find((m) => m.id === missionId) : undefined;
-    const stage = mission ? stageById(mission.stageId) : undefined;
-    return stage ? layerById(stage.layerId) : undefined;
-  });
-
-  function exportData() {
-    const blob = new Blob([JSON.stringify(progress.state, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "nexora-progress.json";
-    a.click();
-    URL.revokeObjectURL(url);
-    exported = true;
-    setTimeout(() => (exported = false), 3000);
-  }
-
-  const syncStamp: Record<string, string> = {
-    local: "on this device",
-    syncing: "saving",
-    saved: "saved",
-    offline: "offline — will retry",
-    error: "sync paused",
-  };
-
-  async function reset() {
-    if (confirmReset) {
-      // Signed-in resets also wipe the cloud copy, so the account does not
-      // resurrect this progress at the next sign-in.
-      if (session.loggedIn) await sync.resetAccount();
-      progress.resetAll();
-      confirmReset = false;
-    } else {
-      confirmReset = true;
-      setTimeout(() => (confirmReset = false), 6000);
-    }
-  }
-
-  function label(id: string): string {
-    const map: Record<string, string> = {
-      "first-job": "Get my first developer job",
-      "own-projects": "Build my own projects",
-      deepen: "Understand code properly",
-      "work-with-dev": "Work better with developers",
-      zero: "Total beginner",
-      basics: "Knows the basics",
-      built: "Has built things",
-      dev: "Already codes",
-    };
-    return map[id] ?? id;
-  }
 </script>
 
 <!-- A signed-in view: it is deliberately absent from the sitemap, and it is
      marked noindex here so the two do not disagree. -->
 <PageHead
   title={pageTitle("Profile & settings")}
-  description="Your learner record: goal, pace, account state, what syncs — and the controls for what lives in this browser only."
+  description="Your NEXORA account: sign-in state, plan, and subscription management. Learning happens in the desktop IDE."
   path="/profile"
   noindex
 />
 
-<div class="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-  <p class="stamp text-accent">learner record</p>
-  <h1 class="mt-2 text-[26px] font-semibold tracking-[-0.02em] sm:text-[32px]">
-    {progress.state.profile.name ? progress.state.profile.name : "Your record"}
+<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
+  <h1 class="display text-[clamp(1.8rem,4vw,3rem)] text-ink">
+    {session.user?.email ? session.user.email : "Your account"}
   </h1>
-  <p class="mt-2 text-[14px] text-muted">
+  <p class="mt-4 text-[14px] text-muted">
     {#if session.loggedIn}
       Signed in as <span class="text-ink">{session.user?.email ?? "…"}</span> ·
       <a href="/auth" class="text-accent underline underline-offset-4">account</a>
+    {:else if session.restoring}
+      Checking your session…
     {:else}
-      Everything here lives in this browser until you create an account.
+      <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to manage your
+      subscription. Learning itself happens in the desktop IDE.
     {/if}
   </p>
 
-  <dl class="mt-5 flex flex-wrap items-baseline gap-x-8 gap-y-2 border-y border-rule py-3">
-    <div>
-      <dt class="stamp text-faint">added</dt>
-      <dd class="num mt-0.5 text-[16px] text-added">{added}</dd>
-    </div>
-    <div>
-      <dt class="stamp text-faint">approved</dt>
-      <dd class="num mt-0.5 text-[16px] text-approved">{approved}</dd>
-    </div>
-    <div>
-      <dt class="stamp text-faint">skills with evidence</dt>
-      <dd class="num mt-0.5 text-[16px] text-muted">{approvedSkills}</dd>
-    </div>
-    <div>
-      <dt class="stamp text-faint">active days</dt>
-      <dd class="num mt-0.5 text-[16px] text-muted">{progress.state.activeDays.length}</dd>
-    </div>
-    {#if currentLayer}
-      <div>
-        <dt class="stamp text-faint">current layer</dt>
-        <dd class="mt-0.5 text-[14px] text-ink">{currentLayer.title}</dd>
-      </div>
-    {/if}
-  </dl>
-
   {#if apiConfigured}
-    <section class="mt-6 border border-rule" aria-label="Plan">
-      <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">plan</h2>
-      <div class="px-3 py-3">
-        {#if !session.loggedIn}
-          <p class="text-[13px] leading-relaxed text-muted">
+    <div class="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <Plate crosshair label="Plan">
+        <p class="stamp text-[11px] text-faint">plan</p>
+
+        {#if session.restoring}
+          <p class="stamp mt-4 text-muted">checking your session…</p>
+        {:else if !session.loggedIn}
+          <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
             <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to manage a
-            subscription. The curriculum itself is free either way.
+            subscription. The base course in the IDE is free either way.
           </p>
         {:else if billingLoading}
-          <p class="stamp text-muted">loading plan…</p>
+          <p class="stamp mt-4 text-muted">loading plan…</p>
         {:else if billingError}
-          <p role="alert" class="text-[13px] text-removed">{billingError}</p>
+          <p class="mt-4 text-[13.5px] text-removed" role="alert">{billingError}</p>
         {:else if subscription?.entitled}
-          <p class="flex flex-wrap items-baseline gap-x-3 text-[14px]">
+          <p class="mt-4 flex flex-wrap items-baseline gap-x-3 text-[14px]">
             <span class="stamp text-approved">pro active</span>
             <span class="text-muted">
               {subscription.plan}{subscription.currentPeriodEnd
@@ -228,42 +179,42 @@
                 : ""}
             </span>
           </p>
-          <div class="mt-3">
-            <Button size="sm" variant="outline" onclick={manage} disabled={portalBusy}>
+          <div class="mt-5 border-t border-rule pt-5">
+            <Button size="sm" variant="ghost" onclick={manage} busy={portalBusy}>
               {portalBusy ? "Opening…" : "Manage subscription"}
             </Button>
           </div>
           {#if portalError}
-            <p role="alert" class="mt-2 text-[13px] text-removed">{portalError}</p>
+            <p class="mt-3 text-[13px] text-removed" role="alert">{portalError}</p>
           {/if}
-          <p class="mt-2 text-[12px] leading-relaxed text-faint">
-            Cancel, update your card and read invoices in the payment provider's portal — this
-            opens it for your account.
+          <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
+            Cancel, update your card and read invoices in the payment provider's portal — this opens
+            it for your account.
           </p>
         {:else if checkoutReturn}
-          <p class="text-[13px] leading-relaxed text-muted">
+          <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
             <span class="stamp text-review">payment received — confirming</span><br />
-            <span class="mt-1 block">
+            <span class="mt-2 block">
               You are back from checkout. Pro activates when the payment provider confirms, usually
               within a minute — the redirect itself grants nothing.
             </span>
           </p>
-          <div class="mt-3">
-            <Button size="sm" variant="outline" onclick={() => (billingLoaded = false)}>
+          <div class="mt-5 border-t border-rule pt-5">
+            <Button size="sm" variant="ghost" onclick={() => (billingLoaded = false)}>
               Check again
             </Button>
           </div>
         {:else}
-          <p class="text-[13px] leading-relaxed text-muted">
-            Free plan — the whole curriculum is free. Pro supports the platform and unlocks extras
-            as they ship.
+          <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
+            Free plan — the base course in the IDE is free. Pro unlocks the further courses per your
+            tier, inside the IDE you already have.
           </p>
           {#if plans.length > 0}
-            <div class="mt-3 flex flex-wrap gap-2">
+            <div class="mt-5 flex flex-wrap gap-2 border-t border-rule pt-5">
               {#each plans as pl (pl.slug)}
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="ghost"
                   onclick={() => upgrade(pl.slug)}
                   disabled={checkoutBusy !== null}
                 >
@@ -272,148 +223,58 @@
               {/each}
             </div>
           {:else}
-            <p class="mt-2 text-[12px] text-faint">No plans published yet.</p>
+            <p class="mt-4 text-[12.5px] text-faint">No plans published yet.</p>
           {/if}
         {/if}
-      </div>
-    </section>
+      </Plate>
 
-    <section class="mt-4 border border-rule" aria-label="Cloud sync">
-      <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">cloud sync</h2>
-      <div class="px-3 py-3">
-        {#if !session.loggedIn}
-          <p class="text-[13px] leading-relaxed text-muted">
-            Your progress lives in this browser.
-            <a href="/auth" class="text-accent underline underline-offset-4">Create a free account</a>
-            to back it up and pick it up on any device.
+      <Plate label="IDE access">
+        <p class="stamp text-[11px] text-faint">ide access</p>
+        <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
+          Your tier decides which courses appear inside the IDE. Approve the IDE's sign-in code at
+          <a href="/auth/ide" class="text-accent underline underline-offset-4">/auth/ide</a>
+          — the password is typed here, never in the IDE.
+        </p>
+        <div class="mt-5 border-t border-rule pt-5">
+          <ActionLink href="/auth/ide" variant="ghost" size="sm" island>Approve a code</ActionLink>
+        </div>
+      </Plate>
+
+      <Plate label="Verified">
+        <p class="stamp text-[11px] text-faint">verified</p>
+
+        {#if session.restoring}
+          <p class="stamp mt-4 text-muted">checking your session…</p>
+        {:else if !session.loggedIn}
+          <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
+            <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to see work
+            the platform verified. Practice stays in the IDE either way.
+          </p>
+        {:else if billingLoading}
+          <p class="stamp mt-4 text-muted">loading verified work…</p>
+        {:else if proofsError}
+          <p class="mt-4 text-[13.5px] text-removed" role="alert">{proofsError}</p>
+        {:else if proofs.length === 0}
+          <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
+            No verified runs yet — attested work appears here after the platform re-judges it.
+            Practice stays in the IDE.
           </p>
         {:else}
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <span
-              class={cn(
-                "stamp border px-1.5 py-0.5",
-                sync.status === "saved" && "border-added/40 text-added",
-                sync.status === "syncing" && "border-rule text-muted",
-                sync.status === "offline" && "border-review/50 text-review",
-                sync.status === "error" && "border-removed/50 text-removed"
-              )}
-              role="status"
-            >
-              {syncStamp[sync.status] ?? sync.status}
-            </span>
-            {#if sync.lastSyncAt}
-              <span class="num text-[12px] text-faint">last synced {timeAgo(sync.lastSyncAt)}</span>
-            {/if}
-            <Button size="sm" variant="outline" onclick={() => sync.syncNow()}>Sync now</Button>
-          </div>
-          {#if sync.detail}
-            <p role="alert" class="mt-2 text-[13px] text-removed">{sync.detail}</p>
-          {/if}
-          <p class="mt-2 text-[12px] leading-relaxed text-faint">
-            Drafts, completions, and evidence are stored on your account — a completion is
-            verified server-side before it counts.
+          <ul class="mt-4 grid gap-1.5">
+            {#each proofs as pr (pr.competencyId)}
+              <li class="text-[13.5px] text-muted">
+                <a href="/verify" class="font-mono text-[12.5px] text-accent underline underline-offset-4">{pr.competencyId}</a>
+                <span> · {pr.kind} · {new Date(pr.issuedAt).toLocaleDateString()}</span>
+              </li>
+            {/each}
+          </ul>
+          <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
+            Verified means the platform signed it — each row re-derives at
+            <a href="/verify" class="text-accent underline underline-offset-4">/verify</a>.
+            It says nothing about who wrote it, only that the platform judged it.
           </p>
         {/if}
-      </div>
-    </section>
+      </Plate>
+    </div>
   {/if}
-
-  <section class="mt-4 border border-rule" aria-label="Learning goal">
-    <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">goal & preferences</h2>
-    <div class="px-3 py-3">
-      {#if progress.state.profile.completedAt}
-        {@const p = progress.state.profile}
-        <dl class="grid gap-x-6 gap-y-1 sm:grid-cols-2">
-          <div class="flex justify-between border-b border-rule py-1">
-            <dt class="text-[13px] text-faint">goal</dt>
-            <dd class="text-[13px] text-ink">{label(p.goal) || "—"}</dd>
-          </div>
-          <div class="flex justify-between border-b border-rule py-1">
-            <dt class="text-[13px] text-faint">experience</dt>
-            <dd class="text-[13px] text-ink">{label(p.experience) || "—"}</dd>
-          </div>
-          <div class="flex justify-between border-b border-rule py-1">
-            <dt class="text-[13px] text-faint">languages touched</dt>
-            <dd class="text-[13px] text-ink">{p.languages.join(", ") || "—"}</dd>
-          </div>
-          <div class="flex justify-between border-b border-rule py-1">
-            <dt class="text-[13px] text-faint">tools touched</dt>
-            <dd class="text-[13px] text-ink">{p.tools.join(", ") || "—"}</dd>
-          </div>
-          <div class="flex justify-between border-b border-rule py-1">
-            <dt class="text-[13px] text-faint">pace</dt>
-            <dd class="num text-[13px] text-ink">{p.hoursPerWeek || "—"} / week</dd>
-          </div>
-          <div class="flex justify-between border-b border-rule py-1">
-            <dt class="text-[13px] text-faint">interests</dt>
-            <dd class="text-[13px] text-ink">{p.interests.join(", ") || "—"}</dd>
-          </div>
-        </dl>
-        <a
-          href="/onboarding"
-          class="mt-3 inline-flex border border-rule px-3 py-1.5 text-[12px] text-ink hover:border-accent hover:text-accent"
-        >
-          Edit preferences
-        </a>
-      {:else}
-        <p class="text-[13px] leading-relaxed text-muted">
-          No goal recorded yet.
-          <a href="/onboarding" class="text-accent underline underline-offset-4">
-            Complete onboarding
-          </a>
-          so your roadmap can start from the right place.
-        </p>
-      {/if}
-    </div>
-  </section>
-
-  <section class="mt-4 border border-rule" aria-label="History">
-    <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">history</h2>
-    <div class="px-3 py-3">
-      <dl class="grid gap-x-6 gap-y-1 sm:grid-cols-2">
-        <div class="flex justify-between border-b border-rule py-1">
-          <dt class="text-[13px] text-faint">xp — activity only, never proof</dt>
-          <dd class="num text-[13px] text-muted">{progress.state.xp}</dd>
-        </div>
-        <div class="flex justify-between border-b border-rule py-1">
-          <dt class="text-[13px] text-faint">diagnostic</dt>
-          <dd class="num text-[13px] text-muted">
-            {progress.state.diagnostic.completedAt
-              ? timeAgo(progress.state.diagnostic.completedAt)
-              : "not taken"}
-          </dd>
-        </div>
-        <div class="flex justify-between border-b border-rule py-1 sm:col-span-2">
-          <dt class="text-[13px] text-faint">last active</dt>
-          <dd class="num text-[13px] text-muted">{progress.state.lastActiveDate ?? "—"}</dd>
-        </div>
-      </dl>
-      <p class="mt-2 text-[12px] text-faint">
-        Streaks are not tracked as a measure of worth. Coming back after a break is normal here.
-      </p>
-    </div>
-  </section>
-
-  <section class="mt-4 border border-rule" aria-label="Your data">
-    <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">your data</h2>
-    <div class="px-3 py-3">
-      <p class="text-[13px] leading-relaxed text-muted">
-        {session.loggedIn
-          ? "Progress is saved on this device and on your account. Nothing is shared with anyone else."
-          : "Progress lives in this browser only — no tracking, and nothing leaves your machine except optional AI tutor requests, which are labelled when they happen."}
-      </p>
-      <div class="mt-3 flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" onclick={exportData}>
-          {exported ? "Exported" : "Export progress (JSON)"}
-        </Button>
-        <Button size="sm" variant="danger" onclick={reset}>
-          {confirmReset
-            ? session.loggedIn
-              ? "Click again to erase this device AND your account"
-              : "Click again to erase everything"
-            : "Reset all progress"}
-        </Button>
-      </div>
-    </div>
-  </section>
 </div>

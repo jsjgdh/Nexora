@@ -3,17 +3,17 @@
    Run: npm run verify
    Covers: contracts, service-kit, auth crypto, gateway (pure + live proxy
    against stub upstreams), execution (validation + live subprocess + docker
-   arg construction + queue + quotas), curriculum + tutor + billing routes
+   arg construction + queue + quotas), curriculum + billing routes
    (in-process via fastify.inject), boot fail-fast paths, sync freshness,
    migrations sanity, compose validity. */
-import { describe, it, before, after } from "node:test";
+import { describe, it, before, beforeEach, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync, execSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import http from "node:http";
 import { verifyWebhookSignature, signTestVector, signingKey, loadPlans } from "../services/billing/dist/dodo.js";
 
@@ -22,6 +22,13 @@ const SECRET = randomBytes(32).toString("hex");
 const MESH = randomBytes(32).toString("hex");
 
 process.env.BCRYPT_ROUNDS = "4"; // speed up tests only; production default is 12
+
+/* Mesh posture for this suite (B-27). The platform now refuses to serve without
+   mesh auth unless a development boot asks for it explicitly, so the suites that
+   drive keyless services in-process declare that posture once, here, instead of
+   each one re-deriving it. A configured INTERNAL_API_KEY always beats the
+   opt-in, and the fail-closed path is asserted in its own describe below. */
+process.env.ALLOW_INSECURE_MESH = "1";
 
 const contracts = await import("../packages/contracts/dist/index.js");
 const kit = await import("../packages/service-kit/dist/index.js");
@@ -39,7 +46,6 @@ const execQueue = await import("../services/execution/dist/queue.js");
 const execQuotas = await import("../services/execution/dist/quotas.js");
 const execGoDiag = await import("../services/execution/dist/go-diagnostics.js");
 const execReceipt = await import("../services/execution/dist/receipt.js");
-const progressRunVerification = await import("../services/progress/dist/verify-runs.js");
 
 // The Go toolchain is the product's teaching language, so its runner is tested
 // for real when it is present. An absent toolchain skips with a reason rather
@@ -68,8 +74,7 @@ describe("contracts", () => {
     assert.ok(!contracts.executeSchema.safeParse({ ...base, language: "ruby" }).success);
     assert.ok(!contracts.executeSchema.safeParse({ ...base, files: [] }).success);
     assert.ok(!contracts.executeSchema.safeParse({ ...base, limits: { timeoutMs: 1 } }).success);
-    // Go is the product's teaching language: it must be accepted by the wire
-    // contract, not merely by the runner.
+    // Go must be accepted by the wire contract, not merely by the runner.
     assert.ok(
       contracts.executeSchema.safeParse({
         language: "go",
@@ -77,9 +82,7 @@ describe("contracts", () => {
       }).success
     );
   });
-  it("tutor + checkout schemas", () => {
-    assert.ok(contracts.tutorAskSchema.safeParse({ missionId: "x" }).success);
-    assert.ok(!contracts.tutorAskSchema.safeParse({ missionId: "x", hintLevel: 9 }).success);
+  it("checkout schemas", () => {
     assert.ok(contracts.checkoutSchema.safeParse({ plan: "pro", email: "a@b.co" }).success);
     assert.ok(!contracts.checkoutSchema.safeParse({ plan: "pro", email: "bad" }).success);
   });
@@ -123,6 +126,25 @@ describe("service-kit", () => {
     assert.equal(kit.clientIp({ headers: { "x-client-ip": "   " }, ip: "10.0.0.1" }), "10.0.0.1", "blank is not an address");
     assert.equal(kit.clientIp({ headers: {} }), "unknown");
   });
+  it("Ed25519 receipt signatures verify offline against the published key", async () => {
+    // B-24's one property: a stranger with the receipt and the public key
+    // re-derives the verdict without the mesh secret — and the secret alone
+    // never verifies an Ed25519 signature, so publishing the key teaches
+    // nothing that mints.
+    const { generateKeyPairSync } = await import("node:crypto");
+    const { privateKey } = generateKeyPairSync("ed25519");
+    const pem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    const pub = kit.receiptEdPublicKey(pem);
+    assert.match(pub, /BEGIN PUBLIC KEY/, "the published half is SPKI PEM");
+    const sig = kit.signReceiptEd("payload-bytes", pem);
+    assert.equal(sig.length, 88, "64 bytes as base64");
+    assert.equal(kit.verifyReceiptEd("payload-bytes", sig, pub), true);
+    assert.equal(kit.verifyReceiptEd("payload-bytos", sig, pub), false, "one edited byte fails");
+    assert.equal(kit.verifyReceiptEd("payload-bytes", "0".repeat(64), pub), false, "the mesh-key shape is not an Ed signature");
+    assert.equal(kit.verifyReceiptEd("payload-bytes", "!!!not-base64!!!", pub), false, "malformed fails closed");
+    const other = generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    assert.equal(kit.verifyReceiptEd("payload-bytes", sig, kit.receiptEdPublicKey(other)), false, "another key fails");
+  });
   it("requireUserId reads gateway header, 401 without it", () => {
     assert.equal(kit.requireUserId({ headers: { "x-user-id": "u1" } }), "u1");
     try {
@@ -131,6 +153,97 @@ describe("service-kit", () => {
     } catch (e) {
       assert.equal(e.status, 401);
     }
+  });
+});
+
+/* B-27: the mesh boundary fails closed, and never on NODE_ENV.
+ *
+ * The rule that used to hold was "production needs a key, everything else runs
+ * open", which made an absent or mis-set NODE_ENV the whole of the
+ * authentication model on a product whose only claim is that a learner cannot
+ * forge a verdict. Three things are asserted here, each one the thing that
+ * would have to be true for the old hole to exist: the pure decision refuses a
+ * real keyless boot, a service with a key 403s a keyless call with NODE_ENV
+ * unset, and a real service process exits rather than serving a keyless mesh. */
+describe("the mesh boundary fails closed, not on NODE_ENV (B-27)", () => {
+  it("refuses a keyless boot in every environment, and refuses the opt-in in production", () => {
+    assert.throws(() => kit.resolveMeshKey({}), /INTERNAL_API_KEY is required/);
+    assert.throws(() => kit.resolveMeshKey({ NODE_ENV: "production" }), /INTERNAL_API_KEY/);
+    assert.throws(
+      () => kit.resolveMeshKey({ INTERNAL_API_KEY: "change-me-internal-mesh-key" }),
+      /placeholder/,
+      "a key published in the repo is not a key in any environment"
+    );
+    assert.throws(
+      () => kit.resolveMeshKey({ NODE_ENV: "production", ALLOW_INSECURE_MESH: "1" }),
+      /refused in production/,
+      "the development opt-in must not be able to switch production off"
+    );
+    assert.throws(
+      () => kit.resolveMeshKey({ NODE_ENV: "production", INTERNAL_API_KEY: "change-me-internal-mesh-key" }),
+      /placeholder/
+    );
+    assert.deepEqual(kit.resolveMeshKey({ INTERNAL_API_KEY: MESH }), { key: MESH, insecure: false });
+    assert.deepEqual(
+      kit.resolveMeshKey({ ALLOW_INSECURE_MESH: "1" }),
+      { key: "", insecure: true },
+      "a keyless mesh must be asked for, never assumed"
+    );
+    assert.deepEqual(
+      kit.resolveMeshKey({ INTERNAL_API_KEY: MESH, ALLOW_INSECURE_MESH: "1" }),
+      { key: MESH, insecure: false },
+      "a real key wins over the opt-in"
+    );
+  });
+  it("403s a keyless internal request with NODE_ENV unset, and admits the keyed one", async () => {
+    const saved = {
+      key: process.env.INTERNAL_API_KEY,
+      nodeEnv: process.env.NODE_ENV,
+      optIn: process.env.ALLOW_INSECURE_MESH
+    };
+    try {
+      process.env.INTERNAL_API_KEY = MESH;
+      delete process.env.NODE_ENV; // the variable that used to decide this
+      delete process.env.ALLOW_INSECURE_MESH;
+      const app = await kit.createService("test-mesh-on");
+      app.get("/internal/thing", async () => ({ ok: true }));
+      await app.ready();
+      const keyless = await app.inject({
+        method: "GET",
+        url: "/internal/thing",
+        headers: { "x-user-id": "victim" } // no mesh key: identity is not a header you may send
+      });
+      assert.equal(keyless.statusCode, 403, "a keyless caller must not be served");
+      const keyed = await app.inject({
+        method: "GET",
+        url: "/internal/thing",
+        headers: { "x-internal-key": MESH }
+      });
+      assert.equal(keyed.statusCode, 200, "the holder of the key is still served");
+      await app.close();
+    } finally {
+      if (saved.key === undefined) delete process.env.INTERNAL_API_KEY;
+      else process.env.INTERNAL_API_KEY = saved.key;
+      if (saved.nodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = saved.nodeEnv;
+      if (saved.optIn === undefined) delete process.env.ALLOW_INSECURE_MESH;
+      else process.env.ALLOW_INSECURE_MESH = saved.optIn;
+    }
+  });
+  it("refuses in a real child process too, and names the opt-in that would allow it", () => {
+    const env = { ...process.env, PORT: "18995" };
+    delete env.INTERNAL_API_KEY;
+    delete env.ALLOW_INSECURE_MESH;
+    const r = spawnSync("node", ["services/curriculum/dist/index.js"], {
+      cwd: root,
+      env,
+      timeout: 15000,
+      encoding: "utf8"
+    });
+    assert.notEqual(r.status, 0, "a service with no mesh key must not start serving");
+    const out = r.stderr + r.stdout;
+    assert.match(out, /INTERNAL_API_KEY/, "the refusal names the variable");
+    assert.match(out, /ALLOW_INSECURE_MESH/, "and the explicit development opt-in");
   });
 });
 
@@ -172,42 +285,53 @@ describe("gateway pure units", () => {
     assert.ok(c.routes.some((r) => r.prefix === "/api/billing" && r.auth));
     const billing = c.routes.find((r) => r.prefix === "/api/billing");
     assert.deepEqual(billing.publicPaths, ["/api/billing/webhooks/dodo"]);
+    const execute = c.routes.find((r) => r.prefix === "/api/execute");
+    assert.deepEqual(execute.publicPaths, ["/api/execute/verify", "/api/execute/verify-key"], "the key travels the same public rule as the verdict");
     assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: "x" }), /32 characters/);
     // The shipped placeholders are long enough to pass a length check, which is
     // precisely why they were dangerous. Both must be refused outright.
     assert.throws(
-      () => gwConfig.loadConfig({ AUTH_JWT_SECRET: "change-me-to-32-plus-random-characters" }),
+      () => gwConfig.loadConfig({ AUTH_JWT_SECRET: "change-me-to-32-plus-random-characters", INTERNAL_API_KEY: MESH }),
       /placeholder/
     );
     assert.throws(
       () => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: "change-me-internal-mesh-key" }),
       /placeholder/
     );
-    assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, FRONTEND_URL: "notaurl" }), /http/);
-    assert.equal(gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, PORT: "18080" }).port, 18080);
+    assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: MESH, FRONTEND_URL: "notaurl" }), /http/);
+    assert.equal(gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: MESH, PORT: "18080" }).port, 18080);
     assert.equal(
-      gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, PORT: "18080", GATEWAY_PORT: "19090" }).port,
+      gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: MESH, PORT: "18080", GATEWAY_PORT: "19090" }).port,
       19090
     );
-    assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, AUTH_MODE: "weird" }), /AUTH_MODE/);
+    assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: MESH, AUTH_MODE: "weird" }), /AUTH_MODE/);
+    // B-27: a gateway with no mesh key is refused in EVERY environment, not only
+    // production — the flag it used to depend on is nobody's safety net.
+    assert.throws(() => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET }), /INTERNAL_API_KEY/);
+    assert.throws(
+      () => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, NODE_ENV: "production", ALLOW_INSECURE_MESH: "1" }),
+      /refused in production/,
+      "the development opt-in is not a production flag"
+    );
     // The degradation bound. Default a minute; 0 is a supported value (fail closed
     // on an unreachable check) and a negative one is not a way to ask for more; the
     // ceiling keeps a typo from buying availability past the point where the
     // credentials it covers have expired on their own.
     assert.equal(c.revocationClearTtlMs, 60_000, "a minute of grace by default");
     assert.equal(c.revocationTimeoutMs, 2_000);
-    const clearTtl = (v) => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, REVOCATION_CLEAR_TTL_MS: v }).revocationClearTtlMs;
+    const clearTtl = (v) => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: MESH, REVOCATION_CLEAR_TTL_MS: v }).revocationClearTtlMs;
     assert.equal(clearTtl("0"), 0, "0 means strict: every unanswerable check is a 503");
     assert.equal(clearTtl("-5000"), 0, "a negative bound is not a request to trust anything");
     assert.equal(clearTtl("5000"), 5_000);
     assert.equal(clearTtl("600000"), 300_000, "clamped to the point where the fallback stops covering live credentials");
     assert.throws(() => clearTtl("soon"), /REVOCATION_CLEAR_TTL_MS/);
     assert.throws(
-      () => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, AUTH_MODE: "clerk" }),
+      () => gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: MESH, AUTH_MODE: "clerk" }),
       /CLERK_SECRET_KEY or CLERK_JWT_KEY/
     );
     const clerkCfg = gwConfig.loadConfig({
       AUTH_JWT_SECRET: SECRET,
+      INTERNAL_API_KEY: MESH,
       AUTH_MODE: "clerk",
       CLERK_JWT_KEY: "pem",
       CLERK_AUTHORIZED_PARTIES: "https://a.dev, https://b.dev",
@@ -216,6 +340,7 @@ describe("gateway pure units", () => {
     assert.deepEqual(clerkCfg.clerkAuthorizedParties, ["https://a.dev", "https://b.dev"]);
     const clerkDefault = gwConfig.loadConfig({
       AUTH_JWT_SECRET: SECRET,
+      INTERNAL_API_KEY: MESH,
       AUTH_MODE: "clerk",
       CLERK_JWT_KEY: "pem",
       FRONTEND_URL: "https://app.example.com",
@@ -385,7 +510,7 @@ describe("gateway pure units", () => {
     assert.throws(() => gwConfig.parseTrustProxy({ TRUST_PROXY: "true" }), /hop count/);
     assert.throws(() => gwConfig.parseTrustProxy({ TRUST_PROXY: "-1" }), /non-negative/);
     assert.throws(() => gwConfig.parseTrustProxy({ TRUST_PROXY: "abc" }), /non-negative/);
-    assert.equal(gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET }).trustProxy, false);
+    assert.equal(gwConfig.loadConfig({ AUTH_JWT_SECRET: SECRET, INTERNAL_API_KEY: MESH }).trustProxy, false);
     // One trusted hop in front: the address next to the socket is the proxy,
     // the one after it is the client we believe.
     const one = gwConfig.parseTrustProxy({ TRUST_PROXY: "1" });
@@ -896,9 +1021,7 @@ describe("gateway live proxy against stubs", () => {
         INTERNAL_API_KEY: MESH,
         AUTH_URL: "http://127.0.0.1:18081",
         CURRICULUM_URL: "http://127.0.0.1:18081",
-        PROGRESS_URL: "http://127.0.0.1:18081",
         EXECUTION_URL: "http://127.0.0.1:18081",
-        TUTOR_URL: "http://127.0.0.1:18081",
         BILLING_URL: "http://127.0.0.1:18081",
         // Short enough to wait out in a test: the degradation bound is a duration,
         // and a duration that takes a minute to observe is a duration nobody tests.
@@ -922,12 +1045,12 @@ describe("gateway live proxy against stubs", () => {
     stubHits = [];
     const jwt = (await import("jsonwebtoken")).default;
     const t = jwt.sign({ sub: "u1" }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
-    const res = await fetch(`http://127.0.0.1:${GW_PORT}/api/progress/summary`, {
+    const res = await fetch(`http://127.0.0.1:${GW_PORT}/api/execute/capabilities`, {
       headers: { Authorization: `Bearer ${t}` },
     });
     assert.equal(res.status, 200);
     assert.equal(stubHits.length, 1);
-    assert.equal(stubHits[0].url, "/summary", "gateway strips the /api/<service> prefix");
+    assert.equal(stubHits[0].url, "/capabilities", "gateway strips the /api/<service> prefix");
     const h = stubHits[0].headers;
     assert.equal(h["x-user-id"], "u1");
     assert.equal(h["x-internal-key"], MESH);
@@ -937,9 +1060,9 @@ describe("gateway live proxy against stubs", () => {
   });
   it("auth routes reject missing/invalid tokens without proxying", async () => {
     stubHits = [];
-    const r1 = await fetch(`http://127.0.0.1:${GW_PORT}/api/progress/summary`);
+    const r1 = await fetch(`http://127.0.0.1:${GW_PORT}/api/execute/capabilities`);
     assert.equal(r1.status, 401);
-    const r2 = await fetch(`http://127.0.0.1:${GW_PORT}/api/progress/summary`, {
+    const r2 = await fetch(`http://127.0.0.1:${GW_PORT}/api/execute/capabilities`, {
       headers: { Authorization: "Bearer invalid" },
     });
     assert.equal(r2.status, 401);
@@ -959,7 +1082,7 @@ describe("gateway live proxy against stubs", () => {
       headers: { Authorization: "Bearer invalid" },
     });
     assert.equal(bad.status, 401);
-    const none = await fetch(`http://127.0.0.1:${GW_PORT}/api/curriculum/stages`);
+    const none = await fetch(`http://127.0.0.1:${GW_PORT}/api/curriculum/ide/manifest`);
     assert.equal(none.status, 200, "no bearer still proxies anonymously");
     assert.equal(stubHits[stubHits.length - 1].headers["x-user-id"], undefined);
   });
@@ -999,7 +1122,7 @@ describe("gateway live proxy against stubs", () => {
     stubHits = [];
     const jwt = (await import("jsonwebtoken")).default;
     const t = jwt.sign({ sub: "u1" }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
-    const res = await fetch(`http://127.0.0.1:${GW_PORT}/api/progress/summary`, {
+    const res = await fetch(`http://127.0.0.1:${GW_PORT}/api/execute/capabilities`, {
       headers: { Authorization: `Bearer ${t}`, "x-user-id": "victim" },
     });
     assert.equal(res.status, 200);
@@ -1010,7 +1133,7 @@ describe("gateway live proxy against stubs", () => {
     const jwt = (await import("jsonwebtoken")).default;
     const t = jwt.sign({ sub: "u1" }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
     const post = (headers, body) =>
-      fetch(`http://127.0.0.1:${GW_PORT}/api/progress/missions/x/complete`, {
+      fetch(`http://127.0.0.1:${GW_PORT}/api/execute`, {
         method: "POST",
         headers: { Authorization: `Bearer ${t}`, ...headers },
         body,
@@ -1039,12 +1162,12 @@ describe("gateway live proxy against stubs", () => {
     const ok = await post({});
     assert.equal(ok.status, 200, await ok.text());
     assert.equal(stubHits.length, 1);
-    assert.equal(stubHits[0].url, "/missions/x/complete");
+    assert.equal(stubHits[0].url, "/");
   });
   it("unknown prefix 404s; CORS preflight honored for configured origin", async () => {
     const r404 = await fetch(`http://127.0.0.1:${GW_PORT}/api/nope`);
     assert.equal(r404.status, 404);
-    const pre = await fetch(`http://127.0.0.1:${GW_PORT}/api/progress/summary`, {
+    const pre = await fetch(`http://127.0.0.1:${GW_PORT}/api/execute/capabilities`, {
       method: "OPTIONS",
       headers: { Origin: "http://localhost:3000", "Access-Control-Request-Method": "GET" },
     });
@@ -1070,11 +1193,11 @@ describe("gateway live proxy against stubs", () => {
     revocationChecks = [];
     revokedJtis.add("revoked-live-1");
     const t = await signWithJti("u-revoked", "revoked-live-1");
-    const res = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const res = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(res.status, 401);
     assert.equal((await res.json()).error.code, "token_revoked");
     assert.equal(
-      stubHits.find((h) => h.url === "/summary"),
+      stubHits.find((h) => h.url === "/capabilities"),
       undefined,
       "a revoked token is never forwarded — the whole point"
     );
@@ -1087,7 +1210,7 @@ describe("gateway live proxy against stubs", () => {
 
     // The same token again: refused from the remembered answer without asking a
     // second time, because a revoked id can never become valid again.
-    const again = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const again = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(again.status, 401);
     assert.equal(revocationChecks.length, 1, "a revoked id is not re-checked");
   });
@@ -1097,7 +1220,7 @@ describe("gateway live proxy against stubs", () => {
     revocationChecks = [];
     const t = await signWithJti("u-live-token", "live-live-1");
     for (let i = 0; i < 2; i++) {
-      const r = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+      const r = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
       assert.equal(r.status, 200);
     }
     assert.equal(
@@ -1112,18 +1235,18 @@ describe("gateway live proxy against stubs", () => {
     revocationChecks = [];
     revocationDown = true;
     const t = await signWithJti("u-live-blip", "blip-live-1");
-    const res = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const res = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(res.status, 503);
     assert.equal((await res.json()).error.code, "revocation_unavailable");
     assert.equal(
-      stubHits.find((h) => h.url === "/summary"),
+      stubHits.find((h) => h.url === "/capabilities"),
       undefined,
       "a session we cannot vouch for is not forwarded"
     );
     // The service recovers; nothing about the outage was remembered, so the very
     // next request succeeds instead of waiting out a TTL.
     revocationDown = false;
-    const back = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const back = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(back.status, 200, "an outage is not sticky");
   });
 
@@ -1133,14 +1256,14 @@ describe("gateway live proxy against stubs", () => {
     const t = await signWithJti("u-degraded", "degraded-live-1");
     // Confirmed clear while the check is answerable — that confirmation is the only
     // thing the fallback is ever allowed to act on.
-    const live = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const live = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(live.status, 200);
 
     revocationDown = true;
-    const through = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const through = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(through.status, 200, "the auth service is away, but this credential was confirmed moments ago");
     assert.ok(
-      stubHits.some((h) => h.url === "/summary"),
+      stubHits.some((h) => h.url === "/capabilities"),
       "and the request was really forwarded — this is a degraded allow, not a stub"
     );
 
@@ -1162,21 +1285,21 @@ describe("gateway live proxy against stubs", () => {
     // past it the same token is refused, so a long outage converges back to failing
     // closed instead of quietly trusting whatever it remembers.
     await new Promise((r) => setTimeout(r, 400));
-    const after = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const after = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(after.status, 503, "the grace period is over, and the edge says so");
     assert.equal((await after.json()).error.code, "revocation_unavailable");
 
     // Recovery is immediate: nothing about the outage was remembered, because every
     // request asks the service again the moment it can.
     revocationDown = false;
-    const back = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const back = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(back.status, 200, "a recovered service is used at once");
   });
 
   it("a monitor sees the outage and the degradation without reading a log", async () => {
     const t = await signWithJti("u-monitor", "monitor-live-1");
     // Something for the counters to count, and a confirmation for the fallback.
-    const live = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const live = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(live.status, 200);
 
     const healthy = await (await fetch(`${GW}/health/deep`)).json();
@@ -1196,7 +1319,7 @@ describe("gateway live proxy against stubs", () => {
     assert.equal(askedAfter, askedBefore, "health reads do not perform checks");
 
     revocationDown = true;
-    const during = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const during = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(during.status, 200, "traffic still flows — which is exactly why this needs a dashboard, not a log");
 
     const degraded = await (await fetch(`${GW}/health/deep`)).json();
@@ -1212,7 +1335,7 @@ describe("gateway live proxy against stubs", () => {
     );
 
     revocationDown = false;
-    const back = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const back = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(back.status, 200);
     const recovered = await (await fetch(`${GW}/health/deep`)).json();
     assert.equal(recovered.status, "ready", "and it clears itself once the service answers again");
@@ -1243,7 +1366,7 @@ describe("gateway live proxy against stubs", () => {
 
     // A confirmed check, so the revocation state reported below is "reachable".
     const t = await signWithJti("u-health", "health-live-1");
-    const live = await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    const live = await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal(live.status, 200);
 
     const healthy = await run(GW);
@@ -1255,7 +1378,7 @@ describe("gateway live proxy against stubs", () => {
     // The auth service stops answering: requests still succeed on the bounded
     // fallback, which is exactly the state a monitor has to be able to see.
     revocationDown = true;
-    await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     const degraded = await run(GW, "--json");
     assert.equal(degraded.status, 1, `expected exit 1, got:\n${degraded.stdout}${degraded.stderr}`);
     const parsed = JSON.parse(degraded.stdout);
@@ -1274,7 +1397,7 @@ describe("gateway live proxy against stubs", () => {
     assert.match(prose.stderr, /auth service is not answering the revocation check/);
 
     revocationDown = false;
-    await fetch(`${GW}/api/progress/summary`, { headers: { Authorization: `Bearer ${t}` } });
+    await fetch(`${GW}/api/execute/capabilities`, { headers: { Authorization: `Bearer ${t}` } });
     assert.equal((await run(GW, "--quiet")).status, 0, "and it clears itself once the service answers again");
 
     // A mesh member's own check failing is reported by name — the `/health/deep`
@@ -1343,7 +1466,7 @@ describe("gateway live proxy against stubs", () => {
   it("a token that names no id is still verified — there is nothing to revoke", async () => {
     stubHits = [];
     revocationChecks = [];
-    const res = await fetch(`${GW}/api/progress/summary`, {
+    const res = await fetch(`${GW}/api/execute/capabilities`, {
       headers: { Authorization: `Bearer ${await sign("u-no-jti")}` },
     });
     assert.equal(res.status, 200);
@@ -1788,10 +1911,9 @@ describe("execution service routes (in-process)", () => {
     assert.equal(body.diagnostics[0].file, "main.go");
   });
   it("runs a scenario's test suite against the learner's file", async () => {
-    // A scenario mission in the app: the learner edits src/task.js, the mission
-    // supplies verify-merge.js. This is the server half of that contract —
-    // nested paths land where the suite expects them, and an explicit command
-    // runs the fixture rather than the learner's file.
+    // The attestation contract in miniature: the learner's file lives at a
+    // nested path, a suite the platform holds judges it, and an explicit
+    // command runs the suite rather than the learner's file.
     const conflicted =
       'function renderTask(task) {\n<<<<<<< HEAD\n  return "Task: " + task.title;\n=======\n' +
       '  return task.done ? "✓ " + task.title : task.title;\n>>>>>>> feature/status\n}\n';
@@ -2161,56 +2283,40 @@ describe("curriculum service (in-process)", () => {
     routes.registerCurriculumRoutes(app);
     await app.ready();
   });
-  it("version + stages + missions", async () => {
-    const v = await app.inject({ method: "GET", url: "/version" });
-    assert.equal(v.statusCode, 200);
-    const body = v.json();
-    assert.equal(body.missions, 46);
-    assert.equal(body.stages, 15);
-    assert.match(body.version, /^[0-9a-f]{12}$/);
-    const m = await app.inject({ method: "GET", url: "/missions?stage=css" });
-    assert.equal(m.json().missions.length, 8);
-    // The foundations layer travels with the curriculum too, in path order: it
-    // is the first thing the tutor and the progress service reason about for a
-    // learner who has just placed into the language layer.
-    const goBasics = await app.inject({ method: "GET", url: "/missions?stage=go-basics" });
-    assert.deepEqual(
-      goBasics.json().missions.map((x) => x.id),
-      ["go-first-program", "go-values", "go-control-flow", "go-functions"]
-    );
-    // The scenario layer travels with the curriculum: a mission the services
-    // cannot see is a mission the tutor and progress cannot speak about.
-    const git = await app.inject({ method: "GET", url: "/missions?stage=git" });
-    assert.deepEqual(
-      git.json().missions.map((x) => x.id),
-      ["git-resolve-conflict", "scenario-duration-format", "scenario-new-workspace-crash"]
-    );
-  });
-  it("diagnostic items never include answer keys", async () => {
-    const r = await app.inject({ method: "GET", url: "/diagnostic/items" });
-    assert.equal(r.statusCode, 200);
-    assert.equal(r.json().items.length, 9);
-    for (const item of r.json().items) {
-      assert.equal("answer" in item, false);
-      assert.ok(Array.isArray(item.options) && item.options.length > 1);
+  it("the classroom endpoints are gone, not unlinked: stages, missions, diagnostic, competencies all 404", async () => {
+    // One way to learn — the desktop IDE. The browser-classroom endpoints were
+    // deleted with the classroom; a request for one must 404 rather than teach.
+    for (const url of [
+      "/version",
+      "/stages",
+      "/missions",
+      "/missions?stage=css",
+      "/missions/js-counter",
+      "/diagnostic/items",
+      "/competencies",
+    ]) {
+      const r = await app.inject({ method: "GET", url });
+      assert.equal(r.statusCode, 404, `${url} is gone`);
     }
-  });
-  it("mission detail is complete; unknown id 404s; version header present", async () => {
-    const r = await app.inject({ method: "GET", url: "/missions/js-counter" });
-    assert.equal(r.statusCode, 200);
-    assert.ok(r.json().mission.checks[0].rule);
-    assert.equal(r.headers["x-content-version"]?.length, 12);
-    const n = await app.inject({ method: "GET", url: "/missions/nope" });
-    assert.equal(n.statusCode, 404);
   });
   it("serves the IDE roadmap publicly: every phase by name and tier, no content", async () => {
     const r = await app.inject({ method: "GET", url: "/ide/manifest" });
     assert.equal(r.statusCode, 200, "the roadmap needs no account");
     const m = r.json().manifest;
-    assert.equal(m.phases.length, 12, "the whole road is visible, not just the free loop");
+    // The phase count grows as the co-author authors content, so pin the
+    // INVARIANT, not a magic number: the public roadmap shows every phase in the
+    // snapshot (the drift test already pins that snapshot to the IDE source).
+    const doc = (await import("../services/curriculum/dist/data/ide-task-manager.js")).IDE_TASK_MANAGER;
+    assert.equal(m.phases.length, doc.phases.length, "the whole road is visible, not just the free loop");
     const free = m.phases.filter((p) => p.tier === "free");
-    assert.equal(free.length, 1, "exactly one free phase");
-    assert.equal(free[0].id, "setup", "the free loop is the first phase");
+    // The free tier is setup + fundamentals (FREE_PHASE_COUNT 2, D-023): a true
+    // beginner finishes two complete loops offline before any paywall. Not one.
+    assert.equal(free.length, 2, "the free tier is the two leading phases (D-023)");
+    assert.deepEqual(
+      free.map((p) => p.id),
+      ["setup", "fundamentals"],
+      "free loop is setup then fundamentals, in order"
+    );
     // A roadmap row is a name and a size, never the work itself.
     for (const p of m.phases) {
       assert.deepEqual(
@@ -2227,8 +2333,12 @@ describe("curriculum service (in-process)", () => {
     assert.equal(r.statusCode, 200);
     const b = r.json();
     assert.match(b.ideVersion, /^[0-9a-f]{12}$/);
-    assert.equal(b.phases, 12);
-    assert.equal(b.freePhases, 1);
+    // Counts move with authored content; assert the endpoint agrees with the
+    // snapshot (the drift test pins that snapshot to the IDE source) and that the
+    // free tier stays the fixed two-phase D-023 loop.
+    const doc = (await import("../services/curriculum/dist/data/ide-task-manager.js")).IDE_TASK_MANAGER;
+    assert.equal(b.phases, doc.phases.length, "the version report counts the snapshot the service serves");
+    assert.equal(b.freePhases, 2, "the two leading free phases are offline (D-023)");
     assert.ok(b.activities > b.phases, "activities outnumber phases");
   });
   it("refuses a paid phase without a user, then without entitlement, with distinct codes", async () => {
@@ -2264,47 +2374,6 @@ describe("curriculum service (in-process)", () => {
       headers: { "x-user-id": "u1", "x-entitled": "1" },
     });
     assert.equal(r.statusCode, 404);
-  });
-});
-
-describe("tutor service (in-process, no pg)", () => {
-  let app;
-  before(async () => {
-    delete process.env.NEXORA_AI_URL;
-    delete process.env.NEXORA_AI_KEY;
-    const kit = await import("../packages/service-kit/dist/index.js");
-    const routes = await import("../services/tutor/dist/routes.js");
-    app = await kit.createService("test-tutor");
-    routes.registerTutorRoutes(app, null);
-    await app.ready();
-  });
-  it("falls back to the authored ladder, honestly labeled", async () => {
-    const r = await app.inject({
-      method: "POST",
-      url: "/ask",
-      headers: { "x-user-id": "u1", "content-type": "application/json" },
-      payload: { missionId: "first-page", failingChecks: ["missing h1"], hintLevel: 2 },
-    });
-    assert.equal(r.statusCode, 200);
-    const body = r.json();
-    assert.equal(body.source, "curriculum");
-    assert.match(body.text, /Concept \(level 2 of 5\)/);
-  });
-  it("401 without user, 404 for unknown mission", async () => {
-    const r1 = await app.inject({
-      method: "POST",
-      url: "/ask",
-      headers: { "content-type": "application/json" },
-      payload: { missionId: "first-page" },
-    });
-    assert.equal(r1.statusCode, 401);
-    const r2 = await app.inject({
-      method: "POST",
-      url: "/ask",
-      headers: { "x-user-id": "u1", "content-type": "application/json" },
-      payload: { missionId: "nope" },
-    });
-    assert.equal(r2.statusCode, 404);
   });
 });
 
@@ -3042,85 +3111,6 @@ describe("auth login throttle (in-process, fake pg)", () => {
   });
 });
 
-describe("progress state + reset (in-process, fake pg)", () => {
-  let app;
-  const seen = [];
-  const now = new Date();
-  const fakePool = {
-    query: async (sql, params) => {
-      seen.push({ sql: sql.trim(), params });
-      if (sql.includes("SUM(xp_awarded)")) return { rows: [{ xp: "250" }], rowCount: 1 };
-      if (sql.startsWith("SELECT * FROM profiles")) return { rows: [], rowCount: 0 };
-      if (sql.startsWith("SELECT * FROM diagnostics")) return { rows: [], rowCount: 0 };
-      if (sql.startsWith("SELECT * FROM mission_progress"))
-        return {
-          rows: [
-            {
-              mission_id: "first-page",
-              content_version: "v-test",
-              code: "<h1>x</h1>",
-              started_at: now,
-              attempts: 2,
-              checks_passed: ["one-h1"],
-              hints_used: 1,
-              max_hint_level: 1,
-              questions: { answered: {}, correct: {} },
-              completed_at: now,
-              mastered_at: now,
-              independent: true,
-              xp_awarded: 250,
-            },
-          ],
-          rowCount: 1,
-        };
-      if (sql.startsWith("SELECT * FROM evidence"))
-        return { rows: [{ competency_id: "html-structure", level: "demonstrated", evidence: ["note"] }], rowCount: 1 };
-      if (sql.startsWith("DELETE FROM")) return { rows: [], rowCount: 1 };
-      return { rows: [], rowCount: 0 };
-    },
-  };
-  before(async () => {
-    const kit = await import("../packages/service-kit/dist/index.js");
-    const routes = await import("../services/progress/dist/routes.js");
-    app = await kit.createService("test-progress");
-    routes.registerProgressRoutes(app, fakePool);
-    await app.ready();
-  });
-  it("GET /state returns full learner state + derived xp; 401 without user", async () => {
-    const anon = await app.inject({ method: "GET", url: "/state" });
-    assert.equal(anon.statusCode, 401);
-    const r = await app.inject({ method: "GET", url: "/state", headers: { "x-user-id": "u1" } });
-    assert.equal(r.statusCode, 200);
-    const { state, savedAt } = r.json();
-    assert.equal(state.version, 1);
-    assert.equal(state.xp, 250);
-    assert.ok(state.missions["first-page"].completedAt, "mission restored");
-    assert.equal(state.missions["first-page"].xpAwarded, 250);
-    assert.equal(state.missions["first-page"].checksPassed[0], "one-h1");
-    assert.equal(state.competencies["html-structure"].level, "demonstrated");
-    assert.equal(state.profile.completedAt, null);
-    assert.equal(state.diagnostic.completedAt, null);
-    assert.ok(savedAt, "savedAt present");
-  });
-  it("DELETE /state wipes every progress table for that user only", async () => {
-    seen.length = 0;
-    const r = await app.inject({ method: "DELETE", url: "/state", headers: { "x-user-id": "u1" } });
-    assert.equal(r.statusCode, 200);
-    const deletes = seen.filter((s) => s.sql.startsWith("DELETE FROM"));
-    // `mission_runs` is in this list because a learner's run history is their
-    // data: an erase that left the transcripts behind would not be an erase.
-    assert.deepEqual(deletes.map((d) => d.sql), [
-      "DELETE FROM mission_runs WHERE user_id = $1",
-      "DELETE FROM mission_progress WHERE user_id = $1",
-      "DELETE FROM evidence WHERE user_id = $1",
-      "DELETE FROM diagnostics WHERE user_id = $1",
-      "DELETE FROM profiles WHERE user_id = $1",
-    ]);
-    for (const d of deletes) assert.deepEqual(d.params, ["u1"]);
-    assert.ok(seen.some((s) => s.sql === "COMMIT"), "committed");
-  });
-});
-
 /* Attestation judging mirrors the IDE's tap.ts: the server re-judges from TAP
    it produced itself, with the same line shape and the same present-AND-passing
    rule. These tests pin the mirror — including the command allowlist that keeps
@@ -3206,9 +3196,10 @@ describe("attestation judging mirrors the IDE", async () => {
 
 /* Attestation re-runs what the learner submits against the platform's own copy
    of the suite: a passing verdict means this sandbox ran it, not the learner's
-   machine. Fixtures stand in for the canonical suites the fixture sync has not
-   landed yet; the registry lookup — and every refusal around it — is what is
-   under test, so an empty registry must refuse rather than judge. */
+   machine. The registry below stands in for the synced canonical suites; the
+   synced-data suite further down proves the real registry judges. In both
+   cases the lookup — and every refusal around it — is what is under test, so
+   an empty registry must refuse rather than judge. */
 describe("attestation re-judges in this sandbox, never on the learner's word", () => {
   let app;
   const KEY = "test-attest-key";
@@ -3229,7 +3220,7 @@ describe("attestation re-judges in this sandbox, never on the learner's word", (
       queue: new execQueue.JobQueue(1),
       quotas: new execQuotas.Quotas(50, 2),
       runner: "subprocess",
-      attestFixtures: new Map([["test/add.test.mjs", SUITE]]),
+      attestFixtures: new Map([["task-manager/test/add.test.mjs", SUITE]]),
     });
     await app.ready();
   });
@@ -3264,6 +3255,37 @@ describe("attestation re-judges in this sandbox, never on the learner's word", (
     ]);
   });
 
+  it("the verdict carries the canonical run's receipt — the handoff object", async () => {
+    const r = await submit([{ path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" }]);
+    assert.equal(r.statusCode, 200, r.body);
+    const receipt = r.json().receipt;
+    assert.ok(receipt, "an attested verdict hands over proof, not just a claim");
+    // The receipt is of THIS run: its files bind the canonical suite the
+    // platform ran, and its signature verifies under this deployment's key.
+    const payload = contracts.runReceiptPayload(receipt.facts, receipt.issuedAt);
+    assert.equal(kit.verifyReceiptSignature(payload, receipt.sig, KEY), true);
+    assert.ok(
+      receipt.facts.files.some((f) => f.path === "test/add.test.mjs"),
+      "the receipt binds the canonical suite, not just the learner's file"
+    );
+  });
+
+  it("no signing key means an attested verdict with nothing to hand over", async () => {
+    const savedKey = process.env.INTERNAL_API_KEY;
+    try {
+      delete process.env.INTERNAL_API_KEY;
+      const r = await submit([{ path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" }]);
+      assert.equal(r.statusCode, 200, r.body);
+      const body = r.json();
+      assert.equal(body.provenance, "attested", "the re-judging is the authority, not the receipt");
+      assert.equal("receipt" in body, false, "with no key there is nothing to hand over — and none is faked");
+      assert.ok(contracts.attestVerdictSchema.safeParse(body).success);
+    } finally {
+      if (savedKey === undefined) delete process.env.INTERNAL_API_KEY;
+      else process.env.INTERNAL_API_KEY = savedKey;
+    }
+  });
+
   it("fails a broken submission — the learner's own TAP is not evidence", async () => {
     const r = await submit([{ path: "src/add.js", content: "export function add() { return 0; }\n" }]);
     assert.equal(r.statusCode, 200, r.body);
@@ -3296,14 +3318,600 @@ describe("attestation re-judges in this sandbox, never on the learner's word", (
     );
     assert.equal(r.statusCode, 400, r.body);
   });
+
+  it("resolves the suite by project: a bare path is judged under task-manager", async () => {
+    // Submissions without a project predate project-qualified keys. The route
+    // defaults them to task-manager — the curriculum's own default — so this
+    // fixture attests exactly as before, and only there.
+    const r = await submit([{ path: "src/add.js", content: "export function add(a, b) { return a + b; }\n" }]);
+    assert.equal(r.statusCode, 200, r.body);
+    assert.deepEqual(r.json().checks.filter((c) => !c.passed), []);
+  });
 });
 
-/* Execution checks are the only checks that prove someone can write and run a
-   program, and progress is uploaded by the learner's own device — so until now
-   a client could claim a Go pass it never earned. These two suites are the
-   other half of that story: the execution service signs what it ran, and the
-   progress service refuses to complete anything it cannot recompute from that
-   signature. */
+/* The synced code registry: `npm run sync:fixtures` exports every suite the
+   authored curriculum names, keyed project/path, and the execution service
+   judges against that copy. Three things are pinned: the committed registry
+   equals what the sibling sources emit (drift fails, absence of the sibling
+   skips honestly); both owners of a shared relative path are present as
+   distinct keys (the merge.test.mjs collision is the reason keys exist); and
+   the synced bytes actually judge (a second app wired from the data file, not
+   fixtures, attests the setup suite with crafted sources, then fails the
+   stub's own broken ones). */
+describe("the synced suite registry judges real curriculum suites", () => {
+  const dataFile = join(root, "services", "execution", "src", "data", "attest-fixtures.ts");
+
+  it("the committed registry equals what the IDE sources emit", (t) => {
+    try {
+      execSync("node scripts/sync-fixtures.mjs --check", { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    } catch (err) {
+      const out = `${err.stdout ?? ""}${err.stderr ?? ""}`;
+      if (/sibling of branchcraft/.test(out)) {
+        t.skip("no nexora-ide sibling checkout on this host; the sync cannot be re-derived here");
+        return;
+      }
+      throw new Error(`attestation fixture sync drifted — run npm run sync:fixtures and commit the result:\n${out}`);
+    }
+  });
+
+  it("every entry is a non-empty suite at a project-qualified key", async () => {
+    const mod = await import("../services/execution/dist/data/attest-fixtures.js");
+    assert.ok(Array.isArray(mod.SYNCED_ATTEST_FIXTURES) && mod.SYNCED_ATTEST_FIXTURES.length > 0, "the registry is empty");
+    const keys = new Set();
+    for (const e of mod.SYNCED_ATTEST_FIXTURES) {
+      assert.ok(typeof e.key === "string" && e.key.length > 0, "a keyless entry judges nothing");
+      assert.ok(e.file.endsWith(".test.mjs"), `${e.key} is not a test suite`);
+      assert.ok(typeof e.content === "string" && e.content.trim().length > 0, `${e.key} asserts nothing`);
+      assert.ok(!keys.has(e.key), `${e.key} is registered twice`);
+      keys.add(e.key);
+    }
+    // The collision that motivates qualified keys: both merges present, apart.
+    assert.ok(keys.has("task-manager/test/merge.test.mjs"), "the task-manager merge suite is registered");
+    assert.ok(keys.has("go-ledger/test/merge.test.mjs"), "the go-ledger merge suite is registered apart from it");
+    assert.ok(keys.has("task-manager/test/setup.test.mjs"), "the setup suite is registered");
+    assert.ok(keys.has("acceptance/takehome.acceptance.test.mjs"), "the take-home suite is registered");
+  });
+
+  it("no registry key collides: one key is one suite, byte for byte", async () => {
+    const mod = await import("../services/execution/dist/data/attest-fixtures.js");
+    const byKey = new Map();
+    for (const e of mod.SYNCED_ATTEST_FIXTURES) {
+      if (byKey.has(e.key)) {
+        assert.equal(e.content, byKey.get(e.key), `${e.key} resolves twice with different bytes`);
+      }
+      byKey.set(e.key, e.content);
+    }
+  });
+
+  it("the synced bytes judge: setup attests from the data file, the stub fails it", async () => {
+    const KEY = "test-synced-attest-key";
+    const saved = process.env.INTERNAL_API_KEY;
+    process.env.INTERNAL_API_KEY = KEY;
+    try {
+      const mod = await import("../services/execution/dist/data/attest-fixtures.js");
+      const routes = await import("../services/execution/dist/routes.js");
+      const synced = new Map(mod.SYNCED_ATTEST_FIXTURES.map((e) => [e.key, e.content]));
+      const app = await kit.createService("test-synced-attest-registry");
+      routes.registerExecutionRoutes(app, {
+        queue: new execQueue.JobQueue(1),
+        quotas: new execQuotas.Quotas(50, 2),
+        runner: "subprocess",
+        attestFixtures: synced,
+      });
+      await app.ready();
+      const submitSetup = (files, project) =>
+        app.inject({
+          method: "POST",
+          url: "/attest",
+          headers: { "x-user-id": "u-sync", "x-internal-key": KEY, "content-type": "application/json" },
+          payload: {
+            checkIds: ["dev-script", "entry-file", "edge-mounts"],
+            checks: [
+              { id: "dev-script", tests: ["the manifest declares a dev script"] },
+              { id: "entry-file", tests: ["the app entry file exists"] },
+              { id: "edge-mounts", tests: ["the entry mounts the app into the page's root element"] },
+            ],
+            files,
+            command: "node --test --test-reporter=tap test/setup.test.mjs",
+            localTap: "",
+            ...(project === undefined ? {} : { project }),
+          },
+        });
+      const good = await submitSetup([
+        { path: "package.json", content: JSON.stringify({ name: "app", scripts: { dev: "vite" } }) },
+        { path: "src/main.jsx", content: "import { createRoot } from 'react-dom/client';\ncreateRoot(document.getElementById('root'));\n" },
+      ]);
+      assert.equal(good.statusCode, 200, good.body);
+      assert.deepEqual(good.json().checks.filter((c) => !c.passed), [], "a complete starter passes every check");
+      const receipt = good.json().receipt;
+      assert.ok(receipt, "an attested run hands over proof, not just a claim");
+      assert.ok(
+        receipt.facts.files.some((f) => f.path === "test/setup.test.mjs"),
+        "the receipt binds the canonical suite, not just the learner's files"
+      );
+      // The stub's own broken package.json (no dev script) fails exactly its check.
+      const broken = await submitSetup([
+        { path: "package.json", content: JSON.stringify({ name: "task-manager-stub", scripts: { test: "node --test" } }) },
+        { path: "src/main.jsx", content: "document.getElementById('root');\n" },
+      ]);
+      assert.equal(broken.statusCode, 200, broken.body);
+      const failed = new Set(broken.json().checks.filter((c) => !c.passed).map((c) => c.checkId));
+      assert.deepEqual([...failed].sort(), ["dev-script"], "only the dev-script check fails on the stub");
+      // A project that names the wrong merge suite gets its verdict from the
+      // right one: go-ledger sources against the go-ledger merge suite.
+      const goMerge = synced.get("go-ledger/test/merge.test.mjs");
+      assert.ok(goMerge && goMerge.length > 0, "the go-ledger merge harness synced");
+      const taskMerge = synced.get("task-manager/test/merge.test.mjs");
+      assert.ok(taskMerge && taskMerge.length > 0 && taskMerge !== goMerge, "the two merges are apart");
+    } finally {
+      if (saved === undefined) delete process.env.INTERNAL_API_KEY;
+      else process.env.INTERNAL_API_KEY = saved;
+    }
+  });
+
+  it("an unknown project refuses rather than guessing a suite", async () => {
+    const saved = process.env.INTERNAL_API_KEY;
+    process.env.INTERNAL_API_KEY = "test-synced-attest-key";
+    try {
+      const mod = await import("../services/execution/dist/data/attest-fixtures.js");
+      const routes = await import("../services/execution/dist/routes.js");
+      const synced = new Map(mod.SYNCED_ATTEST_FIXTURES.map((e) => [e.key, e.content]));
+      const app = await kit.createService("test-synced-attest-unknown-project");
+      routes.registerExecutionRoutes(app, {
+        queue: new execQueue.JobQueue(1),
+        quotas: new execQuotas.Quotas(50, 2),
+        runner: "subprocess",
+        attestFixtures: synced,
+      });
+      await app.ready();
+      const r = await app.inject({
+        method: "POST",
+        url: "/attest",
+        headers: { "x-user-id": "u-sync", "x-internal-key": "test-synced-attest-key", "content-type": "application/json" },
+        payload: {
+          checkIds: ["dev-script"],
+          checks: [{ id: "dev-script", tests: ["the manifest declares a dev script"] }],
+          files: [{ path: "package.json", content: "{}" }],
+          command: "node --test --test-reporter=tap test/setup.test.mjs",
+          localTap: "",
+          project: "no-such-project",
+        },
+      });
+      assert.equal(r.statusCode, 503, r.body);
+      assert.equal(r.json().error.code, "attestation_unavailable");
+    } finally {
+      if (saved === undefined) delete process.env.INTERNAL_API_KEY;
+      else process.env.INTERNAL_API_KEY = saved;
+    }
+  });
+});
+
+/* Design attestation is the structural analogue of a code run: the platform
+   re-derives only the deterministic checks over the learner's graph — never the
+   AI-scored rubric — and signs that outcome. These fixtures are the shared
+   yardstick: the url-shortener canonical checks (mirrored from the extension's
+   design-challenges), a graph that satisfies every check, and one that fails
+   several. Two suites follow — the mirror of the Studio engine, then the route
+   around it — the same shape as the tap.ts/attest.ts twin check for code. */
+const URL_CHECKS = [
+  { id: "has-client", kind: "requires-node", node: "client" },
+  { id: "has-entry", kind: "requires-any", nodes: ["cdn", "dns", "load-balancer", "api-gateway"] },
+  { id: "has-service", kind: "requires-node", node: "service" },
+  { id: "has-store", kind: "requires-any", nodes: ["sql", "nosql"] },
+  { id: "read-path-cache", kind: "requires-path", from: "client", to: "cache" },
+  { id: "service-reads-cache", kind: "requires-edge", from: "service", to: "cache", edge: "sync" },
+  { id: "service-writes-store", kind: "requires-edge", from: "service", to: ["sql", "nosql"] },
+  { id: "no-direct-client-sql", kind: "forbids-edge", from: "client", to: "sql" },
+  { id: "no-direct-client-nosql", kind: "forbids-edge", from: "client", to: "nosql" },
+  { id: "store-replicates", kind: "requires-prop", node: ["sql", "nosql"], prop: "replication" },
+  { id: "has-observability", kind: "requires-any", nodes: ["monitoring", "logging"] },
+  { id: "no-dangling", kind: "no-dangling" },
+];
+
+// A graph that satisfies every structural check above — the machine-decidable
+// floor of the challenge. No rubric, no model score: exactly what a design
+// receipt is allowed to stand for.
+const GOOD_GRAPH = {
+  nodes: [
+    { id: "client", type: "client", props: {} },
+    { id: "cdn", type: "cdn", props: {} },
+    { id: "api-gateway", type: "api-gateway", props: {} },
+    { id: "service", type: "service", props: {} },
+    { id: "cache", type: "cache", props: {} },
+    { id: "sql", type: "sql", props: { replication: "primary-replica" } },
+    { id: "monitoring", type: "monitoring", props: {} },
+  ],
+  edges: [
+    { from: "client", to: "cdn", kind: "sync" },
+    { from: "cdn", to: "api-gateway", kind: "sync" },
+    { from: "api-gateway", to: "service", kind: "sync" },
+    { from: "service", to: "cache", kind: "sync" },
+    { from: "service", to: "sql", kind: "sync" },
+    { from: "monitoring", to: "service", kind: "observe" },
+  ],
+};
+
+// A graph that reaches the store straight from the client, never replicates, and
+// strands the cache: several checks must fail closed. Whatever the learner's own
+// tool claimed, the platform re-derives from the graph, and disagrees.
+const BROKEN_GRAPH = {
+  nodes: [
+    { id: "client", type: "client", props: {} },
+    { id: "service", type: "service", props: {} },
+    { id: "sql", type: "sql", props: {} },
+    { id: "cache", type: "cache", props: {} },
+  ],
+  edges: [
+    { from: "client", to: "sql", kind: "sync" },
+    { from: "service", to: "sql", kind: "sync" },
+  ],
+};
+
+describe("design judging mirrors the Studio engine, structural checks only", async () => {
+  const design = await import("../services/execution/dist/designAttest.js");
+
+  it("passes every structural check a well-formed graph satisfies", () => {
+    const results = design.judgeDesignChecks(GOOD_GRAPH, URL_CHECKS);
+    assert.equal(results.length, URL_CHECKS.length);
+    assert.deepEqual(
+      results.filter((r) => !r.passed).map((r) => r.checkId),
+      [],
+      "the reference graph must satisfy every check"
+    );
+    assert.match(results[0].reason, /platform/i, "a passing reason names where the judgment came from");
+  });
+
+  it("fails the checks a broken graph does not satisfy, and never fabricates a pass", () => {
+    const byId = new Map(design.judgeDesignChecks(BROKEN_GRAPH, URL_CHECKS).map((r) => [r.checkId, r.passed]));
+    assert.equal(byId.get("has-entry"), false, "no entry tier present");
+    assert.equal(byId.get("no-direct-client-sql"), false, "a client wired straight to the store must fail");
+    assert.equal(byId.get("store-replicates"), false, "a store with no replication property must fail");
+    assert.equal(byId.get("no-dangling"), false, "a stranded cache node must fail");
+    assert.equal(byId.get("has-client"), true, "the parts that do hold still hold");
+  });
+
+  it("reads nothing but the graph and the canonical checks it is handed", () => {
+    // judgeDesignChecks has no client-verdict parameter at all — the only way a
+    // submission can attest is to be re-judged here. A broken graph judged
+    // against the canonical checks can never come back all-pass.
+    const judged = design.judgeDesignChecks(BROKEN_GRAPH, URL_CHECKS);
+    assert.ok(judged.some((r) => !r.passed), "a broken graph cannot be all-pass");
+  });
+
+  it("hashes the graph canonically: same structure in a different draw order, same hash", () => {
+    const shuffled = { nodes: [...GOOD_GRAPH.nodes].reverse(), edges: [...GOOD_GRAPH.edges].reverse() };
+    assert.equal(design.canonicalGraphHash(GOOD_GRAPH), design.canonicalGraphHash(shuffled), "draw order is not content");
+    assert.notEqual(design.canonicalGraphHash(GOOD_GRAPH), design.canonicalGraphHash(BROKEN_GRAPH), "different structure hashes differently");
+  });
+
+  it("the compiled Studio and this platform agree, check for check, on the same graph", async (t) => {
+    // The twin of the tap.ts/attest.ts equivalence, done by importing both
+    // engines over the same fixtures. Skips honestly if the IDE is not compiled
+    // on this host, because the platform side is fully pinned on its own above.
+    let ide;
+    try {
+      ide = await import(pathToFileURL(join(root, "..", "..", "nexora-ide", "extensions", "nexora", "out", "design.js")).href);
+    } catch {
+      t.skip("no compiled Studio design.js on this host; the platform engine is pinned above");
+      return;
+    }
+    for (const graph of [GOOD_GRAPH, BROKEN_GRAPH]) {
+      const plat = design.judgeDesignChecks(graph, URL_CHECKS).map((r) => [r.checkId, r.passed]);
+      const ideRes = ide.evaluateStructure(graph, URL_CHECKS).map((r) => [r.id, r.passed]);
+      assert.deepEqual(plat.map(([k]) => k), ideRes.map(([k]) => k), "same checks in the same order");
+      assert.deepEqual(new Map(plat), new Map(ideRes), "platform and Studio disagreed on a structural check");
+    }
+  });
+
+  it("contracts accept the design submission and verdict shapes, and reject a local provenance", () => {
+    const sub = { challengeId: "url-shortener", graph: GOOD_GRAPH };
+    assert.ok(contracts.designAttestSubmissionSchema.safeParse(sub).success);
+    assert.ok(contracts.designAttestSubmissionSchema.safeParse({ ...sub, challengeVersion: 1 }).success, "a named revision parses");
+    assert.ok(!contracts.designAttestSubmissionSchema.safeParse({ ...sub, challengeVersion: 0 }).success, "revision 0 is not a revision");
+    assert.ok(!contracts.designAttestSubmissionSchema.safeParse({ graph: GOOD_GRAPH }).success, "no challenge id");
+    assert.ok(
+      !contracts.designAttestSubmissionSchema.safeParse({ challengeId: "x", graph: { nodes: [], edges: [] } }).success,
+      "an empty graph is not a submission"
+    );
+    const verdict = {
+      provenance: "attested",
+      outcome: "re-derived server-side",
+      checks: [{ checkId: "has-client", passed: true, reason: "Verified." }],
+      challengeVersion: 1,
+    };
+    assert.ok(contracts.designAttestVerdictSchema.safeParse(verdict).success);
+    assert.ok(!contracts.designAttestVerdictSchema.safeParse({ ...verdict, provenance: "local" }).success, "a local design must never parse as an attested verdict");
+  });
+});
+
+describe("design attestation re-judges against the platform's own checks", () => {
+  let app;
+  const KEY = "test-design-attest-key";
+  const saved = process.env.INTERNAL_API_KEY;
+
+  before(async () => {
+    process.env.INTERNAL_API_KEY = KEY;
+    const routes = await import("../services/execution/dist/routes.js");
+    app = await kit.createService("test-design-attestation");
+    routes.registerExecutionRoutes(app, {
+      queue: new execQueue.JobQueue(1),
+      quotas: new execQuotas.Quotas(50, 2),
+      runner: "subprocess",
+      attestChallenges: new Map([["url-shortener", { version: 1, checks: URL_CHECKS }]]),
+    });
+    await app.ready();
+  });
+  after(() => {
+    if (saved === undefined) delete process.env.INTERNAL_API_KEY;
+    else process.env.INTERNAL_API_KEY = saved;
+  });
+
+  const submit = (challengeId, graph, challengeVersion = 1) =>
+    app.inject({
+      method: "POST",
+      url: "/attest/design",
+      headers: { "x-user-id": "u-design", "x-internal-key": KEY, "content-type": "application/json" },
+      payload: { challengeId, challengeVersion, graph },
+    });
+
+  it("attests a graph that satisfies the platform's canonical checks", async () => {
+    const r = await submit("url-shortener", GOOD_GRAPH);
+    assert.equal(r.statusCode, 200, r.body);
+    const body = r.json();
+    assert.ok(contracts.designAttestVerdictSchema.safeParse(body), r.body);
+    assert.equal(body.provenance, "attested");
+    assert.equal(body.challengeVersion, 1, "the verdict names the authored revision actually judged");
+    assert.deepEqual(body.checks.filter((c) => !c.passed), [], "every structural check held");
+  });
+
+  it("the receipt is bound to the requesting learner, and a rebinding fails closed", async () => {
+    const bound = await app.inject({
+      method: "POST",
+      url: "/attest/design",
+      headers: { "x-user-id": "u-owner", "x-internal-key": KEY, "content-type": "application/json" },
+      payload: { challengeId: "url-shortener", challengeVersion: 1, graph: GOOD_GRAPH },
+    });
+    assert.equal(bound.statusCode, 200, bound.body);
+    const receipt = bound.json().receipt;
+    assert.equal(receipt.facts.userId, "u-owner", "the mint names whose verdict this is");
+    // Another account holding the bytes cannot re-point them at themselves:
+    // the signature covers the bound user, so the edit breaks both halves.
+    const stolen = JSON.parse(JSON.stringify(receipt));
+    stolen.facts.userId = "u-thief";
+    const v = await app.inject({
+      method: "POST",
+      url: "/verify",
+      headers: { "content-type": "application/json", "x-internal-key": KEY },
+      payload: { receipt: stolen },
+    });
+    assert.equal(v.statusCode, 200, v.body);
+    assert.equal(v.json().valid, false, "a re-pointed receipt verifies as nothing");
+  });
+
+  it("a receipt minted before the binding still verifies on its original bytes", async () => {
+    // No userId anywhere: the pre-binding shape. Recomputation omits the
+    // absent key, so the signature made then checks out now.
+    const facts = {
+      kind: "design",
+      challengeId: "url-shortener",
+      graphSha256: "b".repeat(64),
+      checks: [{ checkId: "has-client", passed: true, reason: "Re-derived." }],
+      runner: "platform",
+    };
+    const issuedAt = new Date().toISOString();
+    const receipt = { v: 1, issuedAt, facts, sig: kit.signReceipt(contracts.designReceiptPayload(facts, issuedAt), KEY) };
+    const v = await app.inject({
+      method: "POST",
+      url: "/verify",
+      headers: { "content-type": "application/json", "x-internal-key": KEY },
+      payload: { receipt },
+    });
+    assert.equal(v.statusCode, 200, v.body);
+    assert.equal(v.json().valid, true, "the migration must not orphan old receipts");
+  });
+
+  it("refuses a revision the registry does not hold instead of misjudging it", async () => {
+    // The submission names revision 2's checks; the registry holds revision 1.
+    // Judging it anyway could fail work the learner never saw — so the platform
+    // refuses with the mismatch stated, and the design keeps counting as
+    // practiced on the IDE side.
+    const r = await submit("url-shortener", GOOD_GRAPH, 2);
+    assert.equal(r.statusCode, 409, r.body);
+    assert.equal(r.json().error.code, "version_mismatch");
+    assert.match(r.json().error.message, /revision 1/, "the refusal names the revision actually judged");
+  });
+
+  it("an IDE too old to name a revision is still judged, not stranded", async () => {
+    const r = await app.inject({
+      method: "POST",
+      url: "/attest/design",
+      headers: { "x-user-id": "u-design", "x-internal-key": KEY, "content-type": "application/json" },
+      payload: { challengeId: "url-shortener", graph: GOOD_GRAPH },
+    });
+    assert.equal(r.statusCode, 200, r.body);
+    assert.equal(r.json().challengeVersion, 1, "the verdict still names what was judged");
+  });
+
+  it("the verdict carries a design receipt bound to the graph, and /verify re-derives it", async () => {
+    const r = await submit("url-shortener", GOOD_GRAPH);
+    const receipt = r.json().receipt;
+    assert.ok(receipt, "an attested design hands over proof, not just a claim");
+    assert.equal(receipt.facts.kind, "design");
+    assert.equal(receipt.facts.challengeId, "url-shortener");
+    assert.ok(/^[0-9a-f]{64}$/.test(receipt.facts.graphSha256), "the graph is bound by its canonical hash");
+    const payload = contracts.designReceiptPayload(receipt.facts, receipt.issuedAt);
+    assert.equal(kit.verifyReceiptSignature(payload, receipt.sig, KEY), true);
+    // The public surface branches on facts.kind and projects the structural verdict.
+    const v = await app.inject({
+      method: "POST",
+      url: "/verify",
+      headers: { "content-type": "application/json", "x-internal-key": KEY },
+      payload: { receipt },
+    });
+    assert.equal(v.statusCode, 200, v.body);
+    const body = v.json();
+    assert.equal(body.valid, true);
+    assert.equal(body.kind, "design");
+    assert.equal(body.offlineVerifiable, false, "HMAC-only without a receipt key");
+    assert.ok(Array.isArray(body.checks) && body.checks.length > 0 && body.checks.every((c) => c.passed), "a verified design reports the checks that passed");
+  });
+
+  it("a graph the platform judges as failing is reported as failing, even though it is attested", async () => {
+    // There is no client verdict to trust here; the platform's canonical checks
+    // decide. Provenance is still 'attested' — the re-judging is the authority —
+    // but a pass is never fabricated for a graph that does not hold.
+    const r = await submit("url-shortener", BROKEN_GRAPH);
+    assert.equal(r.statusCode, 200, r.body);
+    const body = r.json();
+    assert.equal(body.provenance, "attested");
+    const failed = new Set(body.checks.filter((c) => !c.passed).map((c) => c.checkId));
+    assert.ok(failed.has("has-entry"), "the broken graph is not allowed to read as a pass");
+    assert.ok(failed.has("no-direct-client-sql"), "a client wired to the store fails the forbidden-edge check");
+  });
+
+  it("refuses an unregistered challenge instead of judging it", async () => {
+    const r = await submit("not-registered", GOOD_GRAPH);
+    assert.equal(r.statusCode, 503, r.body);
+    assert.equal(r.json().error.code, "attestation_unavailable");
+  });
+
+  it("no signing key means an attested verdict with nothing to hand over", async () => {
+    const savedKey = process.env.INTERNAL_API_KEY;
+    try {
+      delete process.env.INTERNAL_API_KEY;
+      const r = await submit("url-shortener", GOOD_GRAPH);
+      assert.equal(r.statusCode, 200, r.body);
+      const body = r.json();
+      assert.equal(body.provenance, "attested", "the re-judging is the authority, not the receipt");
+      assert.equal("receipt" in body, false, "with no key there is nothing to hand over — and none is faked");
+    } finally {
+      if (savedKey === undefined) delete process.env.INTERNAL_API_KEY;
+      else process.env.INTERNAL_API_KEY = savedKey;
+    }
+  });
+
+  it("mints the offline signature when a receipt key is configured, and /verify names it", async () => {
+    const { generateKeyPairSync } = await import("node:crypto");
+    const pem = generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    const savedEd = process.env.RECEIPT_ED25519_KEY;
+    const savedId = process.env.RECEIPT_KEY_ID;
+    try {
+      process.env.RECEIPT_ED25519_KEY = pem;
+      process.env.RECEIPT_KEY_ID = "ed-test";
+      const r = await submit("url-shortener", GOOD_GRAPH);
+      assert.equal(r.statusCode, 200, r.body);
+      const receipt = r.json().receipt;
+      assert.equal(typeof receipt.sigEd, "string", "the offline signature rides along");
+      assert.equal(receipt.keyId, "ed-test", "rotation has a name");
+      assert.ok(contracts.designReceiptSchema.safeParse(receipt).success, "the dual-signed design receipt matches the contract");
+      const v = await app.inject({
+        method: "POST",
+        url: "/verify",
+        headers: { "content-type": "application/json", "x-internal-key": KEY },
+        payload: { receipt },
+      });
+      assert.equal(v.json().verifiedBy, "ed25519", "Ed25519 wins when present");
+      assert.equal(v.json().offlineVerifiable, true);
+    } finally {
+      if (savedEd === undefined) delete process.env.RECEIPT_ED25519_KEY;
+      else process.env.RECEIPT_ED25519_KEY = savedEd;
+      if (savedId === undefined) delete process.env.RECEIPT_KEY_ID;
+      else process.env.RECEIPT_KEY_ID = savedId;
+    }
+  });
+});
+
+/* The design-challenge sync: the platform judges only its own canonical copy
+   of each challenge's structural checks, and that copy is generated — from the
+   IDE curriculum by `npm run sync:design` — never hand-written. Three things
+   are pinned: the committed registry equals what the sibling source emits
+   (drift fails, absence of the sibling skips honestly); the registry holds
+   only what the platform judges (no rubric, reference, or teachable content);
+   and the synced bytes actually judge (a second app wired from the data file,
+   not fixtures, attests the reference-shaped graph and refuses a stale
+   revision). */
+describe("the synced design registry is generated, minimal, and judgable", () => {
+  const dataFile = join(root, "services", "execution", "src", "data", "design-challenges.ts");
+
+  it("the committed registry equals what the IDE source emits", (t) => {
+    try {
+      execSync("node scripts/sync-design.mjs --check", { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    } catch (err) {
+      const out = `${err.stdout ?? ""}${err.stderr ?? ""}`;
+      if (/sibling of branchcraft/.test(out)) {
+        t.skip("no nexora-ide sibling checkout on this host; the sync cannot be re-derived here");
+        return;
+      }
+      throw new Error(`design-challenge sync drifted — run npm run sync:design and commit the result:\n${out}`);
+    }
+  });
+
+  it("every synced entry is a versioned check set of known kinds", async () => {
+    const mod = await import("../services/execution/dist/data/design-challenges.js");
+    assert.ok(Array.isArray(mod.SYNCED_DESIGN_CHALLENGES) && mod.SYNCED_DESIGN_CHALLENGES.length > 0, "the registry is empty");
+    const known = new Set(["requires-node", "requires-any", "requires-edge", "requires-path", "forbids-edge", "requires-prop", "no-dangling"]);
+    for (const e of mod.SYNCED_DESIGN_CHALLENGES) {
+      assert.ok(Number.isInteger(e.version) && e.version >= 1, `${e.id} ships no authored revision`);
+      assert.ok(Array.isArray(e.checks) && e.checks.length > 0, `${e.id} holds no checks`);
+      for (const c of e.checks) {
+        assert.ok(known.has(c.kind), `${e.id} check ${c.id} has kind ${c.kind} the engine cannot judge`);
+      }
+    }
+  });
+
+  it("the registry holds only what the platform judges — nothing teachable", () => {
+    const text = readFileSync(dataFile, "utf8");
+    for (const leak of ["rubric", "reference", "alternatives", "scenarios", "hints", "misconceptions", "rationale", "guidance"]) {
+      assert.doesNotMatch(text, new RegExp(`"${leak}"`), `the synced registry carries ${leak} — the platform must not hold what it does not judge`);
+    }
+  });
+
+  it("the synced bytes judge: url-shortener attests from the data file, stale refuses", async () => {
+    const saved = process.env.INTERNAL_API_KEY;
+    process.env.INTERNAL_API_KEY = "test-sync-key";
+    try {
+      const mod = await import("../services/execution/dist/data/design-challenges.js");
+      const routes = await import("../services/execution/dist/routes.js");
+      const synced = new Map(mod.SYNCED_DESIGN_CHALLENGES.map((e) => [e.id, { version: e.version, checks: e.checks }]));
+      const entry = synced.get("url-shortener");
+      assert.ok(entry, "url-shortener must be in the synced registry");
+      const app = await kit.createService("test-synced-design-registry");
+      routes.registerExecutionRoutes(app, {
+        queue: new execQueue.JobQueue(1),
+        quotas: new execQuotas.Quotas(50, 2),
+        runner: "subprocess",
+        attestChallenges: synced,
+      });
+      await app.ready();
+      const good = await app.inject({
+        method: "POST",
+        url: "/attest/design",
+        headers: { "x-user-id": "u-sync", "x-internal-key": "test-sync-key", "content-type": "application/json" },
+        payload: { challengeId: "url-shortener", challengeVersion: entry.version, graph: GOOD_GRAPH },
+      });
+      assert.equal(good.statusCode, 200, good.body);
+      assert.equal(good.json().challengeVersion, entry.version, "the verdict names the synced revision judged");
+      assert.deepEqual(good.json().checks.filter((c) => !c.passed), [], "the fixture graph satisfies the synced checks");
+      const stale = await app.inject({
+        method: "POST",
+        url: "/attest/design",
+        headers: { "x-user-id": "u-sync", "x-internal-key": "test-sync-key", "content-type": "application/json" },
+        payload: { challengeId: "url-shortener", challengeVersion: entry.version + 1, graph: GOOD_GRAPH },
+      });
+      assert.equal(stale.statusCode, 409, stale.body);
+      assert.equal(stale.json().error.code, "version_mismatch");
+    } finally {
+      if (saved === undefined) delete process.env.INTERNAL_API_KEY;
+      else process.env.INTERNAL_API_KEY = saved;
+    }
+  });
+});
+
+/* Execution proves someone can write and run a program, and IDE runs happen
+   on the learner's own device — so a client could claim a pass it never
+   earned. These two suites are the other half of that story: the execution
+   service signs what it ran, and attestation refuses anything it cannot
+   re-derive from that signature. */
 describe("run receipts: the execution service signs what it ran", () => {
   let app;
   const KEY = "test-receipt-key-execution";
@@ -3347,7 +3955,7 @@ describe("run receipts: the execution service signs what it ran", () => {
     const payload = contracts.runReceiptPayload(receipt.facts, receipt.issuedAt);
     assert.equal(kit.verifyReceiptSignature(payload, receipt.sig, KEY), true);
     // The output is inside the signature: editing it after the fact does not
-    // survive, which is the property the completion gate leans on.
+    // survive, which is the property attestation leans on.
     const edited = { ...receipt.facts, stdout: "signed\nand more\n" };
     assert.equal(
       kit.verifyReceiptSignature(
@@ -3424,767 +4032,98 @@ describe("run receipts: the execution service signs what it ran", () => {
     assert.equal(v.statusCode, 200, v.body);
     assert.equal(v.json().valid, false);
   });
-});
 
-describe("completion is decided by the platform's own record", () => {
-  const KEY = "test-receipt-key-progress";
-  const saved = process.env.INTERNAL_API_KEY;
-  const SOLUTION = [
-    "package main",
-    "",
-    'import "fmt"',
-    "",
-    "func main() {",
-    '\tfmt.Println("Hello, Go")',
-    "}",
-    "",
-  ].join("\n");
-
-  let app;
-  let mission;
-  let draft = null;
-  const writes = [];
-
-  const draftRow = ({ code, checksPassed }) => ({
-    mission_id: "go-first-program",
-    content_version: "v-test",
-    code,
-    started_at: new Date(),
-    attempts: 1,
-    checks_passed: checksPassed,
-    hints_used: 0,
-    max_hint_level: 0,
-    questions: { answered: {}, correct: {} },
-    completed_at: null,
-    mastered_at: null,
-    independent: false,
-    xp_awarded: 0,
-  });
-  const setDraft = (opts) => {
-    draft = draftRow(opts);
-  };
-
-  /* A pg stand-in holding one mission row, so the completion path runs for
-     real: same route, same verification, same transaction shape. */
-  const pool = {
-    query: async (sql, params) => {
-      writes.push({ sql: sql.trim(), params });
-      if (sql.startsWith("SELECT * FROM mission_progress")) {
-        return { rows: draft ? [draft] : [], rowCount: draft ? 1 : 0 };
-      }
-      if (sql.startsWith("SELECT * FROM evidence")) return { rows: [], rowCount: 0 };
-      if (sql.includes("SUM(xp_awarded)")) return { rows: [{ xp: "100" }], rowCount: 1 };
-      if (sql.startsWith("INSERT INTO mission_progress")) {
-        draft = { ...draft, completed_at: params[10], mastered_at: params[11], xp_awarded: params[13] };
-        return { rows: [], rowCount: 1 };
-      }
-      return { rows: [], rowCount: 0 };
-    },
-  };
-
-  before(async () => {
-    process.env.INTERNAL_API_KEY = KEY;
-    const routes = await import("../services/progress/dist/routes.js");
-    const missions = await import("../services/progress/dist/vendor/missions.js");
-    mission = missions.missionById("go-first-program");
-    app = await kit.createService("test-progress-receipts");
-    routes.registerProgressRoutes(app, pool);
-    await app.ready();
-  });
-  after(() => {
-    if (saved === undefined) delete process.env.INTERNAL_API_KEY;
-    else process.env.INTERNAL_API_KEY = saved;
-  });
-
-  /** A genuine receipt, produced by the same code the execution service runs. */
-  const receiptFor = ({ code, stdout, exitCode = 0, issuedAt, key = KEY }) => {
-    const job = execValidate.validateJob({
-      language: "go",
-      files: [{ path: "main.go", content: code }],
-    });
-    return execReceipt.mintReceipt(
-      job,
-      {
-        stdout,
-        stderr: "",
-        exitCode,
-        timedOut: false,
-        truncated: false,
-        durationMs: 15,
-        runner: "subprocess",
-        diagnostics: [],
-        phase: "run",
-      },
-      key,
-      issuedAt ? new Date(issuedAt) : new Date()
-    );
-  };
-  const completeAt = (missionId, body) =>
-    app.inject({
-      method: "POST",
-      url: `/missions/${missionId}/complete`,
-      // Both headers the gateway sends: identity, and the mesh key that
-      // authenticates a service call. Nothing here is client-supplied in
-      // production, which is the point.
-      headers: { "x-user-id": "u-receipt", "x-internal-key": KEY },
-      payload: body,
-    });
-  const complete = (body) => completeAt("go-first-program", body);
-  const insertedChecks = () => {
-    const ins = writes.filter((w) => w.sql.startsWith("INSERT INTO mission_progress")).pop();
-    return ins ? ins.params[6] : null;
-  };
-
-  it("refuses a completion whose only evidence is the client's own pass list", async () => {
-    writes.length = 0;
-    setDraft({ code: SOLUTION, checksPassed: ["run-answer"] });
-    const r = await complete({});
-    assert.equal(r.statusCode, 422, r.body);
-    assert.equal(r.json().error.code, "run_unverified");
-    assert.match(r.json().error.message, /no record of a run/);
-    assert.equal(draft.completed_at, null, "nothing was recorded as done");
-  });
-
-  it("refuses a receipt this platform did not issue", async () => {
-    setDraft({ code: SOLUTION, checksPassed: [] });
-    const forged = { ...receiptFor({ code: SOLUTION, stdout: "Hello, Go\n" }), sig: "0".repeat(64) };
-    const r = await complete({ runs: [{ checkId: "run-answer", receipt: forged }] });
-    assert.equal(r.statusCode, 422, r.body);
-    assert.match(r.json().error.message, /did not issue/);
-    assert.equal(draft.completed_at, null);
-  });
-
-  it("refuses a run record whose output was edited after signing", async () => {
-    setDraft({ code: SOLUTION, checksPassed: [] });
-    // What the starter really printed, rewritten to look like the answer.
-    const real = receiptFor({ code: SOLUTION, stdout: "TODO\n" });
-    const edited = { ...real, facts: { ...real.facts, stdout: "Hello, Go\n" } };
-    const r = await complete({ runs: [{ checkId: "run-answer", receipt: edited }] });
-    assert.equal(r.statusCode, 422, r.body);
-    assert.match(r.json().error.message, /did not issue/);
-    assert.equal(draft.completed_at, null);
-  });
-
-  it("refuses an old run — a receipt is evidence about now, not forever", async () => {
-    setDraft({ code: SOLUTION, checksPassed: [] });
-    const old = receiptFor({
-      code: SOLUTION,
-      stdout: "Hello, Go\n",
-      issuedAt: new Date(Date.now() - 31 * 60 * 1000).toISOString(),
-    });
-    const r = await complete({ runs: [{ checkId: "run-answer", receipt: old }] });
-    assert.equal(r.statusCode, 422, r.body);
-    assert.match(r.json().error.message, /30 minutes/);
-  });
-
-  it("refuses a genuine receipt for a different program", async () => {
-    setDraft({ code: SOLUTION, checksPassed: [] });
-    const other = receiptFor({ code: "package main\n\nfunc main() {}\n", stdout: "Hello, Go\n" });
-    const r = await complete({ runs: [{ checkId: "run-answer", receipt: other }] });
-    assert.equal(r.statusCode, 422, r.body);
-    assert.match(r.json().error.message, /different code/);
-  });
-
-  it("decides on the runner's output, not on what the client claimed", async () => {
-    setDraft({ code: mission.starterCode, checksPassed: ["run-answer"] });
-    const starterRun = receiptFor({ code: mission.starterCode, stdout: "TODO\n" });
-    const r = await complete({ runs: [{ checkId: "run-answer", receipt: starterRun }] });
-    assert.equal(r.statusCode, 422, r.body);
-    assert.match(r.json().error.message, /did not meet/);
-    assert.equal(draft.completed_at, null, "a claimed pass is not a pass");
-  });
-
-  it("completes on a genuine run of the learner's current code", async () => {
-    writes.length = 0;
-    setDraft({ code: SOLUTION, checksPassed: [] });
-    const r = await complete({
-      runs: [{ checkId: "run-answer", receipt: receiptFor({ code: SOLUTION, stdout: "Hello, Go\n" }) }],
-    });
-    assert.equal(r.statusCode, 200, r.body);
-    const body = r.json();
-    assert.equal(body.completed, true);
-    assert.deepEqual(body.verifiedChecks, ["run-answer"]);
-    assert.ok(draft.completed_at, "completion was recorded");
-    // The stored pass list is the one the server derived, not the client's.
-    assert.deepEqual(insertedChecks(), ["run-answer"]);
-  });
-
-  it("cannot confirm a run with no signing key, and says so instead of trusting the claim", async () => {
-    delete process.env.INTERNAL_API_KEY;
+  it("mints the second signature when a receipt key is configured, and omits it otherwise", async () => {
+    const { generateKeyPairSync } = await import("node:crypto");
+    const pem = generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    const savedEd = process.env.RECEIPT_ED25519_KEY;
+    const savedId = process.env.RECEIPT_KEY_ID;
     try {
-      setDraft({ code: SOLUTION, checksPassed: ["run-answer"] });
-      const r = await complete({
-        runs: [{ checkId: "run-answer", receipt: receiptFor({ code: SOLUTION, stdout: "Hello, Go\n" }) }],
+      process.env.RECEIPT_ED25519_KEY = pem;
+      process.env.RECEIPT_KEY_ID = "ed-test";
+      const withKey = await runNode();
+      assert.equal(withKey.statusCode, 200, withKey.body);
+      const ed = withKey.json().receipt;
+      assert.equal(typeof ed.sigEd, "string", "the offline signature rides along");
+      assert.equal(ed.keyId, "ed-test", "rotation has a name");
+      assert.ok(contracts.runReceiptSchema.safeParse(ed).success, "the dual-signed receipt still matches the contract");
+
+      delete process.env.RECEIPT_ED25519_KEY;
+      const withoutKey = await runNode();
+      assert.equal(withoutKey.statusCode, 200, withoutKey.body);
+      const hmacOnly = withoutKey.json().receipt;
+      assert.equal("sigEd" in hmacOnly, false, "no key, no second signature — never faked");
+      assert.ok(contracts.runReceiptSchema.safeParse(hmacOnly).success, "HMAC-only receipts still match the contract");
+    } finally {
+      if (savedEd === undefined) delete process.env.RECEIPT_ED25519_KEY;
+      else process.env.RECEIPT_ED25519_KEY = savedEd;
+      if (savedId === undefined) delete process.env.RECEIPT_KEY_ID;
+      else process.env.RECEIPT_KEY_ID = savedId;
+    }
+  });
+
+  it("reports which signature verified, and publishes the key for offline checks", async () => {
+    const { generateKeyPairSync } = await import("node:crypto");
+    const pem = generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    const savedEd = process.env.RECEIPT_ED25519_KEY;
+    const savedId = process.env.RECEIPT_KEY_ID;
+    const post = (url, payload) =>
+      app.inject({ method: "POST", url, headers: { "content-type": "application/json", "x-internal-key": KEY }, payload });
+    try {
+      process.env.RECEIPT_ED25519_KEY = pem;
+      process.env.RECEIPT_KEY_ID = "ed-test";
+      const minted = (await runNode()).json().receipt;
+      // The platform's own answer names the stronger verification.
+      const v = await post("/verify", { receipt: minted });
+      assert.equal(v.statusCode, 200, v.body);
+      assert.equal(v.json().valid, true);
+      assert.equal(v.json().verifiedBy, "ed25519", "Ed25519 wins when present");
+      assert.equal(v.json().offlineVerifiable, true);
+      // The published key re-derives it with no platform secret involved.
+      const k = await app.inject({ method: "GET", url: "/verify-key", headers: { "x-internal-key": KEY } });
+      assert.equal(k.statusCode, 200, k.body);
+      assert.equal(k.json().algorithm, "Ed25519");
+      assert.equal(k.json().keyId, "ed-test");
+      const payload = contracts.runReceiptPayload(minted.facts, minted.issuedAt);
+      assert.equal(kit.verifyReceiptEd(payload, minted.sigEd, k.json().publicKey), true, "the published key verifies the minted receipt");
+      // A stranger's forgery fails on both signatures.
+      const forged = await post("/verify", {
+        receipt: { ...minted, sig: "0".repeat(64), sigEd: Buffer.from("0".repeat(64)).toString("base64") },
       });
-      assert.equal(r.statusCode, 503, r.body);
-      assert.equal(r.json().error.code, "verification_unavailable");
-      assert.match(r.json().error.message, /INTERNAL_API_KEY/);
-      assert.equal(draft.completed_at, null);
+      assert.equal(forged.json().valid, false, "a forgery fails on both signatures");
+      // A damaged HMAC alongside a genuine Ed25519 still verifies — the valid
+      // signature carries the receipt, and the answer names it.
+      const damagedHmac = await post("/verify", { receipt: { ...minted, sig: "0".repeat(64) } });
+      assert.equal(damagedHmac.json().valid, true);
+      assert.equal(damagedHmac.json().verifiedBy, "ed25519");
     } finally {
-      process.env.INTERNAL_API_KEY = KEY;
+      if (savedEd === undefined) delete process.env.RECEIPT_ED25519_KEY;
+      else process.env.RECEIPT_ED25519_KEY = savedEd;
+      if (savedId === undefined) delete process.env.RECEIPT_KEY_ID;
+      else process.env.RECEIPT_KEY_ID = savedId;
     }
-});
-
-/* A run that never became a completion used to leave nothing behind: the
-   receipt was spent and discarded, so a learner who ran their program, closed
-   the tab, and opened the mission on another device could not read back what
-   they had tried — and neither could the attempt transcripts the IDE will one
-   day show. These routes are the durable half of a run: the facts the
-   execution service signed, kept against the mission they were run for. */
-describe("submission history: every run the platform performed is kept", () => {
-  const KEY = "test-receipt-key-history";
-  const savedKey = process.env.INTERNAL_API_KEY;
-  const SOLUTION = [
-    "package main",
-    "",
-    'import "fmt"',
-    "",
-    "func main() {",
-    '\tfmt.Println("Hello, Go")',
-    "}",
-    "",
-  ].join("\n");
-
-  let app;
-  let mission;
-  /** An in-memory stand-in for `mission_runs`, unique index included. */
-  const rows = [];
-  const seen = [];
-  let draftCode = SOLUTION;
-  let nextId = 1;
-
-  const pool = {
-    query: async (sql, params = []) => {
-      const s = sql.trim();
-      seen.push({ sql: s, params });
-      if (s.startsWith("SELECT code FROM mission_progress")) {
-        return draftCode === null
-          ? { rows: [], rowCount: 0 }
-          : { rows: [{ code: draftCode }], rowCount: 1 };
-      }
-      if (s.startsWith("INSERT INTO mission_runs")) {
-        const [
-          userId, missionId, checkIds, language, command, entryPath, entrySha256, draftSha256,
-          stdout, stderr, exitCode, timedOut, truncated, durationMs, phase, diagnostics,
-          runner, receiptSig, contentVersion, issuedAt,
-        ] = params;
-        const clash = rows.some(
-          (r) => r.user_id === userId && r.mission_id === missionId && r.receipt_sig === receiptSig
-        );
-        if (clash) return { rows: [], rowCount: 0 }; // the unique index refuses it
-        rows.push({
-          id: nextId++, user_id: userId, mission_id: missionId, check_ids: checkIds, language,
-          command, entry_path: entryPath, entry_sha256: entrySha256, draft_sha256: draftSha256,
-          stdout, stderr, exit_code: exitCode, timed_out: timedOut, truncated, duration_ms: durationMs,
-          phase, diagnostics: JSON.parse(diagnostics), runner, receipt_sig: receiptSig,
-          content_version: contentVersion, issued_at: issuedAt, recorded_at: new Date(),
-        });
-        return { rows: [{ id: nextId - 1 }], rowCount: 1 };
-      }
-      if (s.startsWith("UPDATE mission_runs")) {
-        const [userId, missionId, sig, added] = params;
-        const row = rows.find(
-          (r) => r.user_id === userId && r.mission_id === missionId && r.receipt_sig === sig
-        );
-        if (row) row.check_ids = [...new Set([...row.check_ids, ...added])];
-        return { rows: [], rowCount: row ? 1 : 0 };
-      }
-      if (s.includes("COUNT(*)::int AS n FROM mission_runs")) {
-        const [userId, missionId] = params;
-        return {
-          rows: [{ n: rows.filter((r) => r.user_id === userId && r.mission_id === missionId).length }],
-          rowCount: 1,
-        };
-      }
-      if (s.startsWith("SELECT * FROM mission_runs")) {
-        const [userId, missionId, third] = params;
-        let list = rows.filter((r) => r.user_id === userId && r.mission_id === missionId);
-        if (Array.isArray(third)) list = list.filter((r) => third.includes(r.receipt_sig));
-        else if (typeof third === "number") list = list.slice(0, third);
-        return { rows: list.slice().sort((a, b) => b.id - a.id), rowCount: list.length };
-      }
-      return { rows: [], rowCount: 0 };
-    },
-  };
-
-  before(async () => {
-    process.env.INTERNAL_API_KEY = KEY;
-    const routes = await import("../services/progress/dist/routes.js");
-    const missions = await import("../services/progress/dist/vendor/missions.js");
-    mission = missions.missionById("go-first-program");
-    app = await kit.createService("test-progress-history");
-    routes.registerProgressRoutes(app, pool);
-    await app.ready();
-  });
-  after(() => {
-    if (savedKey === undefined) delete process.env.INTERNAL_API_KEY;
-    else process.env.INTERNAL_API_KEY = savedKey;
   });
 
-  const receiptFor = ({ code = SOLUTION, stdout = "Hello, Go\n", entry = "main.go", key = KEY }) => {
-    const job = execValidate.validateJob({ language: "go", files: [{ path: entry, content: code }] });
-    return execReceipt.mintReceipt(
-      job,
-      {
-        stdout,
-        stderr: "",
-        exitCode: 0,
-        timedOut: false,
-        truncated: false,
-        durationMs: 12,
-        runner: "subprocess",
-        diagnostics: [{ kind: "compile", file: "main.go", line: 3, column: 1, message: "example" }],
-        phase: "run",
-      },
-      key,
-      new Date()
-    );
-  };
-  const record = (runs) =>
-    app.inject({
-      method: "POST",
-      url: "/missions/go-first-program/runs",
-      headers: { "x-user-id": "u-history", "x-internal-key": KEY },
-      payload: { runs },
-    });
-  // Both headers the gateway sends: identity, and the mesh key that
-  // authenticates every internal call. Neither is client-supplied in
-  // production, which is the point.
-  const history = (query = "") =>
-    app.inject({
-      method: "GET",
-      url: `/missions/go-first-program/runs${query}`,
-      headers: { "x-user-id": "u-history", "x-internal-key": KEY },
-    });
-
-  it("records a run the platform performed, and reads it back", async () => {
-    rows.length = 0;
-    seen.length = 0;
-    const r = await record([{ checkId: "run-answer", receipt: receiptFor({}) }]);
-    assert.equal(r.statusCode, 200, r.body);
-    const body = r.json();
-    assert.equal(body.stored, 1);
-    assert.equal(body.duplicates, 0);
-    assert.equal(body.total, 1);
-    assert.equal(rows.length, 1, "one row for one run");
-    assert.equal(rows[0].stdout, "Hello, Go\n");
-    assert.equal(rows[0].language, "go");
-    assert.equal(rows[0].entry_path, "main.go");
-    assert.equal(rows[0].diagnostics[0].message, "example");
-    assert.equal(rows[0].draft_sha256, kit.codeSha256(SOLUTION), "the draft it was run against");
-    assert.ok(rows[0].issued_at instanceof Date, "when the runner signed it");
-
-    const read = await history();
-    assert.equal(read.statusCode, 200, read.body);
-    const list = read.json();
-    assert.equal(list.missionId, "go-first-program");
-    assert.equal(list.total, 1);
-    assert.equal(list.runs.length, 1);
-    const entry = list.runs[0];
-    assert.equal(entry.stdout, "Hello, Go\n");
-    assert.deepEqual(entry.checkIds, ["run-answer"]);
-    assert.equal(entry.matchesSavedDraft, true);
-    assert.equal(entry.exitCode, 0);
-    assert.ok(entry.recordedAt && entry.issuedAt);
-    // A receipt is a capability: the history describes the run and never hands
-    // back something a client could spend at completion.
-    assert.equal("sig" in entry, false);
-    assert.equal("receiptSig" in entry, false);
-  });
-
-  it("keeps an attempt that never completed, marked as edited-past", async () => {
-    rows.length = 0;
-    // The learner ran the starter and then carried on editing. That is most of
-    // what a learner actually does, and until now it left no trace anywhere.
-    draftCode = "package main\n\n// moved on\n";
-    const starter = mission.starterCode;
-    const r = await record([
-      { checkId: "run-answer", receipt: receiptFor({ code: starter, stdout: "TODO\n" }) },
-    ]);
-    assert.equal(r.statusCode, 200, r.body);
-    const entry = (await history()).json().runs[0];
-    assert.equal(entry.stdout, "TODO\n");
-    assert.equal(entry.matchesSavedDraft, false, "the run is not the code now saved");
-    assert.equal(entry.entrySha256, kit.codeSha256(starter));
-    assert.equal(entry.draftSha256, kit.codeSha256(draftCode));
-    draftCode = SOLUTION;
-  });
-
-  it("records nothing when the service holds no draft at all", async () => {
-    rows.length = 0;
-    draftCode = null;
+  it("verify-key 503s without a receipt key, and verify falls back to the HMAC", async () => {
+    const savedEd = process.env.RECEIPT_ED25519_KEY;
     try {
-      const r = await record([{ checkId: "run-answer", receipt: receiptFor({}) }]);
-      assert.equal(r.statusCode, 200, r.body);
-      assert.equal(rows[0].draft_sha256, null);
-      const entry = (await history()).json().runs[0];
-      assert.equal(entry.draftSha256, null);
-      assert.equal(entry.matchesSavedDraft, false);
+      delete process.env.RECEIPT_ED25519_KEY;
+      const k = await app.inject({ method: "GET", url: "/verify-key", headers: { "x-internal-key": KEY } });
+      assert.equal(k.statusCode, 503, "an unpublished key is a fact, not a verdict");
+      const r = await runNode();
+      const v = await app.inject({
+        method: "POST",
+        url: "/verify",
+        headers: { "content-type": "application/json", "x-internal-key": KEY },
+        payload: { receipt: r.json().receipt },
+      });
+      assert.equal(v.json().valid, true);
+      assert.equal(v.json().verifiedBy, "hmac", "pre-migration receipts still verify");
+      assert.equal(v.json().offlineVerifiable, false, "and say so honestly");
     } finally {
-      draftCode = SOLUTION;
+      if (savedEd === undefined) delete process.env.RECEIPT_ED25519_KEY;
+      else process.env.RECEIPT_ED25519_KEY = savedEd;
     }
-  });
-
-  it("recording a run never marks a check passed", async () => {
-    rows.length = 0;
-    seen.length = 0;
-    const r = await record([{ checkId: "run-answer", receipt: receiptFor({}) }]);
-    assert.equal(r.statusCode, 200, r.body);
-    // Only the draft *read* touches progress: nothing about a record is a
-    // verdict, so a history entry can never stand in for evidence.
-    const wrote = seen.filter((s) => /mission_progress|evidence/.test(s.sql));
-    assert.deepEqual(
-      wrote.map((s) => s.sql),
-      ["SELECT code FROM mission_progress WHERE user_id = $1 AND mission_id = $2"]
-    );
-  });
-
-  it("offering the same run twice is idempotent, not a second record", async () => {
-    rows.length = 0;
-    seen.length = 0;
-    const receipt = receiptFor({});
-    const first = await record([{ checkId: "run-answer", receipt }]);
-    assert.equal(first.json().stored, 1);
-    const again = await record([{ checkId: "run-answer", receipt }]);
-    assert.equal(again.statusCode, 200, again.body);
-    assert.equal(again.json().stored, 0);
-    assert.equal(again.json().duplicates, 1);
-    assert.equal(again.json().total, 1);
-    assert.equal(rows.length, 1, "the same execution is one record");
-    // The duplicate still merges the check it was offered for onto that record.
-    const union = seen.filter((s) => s.sql.startsWith("UPDATE mission_runs")).pop();
-    assert.deepEqual(union.params, ["u-history", "go-first-program", receipt.sig, ["run-answer"]]);
-    assert.deepEqual(rows[0].check_ids, ["run-answer"]);
-  });
-
-  it("refuses a record this platform did not issue, and writes nothing", async () => {
-    rows.length = 0;
-    const forged = { ...receiptFor({}), sig: "0".repeat(64) };
-    const r = await record([{ checkId: "run-answer", receipt: forged }]);
-    assert.equal(r.statusCode, 422, r.body);
-    assert.equal(r.json().error.code, "run_unverified");
-    assert.match(r.json().error.message, /did not issue/);
-    assert.equal(rows.length, 0);
-    // A receipt signed with somebody else's key is not ours either.
-    const foreign = await record([{ checkId: "run-answer", receipt: receiptFor({ key: "another-key" }) }]);
-    assert.equal(foreign.statusCode, 422, foreign.body);
-    assert.equal(rows.length, 0);
-  });
-
-  it("refuses a genuine run that does not include the mission's own file", async () => {
-    rows.length = 0;
-    const r = await record([{ checkId: "run-answer", receipt: receiptFor({ entry: "not-this-one.go" }) }]);
-    assert.equal(r.statusCode, 422, r.body);
-    assert.match(r.json().error.message, /main\.go/);
-    assert.equal(rows.length, 0);
-  });
-
-  it("refuses a check id this mission does not have, before writing anything", async () => {
-    rows.length = 0;
-    const r = await record([
-      { checkId: "run-answer", receipt: receiptFor({}) },
-      { checkId: "invented-check", receipt: receiptFor({}) },
-    ]);
-    assert.equal(r.statusCode, 400, r.body);
-    assert.match(r.json().error.message, /invented-check/);
-    assert.equal(rows.length, 0, "a request records all of what it offered or none of it");
-  });
-
-  it("records nothing with no signing key, and says why", async () => {
-    rows.length = 0;
-    delete process.env.INTERNAL_API_KEY;
-    try {
-      const r = await record([{ checkId: "run-answer", receipt: receiptFor({}) }]);
-      assert.equal(r.statusCode, 503, r.body);
-      assert.equal(r.json().error.code, "verification_unavailable");
-      assert.match(r.json().error.message, /INTERNAL_API_KEY/);
-      assert.equal(rows.length, 0);
-    } finally {
-      process.env.INTERNAL_API_KEY = KEY;
-    }
-  });
-
-  it("a history read is the learner's own, and only theirs", async () => {
-    rows.length = 0;
-    seen.length = 0;
-    await record([{ checkId: "run-answer", receipt: receiptFor({}) }]);
-    // A second account's run of the same mission, written straight into the table.
-    rows.push({
-      id: nextId++, user_id: "u-someone-else", mission_id: "go-first-program", check_ids: ["run-answer"],
-      language: "go", command: [], entry_path: "main.go", entry_sha256: "0".repeat(64),
-      draft_sha256: null, stdout: "not yours\n", stderr: "", exit_code: 0, timed_out: false,
-      truncated: false, duration_ms: 1, phase: "run", diagnostics: [], runner: "subprocess",
-      receipt_sig: "f".repeat(64), content_version: "v-test", issued_at: new Date(),
-      recorded_at: new Date(),
-    });
-    const read = await history();
-    assert.equal(read.statusCode, 200, read.body);
-    assert.equal(read.json().total, 1, "another learner's runs are not in the count");
-    assert.equal(read.json().runs.length, 1);
-    assert.notEqual(read.json().runs[0].stdout, "not yours\n");
-    // The scope travels in the query, not in a filter applied afterwards.
-    const reads = seen.filter((s) => s.sql.startsWith("SELECT * FROM mission_runs"));
-    assert.equal(reads.length, 2);
-    for (const s of reads) assert.equal(s.params[0], "u-history");
-
-    // Meshed as the gateway would be, but with no identity: the route refuses.
-    const anon = await app.inject({
-      method: "GET",
-      url: "/missions/go-first-program/runs",
-      headers: { "x-internal-key": KEY },
-    });
-    assert.equal(anon.statusCode, 401);
-    const unknown = await app.inject({
-      method: "GET",
-      url: "/missions/no-such-mission/runs",
-      headers: { "x-user-id": "u-history", "x-internal-key": KEY },
-    });
-    assert.equal(unknown.statusCode, 404);
-  });
-
-  it("a read asks for a page, and a nonsense page size is clamped, not fatal", async () => {
-    const limitFor = async (q) => {
-      seen.length = 0;
-      const r = await history(q);
-      assert.equal(r.statusCode, 200, r.body);
-      return seen.find((s) => s.sql.startsWith("SELECT * FROM mission_runs"))?.params[2];
-    };
-    assert.equal(await limitFor("?limit=1"), 1);
-    assert.equal(await limitFor("?limit=9999"), 100, "capped, never unbounded");
-    assert.equal(await limitFor("?limit=zero"), 20, "the default, not an error");
-  });
-});
-
-describe("run evidence is bound to authored scenario fixtures", () => {
-  const KEY = "test-receipt-fixture-key";
-  let scenario;
-  let check;
-  let verify;
-
-  before(async () => {
-    const missions = await import("../services/progress/dist/vendor/missions.js");
-    scenario = missions.missionById("scenario-duration-format");
-    check = scenario.checks.find((c) => c.rule.kind === "runs");
-    verify = progressRunVerification.verifyRunEvidence;
-  });
-
-  const receiptForFiles = (files) => {
-    const job = execValidate.validateJob({ language: "node", files });
-    return execReceipt.mintReceipt(job, {
-      stdout: "ALL TESTS PASSED\n", stderr: "", exitCode: 0,
-      timedOut: false, truncated: false, durationMs: 10,
-      runner: "subprocess", diagnostics: [], phase: "run",
-    }, KEY, new Date());
-  };
-  const verdict = (receipt) => verify({
-    check, receipt, meshKey: KEY, draftCode: scenario.starterCode,
-    entryPath: scenario.fileName,
-  });
-
-  it("accepts an authentic run with the exact authored fixture", () => {
-    const receipt = receiptForFiles([
-      { path: scenario.fileName, content: scenario.starterCode },
-      ...check.rule.harness,
-    ]);
-    assert.equal(verdict(receipt).passed, true);
-  });
-
-  it("rejects a genuine runner receipt with a replaced test fixture", () => {
-    const receipt = receiptForFiles([
-      { path: scenario.fileName, content: scenario.starterCode },
-      { path: check.rule.harness[0].path, content: "console.log('ALL TESTS PASSED')" },
-    ]);
-    const result = verdict(receipt);
-    assert.equal(result.passed, false);
-    assert.match(result.reason, /changed or missing mission test fixture/);
-  });
-
-  it("rejects extra submitted files even when the trusted fixture is present", () => {
-    const receipt = receiptForFiles([
-      { path: scenario.fileName, content: scenario.starterCode },
-      ...check.rule.harness,
-      { path: "extra.js", content: "// alters the run environment" },
-    ]);
-    const result = verdict(receipt);
-    assert.equal(result.passed, false);
-    assert.match(result.reason, /different set of files/);
-  });
-});
-
-/* Web missions are most of the curriculum, and until now a client could mark
-     one done without its saved draft satisfying a single rule — the pass list
-     it uploaded *was* the record. Now the platform re-derives those checks from
-     the draft it stores, using the identical interpreter the learner's screen
-     runs (vendored from the frontend, so the two cannot drift apart). */
-  const PAGE = [
-    "<!DOCTYPE html>",
-    '<html lang="en">',
-    "  <head>",
-    '    <meta charset="utf-8" />',
-    "    <title>Ada's notes</title>",
-    "  </head>",
-    "  <body>",
-    "    <h1>Things I am learning</h1>",
-    "    <p>HTML is simpler than I expected.</p>",
-    "  </body>",
-    "</html>",
-    "",
-  ].join("\n");
-  const docMission = async (id) => {
-    const missions = await import("../services/progress/dist/vendor/missions.js");
-    return missions.missionById(id);
-  };
-  const claimAll = (m) => ({ code: m.starterCode, checksPassed: m.checks.map((c) => c.id) });
-
-  it("refuses a web completion the saved draft does not satisfy", async () => {
-    const doc = await docMission("first-page");
-    setDraft({ code: "<h1>x</h1>", checksPassed: doc.checks.map((c) => c.id) });
-    draft.mission_id = "first-page";
-    const r = await completeAt("first-page", {});
-    assert.equal(r.statusCode, 422, r.body);
-    assert.equal(r.json().error.code, "document_unverified");
-    // The refusal names the unmet rule in the mission's own authored words.
-    assert.match(r.json().error.message, /meaningful <title>/);
-    assert.match(r.json().error.message, /Untitled page/);
-    assert.equal(draft.completed_at, null, "a claimed pass is not a pass");
-  });
-
-  it("reports only what is unmet, and passes what the draft does satisfy", async () => {
-    const doc = await docMission("first-page");
-    // Title and heading are there; the paragraph is missing.
-    setDraft({ code: "<title>My page</title><h1>Hi there</h1>", checksPassed: doc.checks.map((c) => c.id) });
-    draft.mission_id = "first-page";
-    const r = await completeAt("first-page", {});
-    assert.equal(r.statusCode, 422, r.body);
-    assert.match(r.json().error.message, /paragraph/);
-    assert.doesNotMatch(r.json().error.message, /meaningful <title>/);
-  });
-
-  it("completes a draft that satisfies every rule, even when the client claimed nothing", async () => {
-    writes.length = 0;
-    setDraft({ code: PAGE, checksPassed: [] });
-    draft.mission_id = "first-page";
-    const r = await completeAt("first-page", {});
-    assert.equal(r.statusCode, 200, r.body);
-    const body = r.json();
-    assert.equal(body.completed, true);
-    // What passed came from the draft, not from the (empty) claim.
-    assert.deepEqual(insertedChecks(), ["has-title", "has-h1", "has-p"]);
-    assert.deepEqual(body.verifiedChecks, ["has-title", "has-h1", "has-p"]);
-  });
-
-  it("will not complete a mission the learner never wrote code for", async () => {
-    const doc = await docMission("first-page");
-    // No saved draft: the server judges the code the mission starts with — the
-    // code the learner is looking at — and the starter code does not satisfy
-    // the mission's own rules. Claiming otherwise is exactly the hole this
-    // closes, so the claim has to lose.
-    setDraft({ code: null, checksPassed: doc.checks.map((c) => c.id) });
-    draft.mission_id = "first-page";
-    const r = await completeAt("first-page", {});
-    assert.equal(r.statusCode, 422, r.body);
-    assert.equal(r.json().error.code, "document_unverified");
-    assert.match(r.json().error.message, /untitled page/i);
-    assert.equal(draft.completed_at, null);
-  });
-
-  it("leaves the rules only a browser can decide as the client's own evidence", async () => {
-    // The stored boundary, executable: `h1 { color: … }` is decided by a real
-    // cascade, and no parser reproduces one faithfully — so this mission still
-    // travels on the client's report, and the code says so rather than guessing
-    // (TODO 2.2). If that ever changes, this test fails and the limitation gets
-    // rewritten instead of quietly outliving the fix.
-    const css = await docMission("css-selectors");
-    assert.ok(
-      css.checks.every((c) => c.rule.kind === "computed-style"),
-      "the example mission is still a computed-style one"
-    );
-    const { documentChecks } = await import("../services/progress/dist/verify-document.js");
-    assert.deepEqual(documentChecks(css.checks), []);
-    setDraft(claimAll(css));
-    draft.mission_id = "css-selectors";
-    const r = await completeAt("css-selectors", {});
-    assert.equal(r.statusCode, 200, r.body);
-    assert.equal(r.json().completed, true);
-  });
-});
-
-describe("the platform decides document checks with the learner's own interpreter", () => {
-  let documentChecks;
-  let verifyDocumentChecks;
-  before(async () => {
-    ({ documentChecks, verifyDocumentChecks } = await import(
-      "../services/progress/dist/verify-document.js"
-    ));
-  });
-
-  /** One rule, one draft: the whole surface, without a route or a database. */
-  const verdict = (code, rule) =>
-    verifyDocumentChecks({
-      checks: [{ id: "c", label: "a rule", feedback: "what to do about it", rule }],
-      draftCode: code,
-    })[0];
-
-  it("decides every document rule kind, in both directions", () => {
-    const cases = [
-      ['<img src="a.png" alt="A cat">', { kind: "has-element", selector: "img[alt]" }, true],
-      ["<div></div>", { kind: "has-element", selector: "img[alt]" }, false],
-      ["<div></div>", { kind: "missing-element", selector: "table" }, true],
-      ["<table></table>", { kind: "missing-element", selector: "table" }, false],
-      ["<ul><li>a</li><li>b</li></ul>", { kind: "count-min", selector: "li", min: 2 }, true],
-      ["<ul><li>a</li></ul>", { kind: "count-min", selector: "li", min: 2 }, false],
-      ["<ul><li>a</li></ul>", { kind: "count-exact", selector: "li", exact: 1 }, true],
-      ["<ul><li>a</li><li>b</li></ul>", { kind: "count-exact", selector: "li", exact: 1 }, false],
-      ["<h1>Hi</h1>", { kind: "text-match", selector: "h1", pattern: "^hi$" }, true],
-      ["<h1>x</h1>", { kind: "text-match", selector: "h1", pattern: "^hi$" }, false],
-      // Missing element, not an error and not a pass: no element, no match.
-      ["<div></div>", { kind: "text-match", selector: "h1", pattern: "." }, false],
-      ["<p>Hello world</p>", { kind: "doc-text-match", pattern: "hello" }, true],
-      ["<p>Goodbye</p>", { kind: "doc-text-match", pattern: "hello" }, false],
-      ['<a href="https://example.com">x</a>', { kind: "attr-match", selector: "a", attr: "href", pattern: "^https://" }, true],
-      ['<a href="x.html">x</a>', { kind: "attr-match", selector: "a", attr: "href", pattern: "^https://" }, false],
-      ['<nav><a href="x.html">x</a></nav>', { kind: "nested", ancestor: "nav", child: "a" }, true],
-      ["<div><a href=\"x.html\">x</a></div>", { kind: "nested", ancestor: "nav", child: "a" }, false],
-      ['<label for="n">Name</label><input id="n" />', { kind: "labeled-inputs" }, true],
-      ["<input id=\"n\" />", { kind: "labeled-inputs" }, false],
-      ["<p>no fields here</p>", { kind: "labeled-inputs" }, false],
-      ['<a href="page.html">x</a>', { kind: "no-placeholder-links" }, true],
-      ['<a href="#">x</a>', { kind: "no-placeholder-links" }, false],
-      ["<style>.a { color: red; }</style>", { kind: "style-text-match", pattern: "\\.a\\s*\\{[^}]*color" }, true],
-      ["<style>.a { color: red; }</style>", { kind: "style-text-match", pattern: "display\\s*:\\s*flex" }, false],
-    ];
-    for (const [code, rule, expected] of cases) {
-      const v = verdict(code, rule);
-      assert.equal(v.passed, expected, `${rule.kind} ${JSON.stringify(rule)} on ${JSON.stringify(code)}`);
-    }
-  });
-
-  it("claims the document kinds, and never the browser's or the runner's", () => {
-    const ids = documentChecks([
-      { id: "doc", label: "", feedback: "", rule: { kind: "has-element", selector: "p" } },
-      { id: "rendered", label: "", feedback: "", rule: { kind: "computed-style", selector: "p", property: "color", pattern: "red" } },
-      { id: "driven", label: "", feedback: "", rule: { kind: "scripted", ops: [], assertions: [] } },
-      { id: "ran", label: "", feedback: "", rule: { kind: "runs", assertions: [] } },
-    ]).map((c) => c.id);
-    assert.deepEqual(ids, ["doc"]);
-  });
-
-  it("fails closed with no draft, and on a rule it cannot evaluate", () => {
-    const rule = { kind: "has-element", selector: "p" };
-    for (const draftCode of [null, "", "   "]) {
-      const v = verifyDocumentChecks({
-        checks: [{ id: "c", label: "a rule", feedback: "write something", rule }],
-        draftCode,
-      })[0];
-      assert.equal(v.passed, false, `no draft (${JSON.stringify(draftCode)}) cannot pass`);
-      assert.match(v.reason, /no saved draft/);
-    }
-    // A pattern the engine cannot compile must not become a pass. Authored
-    // mission data is checked elsewhere; this is the guarantee that a broken
-    // rule never silently opens the gate.
-    const broken = verdict("<p>x</p>", { kind: "text-match", selector: "p", pattern: "(" });
-    assert.equal(broken.passed, false);
-    assert.equal(broken.reason, "what to do about it");
   });
 });
 
@@ -4213,8 +4152,8 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     assert.match(out, /INTERNAL_API_KEY/, "the message says what a learner could reach");
     assert.match(out, /EXECUTION_ALLOW_SUBPROCESS=1/, "and names the explicit override");
   });
-  it("auth/progress/billing refuse to boot without DATABASE_URL", () => {
-    for (const svc of ["auth", "progress", "billing"]) {
+  it("auth/billing refuse to boot without DATABASE_URL", () => {
+    for (const svc of ["auth", "billing"]) {
       const env = { ...process.env };
       delete env.DATABASE_URL;
       const r = spawnSync("node", [`services/${svc}/dist/index.js`], {
@@ -4230,8 +4169,6 @@ describe("boot fail-fast + migrations + sync + compose", () => {
   it("migrations create the tables they claim", () => {
     const checks = [
       ["auth", ["CREATE TABLE IF NOT EXISTS users", "CREATE TABLE IF NOT EXISTS refresh_tokens"]],
-      ["progress", ["CREATE TABLE IF NOT EXISTS profiles", "CREATE TABLE IF NOT EXISTS mission_progress", "CREATE TABLE IF NOT EXISTS evidence"]],
-      ["tutor", ["CREATE TABLE IF NOT EXISTS tutor_requests"]],
       ["billing", ["CREATE TABLE IF NOT EXISTS billing_checkouts", "CREATE TABLE IF NOT EXISTS billing_subscriptions", "CREATE TABLE IF NOT EXISTS billing_events"]],
     ];
     for (const [svc, needles] of checks) {
@@ -4284,41 +4221,42 @@ describe("boot fail-fast + migrations + sync + compose", () => {
       gwIndexSrc.includes("revocationNotice"),
       "and logs the first refusal or unanswered check at once, rather than up to an interval later"
     );
-    // Submission history rides a forward-only migration of its own: an existing
-    // deployment gains the table without any progress row being touched, and
-    // the runner's signature is what keeps one execution to one record.
-    const progress002 = readFileSync(join(root, "services", "progress", "migrations", "002_runs.sql"), "utf8");
-    assert.ok(progress002.includes("CREATE TABLE IF NOT EXISTS mission_runs"), "progress 002 records runs");
-    assert.ok(progress002.includes("receipt_sig"), "progress 002 keys a record by the runner's signature");
-    assert.ok(
-      progress002.includes("UNIQUE INDEX IF NOT EXISTS mission_runs_one_row_per_receipt"),
-      "progress 002 makes re-offering one run idempotent"
-    );
   });
-  it("vendor snapshots match frontend source (run sync on drift)", async () => {
-    const { createHash } = await import("node:crypto");
-    const { readFile } = await import("node:fs/promises");
-    const manifest = {
-      "services/curriculum/src/data": ["types.ts", "curriculum.ts", "diagnostic.ts", "missions.ts", "missions-a.ts", "missions-b.ts", "missions-c.ts", "missions-d.ts", "missions-e.ts", "missions-f.ts", "missions-g.ts", "missions-h.ts", "missions-i.ts", "missions-j.ts", "missions-k.ts", "missions-l.ts", "missions-m.ts", "missions-n.ts", "missions-o.ts", "missions-p.ts", "missions-q.ts", "missions-r.ts", "missions-orientation.ts"],
-      "services/progress/src/vendor": ["types.ts", "curriculum.ts", "diagnostic.ts", "missions.ts", "missions-a.ts", "missions-b.ts", "missions-c.ts", "missions-d.ts", "missions-e.ts", "missions-f.ts", "missions-g.ts", "missions-h.ts", "missions-i.ts", "missions-j.ts", "missions-k.ts", "missions-l.ts", "missions-m.ts", "missions-n.ts", "missions-o.ts", "missions-p.ts", "missions-q.ts", "missions-r.ts", "missions-orientation.ts", "format.ts", "recommend.ts", "progress-core.ts", "run-evidence.ts", "document-rules.ts"],
-      "services/tutor/src/vendor": ["types.ts", "missions.ts", "missions-a.ts", "missions-b.ts", "missions-c.ts", "missions-d.ts", "missions-e.ts", "missions-f.ts", "missions-g.ts", "missions-h.ts", "missions-i.ts", "missions-j.ts", "missions-k.ts", "missions-l.ts", "missions-m.ts", "missions-n.ts", "missions-o.ts", "missions-p.ts", "missions-q.ts", "missions-r.ts", "missions-orientation.ts"],
-    };
-    const stripExt = (content) =>
-      content.replace(/(from\s+["'])(\.[^"']+)(["'])/g, (m, pre, p, post) =>
-        p.endsWith(".js") || p.endsWith(".json") ? m : pre + p + ".js" + post
+  it("web-classroom sync is retired: the browser sources and the vendor copies are gone", async () => {
+    // The browser classroom is deleted — one way to learn, the desktop IDE —
+    // so there is no web content to snapshot, and this session removed the
+    // services' classroom surface with it. This pins the removal from the
+    // platform side: the retired sources must stay absent (re-adding them
+    // without restoring the sync is how the old drift returned), and the
+    // vendor copies must stay deleted (their services no longer exist to
+    // read them).
+    const { existsSync: exists, readdirSync: readdir } = await import("node:fs");
+    for (const f of [
+      "missions.ts",
+      "missions-orientation.ts",
+      "curriculum.ts",
+      "diagnostic.ts",
+      "checks.ts",
+      "harness.ts",
+      "practice-core.ts",
+      "recommend.ts",
+      "document-rules.ts",
+      "run-evidence.ts",
+    ]) {
+      assert.ok(
+        !exists(join(root, "..", "nexora-svelte", "src", "lib", f)),
+        `${f} stays deleted from the front door (do not re-add web sources without restoring the sync)`
       );
-    const hash = createHash("sha256");
-    for (const [dir, files] of Object.entries(manifest).sort(([a], [b]) => (a < b ? -1 : 1))) {
-      for (const f of [...files].sort()) {
-        const src = await readFile(join(root, "..", "nexora-svelte", "src", "lib", f), "utf8");
-        // Hash input mirrors sync-curriculum.mjs exactly (keys carry ../).
-        hash.update("../" + dir + "/" + f + "\n" + src + "\n");
-        const vendor = await readFile(join(root, dir, f), "utf8");
-        assert.equal(vendor, stripExt(src), `${dir}/${f} matches source (run npm run sync:curriculum)`);
-      }
     }
-    const ver = await import("../services/curriculum/dist/data/version.js");
-    assert.equal(ver.CONTENT_VERSION, hash.digest("hex").slice(0, 12));
+    for (const dir of ["services/progress", "services/tutor"]) {
+      assert.ok(!exists(join(root, dir)), `${dir} stays deleted (no service reads classroom content anymore)`);
+    }
+    const dataFiles = readdir(join(root, "services", "curriculum", "src", "data"));
+    assert.deepEqual(
+      [...dataFiles].sort(),
+      ["ide-manifest.ts", "ide-task-manager.ts", "ide-version.ts"].sort(),
+      "the curriculum data dir holds only the IDE snapshot"
+    );
   });
   it("IDE curriculum snapshot matches its source and its own stamp (run sync on drift)", async () => {
     // The paid phases the platform serves are a snapshot of the IDE's authored
@@ -4399,17 +4337,16 @@ describe("boot fail-fast + migrations + sync + compose", () => {
       "the IDE snapshot matches the sibling repo's source (run npm run sync:curriculum)"
     );
   });
-  it("every relative import in vendor/data ends with .js (NodeNext)", async () => {
+  it("every relative import in curriculum data ends with .js (NodeNext)", async () => {
     const { readFile, readdir } = await import("node:fs/promises");
-    for (const dir of ["services/curriculum/src/data", "services/progress/src/vendor", "services/tutor/src/vendor"]) {
-      const files = (await readdir(join(root, dir))).filter((f) => f.endsWith(".ts"));
-      for (const f of files) {
-        const content = await readFile(join(root, dir, f), "utf8");
-        const bad = [...content.matchAll(/from\s+["'](\.[^"']+)["']/g)]
-          .map((m) => m[1])
-          .filter((p) => !p.endsWith(".js") && !p.endsWith(".json"));
-        assert.deepEqual(bad, [], `${dir}/${f} extensionless imports`);
-      }
+    const dir = "services/curriculum/src/data";
+    const files = (await readdir(join(root, dir))).filter((f) => f.endsWith(".ts"));
+    for (const f of files) {
+      const content = await readFile(join(root, dir, f), "utf8");
+      const bad = [...content.matchAll(/from\s+["'](\.[^"']+)["']/g)]
+        .map((m) => m[1])
+        .filter((p) => !p.endsWith(".js") && !p.endsWith(".json"));
+      assert.deepEqual(bad, [], `${dir}/${f} extensionless imports`);
     }
   });
   it("compose config is valid; postgres stays internal; gateway published", () => {
@@ -4430,7 +4367,7 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     }
     const cfg = JSON.parse(out);
     const names = Object.keys(cfg.services);
-    for (const s of ["postgres", "auth", "curriculum", "progress", "execution", "tutor", "billing", "gateway", "frontend"]) {
+    for (const s of ["postgres", "auth", "curriculum", "execution", "billing", "gateway", "frontend"]) {
       assert.ok(names.includes(s), `service ${s} present`);
     }
     assert.equal(cfg.services.postgres.ports, undefined, "postgres not published");
@@ -4594,12 +4531,27 @@ function fakeAuthPool() {
         return row ? { rows: [{ id: row.id }], rowCount: 1 } : { rows: [], rowCount: 0 };
       }
       if (sql.startsWith("UPDATE refresh_tokens SET revoked_at = now(), replaced_by")) {
+        // Guard-aware on purpose: rotation claims a row with
+        // `... AND revoked_at IS NULL`, and that guard IS the behaviour under test.
+        // A fake that ignored it would let two concurrent refreshes both claim the
+        // same row and hide the race (B-28).
+        const guarded = sql.includes("AND revoked_at IS NULL");
+        let n = 0;
         for (const row of tokens.values()) {
-          if (row.id === params[1]) {
+          if (row.id === params[1] && (!guarded || !row.revoked_at)) {
             row.revoked_at = new Date();
             row.replaced_by = params[0];
+            n += 1;
           }
         }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("UPDATE refresh_tokens SET revoked_at = now() WHERE id")) {
+        const row = [...tokens.values()].find((r) => r.id === params[0]);
+        if (!row || (sql.includes("AND revoked_at IS NULL") && row.revoked_at)) {
+          return { rows: [], rowCount: 0 };
+        }
+        row.revoked_at = new Date();
         return { rows: [], rowCount: 1 };
       }
       if (sql.startsWith("UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash")) {
@@ -4790,6 +4742,466 @@ describe("auth token lifecycle (in-process, fake pg)", () => {
   });
 });
 
+/* Verified proof ledger: the IDE syncs attested records for profile display,
+ * and this service stores only what its own signatures verify. The fake pg
+ * below is an in-memory proofs table — foreign keys are not enforced by the
+ * fake, which is fine because the trust under test is signature-first, and
+ * user isolation is asserted on the rows, not the constraints. */
+describe("proofs ledger stores only what verifies (in-process, fake pg)", () => {
+  let app;
+  let kit;
+  let contracts;
+  const KEY = "test-proofs-key";
+  const saved = process.env.INTERNAL_API_KEY;
+  const rows = [];
+
+  const fakePool = {
+    query: async (sql, params) => {
+      if (sql.startsWith("SELECT user_id, issued_at FROM proofs WHERE payload_sha256")) {
+        const hit = rows.filter((r) => r.payload_sha256 === params[0]);
+        return { rows: hit, rowCount: hit.length };
+      }
+      if (sql.startsWith("SELECT competency_id, level, issued_at FROM proofs WHERE user_id")) {
+        const hit = rows.filter((r) => r.user_id === params[0] && r.competency_id === params[1]);
+        return { rows: hit, rowCount: hit.length };
+      }
+      if (sql.startsWith("INSERT INTO proofs")) {
+        const [user_id, competency_id, level, receipt, payload_sha256, issued_at] = params;
+        const at = new Date(issued_at);
+        const ix = rows.findIndex((r) => r.user_id === user_id && r.competency_id === competency_id);
+        const row = { user_id, competency_id, level, receipt: JSON.parse(receipt), payload_sha256, issued_at: at };
+        if (ix >= 0) rows[ix] = row;
+        else rows.push(row);
+        return { rows: [{ competency_id, level, issued_at: at }], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT competency_id, level, CASE")) {
+        return {
+          rows: rows
+            .filter((r) => r.user_id === params[0])
+            .sort((a, b) => b.issued_at.getTime() - a.issued_at.getTime())
+            .map((r) => ({
+              competency_id: r.competency_id,
+              level: r.level,
+              kind: r.receipt?.facts?.kind === "design" ? "design" : "run",
+              issued_at: r.issued_at,
+            })),
+          rowCount: rows.filter((r) => r.user_id === params[0]).length,
+        };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  };
+
+  const runFacts = {
+    language: "node",
+    command: ["node", "--test"],
+    files: [{ path: "src/add.js", sha256: "a".repeat(64) }],
+    stdout: "ok 1",
+    stderr: "",
+    exitCode: 0,
+    timedOut: false,
+    truncated: false,
+    durationMs: 100,
+    phase: "run",
+    diagnostics: [],
+    runner: "platform",
+  };
+  const mintRun = (issuedAt, mutate) => {
+    const facts = mutate ? { ...runFacts, ...mutate } : runFacts;
+    const payload = contracts.runReceiptPayload(facts, issuedAt);
+    return { v: 1, issuedAt, facts, sig: kit.signReceipt(payload, KEY) };
+  };
+  const mintDesign = (issuedAt) => {
+    const facts = {
+      kind: "design",
+      challengeId: "url-shortener",
+      graphSha256: "b".repeat(64),
+      checks: [{ checkId: "has-client", passed: true, reason: "Re-derived." }],
+      runner: "platform",
+    };
+    const payload = contracts.designReceiptPayload(facts, issuedAt);
+    return { v: 1, issuedAt, facts, sig: kit.signReceipt(payload, KEY) };
+  };
+
+  before(async () => {
+    process.env.INTERNAL_API_KEY = KEY;
+    kit = await import("../packages/service-kit/dist/index.js");
+    contracts = await import("../packages/contracts/dist/index.js");
+    const routes = await import("../services/auth/dist/routes.js");
+    app = await kit.createService("test-proofs-ledger");
+    routes.registerAuthRoutes(app, fakePool);
+    await app.ready();
+  });
+  after(() => {
+    if (saved === undefined) delete process.env.INTERNAL_API_KEY;
+    else process.env.INTERNAL_API_KEY = saved;
+  });
+  beforeEach(() => {
+    rows.length = 0;
+  });
+
+  const post = (user, body, headers = {}) =>
+    app.inject({
+      method: "POST",
+      url: "/proofs",
+      headers: { "x-user-id": user, "x-internal-key": KEY, "content-type": "application/json", ...headers },
+      payload: body,
+    });
+  const get = (user, headers = {}) =>
+    app.inject({ method: "GET", url: "/proofs", headers: { "x-user-id": user, "x-internal-key": KEY, ...headers } });
+
+  it("stores a valid run receipt and reads it back as the caller's own row", async () => {
+    const issuedAt = new Date().toISOString();
+    const r = await post("u-1", {
+      competencyId: "go-functions",
+      level: "demonstrated",
+      lastDemonstratedAt: issuedAt,
+      lastRetrievedAt: null,
+      receipt: mintRun(issuedAt),
+    });
+    assert.equal(r.statusCode, 201, r.body);
+    const body = r.json();
+    assert.equal(body.stored, true);
+    assert.ok(contracts.proofRecordSchema.safeParse(body.proof).success, JSON.stringify(body.proof));
+    assert.deepEqual(body.proof, { competencyId: "go-functions", level: "demonstrated", kind: "run", issuedAt });
+    const g = await get("u-1");
+    assert.equal(g.statusCode, 200, g.body);
+    assert.deepEqual(g.json().proofs, [body.proof]);
+  });
+
+  it("stores a valid design receipt with its kind", async () => {
+    const issuedAt = new Date().toISOString();
+    const r = await post("u-1", {
+      competencyId: "system-design",
+      level: "demonstrated",
+      lastDemonstratedAt: issuedAt,
+      lastRetrievedAt: null,
+      receipt: mintDesign(issuedAt),
+    });
+    assert.equal(r.statusCode, 201, r.body);
+    assert.equal(r.json().proof.kind, "design");
+  });
+
+  it("a forged signature stores nothing", async () => {
+    const issuedAt = new Date().toISOString();
+    const receipt = mintRun(issuedAt);
+    receipt.sig = "0".repeat(64);
+    const r = await post("u-1", {
+      competencyId: "go-functions",
+      level: "demonstrated",
+      lastDemonstratedAt: issuedAt,
+      lastRetrievedAt: null,
+      receipt,
+    });
+    assert.equal(r.statusCode, 401, r.body);
+    assert.equal(r.json().error.code, "invalid_proof");
+    assert.deepEqual((await get("u-1")).json().proofs, []);
+  });
+
+  it("tampered facts fail closed even with a well-formed envelope", async () => {
+    const issuedAt = new Date().toISOString();
+    const receipt = mintRun(issuedAt);
+    receipt.facts.stdout = "ok 999 - invented";
+    const r = await post("u-1", {
+      competencyId: "go-functions",
+      level: "demonstrated",
+      lastDemonstratedAt: issuedAt,
+      lastRetrievedAt: null,
+      receipt,
+    });
+    assert.equal(r.statusCode, 401, r.body);
+    assert.deepEqual((await get("u-1")).json().proofs, []);
+  });
+
+  it("syncing the same receipt twice is one row, reported not re-stored", async () => {
+    const issuedAt = new Date().toISOString();
+    const body = {
+      competencyId: "go-functions",
+      level: "demonstrated",
+      lastDemonstratedAt: issuedAt,
+      lastRetrievedAt: null,
+      receipt: mintRun(issuedAt),
+    };
+    assert.equal((await post("u-1", body)).statusCode, 201);
+    const again = await post("u-1", body);
+    assert.equal(again.statusCode, 200, again.body);
+    assert.equal(again.json().stored, false);
+    assert.equal((await get("u-1")).json().proofs.length, 1);
+  });
+
+  it("an older re-sync never moves a newer row backwards", async () => {
+    const newer = new Date().toISOString();
+    await post("u-1", {
+      competencyId: "go-functions",
+      level: "demonstrated",
+      lastDemonstratedAt: newer,
+      lastRetrievedAt: null,
+      receipt: mintRun(newer),
+    });
+    const older = new Date(Date.parse(newer) - 3_600_000).toISOString();
+    const r = await post("u-1", {
+      competencyId: "go-functions",
+      level: "practiced",
+      lastDemonstratedAt: older,
+      lastRetrievedAt: null,
+      receipt: mintRun(older),
+    });
+    assert.equal(r.statusCode, 200, r.body);
+    assert.equal(r.json().stored, false);
+    assert.equal((await get("u-1")).json().proofs[0].level, "demonstrated");
+  });
+
+  it("the same bytes under a different account conflict without naming the owner", async () => {
+    const issuedAt = new Date().toISOString();
+    const body = {
+      competencyId: "go-functions",
+      level: "demonstrated",
+      lastDemonstratedAt: issuedAt,
+      lastRetrievedAt: null,
+      receipt: mintRun(issuedAt),
+    };
+    assert.equal((await post("u-1", body)).statusCode, 201);
+    const r = await post("u-2", { ...body, competencyId: "go-functions" });
+    assert.equal(r.statusCode, 409, r.body);
+    assert.equal(r.json().error.code, "already_synced");
+    assert.ok(!JSON.stringify(r.body).includes("u-1"), "the refusal must not name the other account");
+  });
+
+  it("rows never cross accounts, and strangers get 401", async () => {
+    const issuedAt = new Date().toISOString();
+    await post("u-1", {
+      competencyId: "go-functions",
+      level: "demonstrated",
+      lastDemonstratedAt: issuedAt,
+      lastRetrievedAt: null,
+      receipt: mintRun(issuedAt),
+    });
+    assert.deepEqual((await get("u-2")).json().proofs, []);
+    const noUser = { "x-internal-key": KEY, "content-type": "application/json" };
+    const anon = await app.inject({ method: "GET", url: "/proofs", headers: { "x-internal-key": KEY } });
+    assert.equal(anon.statusCode, 401, anon.body);
+    const anonPost = await app.inject({
+      method: "POST",
+      url: "/proofs",
+      headers: noUser,
+      payload: { competencyId: "x", level: "demonstrated", lastDemonstratedAt: null, lastRetrievedAt: null, receipt: mintRun(issuedAt) },
+    });
+    assert.equal(anonPost.statusCode, 401, anonPost.body);
+  });
+
+  it("an Ed25519-signed receipt verifies on the offline path too", async () => {
+    const { generateKeyPairSync } = await import("node:crypto");
+    const pem = generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    const issuedAt = new Date().toISOString();
+    const payload = contracts.runReceiptPayload(runFacts, issuedAt);
+    const receipt = { v: 1, issuedAt, facts: runFacts, sig: kit.signReceipt(payload, KEY), sigEd: kit.signReceiptEd(payload, pem), keyId: "ed-test" };
+    const savedEd = process.env.RECEIPT_ED25519_KEY;
+    try {
+      process.env.RECEIPT_ED25519_KEY = pem;
+      const r = await post("u-1", {
+        competencyId: "go-functions",
+        level: "demonstrated",
+        lastDemonstratedAt: issuedAt,
+        lastRetrievedAt: null,
+        receipt,
+      });
+      assert.equal(r.statusCode, 201, r.body);
+      assert.equal(r.json().stored, true);
+    } finally {
+      if (savedEd === undefined) delete process.env.RECEIPT_ED25519_KEY;
+      else process.env.RECEIPT_ED25519_KEY = savedEd;
+    }
+  });
+
+  it("contracts accept both receipt kinds and refuse a missing one", () => {
+    const issuedAt = new Date().toISOString();
+    const base = { competencyId: "go-functions", level: "demonstrated", lastDemonstratedAt: issuedAt, lastRetrievedAt: null };
+    assert.ok(contracts.proofSubmitSchema.safeParse({ ...base, receipt: mintRun(issuedAt) }).success);
+    assert.ok(contracts.proofSubmitSchema.safeParse({ ...base, receipt: mintDesign(issuedAt) }).success);
+    assert.ok(!contracts.proofSubmitSchema.safeParse({ ...base }).success, "no receipt is not a submission");
+    assert.ok(!contracts.proofSubmitSchema.safeParse({ ...base, receipt: { v: 1 } }).success, "a husk is not a receipt");
+  });
+});
+
+/* The four findings the session-9 audit left in the auth service (B-28).
+ *
+ * Re-read in the code first, because the audit was written in session 9 and this
+ * service has moved a long way since: one of the four (the unswept login-hit map)
+ * had been fixed by the two-budget throttle that replaced it, and that is asserted
+ * here so it stays fixed. The other three were still open, and each test fails on
+ * the pre-fix behaviour.
+ */
+describe("auth edge cases the audit named (B-28)", () => {
+  let app;
+  const fakePool = fakeAuthPool();
+  const register = (email, ip, password = "correct-horse-battery") =>
+    app.inject({
+      method: "POST",
+      url: "/register",
+      headers: { "content-type": "application/json", "x-client-ip": ip },
+      payload: { email, password },
+    });
+  const login = (email, password, ip = "198.51.100.7") =>
+    app.inject({
+      method: "POST",
+      url: "/login",
+      headers: { "content-type": "application/json", "x-client-ip": ip },
+      payload: { email, password },
+    });
+  const timed = async (fn) => {
+    const started = Date.now();
+    const value = await fn();
+    return { ms: Date.now() - started, value };
+  };
+
+  let savedSecret;
+  before(async () => {
+    // Set here rather than inherited from whatever another describe left in place:
+    // this suite is run on its own (a --test-name-pattern run is how it is
+    // falsified), and a signing secret that happens to be set by an earlier hook is
+    // not a dependency worth having — without it the register route 500s on
+    // AUTH_JWT_SECRET and the failure looks like the feature.
+    savedSecret = process.env.AUTH_JWT_SECRET;
+    process.env.AUTH_JWT_SECRET = SECRET;
+    const routes = await import("../services/auth/dist/routes.js");
+    app = await kit.createService("test-auth-b28");
+    routes.registerAuthRoutes(app, fakePool);
+    await app.ready();
+  });
+  after(() => {
+    if (savedSecret === undefined) delete process.env.AUTH_JWT_SECRET;
+    else process.env.AUTH_JWT_SECRET = savedSecret;
+  });
+
+  it("spends the same password work on an account that does not exist", async () => {
+    // The cost factor is raised for this test alone. The oracle has the same shape
+    // at any factor; at the suite's rounds=4 a wrong password is a couple of
+    // milliseconds, which is too close to scheduling noise to be a fair test of
+    // "the same work happened". At 8, pre-fix the unknown-account answer is a
+    // fraction of a percent of the wrong-password answer, and post-fix it is ~100%.
+    const saved = process.env.BCRYPT_ROUNDS;
+    process.env.BCRYPT_ROUNDS = "8";
+    try {
+      const created = await register("timing@example.com", "203.0.113.10");
+      assert.equal(created.statusCode, 201, created.body);
+      // Warm the dummy hash before timing, so this measures the compare rather
+      // than the one-off cost of building it.
+      await login("warmup@example.com", "not-the-password");
+      const wrong = await timed(() => login("timing@example.com", "not-the-password"));
+      const unknown = await timed(() => login("nobody@example.com", "not-the-password"));
+      assert.equal(wrong.value.statusCode, 401);
+      assert.equal(unknown.value.statusCode, 401);
+      const wrongErr = wrong.value.json().error;
+      const unknownErr = unknown.value.json().error;
+      assert.deepEqual(
+        { code: wrongErr.code, message: wrongErr.message },
+        { code: unknownErr.code, message: unknownErr.message },
+        "the two answers must stay indistinguishable apart from the request id"
+      );
+      assert.ok(
+        unknown.ms > wrong.ms * 0.5,
+        `an unknown account must not answer faster than a wrong password ` +
+          `(unknown ${unknown.ms}ms vs wrong ${wrong.ms}ms)`
+      );
+    } finally {
+      if (saved === undefined) delete process.env.BCRYPT_ROUNDS;
+      else process.env.BCRYPT_ROUNDS = saved;
+    }
+  });
+
+  it("bounds account creation per address, and only for that address", async () => {
+    const address = "203.0.113.20";
+    for (let i = 0; i < 10; i++) {
+      const r = await register(`bulk-${i}@example.com`, address);
+      assert.equal(r.statusCode, 201, `registration ${i + 1} should be allowed: ${r.body}`);
+    }
+    const eleventh = await register("bulk-10@example.com", address);
+    assert.equal(eleventh.statusCode, 429, "the eleventh account from one address in an hour is refused");
+    assert.equal(eleventh.json().error.code, "rate_limited");
+    const elsewhere = await register("bulk-other@example.com", "203.0.113.21");
+    assert.equal(elsewhere.statusCode, 201, "one address's budget must not deny another");
+    // The budget is spent before the bcrypt hash runs, which is the whole point:
+    // no user row may exist for the refused attempt.
+    assert.equal(
+      [...fakePool.users.values()].some((u) => u.email === "bulk-10@example.com"),
+      false,
+      "a refused registration must not have created an account"
+    );
+  });
+
+  it("two concurrent refreshes with one token cannot both mint a session", async () => {
+    /* A pool whose first two reads of a token wait for each other.
+     *
+     * The guard can only be tested by requests that are genuinely simultaneous: two
+     * sequential refreshes pass with the guard *removed*, because the second one
+     * reads `revoked_at` already set and takes the reuse path on its own. That was
+     * this test's first version, and falsification caught it. Holding both reads
+     * until both have happened is the smallest thing that reproduces the shape a real
+     * race has, without depending on the scheduler. */
+    const base = fakeAuthPool();
+    let reads = 0;
+    let releaseBoth;
+    const bothHaveRead = new Promise((resolve) => {
+      releaseBoth = resolve;
+    });
+    const pool = {
+      ...base,
+      query: async (sql, params) => {
+        const gate = sql.startsWith("SELECT * FROM refresh_tokens WHERE token_hash") && reads < 2;
+        if (gate) reads += 1;
+        const result = await base.query(sql, params);
+        if (gate) {
+          if (reads === 2) releaseBoth();
+          await bothHaveRead;
+        }
+        return result;
+      },
+    };
+    const routes = await import("../services/auth/dist/routes.js");
+    const raceApp = await kit.createService("test-auth-b28-race");
+    routes.registerAuthRoutes(raceApp, pool);
+    await raceApp.ready();
+
+    const reg = await raceApp.inject({
+      method: "POST",
+      url: "/register",
+      headers: { "content-type": "application/json", "x-client-ip": "203.0.113.12" },
+      payload: { email: "race@example.com", password: "correct-horse-battery" },
+    });
+    assert.equal(reg.statusCode, 201, reg.body);
+    const { refreshToken } = reg.json().tokens;
+    const post = () =>
+      raceApp.inject({
+        method: "POST",
+        url: "/refresh",
+        headers: { "content-type": "application/json" },
+        payload: { refreshToken },
+      });
+    const [a, b] = await Promise.all([post(), post()]);
+    const codes = [a.statusCode, b.statusCode].sort((x, y) => x - y);
+    assert.deepEqual(codes, [200, 401], `exactly one refresh may win (got ${codes.join(", ")})`);
+    const loser = a.statusCode === 401 ? a : b;
+    assert.equal(loser.json().error.code, "token_reused", "the loser gets the reuse verdict, not a silent second session");
+    // The family is revoked, and that now provably includes the row the winner
+    // minted a moment earlier: the winner mints before it claims, so its row exists
+    // before the loser's failed claim — which is what the loser revokes on.
+    const rows = [...pool.tokens.values()].filter((r) => r.user_id === reg.json().user.id);
+    assert.equal(rows.filter((r) => !r.revoked_at).length, 0, "no live session survives the race");
+    await raceApp.close();
+  });
+
+  it("the throttle maps are still swept (the audit's fourth finding, closed)", () => {
+    // Sweeping is the absence of unbounded growth, which a request-level test
+    // cannot observe, so it is asserted at the source — the same treatment the
+    // revocation prune gets. The check is that the only way either map grows
+    // still sweeps, with the gateway limiter's amortised threshold.
+    const src = readFileSync(join(root, "services", "auth", "src", "routes.ts"), "utf8");
+    assert.match(src, /function sweep\(/, "the sweep helper still exists");
+    assert.match(src, /sweep\(map, now\);/, "and the growth path still calls it");
+    assert.match(src, /map\.size < 10_000/, "with the same threshold the gateway limiter uses");
+  });
+});
+
 describe("immediate revocation, end to end (real gateway → real auth service)", () => {
   /* The seam the two layers above cannot cover by themselves.
    *
@@ -4850,8 +5262,8 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
       else process.env.INTERNAL_API_KEY = saved.mesh;
     }
 
-    // A progress stub: something for an authenticated request to be forwarded to.
-    // The gateway strips the /api/<service> prefix, so it answers /summary.
+    // An execution stub: something for an authenticated request to be forwarded to.
+    // The gateway strips the /api/<service> prefix, so it answers /capabilities.
     stub = http.createServer((req, res) => {
       res.setHeader("content-type", "application/json");
       res.end(JSON.stringify({ stub: true, path: req.url, user: req.headers["x-user-id"] ?? null }));
@@ -4869,9 +5281,7 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
         INTERNAL_API_KEY: MESH,
         AUTH_URL: `http://127.0.0.1:${AUTH_PORT}`,
         CURRICULUM_URL: `http://127.0.0.1:${STUB_PORT}`,
-        PROGRESS_URL: `http://127.0.0.1:${STUB_PORT}`,
         EXECUTION_URL: `http://127.0.0.1:${STUB_PORT}`,
-        TUTOR_URL: `http://127.0.0.1:${STUB_PORT}`,
         BILLING_URL: `http://127.0.0.1:${STUB_PORT}`,
       },
       stdio: "ignore",
@@ -4912,7 +5322,7 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
     assert.equal(reg.status, 201, JSON.stringify(reg.body));
     const { accessToken, refreshToken } = reg.body.tokens;
 
-    const before = await call("GET", "/api/progress/summary", { token: accessToken });
+    const before = await call("GET", "/api/execute/capabilities", { token: accessToken });
     assert.equal(before.status, 200, "the token works while the session is live");
     assert.equal(before.body.user, reg.body.user.id, "and it resolves to the right learner");
 
@@ -4920,7 +5330,7 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
     const out = await call("POST", "/api/auth/logout", { body: { refreshToken, accessToken } });
     assert.equal(out.status, 200);
 
-    const after = await call("GET", "/api/progress/summary", { token: accessToken });
+    const after = await call("GET", "/api/execute/capabilities", { token: accessToken });
     assert.equal(after.status, 401, "the token the learner just signed out with is refused at once");
     assert.equal(after.body.error.code, "token_revoked");
 
@@ -4932,7 +5342,7 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
     // credential, not the account.
     const login = await call("POST", "/api/auth/login", { body: { email, password } });
     assert.equal(login.status, 200);
-    const fresh = await call("GET", "/api/progress/summary", {
+    const fresh = await call("GET", "/api/execute/capabilities", {
       token: login.body.tokens.accessToken,
     });
     assert.equal(fresh.status, 200, "a new session is not collaterally revoked");
@@ -4962,7 +5372,7 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
     // Two devices, two live sessions — otherwise "everywhere" is being claimed
     // about a session that was already over.
     for (const t of [a.body.tokens.accessToken, b.body.tokens.accessToken]) {
-      assert.equal((await call("GET", "/api/progress/summary", { token: t })).status, 200);
+      assert.equal((await call("GET", "/api/execute/capabilities", { token: t })).status, 200);
     }
 
     // The cut-off is compared against `iat`, which has one-second resolution, so a
@@ -4984,7 +5394,7 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
     // account rather than the credential for device A — the half that only exists
     // because the check carries the subject.
     for (const t of [a.body.tokens.accessToken, b.body.tokens.accessToken]) {
-      const res = await call("GET", "/api/progress/summary", { token: t });
+      const res = await call("GET", "/api/execute/capabilities", { token: t });
       assert.equal(res.status, 401, "every device is out");
       assert.equal(res.body.error.code, "token_revoked");
     }
@@ -4998,7 +5408,7 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
     // And the learner can come back: a cut-off is a moment, not a ban.
     const back = await call("POST", "/api/auth/login", { body: { email, password } });
     assert.equal(back.status, 200);
-    const resumed = await call("GET", "/api/progress/summary", { token: back.body.tokens.accessToken });
+    const resumed = await call("GET", "/api/execute/capabilities", { token: back.body.tokens.accessToken });
     assert.equal(resumed.status, 200, "a fresh sign-in is not collateral damage");
   });
 

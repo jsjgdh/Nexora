@@ -149,59 +149,23 @@ export interface AuthTokens {
   expiresIn: number;
 }
 
-/* ---------- curriculum ---------- */
+/* ---------- curriculum (IDE only) ---------- */
 
-export interface StageSummary {
-  id: string;
-  num: number;
-  title: string;
-  goal: string;
-  description: string;
-  missionIds: string[];
-}
-
-export interface MissionSummary {
-  id: string;
-  stageId: string;
-  title: string;
-  tagline: string;
-  type: string;
-  difficulty: number;
-  estMinutes: number;
-  objectives: string[];
-  prereqIds: string[];
-  competencyIds: string[];
-  isBoss: boolean;
-  needsScript: boolean;
-}
-
-export interface CurriculumVersion {
-  version: string;
-  stages: number;
-  missions: number;
-  diagnosticItems: number;
-}
-
-export interface DiagnosticItemPublic {
-  id: string;
-  competencyId: string;
-  skill: string;
-  prompt: string;
-  code?: string;
-  options: string[];
-  explanation: string;
-}
+/* The curriculum service serves the IDE curriculum: a public roadmap of phase
+   names and tiers, plus paid phase payloads behind entitlement. The
+   browser-classroom summaries (stages, missions, diagnostic items) are deleted
+   with the classroom — one way to learn, the desktop IDE. */
 
 /* ---------- run receipts: proof that the platform ran the code ---------- */
 
 /**
  * What the runner observed, exactly as the learner's client received it.
  *
- * These facts are the evidence an execution check reads, so the copy that
- * travels back to the progress service must be the copy the execution service
- * signed — not one the client can edit on the way. `files` binds the run to the
- * submission: the progress service matches the mission's own file against the
- * saved draft, so a receipt cannot be replayed for a different program.
+ * These facts are the evidence attestation reads, so the copy that travels
+ * onward must be the copy the execution service signed — not one the client
+ * can edit on the way. `files` binds the run to the submission: the entry
+ * file's sha256 is matched against the code the platform holds, so a receipt
+ * cannot be replayed for a different program.
  */
 export interface RunFacts {
   language: "node" | "python" | "go";
@@ -216,14 +180,20 @@ export interface RunFacts {
   phase: "compile" | "run" | null;
   diagnostics: ExecDiagnostic[];
   runner: string;
+  /** The learner this run is bound to. Absent on receipts minted before the
+   * binding landed — those verify on their original bytes, unchanged. */
+  userId?: string;
 }
 
 /**
- * A capability the execution service issues after a run and the progress
- * service accepts at completion. The signature is an HMAC over
- * `runReceiptPayload` keyed by a receipt key derived from the mesh key, so
- * only a service inside the mesh can produce one — a client can forward a
- * receipt, never mint or alter one.
+ * A capability the execution service issues after a run and attestation
+ * accepts as proof. Two signatures over the same `runReceiptPayload` bytes:
+ * `sig` is an HMAC keyed by a receipt key derived from the mesh key (mesh-
+ * internal checks keep this shape), and `sigEd` is Ed25519 by the operator-
+ * held receipt key, verifiable by anyone holding the published public key —
+ * a stranger re-derives the verdict without asking the platform and without
+ * learning anything that mints. `sigEd` is absent on receipts minted before
+ * the operator configured a receipt key; those still verify on the HMAC.
  */
 export interface RunReceipt {
   v: 1;
@@ -231,6 +201,10 @@ export interface RunReceipt {
   facts: RunFacts;
   /** hex HMAC-SHA256 of `runReceiptPayload(facts, issuedAt)`. */
   sig: string;
+  /** base64 Ed25519 over the same payload bytes. Absent before the migration. */
+  sigEd?: string;
+  /** Which published key signed it, so rotation does not orphan old receipts. */
+  keyId?: string;
 }
 
 export const runFactsSchema = z.object({
@@ -259,6 +233,7 @@ export const runFactsSchema = z.object({
     )
     .max(64),
   runner: z.string().max(40),
+  userId: z.string().min(1).max(120).optional(),
 });
 
 export const runReceiptSchema = z.object({
@@ -266,6 +241,8 @@ export const runReceiptSchema = z.object({
   issuedAt: z.string().min(20).max(40),
   facts: runFactsSchema,
   sig: z.string().regex(/^[0-9a-f]{64}$/),
+  sigEd: z.string().min(86).max(90).optional(),
+  keyId: z.string().min(1).max(64).optional(),
 });
 
 /**
@@ -279,6 +256,9 @@ export const runReceiptSchema = z.object({
 export function runReceiptPayload(facts: RunFacts, issuedAt: string): string {
   return JSON.stringify({
     v: 1,
+    // Identity first when bound; omitted entirely when not, so receipts
+    // minted before the binding verify on their original bytes.
+    ...(facts.userId === undefined ? {} : { userId: facts.userId }),
     issuedAt,
     language: facts.language,
     command: facts.command,
@@ -320,6 +300,12 @@ export const attestSubmissionSchema = z.object({
     .max(32),
   command: z.string().min(1).max(500),
   localTap: z.string().max(1_100_000).default(""),
+  /** The phase project the submission belongs to (`task-manager` and friends).
+   * Optional so older IDEs keep working; absent means `task-manager`, mirroring
+   * the curriculum's own default. It disambiguates suites two projects own
+   * under one relative path — without it a Go merge and a JS merge would be
+   * judged by whichever suite a bare path happened to name. */
+  project: z.string().min(1).max(120).optional(),
 });
 export type AttestSubmission = z.infer<typeof attestSubmissionSchema>;
 
@@ -336,8 +322,187 @@ export const attestVerdictSchema = z.object({
     )
     .min(1)
     .max(64),
+  /**
+   * The canonical run's own receipt, when the deployment holds a signing key.
+   * This is the handoff object: the IDE stores it beside the attested record
+   * so the learner can hand a stranger proof that stands without a live
+   * platform. Absent when unconfigured — the verdict is still attested (its
+   * authority is the re-judging, not the receipt), but there is nothing to hand over.
+   */
+  receipt: runReceiptSchema.optional(),
 });
 export type AttestVerdict = z.infer<typeof attestVerdictSchema>;
+
+/* ---------- design attestation (structural verdicts, B-24 for the Studio) ---------- */
+
+/*
+ * A design verdict is the structural analogue of a code run receipt: it signs
+ * only what a machine can re-derive — the deterministic structural checks over
+ * the submitted graph — and never the AI-scored rubric. The rubric weights and
+ * any model output are not in this schema by construction, because AI explains
+ * and never decides (D-025, "Explicitly not in v2"). Only the platform's own
+ * registered canonical checks decide; anything the client claims about its own
+ * graph is ignored on the way in.
+ */
+
+/** What a connection means on the wire — the same four kinds the Studio engine reads. */
+export const designEdgeKindSchema = z.enum(["sync", "async", "replication", "observe"]);
+
+/**
+ * The Studio's graph, on the wire. Only fields a structural check reads travel:
+ * a node's id/type/props and an edge's endpoints/kind. A node's `type` is a
+ * plain string, not an enum — the engine treats a type outside the canonical
+ * challenge as inert (it satisfies nothing and forbids nothing), so refusing it
+ * here would reject a valid-but-odd submission rather than judge it. Labels and
+ * rationale are the learner's own prose, recorded in the IDE ledger and never
+ * part of what this endpoint judges or hashes.
+ */
+export const designGraphSchema = z.object({
+  nodes: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(80),
+        type: z.string().min(1).max(40),
+        props: z.record(z.string(), z.string().max(120)).default({}),
+      })
+    )
+    .min(1)
+    .max(64),
+  edges: z
+    .array(
+      z.object({
+        from: z.string().min(1).max(80),
+        to: z.string().min(1).max(80),
+        kind: designEdgeKindSchema,
+      })
+    )
+    .max(256),
+});
+export type DesignGraphWire = z.infer<typeof designGraphSchema>;
+
+/** A design submission names a registered canonical challenge and the graph to judge against it. */
+export const designAttestSubmissionSchema = z.object({
+  challengeId: z.string().min(1).max(120),
+  /** The authored revision the learner's IDE holds. Optional so older IDEs keep
+   * working; when present and stale the route refuses rather than misjudges. */
+  challengeVersion: z.number().int().min(1).max(1000000).optional(),
+  graph: designGraphSchema,
+});
+export type DesignAttestSubmission = z.infer<typeof designAttestSubmissionSchema>;
+
+/** One re-derived structural verdict: which check, whether it held, why — never a rubric score. */
+export const designCheckResultSchema = z.object({
+  checkId: z.string().min(1).max(80),
+  passed: z.boolean(),
+  reason: z.string().min(1).max(1000),
+});
+export type DesignCheckResult = z.infer<typeof designCheckResultSchema>;
+
+/**
+ * What a design receipt signs. `kind: "design"` is the discriminator `/verify`
+ * branches on, and it carries no `language`/`command`/`stdout` because nothing
+ * ran: a design verdict is pure computation over a graph, which is what keeps
+ * it strictly safer than code attestation — no sandbox, no subprocess.
+ */
+export interface DesignFacts {
+  kind: "design";
+  challengeId: string;
+  graphSha256: string;
+  checks: DesignCheckResult[];
+  runner: string;
+  /** The learner this verdict is bound to. Absent on receipts minted before
+   * the binding landed — those verify on their original bytes, unchanged. */
+  userId?: string;
+}
+
+export const designFactsSchema = z.object({
+  kind: z.literal("design"),
+  challengeId: z.string().min(1).max(120),
+  graphSha256: z.string().regex(/^[0-9a-f]{64}$/),
+  checks: z.array(designCheckResultSchema).min(1).max(64),
+  runner: z.string().max(40),
+  userId: z.string().min(1).max(120).optional(),
+});
+
+/** A design receipt: same two-signature shape as a run receipt, over design bytes. */
+export interface DesignReceipt {
+  v: 1;
+  issuedAt: string;
+  facts: DesignFacts;
+  /** hex HMAC-SHA256 of `designReceiptPayload(facts, issuedAt)`. */
+  sig: string;
+  /** base64 Ed25519 over the same payload bytes. Absent before the migration. */
+  sigEd?: string;
+  keyId?: string;
+}
+
+export const designReceiptSchema = z.object({
+  v: z.literal(1),
+  issuedAt: z.string().min(20).max(40),
+  facts: designFactsSchema,
+  sig: z.string().regex(/^[0-9a-f]{64}$/),
+  sigEd: z.string().min(86).max(90).optional(),
+  keyId: z.string().min(1).max(64).optional(),
+});
+
+/**
+ * Deterministic serialization of the signed design facts, hand-built exactly
+ * like `runReceiptPayload` so a signed string never depends on key insertion
+ * order and both sides agree on the bytes by construction.
+ */
+export function designReceiptPayload(facts: DesignFacts, issuedAt: string): string {
+  return JSON.stringify({
+    v: 1,
+    // Identity first when bound; omitted entirely when not, so receipts
+    // minted before the binding verify on their original bytes.
+    ...(facts.userId === undefined ? {} : { userId: facts.userId }),
+    kind: "design",
+    issuedAt,
+    challengeId: facts.challengeId,
+    graphSha256: facts.graphSha256,
+    checks: facts.checks.map((c) => [c.checkId, c.passed, c.reason]),
+    runner: facts.runner,
+  });
+}
+
+export const designAttestVerdictSchema = z.object({
+  provenance: z.literal("attested"),
+  outcome: z.string().min(1).max(500),
+  checks: z.array(designCheckResultSchema).min(1).max(64),
+  /** The authored revision actually judged — the registry's own, so a stranger
+   * knows which check set decided this verdict. */
+  challengeVersion: z.number().int().min(1).max(1000000),
+  /** The design receipt — the handoff object — when this deployment holds a signing key. */
+  receipt: designReceiptSchema.optional(),
+});
+export type DesignAttestVerdict = z.infer<typeof designAttestVerdictSchema>;
+
+/* ---------- proofs (verified ledger) ---------- */
+
+/* One synced attested record: which competency, at what level, and the receipt
+ * proving it. Either receipt kind travels — the route discriminates on the
+ * facts and re-derives that kind's payload before anything is stored. `level`
+ * is the IDE's proficiency word, echoed for display; it confers nothing, and
+ * the route never upgrades, judges, or re-levels from it. */
+export const proofReceiptSchema = z.union([runReceiptSchema, designReceiptSchema]);
+export type ProofReceipt = z.infer<typeof proofReceiptSchema>;
+
+export const proofSubmitSchema = z.object({
+  competencyId: z.string().min(1).max(120),
+  level: z.enum(["introduced", "practiced", "demonstrated", "retained"]),
+  lastDemonstratedAt: z.string().min(20).max(40).nullable(),
+  lastRetrievedAt: z.string().min(20).max(40).nullable(),
+  receipt: proofReceiptSchema,
+});
+export type ProofSubmit = z.infer<typeof proofSubmitSchema>;
+
+export const proofRecordSchema = z.object({
+  competencyId: z.string().min(1).max(120),
+  level: z.enum(["introduced", "practiced", "demonstrated", "retained"]),
+  kind: z.enum(["run", "design"]),
+  issuedAt: z.string().min(20).max(40),
+});
+export type ProofRecord = z.infer<typeof proofRecordSchema>;
 
 export interface ExecutionCapabilities {
   runner: string;
@@ -349,167 +514,13 @@ export interface ExecutionCapabilities {
   queueDepth?: number;
 }
 
-/* ---------- progress ---------- */
+/* ---------- progress (retired) ---------- */
 
-export const profileSchema = z.object({
-  name: z.string().max(80).default(""),
-  goal: z.string().max(40).default(""),
-  experience: z.string().max(40).default(""),
-  languages: z.array(z.string().max(40)).max(30).default([]),
-  tools: z.array(z.string().max(40)).max(30).default([]),
-  canBuild: z.string().max(500).default(""),
-  hoursPerWeek: z.string().max(40).default(""),
-  interests: z.array(z.string().max(60)).max(30).default([]),
-});
-export type ProfileInput = z.infer<typeof profileSchema>;
-
-export const diagnosticResultSchema = z.object({
-  itemId: z.string().min(1).max(80),
-  selected: z.number().int().min(-1).max(20),
-  correct: z.boolean(),
-  skipped: z.boolean(),
-});
-export const diagnosticSubmitSchema = z.object({
-  results: diagnosticResultSchema.array().min(1).max(50),
-});
-export type DiagnosticSubmit = z.infer<typeof diagnosticSubmitSchema>;
-
-export const runEvidenceSchema = z.object({
-  checkId: z.string().min(1).max(80),
-  receipt: runReceiptSchema,
-});
-export type RunEvidenceInput = z.infer<typeof runEvidenceSchema>;
-
-/**
- * Completion carries the run evidence the client holds. The client does not
- * decide execution checks — it only supplies the platform's own records; the
- * progress service recomputes every `runs` check from them.
- */
-export const missionCompleteSchema = z
-  .object({ runs: runEvidenceSchema.array().max(32).default([]) })
-  .default({ runs: [] });
-export type MissionCompleteInput = z.infer<typeof missionCompleteSchema>;
-
-export const missionDraftSchema = z.object({
-  code: z.string().max(256_000).optional(),
-  checksPassed: z.array(z.string().max(80)).max(64).optional(),
-  attempts: z.number().int().min(0).max(10_000).optional(),
-  hintsUsed: z.number().int().min(0).max(10_000).optional(),
-  maxHintLevel: z.number().int().min(0).max(5).optional(),
-  questionsAnswered: z.record(z.string(), z.number().int()).optional(),
-  questionsCorrect: z.record(z.string(), z.boolean()).optional(),
-});
-export type MissionDraftInput = z.infer<typeof missionDraftSchema>;
-
-export interface MissionProgressView {
-  missionId: string;
-  code: string;
-  startedAt: string | null;
-  attempts: number;
-  checksPassed: string[];
-  hintsUsed: number;
-  maxHintLevel: number;
-  questionsAnswered: Record<string, number>;
-  questionsCorrect: Record<string, boolean>;
-  completedAt: string | null;
-  masteredAt: string | null;
-  independent: boolean;
-  xpAwarded: number;
-  contentVersion: string;
-}
-
-export interface CompleteResponse {
-  completed: boolean;
-  mastered: boolean;
-  xpGained: number;
-  xpTotal: number;
-  /** Execution checks this completion *proved*, from the runner's own record. */
-  verifiedChecks?: string[];
-}
-
-export interface RecommendationResponse {
-  primaryId: string | null;
-  refresherIds: string[];
-  reason: string;
-  done: boolean;
-}
-
-export interface SummaryResponse {
-  xp: number;
-  completed: number;
-  mastered: number;
-  skills: { id: string; name: string; level: string; evidenceCount: number }[];
-}
-
-/* ---------- submission history ---------- */
-
-/**
- * A run the learner offers to the record, carrying the platform's own signed
- * report of it. One request holds the execution checks that ran together: a
- * single program is one submission, however many checks read it.
- */
-export const runRecordSchema = z.object({
-  runs: runEvidenceSchema.array().min(1).max(32),
-});
-export type RunRecordInput = z.infer<typeof runRecordSchema>;
-
-/**
- * One execution, as the platform recorded it.
- *
- * This is the learner's attempt transcript: what was run, what it printed, and
- * whether it died, kept where a device change cannot lose it. It is a *record*
- * of a run, not a verdict about it — a check still passes only where the
- * completion path recomputes it — which is why no signature travels back out
- * of here. A receipt is a capability: the platform stores what it issued and
- * hands the client a description, never a token it could replay.
- */
-export interface RunHistoryEntry {
-  id: number;
-  missionId: string;
-  /** The mission's execution checks this run was offered for. */
-  checkIds: string[];
-  language: RunFacts["language"];
-  command: string[];
-  /** The mission's own file, as it ran (the runner's entry path for it). */
-  entryPath: string;
-  /** sha256 of the file that ran: the learner's code at that moment. */
-  entrySha256: string;
-  /** sha256 of the draft this service held when the run was recorded. */
-  draftSha256: string | null;
-  /** Did the program that ran match the draft saved at that moment? */
-  matchesSavedDraft: boolean;
-  stdout: string;
-  stderr: string;
-  exitCode: number | null;
-  timedOut: boolean;
-  truncated: boolean;
-  durationMs: number;
-  phase: RunFacts["phase"];
-  diagnostics: ExecDiagnostic[];
-  runner: string;
-  /** When the runner signed it — the moment the program ran. */
-  issuedAt: string;
-  /** When this platform recorded it. */
-  recordedAt: string;
-}
-
-export interface RunHistoryResponse {
-  missionId: string;
-  /** Newest first, so a transcript reads from the last run backwards. */
-  runs: RunHistoryEntry[];
-  /** Runs on record for this mission, not just the page returned. */
-  total: number;
-}
-
-export interface RunRecordResponse {
-  missionId: string;
-  /** Rows this call added to the history. */
-  stored: number;
-  /** Runs already on record: re-offering one is idempotent, never a second row. */
-  duplicates: number;
-  total: number;
-  runs: RunHistoryEntry[];
-}
+/* The progress service stored browser-classroom state — profiles, diagnostic
+   submissions, mission drafts, completions, run history, recommendations,
+   summaries. It is deleted with the classroom: the IDE keeps its own local
+   state and earns attestation through the execution service, so no platform
+   schema carries learner progress anymore. */
 
 /* ---------- execution ---------- */
 
@@ -523,8 +534,7 @@ export const executeLimitsSchema = z.object({
   outputKb: z.number().int().min(1).max(1024).optional(),
 });
 export const executeSchema = z.object({
-  /** Languages with a supported runner. `go` is the product's teaching
-      language: the language layer's missions run real Go, not a simulation. */
+  /** Languages with a supported runner. */
   language: z.enum(["node", "python", "go"]),
   files: executeFileSchema.array().min(1).max(32),
   command: z.array(z.string().max(200)).min(1).max(8).optional(),
@@ -565,38 +575,19 @@ export interface ExecuteResponse {
   phase?: "compile" | "run";
   /**
    * The platform's signed record of this run, when the service holds a signing
-   * key. A client forwards it to the progress service at completion, which is
-   * how an execution check is decided by the engine that ran the code rather
-   * than by the client's own pass list. Omitted when no signing key is
-   * configured (development), and then the run cannot be proven — see
-   * `POST /missions/:id/complete`.
+   * key. The IDE forwards it where attestation needs proof the platform ran
+   * the code, rather than the client's own word. Omitted when no signing key
+   * is configured (development), and then the run cannot be proven.
    */
   receipt?: RunReceipt;
 }
 
-/* ---------- tutor ---------- */
+/* ---------- tutor (retired) ---------- */
 
-export const tutorAskSchema = z.object({
-  missionId: z.string().min(1).max(80),
-  code: z.string().max(32_000).default(""),
-  failingChecks: z.array(z.string().max(300)).max(32).default([]),
-  /**
-   * The program's own output: compiler diagnostics or a runtime failure.
-   *
-   * Sent so the tutor can explain the error the learner is actually looking at
-   * instead of guessing from the code. The server treats it as data to quote,
-   * never as an instruction, and it can only ever describe a real run — the
-   * assessment still decides pass or fail.
-   */
-  errorOutput: z.string().max(4000).default(""),
-  hintLevel: z.number().int().min(1).max(5).default(1),
-});
-export type TutorAskRequest = z.infer<typeof tutorAskSchema>;
-
-export interface TutorAskResponse {
-  text: string;
-  source: "ai" | "curriculum";
-}
+/* The tutor service answered over browser missions — hint ladders keyed by
+   mission id. It is deleted with the classroom: no missions, no ladder, no
+   ask endpoint. AI may still explain IDE failures inside the IDE; it never
+   decides, and there is no platform tutor route anymore. */
 
 /* ---------- billing (Dodo Payments) ---------- */
 

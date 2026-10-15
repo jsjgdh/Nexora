@@ -1,3 +1,16 @@
+# NODE_ENV is set explicitly on every service below rather than left to .env.
+# Mesh authentication does NOT depend on it (B-27): service-kit refuses to boot
+# without a real INTERNAL_API_KEY in every environment, and the only way past
+# that is the explicit development opt-in ALLOW_INSECURE_MESH=1 — which is
+# itself refused when NODE_ENV=production. An environment that merely forgot a
+# line therefore fails to start instead of serving unauthenticated cross-user
+# access, and no value of NODE_ENV can open the mesh. NODE_ENV still decides
+# response hygiene (whether zod issue detail is returned), which is why this
+# file states it rather than leaving it to .env.
+#
+# The Postgres password and the two platform secrets come from .env because
+# they are environment-specific; .env.example's placeholder values FAIL
+# validation on purpose, so a copied example cannot boot a live deployment.
 services:
   postgres:
     image: postgres:17-alpine
@@ -26,6 +39,7 @@ services:
       - path: .env
         required: false
     environment:
+      NODE_ENV: production
       PORT: 8101
       DATABASE_URL: ${AUTH_DATABASE_URL}
     depends_on:
@@ -49,32 +63,10 @@ services:
       - path: .env
         required: false
     environment:
+      NODE_ENV: production
       PORT: 8102
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8102/health/live"]
-      interval: 10s
-      timeout: 3s
-      retries: 6
-    restart: unless-stopped
-    mem_limit: 256m
-    cpus: 0.5
-
-  progress:
-    build:
-      context: .
-      args:
-        SERVICE: progress
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      PORT: 8103
-      DATABASE_URL: ${PROGRESS_DATABASE_URL}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8103/health/live"]
       interval: 10s
       timeout: 3s
       retries: 6
@@ -91,6 +83,7 @@ services:
       - path: .env
         required: false
     environment:
+      NODE_ENV: production
       PORT: 8104
       # This service's own sandboxed runners are the only tier there is: the
       # course now runs on the learner's machine, and a hosted run is our
@@ -115,29 +108,6 @@ services:
     # deliberately NOT mounted here: enable it only on hosts you control,
     # understanding a container escape via the socket is a real risk.
 
-  tutor:
-    build:
-      context: .
-      args:
-        SERVICE: tutor
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      PORT: 8105
-      DATABASE_URL: ${TUTOR_DATABASE_URL}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8105/health/live"]
-      interval: 10s
-      timeout: 3s
-      retries: 6
-    restart: unless-stopped
-    mem_limit: 256m
-    cpus: 0.5
-
   billing:
     build:
       context: .
@@ -147,8 +117,15 @@ services:
       - path: .env
         required: false
     environment:
+      NODE_ENV: production
       PORT: 8106
       DATABASE_URL: ${BILLING_DATABASE_URL}
+      # Webhook tenancy guard (B-31): set to your Dodo business/account id so a
+      # correctly-signed event from a *different* merchant is ignored rather than
+      # honoured. Empty = guard off (dev default). The test_mode guard (B-30)
+      # needs nothing here — it activates automatically once DODO_PAYMENTS_BASE
+      # points at live.dodopayments.com, which is required to take real money.
+      DODO_BUSINESS_ID: ${DODO_BUSINESS_ID:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -170,6 +147,7 @@ services:
       - path: .env
         required: false
     environment:
+      NODE_ENV: production
       PORT: 8080
     ports:
       - "8080:8080"
@@ -178,11 +156,7 @@ services:
         condition: service_healthy
       curriculum:
         condition: service_healthy
-      progress:
-        condition: service_healthy
       execution:
-        condition: service_healthy
-      tutor:
         condition: service_healthy
       billing:
         condition: service_healthy
@@ -204,8 +178,15 @@ services:
       - path: .env
         required: false
     environment:
+      NODE_ENV: production
       PORT: 3000
+      # The browser's route to the gateway (the published host port).
       PUBLIC_API_URL: http://127.0.0.1:8080
+      # This container's route to the same gateway, used by the app's own
+      # /auth/session endpoints — the ones that keep the refresh token in an
+      # HttpOnly cookie. PUBLIC_API_URL cannot serve there: inside this container
+      # 127.0.0.1 is the container itself, not the host's published port.
+      GATEWAY_URL: http://gateway:8080
     ports:
       - "3000:3000"
     depends_on:

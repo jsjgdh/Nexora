@@ -1,61 +1,94 @@
 @import "tailwindcss";
 
-/* NEXORA — Black Desk.
-   Learners code at night, so the ground is black and every surface above it is
-   a warm charcoal step. The interface's own artifact — the answer pad — is the
-   only light surface on the page, and the brass lamp marks what is reachable
-   next. State hues are inks, each meaning one thing: brass = open/next, green =
-   passed, amber = under review, rose = needs work, violet = approved. No
-   gradients, no glows, one shadow in the whole build (the pad, on the desk). */
+/* NEXORA — THE PRESS.
+   A print room, not a dark SaaS page.
+
+   The ground is newsprint and the ink is black: the whole site is a press
+   that prints one thing — the proof of what you built. The previous world put
+   a single lit object on charcoal; this one inverts it, because the object
+   was always paper and the honest way to show paper is to stand in daylight
+   rather than a spotlight.
+
+   The colour that means something is the press blue, and it can only mean
+   something if nothing else is doing its job. It is reserved for exactly
+   three states — reachable, next, verified — and is never decoration. The
+   pen red marks a correction; the green ink passes a sheet.
+
+   Every value below is measured, not chosen by eye: scripts/verify.ts reads
+   this block back, computes the WCAG ratio of each text role against all four
+   surfaces, and fails the suite if any pair drops below its floor. Text roles
+   clear 4.5:1; borders and control edges clear 3:1, and a field boundary must
+   clear 3:1 AND be stronger than a plain rule. */
 @theme {
-  --color-ground: #060605;
-  --color-panel: #0e0e0c;
-  --color-raised: #151513;
-  --color-raised-2: #1e1e1a;
-  --color-rule: #262622;
-  --color-rule-strong: #3e3d37;
+  /* The four surfaces, newsprint to fresh stock. None of them is #ffffff: a
+     pure white surface is the value a screen defaults to, and it reads flat
+     and synthetic next to warm newsprint. The lit surfaces carry the page's
+     own hue instead, so a sheet laid on the page is stock rather than a hole
+     punched through to the browser. */
+  --color-ground: #efece3;
+  --color-panel: #f6f4ee;
+  --color-raised: #fdfcf7;
+  --color-raised-2: #e5e1d4;
 
-  --color-control: #8f8e87;
+  /* Structure: a hairline is one pixel and never a halo. */
+  --color-rule: #cfc9b8;
+  --color-rule-strong: #9a9382;
+  --color-control: #6f6a5a;
 
-  --color-ink: #f2f1ec;
-  --color-muted: #abaaa3;
-  --color-faint: #8d8c85;
+  /* The ink ramp. */
+  --color-ink: #14120d;
+  --color-muted: #55503f;
+  --color-faint: #5f5b4a;
 
-  /* State channels — meaning is fixed, never decorative */
-  --color-accent: #c9a227;
-  --color-accent-bright: #e0b63f;
-  --color-accent-dim: #a8871f;
-  --color-added: #56c08d;
-  --color-review: #e0913c;
-  --color-removed: #f48075;
-  --color-approved: #9d8df1;
+  /* The signal. Exactly one hue, exactly three meanings. */
+  --color-accent: #1b3fd0;
+  --color-accent-bright: #2a4fe0;
+  --color-accent-dim: #4a6ae0;
 
-  /* The answer pad — the one light surface in the product. Paper, paper ink,
-     the red pen that marks it, and the green ink that approves it. */
-  --color-paper: #e9e7dc;
-  --color-paper-2: #f3f2ea;
-  --color-paper-ink: #1b2420;
-  --color-paper-muted: #55635c;
-  --color-pen: #b2301f;
-  --color-pass: #1f6b45;
+  /* State inks. Each means one thing; none is ever the message alone. */
+  --color-added: #1a6b3a;
+  --color-review: #7d5200;
+  --color-removed: #b3261e;
+  --color-approved: #5b3fd0;
 
-  --font-sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto,
-    sans-serif;
-  --font-display: "Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
+  /* The sheet. The one surface that is a printed artefact rather than the
+     page: stock, black ink, the red pen that corrects it, the green ink that
+     passes it. Warmest of the four, because it is the object rather than the
+     page — and still clear of the newsprint ground it is laid on. */
+  --color-paper: #fbf9f3;
+  --color-paper-2: #fdfcf8;
+  --color-paper-ink: #14120d;
+  --color-paper-muted: #6b6656;
+  --color-pen: #b3261e;
+  --color-pass: #1a6b3a;
+
+  /* Type: three families, which is the ceiling. One grotesque carries the
+     poster line *and* running text — it has an optical-size axis, so the text
+     cut is the same family rather than a second face doing the same job. One
+     editorial serif for the single moment that wants another voice, and one
+     typewriter for every number and every file name. A fourth family (a
+     separate body sans) used to sit here, and it was the face that made the
+     page read as four; it earned nothing the grotesque's text cut does not. */
+  --font-text: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  --font-sans: var(--font-text);
+  --font-display: var(--font-text);
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
   --font-mono: "Courier Prime", ui-monospace, "SF Mono", "Cascadia Mono",
     monospace;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: clip;
+  scroll-behavior: smooth;
 }
 
 /* The 4-point scale, by name. Every padding, gap and margin in the build is
-   one of these values — no ad-hoc rems. (Deliberately outside @theme so it
-   stays a plain custom property rather than a Tailwind spacing namespace.) */
+   one of these values — no ad-hoc rems. Deliberately outside @theme so it
+   stays a plain custom property rather than a Tailwind spacing namespace. */
 :root {
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -74,17 +107,34 @@ html {
   --space-20: 5rem;
   --space-24: 6rem;
   --space-28: 7rem;
+  --space-32: 8rem;
+
+  /* One curve for arrivals, one for a sheet being fed. Nothing bounces. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* A fresh sheet casts a real shadow: an offset and a soft blur, never a
+     zero-offset halo. */
+  --shadow-sheet: 0 18px 40px -26px rgb(20 18 13 / 0.55), 0 2px 0 rgb(20 18 13 / 0.06);
+  --shadow-stack: 0 30px 70px -40px rgb(20 18 13 / 0.6);
+
+  /* The folio is pinned to the top of every page, so it is the one layer that
+     has to out-paint everything it crosses: the rail travels the right edge and
+     the CTA bar sits at the bottom, and neither may ever cover the section bar.
+     There is no layer above the folio, because there is nothing above the
+     pointer: the pointer is the platform's. */
+  --z-nav: 50;
+  --z-rail: 45;
 }
 
 body {
   background: var(--color-ground);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 15.5px;
   line-height: 1.6;
   overflow-x: clip;
 }
-
 
 /* Data, gutters, counts and captions are tabular and mono. */
 .num {
@@ -92,23 +142,27 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* The editorial voice: only ever a short pull, never a paragraph. */
+.serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
 /* ---------- Browser surfaces are part of the world ---------- */
 
 ::selection {
-  background: color-mix(in srgb, var(--color-accent) 32%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
   color: var(--color-ink);
 }
 
+/* One pixel of rule, never a halo. The contrast suite asserts this exact
+   declaration, because it is the only focus treatment the interface has. */
 :focus-visible {
   outline: 1px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* One pixel of rule, never a halo. */
-:where(a, button, summary, [role="tab"]):focus-visible {
-  outline: 1px solid var(--color-accent);
-  outline-offset: 2px;
+  border-radius: 1px;
 }
 
 a {
@@ -116,11 +170,21 @@ a {
   text-decoration-thickness: 1px;
 }
 
+/* A named section has to clear the sticky bar it is jumped to from. That bar is
+   the folio — a 2px rule, a 44px row and a 1px rule, 47px in all — plus a line
+   of air, because arriving with the heading touching the rule is not arriving.
+   Without this, `/#courses` puts the section's first line behind the folio and
+   the reader lands somewhere other than the nav promised. Only anchored
+   sections move; nothing else on the page does. */
+section[id] {
+  scroll-margin-top: 4.5rem;
+}
+
 .code-field {
   caret-color: var(--color-accent);
 }
 .code-field::selection {
-  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 
 .nice-scroll {
@@ -142,90 +206,111 @@ a {
   background: transparent;
 }
 
-/* ---------- Diff rows ----------
-    The roadmap's atom: a mark gutter, a mono position, a name, a state word.
-    Form carries the state; the tint is a reinforcement, never the message. */
+/* ---------- The plate ----------
+   One container primitive. On paper a plate is a *sheet laid on the page*:
+   a hairline, a white face and a real shadow, so it reads as stock rather
+   than as a tinted box. Elevation is declared by border, background and the
+   one sheet shadow — never by a glow. `crosshair` anchors the top-left
+   corner the way a print plate is registered. */
 
-.diffrows {
+.plate {
+  position: relative;
+  background: var(--color-panel);
   border: 1px solid var(--color-rule);
 }
 
-.row {
-  display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: 0.75rem;
-  border-top: 1px solid var(--color-rule);
-  padding: 0.5rem 0.75rem 0.5rem 0;
-  min-height: 3rem;
-}
-.row:first-child {
-  border-top: 0;
-}
-
-.row-mark {
-  font-family: var(--font-mono);
-  text-align: right;
-  color: var(--color-faint);
-  font-size: 13px;
-  user-select: none;
-}
-
-/* State lives in line FORM before hue: solid = demonstrated, dashed = pending,
-   dotted = not in this change, struck = locked. Every row also prints the
-   state as a word, so nothing depends on colour to be readable. */
-.row[data-state="completed"] {
-  border-left: 1px solid var(--color-added);
-}
-.row[data-state="mastered"] {
-  border-left: 1px solid var(--color-approved);
-}
-.row[data-state="recommended"] {
-  border-left: 1px solid var(--color-accent);
-}
-.row[data-state="in-progress"] {
-  border-left: 1px dashed var(--color-review);
-}
-.row[data-state="needs-practice"] {
-  border-left: 1px solid var(--color-removed);
-}
-.row[data-state="available"] {
-  border-left: 1px dashed var(--color-rule-strong);
-}
-.row[data-state="optional"] {
-  border-left: 1px dotted var(--color-rule-strong);
-}
-.row[data-state="locked"] {
-  border-left: 1px dotted var(--color-rule);
-}
-.row[data-state="locked"] .row-title,
-.row[data-state="locked"] .row-meta {
-  color: var(--color-faint);
-  text-decoration: line-through;
-  text-decoration-color: var(--color-rule-strong);
-}
-
-/* A hunk header: the layer above the change you are shipping. */
-.hunk {
-  display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
-  column-gap: 0.75rem;
-  align-items: baseline;
-  border-top: 1px solid var(--color-rule);
+.plate-step {
   background: var(--color-raised);
-  padding: 0.4rem 0.75rem 0.4rem 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-muted);
+  border: 1px solid var(--color-rule-strong);
+  box-shadow: var(--shadow-sheet);
 }
 
-/* The reviewer's thread: one pixel of spine, no bubble, no shadow. */
-.thread {
-  border-left: 1px solid var(--color-rule);
-  padding-left: 0.875rem;
+/* Registration crosshair — two one-pixel marks, no colour of its own. */
+.crosshair::before,
+.crosshair::after {
+  content: "";
+  position: absolute;
+  background: var(--color-rule-strong);
+  pointer-events: none;
+}
+.crosshair::before {
+  left: -4px;
+  top: 0;
+  width: 9px;
+  height: 1px;
+}
+.crosshair::after {
+  left: 0;
+  top: -4px;
+  width: 1px;
+  height: 9px;
 }
 
-/* An approval stamp: printed monospace label, natural casing, clean tracking. */
+/* ---------- The press ----------
+   A machine in the margin: an inked slot, and a sheet that feeds out of it
+   line by line. The slot is structure; the sheet is the artefact. */
+
+.press-slot {
+  position: relative;
+  height: 14px;
+  background: var(--color-ink);
+  border-radius: 2px;
+}
+.press-slot::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 4px;
+  height: 2px;
+  background: color-mix(in srgb, var(--color-paper) 55%, transparent);
+}
+
+/* A perforated foot, cut with a repeating conic gradient rather than an
+   image asset. */
+.perf-edge {
+  height: 10px;
+  background-image: repeating-conic-gradient(
+    from -45deg at 50% 0,
+    var(--color-paper) 0deg 90deg,
+    transparent 90deg 180deg
+  );
+  background-size: 12px 12px;
+  background-position: 50% 0;
+}
+
+/* Halftone: the press's own texture, drawn from a gradient rather than an
+   image. Used sparingly, as a ground for one artifact. */
+.halftone {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--color-ink) 20%, transparent) 0.7px,
+    transparent 0.8px
+  );
+  background-size: 5px 5px;
+}
+
+/* ---------- Type primitives ---------- */
+
+/* The oversized structural line. Bricolage carries a width axis: condensed is
+   what makes a headline read as a poster rather than as large body copy. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 80;
+  letter-spacing: -0.035em;
+  line-height: 0.88;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+/* A second voice for the poster line: outlined ink, for the one word the
+   page wants to be read twice. Ink-stroke on paper, never a gradient. */
+.outline-ink {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-ink);
+}
+
+/* A micro-label: printed monospace, natural casing, clean tracking. */
 .stamp {
   font-family: var(--font-mono);
   font-size: 11.5px;
@@ -233,34 +318,192 @@ a {
   letter-spacing: 0.02em;
 }
 
-/* Registration crosshair — anchors a plate corner. */
-.crosshair {
-  position: relative;
-}
-.crosshair::before,
-.crosshair::after {
-  content: "";
-  position: absolute;
-  background: var(--color-rule-strong);
-}
-.crosshair::before {
-  left: 0;
-  top: -4px;
-  width: 1px;
-  height: 9px;
-}
-.crosshair::after {
-  left: -4px;
-  top: 0;
-  width: 9px;
-  height: 1px;
+/* ---------- The reveal ----------
+   Type arrives the way a sheet is fed into a press: masked, once, and not
+   again. Every animated primitive in the build funnels through one of these
+   so the reduced-motion path stays a single decision. */
+
+.line-mask {
+  display: block;
+  overflow: hidden;
 }
 
-/* ---------- The one authored moment ----------
-    The pen circle drawn around the next requested change. */
+.line-mask > span {
+  display: block;
+  transform: translateY(105%);
+  transition: transform 900ms var(--ease-out);
+}
 
-/* Shapes that animate use pathLength="100", so the dash space is normalised
-   and the pen stroke reads correctly at any row width. */
+[data-shown="true"] .line-mask > span,
+.line-mask[data-shown="true"] > span {
+  transform: translateY(0);
+}
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out);
+}
+
+.fade-up[data-shown="true"],
+[data-shown="true"] .fade-up {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* A hairline that draws itself in, left to right. */
+.draw {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 800ms var(--ease-out);
+}
+.draw[data-shown="true"],
+[data-shown="true"] .draw {
+  transform: scaleX(1);
+}
+
+/* A sheet feeding out of the press: it arrives clipped from the top and
+   settles, once, at a printer's cadence rather than a fade. */
+@keyframes feed {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-6px);
+  }
+  to {
+    clip-path: inset(0);
+    transform: none;
+  }
+}
+.feed {
+  animation: feed 220ms steps(4, end) both;
+}
+
+/* ---------- Diff rows ----------
+   The atom of the curriculum: a mark gutter, a mono position, a name, a
+   state word. Form carries the state; the tint is a reinforcement, never the
+   message. Solid = demonstrated, dashed = pending, dotted = not in this
+   change, struck = locked. */
+
+.phase-row {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  border-top: 1px solid var(--color-rule);
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  min-height: 2.75rem;
+}
+.phase-row:first-child {
+  border-top: 0;
+}
+.phase-row:hover {
+  background: var(--color-raised);
+}
+
+.row-mark {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: right;
+  color: var(--color-faint);
+  user-select: none;
+}
+
+.phase-row[data-state="completed"] {
+  border-left: 1px solid var(--color-added);
+}
+.phase-row[data-state="mastered"] {
+  border-left: 1px solid var(--color-approved);
+}
+.phase-row[data-state="recommended"] {
+  border-left: 1px solid var(--color-accent);
+}
+.phase-row[data-state="in-progress"] {
+  border-left: 1px dashed var(--color-review);
+}
+.phase-row[data-state="available"] {
+  border-left: 1px dashed var(--color-rule-strong);
+}
+.phase-row[data-state="locked"] {
+  border-left: 1px dotted var(--color-rule);
+}
+.phase-row[data-state="locked"] .row-title {
+  color: var(--color-faint);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-rule-strong);
+}
+
+/* ---------- The receipt ----------
+   The signature object: the product's own output, printed. It is white stock
+   on newsprint — a separate sheet, held off the page by an offset shadow so
+   it reads as an artefact laid down rather than a white box. */
+
+.receipt {
+  background: var(--color-paper);
+  color: var(--color-paper-ink);
+  font-family: var(--font-mono);
+  border: 1px solid var(--color-rule);
+  box-shadow: var(--shadow-stack);
+}
+
+/* The stamp lands like a decision: once, late, and hard. */
+@keyframes stamp-land {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(1.06);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  70% {
+    transform: scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.stamp-land {
+  animation: stamp-land 420ms var(--ease-sheet) both;
+}
+
+/* ---------- Terminal ----------
+   A transcript is not app chrome: it is a printed record of what ran. No
+   window dressing, no fake title bar, no traffic lights. */
+.term-line {
+  animation: term-line 180ms steps(1, end) both;
+}
+@keyframes term-line {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* A caret that blinks once per second, the way a cursor does when it is
+   waiting for the machine rather than for you. */
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.caret {
+  animation: caret-blink 1.1s steps(1, end) infinite;
+}
+
+/* ---------- The pen ----------
+   The one authored moment kept from the previous build because it was the
+   best thing in it: the red circle drawn around the thing that matters. On
+   paper it is simply a pen. */
 @keyframes draw-circle {
   from {
     stroke-dashoffset: 100;
@@ -269,64 +512,31 @@ a {
     stroke-dashoffset: 0;
   }
 }
-
 .pen-circle {
-  animation: draw-circle 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: draw-circle 0.72s var(--ease-out) both;
 }
 
-@keyframes row-settle {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.row-settle {
-  animation: row-settle 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* ---------- Lesson prose ---------- */
+/* ---------- Prose ---------- */
 
 .prose-nexora p {
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
   line-height: 1.7;
   color: var(--color-muted);
 }
 .prose-nexora p:last-child {
   margin-bottom: 0;
 }
-.prose-nexora h4 {
-  font-weight: 600;
-  margin: 1.25rem 0 0.5rem;
+.prose-nexora strong {
   color: var(--color-ink);
-}
-.prose-nexora ul,
-.prose-nexora ol {
-  margin: 0 0 0.75rem 1.25rem;
-  line-height: 1.7;
-  color: var(--color-muted);
-}
-.prose-nexora ul {
-  list-style: disc;
-}
-.prose-nexora ol {
-  list-style: decimal;
+  font-weight: 600;
 }
 .prose-nexora code:not(pre code) {
   font-family: var(--font-mono);
   font-size: 0.85em;
   background: var(--color-raised);
   border: 1px solid var(--color-rule);
-  border-radius: 3px;
   padding: 0.05rem 0.3rem;
   color: var(--color-ink);
-}
-.prose-nexora strong {
-  color: var(--color-ink);
-  font-weight: 600;
 }
 
 details.nexora-details > summary {
@@ -336,7 +546,12 @@ details.nexora-details > summary::-webkit-details-marker {
   display: none;
 }
 
+/* ---------- Reduced motion ----------
+   One decision, applied everywhere: everything static, nothing hidden. */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
@@ -344,68 +559,12 @@ details.nexora-details > summary::-webkit-details-marker {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* Compat: the mission workspace, editor, header, and supporting screens
-   address these learning-UI tokens and motions. The black-desk theme above is
-   authoritative for new work; this block keeps shipped screens rendering
-   until they migrate, on the same palette rather than a second one. */
-@theme {
-  --color-mint: #c9a227;
-  --color-mint-dim: #a8871f;
-  --color-graphite: #060605;
-  --color-elevated: #0e0e0c;
-  --color-elevated-2: #151513;
-  --color-line: #262622;
-  --color-success: #56c08d;
-  --color-warning: #e0913c;
-  --color-error: #f48075;
-}
-
-@keyframes node-pop {
-  0% { transform: scale(0.6); opacity: 0; }
-  60% { transform: scale(1.08); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes draw-route {
-  from { stroke-dashoffset: 240; }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes toast-in {
-  from { transform: translateY(12px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.animate-node-pop { animation: node-pop 0.35s ease-out both; }
-.animate-toast-in { animation: toast-in 0.25s ease-out both; }
-
-/* ---------- NEXORA desk surfaces ----------
-    Structural hairlines only. Panels declare elevation by border or
-    background, never by shadow or blur. One authored moment: the
-    recommended-node ring (see .active-focus-card). */
-
-.deck-panel {
-  background: var(--color-panel);
-  border: 1px solid var(--color-rule);
-}
-
-.deck-row {
-  background: var(--color-panel);
-  border: 1px solid var(--color-rule);
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease;
-}
-
-.deck-row:hover {
-  background: var(--color-raised);
-  border-color: var(--color-rule-strong);
-}
-
-/* The single authored moment: a 1px brass ring on the recommended node. */
-.active-focus-card {
-  background: var(--color-raised);
-  border: 1px solid var(--color-accent);
+  .line-mask > span,
+  .fade-up,
+  .draw,
+  .feed {
+    transform: none;
+    opacity: 1;
+    clip-path: none;
+  }
 }

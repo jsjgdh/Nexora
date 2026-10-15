@@ -1,7 +1,3 @@
-import { layerForStage, stageById } from "./curriculum";
-import { ALL_MISSIONS } from "./missions";
-import type { Mission } from "./types";
-
 /* SEO basics (TODO 8.4). These are pure functions rather than templates baked
    into a route so the paths and the documents they produce are asserted in the
    suite, not eyeballed in a browser. The app is local-first and ships with no
@@ -9,10 +5,10 @@ import type { Mission } from "./types";
    routes fall back to SITE_URL_FALLBACK: an unset variable must never throw.
 
    The same three rules hold for the metadata as for the crawler files: nothing
-   is invented (a mission's description is built only from its own authored
-   words plus the curriculum's own names), nothing is duplicated by hand (one
-   builder serves every route), and nothing claims a URL the build did not
-   actually emit. */
+   is invented, nothing is duplicated by hand (one builder serves every route),
+   and nothing claims a URL the build did not actually emit. There is one way
+   to learn — the desktop IDE — so no sitemap entry, title, or description
+   names a browser mission, classroom route, or curriculum page. */
 
 /** Where generated URLs point when PUBLIC_SITE_URL is not configured. */
 export const SITE_URL_FALLBACK = "http://localhost:5173";
@@ -51,26 +47,21 @@ export function absoluteUrl(origin: string, path: string): string {
 }
 
 /** The public, account-free pages. `/profile` is deliberately absent: it is a
-    signed-in view, and a crawler has nothing to index behind it. */
+    signed-in view, and a crawler has nothing to index behind it. Only the
+    front door is listed — the download, the account, the tier, and the proof.
+    Learning happens in the desktop IDE, so no classroom route is advertised. */
 const PUBLIC_PATHS = [
   "/",
-  "/roadmap",
-  "/skills",
-  "/projects",
-  "/practice",
   "/pricing",
-  "/visualizations",
-  "/onboarding",
-  "/diagnostic",
   "/auth",
   "/auth/ide",
   "/verify",
   "/download",
 ];
 
-/** Every indexable path: the public pages, then one URL per mission. */
+/** Every indexable path: exactly the public pages. Nothing else is emitted. */
 export function sitemapPaths(): string[] {
-  return [...PUBLIC_PATHS, ...ALL_MISSIONS.map((m) => `/mission/${m.id}`)];
+  return [...PUBLIC_PATHS];
 }
 
 function escapeXml(s: string): string {
@@ -135,20 +126,6 @@ export function clampDescription(text: string, limit = META_DESCRIPTION_LIMIT): 
 /** A page's document title: the page, then the product. */
 export function pageTitle(name: string): string {
   return `${name} — ${SITE_NAME}`;
-}
-
-/**
- * A mission's meta description, built only from its own authored words plus
- * the path's own names — no marketing sentence is appended to it, because a
- * crawler snippet is a claim like any other.
- */
-export function missionDescription(mission: Mission): string {
-  const stage = stageById(mission.stageId);
-  const layer = layerForStage(mission.stageId);
-  const where = stage ? `Stage ${stage.num} · ${stage.title}` : "";
-  const context = layer ? `${layer.title} layer` : "";
-  const suffix = [where, context].filter(Boolean).join(" · ");
-  return clampDescription([mission.tagline, suffix].filter(Boolean).join(" "));
 }
 
 /**

@@ -1,9 +1,9 @@
 <script lang="ts">
   import "../app.css";
-  import { page } from "$app/state";
   import { afterNavigate } from "$app/navigation";
   import { onMount, type Snippet } from "svelte";
   import Header from "$lib/components/Header.svelte";
+  import Footer from "$lib/components/Footer.svelte";
   import { session } from "$lib/session.svelte";
   import { SITE_NAME } from "$lib/seo";
 
@@ -34,23 +34,24 @@
      its title, description, canonical URL and the card's own title and
      description — is emitted by <PageHead>, because `svelte:head` merges: a
      default here plus a page override would put two descriptions in the
-     document, and the crawler would pick one of them. No claims, logos,
-     statistics or images are invented to fill any of these out. -->
+     document, and the crawler would pick one of them. -->
 <svelte:head>
-  <meta name="theme-color" content="#060605" />
+  <meta name="theme-color" content="#efece3" />
   <meta property="og:site_name" content={SITE_NAME} />
   <meta name="twitter:card" content="summary" />
 </svelte:head>
 
 <a
   href="#main"
-  class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-[3px] focus:border focus:border-accent focus:bg-panel focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-ink"
+  class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:border focus:border-accent focus:bg-panel focus:px-3 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-ink"
 >
   Skip to main content
 </a>
-{#if page.url.pathname !== "/"}
-  <Header />
-{/if}
+
+<Header />
+
 <main id="main" tabindex="-1">
   {@render children()}
 </main>
+
+<Footer />

@@ -24,7 +24,10 @@ const HOP_BY_HOP = new Set([
  * The identity headers are the load-bearing ones: every service reads
  * `x-user-id` as the authenticated user with no further check, so forwarding a
  * client-supplied copy is an impersonation primitive the moment any public or
- * optional-auth route calls `requireUserId`. `x-internal-key` would forge mesh
+ * optional-auth route calls `requireUserId`. `x-entitled` is the same kind of
+ * trust: the gateway sets it only after billing confirms a subscription, and a
+ * paid curriculum route serves on it, so a client that could send it could
+ * unlock the paywall by typing a header. `x-internal-key` would forge mesh
  * auth, and the `x-forwarded-*` family would let a caller lie about their IP to
  * services that also trust the proxy layer. Overwriting a header after the loop
  * only helps when the value we overwrite with is truthy — on an anonymous
@@ -35,8 +38,13 @@ const NEVER_FORWARDED = new Set([
   "cookie",
   "host",
   "x-user-id",
+  "x-entitled",
   "x-internal-key",
   "x-request-id",
+  // The client address is ours to resolve, never theirs to assert: a service
+  // keys its own limiter on x-client-ip, so a client-chosen value would let one
+  // caller walk around a service's throttle by inventing a new address.
+  "x-client-ip",
   "x-forwarded-for",
   "x-forwarded-host",
   "x-forwarded-proto",
@@ -57,10 +65,22 @@ export function matchRoute(path: string, routes: RouteConfig[]): RouteConfig | n
 
 /** Outbound headers: strip hop-by-hop + client identity, inject mesh auth,
     user id (post-JWT), and request tracing. The client's Bearer token is
-    deliberately NOT forwarded — downstream trusts x-user-id from us. */
+    deliberately NOT forwarded — downstream trusts x-user-id from us.
+    `entitled` is injected only on a paid route the entitlement gate cleared;
+    like x-user-id it is a verdict downstream trusts, never a client input.
+    `clientIp` is the address WE resolved (our own trustProxy-aware req.ip),
+    because a service that must rate-limit a caller cannot use its own req.ip:
+    every request through this proxy arrives from here, so that would be one
+    shared bucket for the whole internet. */
 export function buildForwardHeaders(
   incoming: Record<string, string | string[] | undefined>,
-  opts: { userId: string | null; internalKey: string; requestId: string }
+  opts: {
+    userId: string | null;
+    internalKey: string;
+    requestId: string;
+    entitled?: boolean;
+    clientIp?: string;
+  }
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(incoming)) {
@@ -72,7 +92,9 @@ export function buildForwardHeaders(
   }
   out["content-type"] = "application/json";
   out["x-request-id"] = opts.requestId;
+  if (opts.clientIp) out["x-client-ip"] = opts.clientIp;
   if (opts.userId) out["x-user-id"] = opts.userId;
+  if (opts.entitled) out["x-entitled"] = "1";
   if (opts.internalKey) out["x-internal-key"] = opts.internalKey;
   return out;
 }

@@ -16,6 +16,8 @@ import {
   createPortalSession,
   dodoBase,
   dodoKey,
+  expectedBusinessId,
+  isLiveMode,
   loadPlans,
   verifyWebhookSignature,
   webhookSecret,
@@ -54,11 +56,31 @@ async function processEvent(
     // Link payment → pending checkout where possible (metadata round-trip).
     const userId = str(meta.user_id);
     if (userId) {
-      await pool.query(
-        "UPDATE billing_checkouts SET status = 'paid', paid_at = now() WHERE user_id = $1 AND status = 'pending'",
-        [userId]
+      // Prefer the session this payment actually names. A learner with two
+      // checkouts open (two tabs, or a retry after a failed card) would
+      // otherwise have every pending row marked paid by the first payment,
+      // attributing money to a session nobody paid for — the row's own
+      // dodo_session_id is the key that disambiguates them.
+      const sessionId = pick(
+        data.session_id,
+        data.checkout_id,
+        (data.checkout as Record<string, unknown> | undefined)?.id
       );
-      log.info({ userId, type }, "checkout marked paid");
+      if (sessionId) {
+        await pool.query(
+          "UPDATE billing_checkouts SET status = 'paid', paid_at = now() WHERE dodo_session_id = $1 AND status = 'pending'",
+          [sessionId]
+        );
+        log.info({ userId, sessionId, type }, "checkout marked paid");
+      } else {
+        // Older payload shapes carry no session id: fall back to the coarse
+        // update rather than lose the link between payment and checkout.
+        await pool.query(
+          "UPDATE billing_checkouts SET status = 'paid', paid_at = now() WHERE user_id = $1 AND status = 'pending'",
+          [userId]
+        );
+        log.info({ userId, type }, "checkout marked paid");
+      }
     } else {
       log.warn({ type }, "payment.succeeded without metadata.user_id — left for subscription events");
     }
@@ -217,17 +239,57 @@ export function registerBillingRoutes(
       rawBody: raw,
     });
     if (!ok) throw new ApiError(401, "invalid_signature", "Webhook signature verification failed.");
-    const event = req.body as { business_id?: unknown; type?: unknown; timestamp?: unknown; data?: unknown };
+    const event = req.body as {
+      business_id?: unknown;
+      test_mode?: unknown;
+      type?: unknown;
+      timestamp?: unknown;
+      data?: unknown;
+    };
     const eventId = hdr(req.headers["webhook-id"]) as string;
     const type = str(event.type) ?? "unknown";
-    const seen = await pool.query("SELECT 1 FROM billing_events WHERE event_id = $1", [eventId]);
-    if (seen.rowCount) return { ok: true, duplicate: true };
-    await processEvent(pool, app.log, { type, data: event.data });
-    await pool.query("INSERT INTO billing_events (event_id, type, payload) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING", [
-      eventId,
-      type,
-      JSON.stringify(event),
-    ]);
+    // Tenancy + environment guards run BEFORE any state write (and before the
+    // event ledger, so a rejected event is never recorded as if honoured). A
+    // valid signature proves Dodo sent it, not that it is ours to act on: a
+    // foreign merchant's event, or a sandbox (test_mode) payment reaching a
+    // live deployment, is acked with 200 so the vendor stops retrying it, but
+    // applies nothing.
+    const wantBiz = expectedBusinessId();
+    if (wantBiz && str(event.business_id) !== wantBiz) {
+      app.log.warn({ type, business_id: str(event.business_id) }, "webhook business_id mismatch — ignored");
+      return reply.code(200).send({ ok: true, ignored: "business_id" });
+    }
+    if (isLiveMode() && event.test_mode === true) {
+      app.log.warn({ type }, "test_mode webhook in live mode — ignored");
+      return reply.code(200).send({ ok: true, ignored: "test_mode" });
+    }
+    /* Claim the event before acting on it, in one statement, in the same
+     * transaction as the effect it causes.
+     *
+     * Read-then-write was a TOCTOU: two concurrent deliveries (a vendor retry
+     * overlapping the first attempt, or a replay inside the skew window) could
+     * both pass the SELECT and both apply state, and two different events could
+     * interleave out of order and leave entitlement flapping. Here the unique
+     * index on event_id arbitrates — whoever inserts the row is the one that
+     * applies the event — and because the claim shares the transaction, a
+     * failure while applying rolls the claim back too, so a retry can still
+     * apply the event instead of being dismissed as a duplicate. */
+    await pool.query("BEGIN");
+    try {
+      const claim = await pool.query(
+        "INSERT INTO billing_events (event_id, type, payload) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING event_id",
+        [eventId, type, JSON.stringify(event)]
+      );
+      if (claim.rowCount === 0) {
+        await pool.query("ROLLBACK");
+        return { ok: true, duplicate: true };
+      }
+      await processEvent(pool, app.log, { type, data: event.data });
+      await pool.query("COMMIT");
+    } catch (err) {
+      await pool.query("ROLLBACK").catch(() => undefined);
+      throw err;
+    }
     return reply.code(200).send({ ok: true });
   });
 

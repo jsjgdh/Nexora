@@ -41,7 +41,8 @@ export interface ValidatedJob {
   outputKb: number;
 }
 
-function cleanPath(p: string): string {
+/** Exported for the attestation route, which validates learner paths the same way. */
+export function cleanPath(p: string): string {
   // Reject absolute paths, parent escapes, drive letters, null bytes.
   if (p.includes("\0")) throw new ApiError(400, "bad_request", "Invalid file path.");
   const norm = p.replace(/\\/g, "/");

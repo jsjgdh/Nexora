@@ -12,13 +12,16 @@
   import Button from "$lib/components/Button.svelte";
   import { cn } from "$lib/format";
   import PageHead from "$lib/components/PageHead.svelte";
+  import Headline from "$lib/components/Headline.svelte";
+  import Plate from "$lib/components/Plate.svelte";
+  import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
 
   /* Two sign-in methods, one boundary. Email/password talks to the
      local-mode auth service; Clerk (when PUBLIC_CLERK_PUBLISHABLE_KEY is
      set) mounts Clerk's own components and stores the Clerk session token.
-     Either way the rest of the app — header, tutor, billing, sync — only
-     ever reads session.token. */
+     Either way the rest of the app — header, billing, subscription reads —
+     only ever reads session.token. */
 
   let mode = $state<"login" | "register">("login");
   let email = $state("");
@@ -38,7 +41,7 @@
   let clerkNote = $state<"conflict" | "unavailable" | null>(null);
 
   // Clerk branch: adopt an existing Clerk session (return visits), then
-  // render Clerk's own form. A linked session leaves for the roadmap; a
+  // render Clerk's own form. A linked session leaves for the profile; a
   // conflict or an unreachable Clerk keeps the learner here with words.
   $effect(() => {
     if (!clerkConfigured || !apiConfigured || session.loggedIn) return;
@@ -51,7 +54,7 @@
       const status = await clerkStatus();
       if (cancelled) return;
       if (status === "linked") {
-        goto("/roadmap");
+        goto("/profile");
         return;
       }
       if (status === "conflict") clerkNote = "conflict";
@@ -72,7 +75,7 @@
     try {
       if (mode === "login") await session.login(email.trim(), password);
       else await session.register(email.trim(), password, name.trim());
-      goto("/roadmap");
+      goto("/profile");
     } catch (err) {
       error = err instanceof Error ? err.message : "Something went wrong.";
     } finally {
@@ -129,237 +132,229 @@
   path="/auth"
 />
 
-<div class="mx-auto max-w-lg px-4 py-10">
-  <p class="stamp text-accent">account</p>
-  <h1 class="mt-2 text-[26px] font-semibold tracking-[-0.02em] sm:text-[32px]">
-    {#if session.loggedIn}
-      You are signed in
-    {:else if session.restoring}
-      One moment
-    {:else if clerkConfigured && apiConfigured}
-      Welcome
-    {:else if mode === "login"}
-      Welcome back
-    {:else}
-      Create your account
-    {/if}
-  </h1>
-  <p class="mt-2 text-[14px] leading-relaxed text-muted">
-    An account unlocks IDE courses per your tier. The base course bundled in
-    the IDE works without one.
-  </p>
+<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
+  <div class="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
+    <!-- The argument, on the left. The form is on the right. -->
+    <div>
+      <Headline
+        as="h1"
+        lines={[
+          session.loggedIn ? "You are signed in." : session.restoring ? "One moment." : "An account, and nothing more.",
+        ]}
+        class="text-[clamp(1.9rem,4.4vw,3.2rem)] text-ink"
+      />
+      <p class="mt-6 max-w-[44ch] text-[14.5px] leading-relaxed text-muted">
+        An account unlocks IDE courses per your tier. The base course bundled in the IDE works
+        without one — and it stays that way.
+      </p>
 
-  <div class="thread mt-6">
-    <p class="stamp text-accent">signing in the IDE</p>
-    <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
-      In the IDE, choose sign-in: it shows a short code and opens this site.
-      Approve the code at <a href="/auth/ide" class="text-accent underline underline-offset-4">IDE sign-in</a>
-      and the IDE signs itself in — your password is typed here and nowhere else.
-    </p>
+      <div class="mt-10 border-t border-rule pt-6">
+        <p class="stamp text-[11px] text-accent">signing in the IDE</p>
+        <p class="mt-3 max-w-[46ch] text-[13.5px] leading-relaxed text-muted">
+          In the IDE, choose sign-in: it shows a short code and opens this site. Approve the code at
+          <a href="/auth/ide" class="text-accent underline underline-offset-4">IDE sign-in</a>
+          and the IDE signs itself in — your password is typed here and nowhere else.
+        </p>
+      </div>
+
+      <div class="mt-8 border-t border-rule pt-6">
+        <p class="stamp text-[11px] text-faint">what we never ask for</p>
+        <p class="mt-3 max-w-[46ch] text-[13.5px] leading-relaxed text-muted">
+          Not your GitHub password, not a wallet, not a phone number. An email and a password, or
+          the provider's own sign-in — nothing this product cannot justify needing.
+        </p>
+      </div>
+    </div>
+
+    <!-- Every state of the account, in one column. -->
+    <div class="min-w-0">
+      <!-- Outside the signed-in branch on purpose: ending every session signs this
+           page out too, and the learner still has to see whether it worked. -->
+      {#if everywhereNote}
+        <p
+          class="mb-4 border border-approved px-4 py-3 text-[13.5px] leading-relaxed text-ink"
+          role="status"
+        >
+          {everywhereNote}
+        </p>
+      {/if}
+      {#if everywhereError}
+        <p class="mb-4 border border-removed px-4 py-3 text-[13.5px] leading-relaxed text-ink" role="alert">
+          {everywhereError}
+        </p>
+      {/if}
+
+      {#if session.restoring}
+        <!-- Shown before the sign-in form, never instead of the account: the
+             session is a cookie the page cannot read, so the form would be a guess. -->
+        <Plate>
+          <p class="stamp text-muted">checking your session</p>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+            Your session lives in a cookie this page cannot read, so it asks the server before it
+            can say whether you are signed in. One moment.
+          </p>
+        </Plate>
+      {:else if !apiConfigured}
+        <Plate>
+          <p class="stamp text-review">cloud accounts not connected</p>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+            This build runs in local mode, so there are no accounts to sign into. The base course in
+            the IDE works without one.
+          </p>
+          <div class="mt-5">
+            <ActionLink href="/download" variant="ghost" size="sm" island>Get the IDE</ActionLink>
+          </div>
+        </Plate>
+      {:else if session.loggedIn && session.user}
+        <Plate crosshair>
+          <p class="stamp text-[11px] text-faint">signed in as</p>
+          <p class="mt-3 text-[16px] text-ink">{session.user.email}</p>
+          {#if session.user.name}
+            <p class="mt-1 text-[13px] text-muted">{session.user.name}</p>
+          {/if}
+          <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-rule pt-6">
+            <ActionLink href="/profile" island>Manage your plan</ActionLink>
+            <Button variant="ghost" onclick={signOut}>Sign out</Button>
+            {#if !clerkConfigured}
+              <Button variant="quiet" disabled={everywhereBusy} onclick={signOutEverywhere}>
+                {everywhereBusy
+                  ? "Ending every session…"
+                  : confirmEverywhere
+                    ? "Click again to end every session"
+                    : "Sign out everywhere"}
+              </Button>
+            {/if}
+          </div>
+          <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
+            {#if clerkConfigured}
+              Sessions on this account are managed by Clerk, so ending them on every device is done
+              from its dashboard — signing out here ends this device.
+            {:else}
+              “Sign out everywhere” ends every session on this account — every tab and every device,
+              including this one — for a device you no longer hold or trust.
+            {/if}
+          </p>
+        </Plate>
+      {:else if clerkConfigured}
+        <Plate>
+          <div class="flex border-b border-rule" role="tablist" aria-label="Sign in or create account">
+            {#each [["sign-in", "Sign in"], ["sign-up", "Create account"]] as [tab, label] (tab)}
+              <button
+                role="tab"
+                aria-selected={clerkTab === tab}
+                onclick={() => {
+                  clerkTab = tab as "sign-in" | "sign-up";
+                  clerkNote = null;
+                }}
+                class={cn(
+                  "cursor-pointer border-b-2 bg-transparent px-4 py-2 text-[13px] font-semibold",
+                  clerkTab === tab ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
+                )}
+              >
+                {label}
+              </button>
+            {/each}
+          </div>
+          {#if clerkNote === "conflict"}
+            <div class="mt-5 border-l border-removed pl-4" role="alert">
+              <p class="stamp text-removed">two ways in, one account each</p>
+              <p class="mt-2 text-[13.5px] leading-relaxed text-muted">
+                An account with this email already exists under a different sign-in method. Pick one
+                and stick with it.
+              </p>
+            </div>
+          {:else if clerkNote === "unavailable"}
+            <div class="mt-5 border-l border-review pl-4" role="alert">
+              <p class="stamp text-review">sign-in is unreachable</p>
+              <p class="mt-2 text-[13.5px] leading-relaxed text-muted">
+                The sign-in service did not answer. Nothing here depends on it — try again, or keep
+                learning in the IDE without an account.
+              </p>
+            </div>
+          {/if}
+          <div bind:this={clerkNode} class="mt-6 min-h-[200px]"></div>
+          <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
+            Signing in backs up drafts, attempts and completions, and pulls them onto every device.
+            Everything already on this browser moves onto the account, never the other way round.
+          </p>
+        </Plate>
+      {:else}
+        <Plate crosshair>
+          <div class="flex border-b border-rule" role="tablist" aria-label="Sign in or create account">
+            {#each ["login", "register"] as m (m)}
+              <button
+                role="tab"
+                aria-selected={mode === m}
+                onclick={() => {
+                  mode = m as "login" | "register";
+                  error = null;
+                }}
+                class={cn(
+                  "cursor-pointer border-b-2 bg-transparent px-4 py-2 text-[13px] font-semibold",
+                  mode === m ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
+                )}
+              >
+                {m === "login" ? "Sign in" : "Create account"}
+              </button>
+            {/each}
+          </div>
+
+          <form onsubmit={submit} class="mt-6">
+            {#if mode === "register"}
+              <div>
+                <label for="auth-name" class="stamp block text-faint">name</label>
+                <input
+                  id="auth-name"
+                  bind:value={name}
+                  placeholder="Ada"
+                  autocomplete="nickname"
+                  class="mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[14px] text-ink placeholder:text-faint"
+                />
+              </div>
+            {/if}
+            <div class={cn(mode === "register" && "mt-5")}>
+              <label for="auth-email" class="stamp block text-faint">email</label>
+              <input
+                id="auth-email"
+                type="email"
+                required
+                bind:value={email}
+                placeholder="ada@example.com"
+                autocomplete="email"
+                class="mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[14px] text-ink placeholder:text-faint"
+              />
+            </div>
+            <div class="mt-5">
+              <label for="auth-password" class="stamp block text-faint">
+                password{mode === "register" ? " — 10 characters or more" : ""}
+              </label>
+              <input
+                id="auth-password"
+                type="password"
+                required
+                minlength={mode === "register" ? 10 : 1}
+                bind:value={password}
+                autocomplete={mode === "login" ? "current-password" : "new-password"}
+                class="mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[14px] text-ink placeholder:text-faint"
+              />
+            </div>
+            {#if error}
+              <div class="mt-5 border-l border-removed pl-4" role="alert">
+                <p class="stamp text-removed">that did not work</p>
+                <p class="mt-2 text-[13.5px] leading-relaxed text-muted">{error}</p>
+              </div>
+            {/if}
+            <div class="mt-6">
+              <Button type="submit" busy={busy}>
+                {busy ? "One moment…" : mode === "login" ? "Sign in" : "Create account"}
+              </Button>
+            </div>
+          </form>
+          <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
+            Passwords are bcrypt-hashed. Sessions rotate, and theft revokes the whole family.
+          </p>
+        </Plate>
+      {/if}
+    </div>
   </div>
-
-  <!-- Outside the signed-in branch on purpose: ending every session signs this page
-       out too, and the learner still has to see whether it worked. -->
-  {#if everywhereNote}
-    <p class="mt-4 border border-approved/40 bg-approved/5 px-3 py-2 text-[13px] leading-relaxed text-ink" role="status">
-      {everywhereNote}
-    </p>
-  {/if}
-  {#if everywhereError}
-    <p class="mt-4 border border-removed/40 bg-removed/5 px-3 py-2 text-[13px] leading-relaxed text-ink" role="alert">
-      {everywhereError}
-    </p>
-  {/if}
-
-  {#if session.restoring}
-    <!-- Shown before the sign-in form, never instead of the account: the session
-         is a cookie the page cannot read, so the form would be a guess. -->
-    <div class="thread mt-6">
-      <p class="stamp text-muted">checking your session</p>
-      <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
-        Your session lives in a cookie this page cannot read, so it asks the server before it can
-        say whether you are signed in. One moment.
-      </p>
-    </div>
-  {:else if !apiConfigured}
-    <div class="thread mt-6">
-      <p class="stamp text-review">cloud accounts not connected</p>
-      <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
-        This build runs in local mode, so progress stays in this browser. Set
-        <code class="num text-ink">PUBLIC_API_URL</code> to enable accounts.
-      </p>
-      <a
-        href="/roadmap"
-        class="mt-3 inline-flex border border-rule px-3 py-1.5 text-[13px] text-ink hover:border-accent hover:text-accent"
-      >
-        Back to the roadmap
-      </a>
-    </div>
-  {:else if session.loggedIn && session.user}
-    <div class="mt-6 border border-rule">
-      <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">signed in as</h2>
-      <div class="px-3 py-3">
-        <p class="text-[15px] text-ink">{session.user.email}</p>
-        {#if session.user.name}
-          <p class="mt-0.5 text-[13px] text-muted">{session.user.name}</p>
-        {/if}
-        <div class="mt-4 flex flex-wrap items-center gap-2">
-          <a
-            href="/roadmap"
-            class="inline-flex border border-accent bg-accent/10 px-4 py-2 text-[13px] font-medium text-accent hover:bg-accent/20"
-          >
-            Open the roadmap
-          </a>
-          <Button variant="ghost" onclick={signOut}>Sign out</Button>
-          {#if !clerkConfigured}
-            <Button variant="outline" disabled={everywhereBusy} onclick={signOutEverywhere}>
-              {everywhereBusy
-                ? "Ending every session…"
-                : confirmEverywhere
-                  ? "Click again to end every session"
-                  : "Sign out everywhere"}
-            </Button>
-          {/if}
-        </div>
-        <p class="mt-3 text-[12px] leading-relaxed text-faint">
-          {#if clerkConfigured}
-            Sessions on this account are managed by Clerk, so ending them on every device is done
-            from its dashboard — signing out here ends this device.
-          {:else}
-            “Sign out everywhere” ends every session on this account — every tab and every device,
-            including this one — for a device you no longer hold or trust.
-          {/if}
-        </p>
-      </div>
-    </div>
-  {:else if clerkConfigured}
-    <div
-      class="mt-6 flex border-b border-rule"
-      role="tablist"
-      aria-label="Sign in or create account"
-    >
-      {#each [["sign-in", "Sign in"], ["sign-up", "Create account"]] as [tab, label] (tab)}
-        <button
-          role="tab"
-          aria-selected={clerkTab === tab}
-          onclick={() => {
-            clerkTab = tab as "sign-in" | "sign-up";
-            clerkNote = null;
-          }}
-          class={cn(
-            "border-b px-3 py-2 text-[13px] font-medium",
-            clerkTab === tab ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
-          )}
-        >
-          {label}
-        </button>
-      {/each}
-    </div>
-    {#if clerkNote === "conflict"}
-      <div class="thread mt-4" role="alert">
-        <p class="stamp text-removed">two ways in, one account each</p>
-        <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
-          An account with this email already exists under a different sign-in method. Pick one
-          and stick with it — and nothing you did as a guest is lost either way.
-        </p>
-        <a
-          href="/roadmap"
-          class="mt-3 inline-flex border border-rule px-3 py-1.5 text-[13px] text-ink hover:border-accent hover:text-accent"
-        >
-          Continue locally for now
-        </a>
-      </div>
-    {:else if clerkNote === "unavailable"}
-      <div class="thread mt-4" role="alert">
-        <p class="stamp text-review">sign-in is unreachable</p>
-        <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
-          The sign-in service did not answer. Your work is saved on this device — try again, or
-          keep learning without an account.
-        </p>
-      </div>
-    {/if}
-    <div bind:this={clerkNode} class="mt-5 min-h-[200px]"></div>
-    <p class="mt-4 text-[12px] leading-relaxed text-faint">
-      Signing in backs up drafts, attempts and completions, and pulls them onto every device.
-      Everything already on this browser moves onto the account, never the other way round.
-    </p>
-  {:else}
-    <div
-      class="mt-6 flex border-b border-rule"
-      role="tablist"
-      aria-label="Sign in or create account"
-    >
-      {#each ["login", "register"] as m (m)}
-        <button
-          role="tab"
-          aria-selected={mode === m}
-          onclick={() => {
-            mode = m as "login" | "register";
-            error = null;
-          }}
-          class={cn(
-            "border-b px-3 py-2 text-[13px] font-medium",
-            mode === m ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
-          )}
-        >
-          {m === "login" ? "Sign in" : "Create account"}
-        </button>
-      {/each}
-    </div>
-
-    <form onsubmit={submit} class="mt-5">
-      {#if mode === "register"}
-        <div>
-          <label for="auth-name" class="stamp block text-faint">name</label>
-          <input
-            id="auth-name"
-            bind:value={name}
-            placeholder="Ada"
-            autocomplete="nickname"
-            class="mt-1.5 w-full border border-control bg-raised px-3 py-2 text-[14px] text-ink placeholder:text-faint focus:border-accent-dim"
-          />
-        </div>
-      {/if}
-      <div class={cn(mode === "register" && "mt-4")}>
-        <label for="auth-email" class="stamp block text-faint">email</label>
-        <input
-          id="auth-email"
-          type="email"
-          required
-          bind:value={email}
-          placeholder="ada@example.com"
-          autocomplete="email"
-          class="mt-1.5 w-full border border-control bg-raised px-3 py-2 text-[14px] text-ink placeholder:text-faint focus:border-accent-dim"
-        />
-      </div>
-      <div class="mt-4">
-        <label for="auth-password" class="stamp block text-faint">
-          password{mode === "register" ? " — 10 characters or more" : ""}
-        </label>
-        <input
-          id="auth-password"
-          type="password"
-          required
-          minlength={mode === "register" ? 10 : 1}
-          bind:value={password}
-          autocomplete={mode === "login" ? "current-password" : "new-password"}
-          class="mt-1.5 w-full border border-control bg-raised px-3 py-2 text-[14px] text-ink placeholder:text-faint focus:border-accent-dim"
-        />
-      </div>
-      {#if error}
-        <div class="thread mt-4" role="alert">
-          <p class="stamp text-removed">that did not work</p>
-          <p class="mt-1.5 text-[13px] leading-relaxed text-muted">{error}</p>
-        </div>
-      {/if}
-      <div class="mt-5">
-        <Button type="submit" disabled={busy}>
-          {busy ? "One moment…" : mode === "login" ? "Sign in" : "Create account"}
-        </Button>
-      </div>
-    </form>
-    <p class="mt-4 text-[12px] leading-relaxed text-faint">
-      Passwords are bcrypt-hashed. Sessions rotate, and theft revokes the whole family.
-    </p>
-  {/if}
 </div>

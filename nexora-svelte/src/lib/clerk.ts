@@ -138,6 +138,9 @@ export async function signOutEverywhere(): Promise<void> {
   } finally {
     linkedFor.clear();
     session.useExternalToken(null);
-    session.logout();
+    // Awaited so the broker's revoke lands before this returns: Clerk's own
+    // sign-out has already happened, and leaving our refresh cookie behind would
+    // keep a session the learner believes they ended.
+    await session.logout();
   }
 }

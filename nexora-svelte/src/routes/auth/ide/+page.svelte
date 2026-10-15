@@ -3,6 +3,9 @@
   import { apiConfigured, session } from "$lib/session.svelte";
   import Button from "$lib/components/Button.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
+  import Headline from "$lib/components/Headline.svelte";
+  import Plate from "$lib/components/Plate.svelte";
+  import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
 
   /* The browser half of IDE sign-in: the GitHub-style device flow.
@@ -68,113 +71,122 @@
   path="/auth/ide"
 />
 
-<div class="mx-auto max-w-lg px-4 py-10">
-  <p class="stamp text-accent">ide sign-in</p>
-  <h1 class="mt-2 text-[26px] font-semibold tracking-[-0.02em] sm:text-[32px]">
-    {#if approved}
-      IDE connected
-    {:else}
-      Connect your IDE
-    {/if}
-  </h1>
-  <p class="mt-2 text-[14px] leading-relaxed text-muted">
-    Your IDE shows a short code and opened this page. Sign in, approve that
-    code, and the IDE signs itself in — no password typed anywhere but here.
-  </p>
-
-  {#if !apiConfigured}
-    <div class="thread mt-6">
-      <p class="stamp text-review">cloud accounts not connected</p>
-      <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
-        This build runs in local mode, so there is no platform for the IDE to
-        sign in to. Set
-        <code class="num text-ink">PUBLIC_API_URL</code> to enable accounts.
-      </p>
-    </div>
-  {:else if session.restoring}
-    <div class="thread mt-6">
-      <p class="stamp text-muted">checking your session</p>
-      <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
-        One moment — the page is asking the server who you are before it can
-        approve anything.
-      </p>
-    </div>
-  {:else if !session.loggedIn}
-    <div class="thread mt-6">
-      <p class="stamp text-muted">sign in first</p>
-      <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
-        Approving a code signs your account into the IDE, so the IDE needs to
-        know which account is yours.
-      </p>
-      <a
-        href="/auth"
-        class="mt-3 inline-flex border border-rule px-3 py-1.5 text-[13px] text-ink hover:border-accent hover:text-accent"
-      >
-        Sign in, then come back
-      </a>
-    </div>
-  {:else if approved}
-    <div class="mt-6 border border-approved/40 bg-approved/5 px-3 py-3" role="status">
-      <p class="text-[14px] font-semibold text-ink">Approved — return to your IDE.</p>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        It signs in by itself from here. This page has nothing more to do.
-      </p>
-    </div>
-  {:else}
-    <form onsubmit={approve} class="mt-6">
-      <label for="ide-code" class="stamp block text-faint">code from your IDE</label>
-      <input
-        id="ide-code"
-        bind:value={code}
-        placeholder="KQ7M-XR42"
-        required
-        minlength={4}
-        maxlength={16}
-        autocomplete="off"
-        spellcheck={false}
-        class="num mt-1.5 w-full border border-control bg-raised px-3 py-2 text-[18px] tracking-[0.12em] text-ink placeholder:text-faint focus:border-accent-dim"
+<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
+  <div class="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
+    <div>
+      <Headline
+        as="h1"
+        lines={[approved ? "IDE connected." : "Approve the code.", "Then close this tab."]}
+        class="text-[clamp(1.9rem,4.4vw,3.2rem)] text-ink"
       />
-      {#if error}
-        <div class="thread mt-4" role="alert">
-          <p class="stamp text-removed">that did not work</p>
-          <p class="mt-1.5 text-[13px] leading-relaxed text-muted">{error}</p>
-        </div>
-      {/if}
-      <div class="mt-5">
-        <Button type="submit" disabled={busy}>
-          {busy ? "Approving…" : "Approve this IDE"}
-        </Button>
-      </div>
-    </form>
-    <p class="mt-4 text-[12px] leading-relaxed text-faint">
-      Approving signs the IDE in as {session.user?.email ?? "this account"}. Wrong codes are
-      refused without saying why — a prober learns nothing from guessing.
-    </p>
-  {/if}
-
-  {#if phases.length > 0}
-    <section class="mt-8 border border-rule" aria-label="What your tier unlocks">
-      <h2 class="stamp border-b border-rule bg-raised px-3 py-1.5 text-faint">what your tier unlocks</h2>
-      <ul class="divide-y divide-rule px-3 py-1">
-        {#each free as p (p.id)}
-          <li class="flex items-baseline justify-between gap-3 py-2">
-            <span class="text-[13px] text-ink">{p.title}</span>
-            <span class="stamp text-approved">free</span>
-          </li>
-        {/each}
-        {#each pro as p (p.id)}
-          <li class="flex items-baseline justify-between gap-3 py-2">
-            <span class="text-[13px] text-ink">{p.title}</span>
-            <span class="stamp text-muted">pro</span>
-          </li>
-        {/each}
-      </ul>
-      <p class="border-t border-rule px-3 py-2 text-[12px] leading-relaxed text-faint">
-        Free phases ship inside the IDE. Pro phases appear there once your
-        subscription is active — fetched per entitlement, never written to disk.
+      <p class="mt-6 max-w-[46ch] text-[14.5px] leading-relaxed text-muted">
+        Your IDE shows a short code and opened this page. Sign in, approve that code, and the IDE
+        signs itself in — no password typed anywhere but here.
       </p>
-    </section>
-  {:else if manifestNote}
-    <p class="mt-6 text-[12px] leading-relaxed text-faint">{manifestNote}</p>
-  {/if}
+
+      <div class="mt-10 grid gap-4 border-t border-rule pt-6">
+        <p class="stamp text-[11px] text-faint">why a code and not a password</p>
+        <p class="max-w-[46ch] text-[13.5px] leading-relaxed text-muted">
+          A password typed into an editor is phishable, loggable, and mistypable in exactly the
+          place with the least context for getting it right. GitHub solved this for editors a decade
+          ago; the shape is borrowed, not invented.
+        </p>
+      </div>
+    </div>
+
+    <div class="min-w-0">
+      {#if !apiConfigured}
+        <Plate>
+          <p class="stamp text-review">cloud accounts not connected</p>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+            This build runs in local mode, so there is no platform for the IDE to sign in to. Set
+            <code class="num text-ink">PUBLIC_API_URL</code> to enable accounts.
+          </p>
+        </Plate>
+      {:else if session.restoring}
+        <Plate>
+          <p class="stamp text-muted">checking your session</p>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+            One moment — the page is asking the server who you are before it can approve anything.
+          </p>
+        </Plate>
+      {:else if !session.loggedIn}
+        <Plate>
+          <p class="stamp text-muted">sign in first</p>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+            Approving a code signs your account into the IDE, so the IDE needs to know which account
+            is yours.
+          </p>
+          <div class="mt-5">
+            <ActionLink href="/auth" variant="ghost" size="sm" island>Sign in, then come back</ActionLink>
+          </div>
+        </Plate>
+      {:else if approved}
+        <Plate crosshair>
+          <p class="text-[15px] font-semibold text-ink">Approved — return to your IDE.</p>
+          <p class="mt-2 text-[13.5px] leading-relaxed text-muted">
+            It signs in by itself from here. This page has nothing more to do.
+          </p>
+        </Plate>
+      {:else}
+        <Plate crosshair>
+          <form onsubmit={approve}>
+            <label for="ide-code" class="stamp block text-faint">code from your IDE</label>
+            <input
+              id="ide-code"
+              bind:value={code}
+              placeholder="KQ7M-XR42"
+              required
+              minlength={4}
+              maxlength={16}
+              autocomplete="off"
+              spellcheck={false}
+              class="num mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[18px] tracking-[0.12em] text-ink placeholder:text-faint"
+            />
+            {#if error}
+              <div class="mt-5 border-l border-removed pl-4" role="alert">
+                <p class="stamp text-removed">that did not work</p>
+                <p class="mt-2 text-[13.5px] leading-relaxed text-muted">{error}</p>
+              </div>
+            {/if}
+            <div class="mt-6">
+              <Button type="submit" busy={busy}>{busy ? "Approving…" : "Approve this IDE"}</Button>
+            </div>
+          </form>
+          <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
+            Approving signs the IDE in as {session.user?.email ?? "this account"}. Wrong codes are
+            refused without saying why — a prober learns nothing from guessing.
+          </p>
+        </Plate>
+      {/if}
+
+      {#if phases.length > 0}
+        <section class="mt-6" aria-label="What your tier unlocks">
+          <Plate>
+            <p class="stamp text-[11px] text-faint">what your tier unlocks</p>
+            <ul class="mt-4 border-t border-rule">
+              {#each free as p (p.id)}
+                <li class="flex items-baseline justify-between gap-4 border-b border-rule py-3">
+                  <span class="text-[13.5px] text-ink">{p.title}</span>
+                  <span class="stamp text-added">free</span>
+                </li>
+              {/each}
+              {#each pro as p (p.id)}
+                <li class="flex items-baseline justify-between gap-4 border-b border-rule py-3">
+                  <span class="text-[13.5px] text-ink">{p.title}</span>
+                  <span class="stamp text-faint">pro</span>
+                </li>
+              {/each}
+            </ul>
+            <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
+              Free phases ship inside the IDE. Pro phases appear there once your subscription is
+              active — fetched per entitlement, never written to disk.
+            </p>
+          </Plate>
+        </section>
+      {:else if manifestNote}
+        <p class="mt-6 text-[12.5px] leading-relaxed text-faint">{manifestNote}</p>
+      {/if}
+    </div>
+  </div>
 </div>

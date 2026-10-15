@@ -3,6 +3,7 @@
 
 export class FixedWindow {
   private hits = new Map<string, { count: number; reset: number }>();
+  private lastSweep = 0;
 
   constructor(
     readonly windowMs: number,
@@ -28,8 +29,13 @@ export class FixedWindow {
   }
 
   private sweep(now: number) {
-    // Amortized cleanup: only when the map grows unboundedly.
-    if (this.hits.size < 10_000) return;
+    // Time-based rather than "only when the map grows large": an expired entry
+    // costs memory until it is dropped, and the old size threshold meant a map
+    // of up to 9 999 dead keys was never cleaned at all. Sweeping no more often
+    // than once per window keeps the map proportional to live traffic and keeps
+    // the cost amortised.
+    if (this.hits.size < 10_000 && now - this.lastSweep < this.windowMs) return;
+    this.lastSweep = now;
     for (const [k, v] of this.hits) {
       if (v.reset <= now) this.hits.delete(k);
     }

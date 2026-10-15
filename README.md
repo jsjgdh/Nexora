@@ -71,6 +71,19 @@ npm run verify:e2e        # drives the real HTTP surface end to end
 `PUBLIC_API_URL` must be reachable **from the browser**, not from inside the container. Point the
 learner app at the gateway (`http://127.0.0.1:8080`) to switch it from local mode to cloud mode.
 
+Once it is up, one command asks whether it is actually well, and says why not:
+
+```bash
+cd platform && npm run healthcheck                                    # http://127.0.0.1:8080
+cd platform && npm run healthcheck -- --url=http://gateway:8080 --quiet   # for cron
+```
+
+Exit `0` healthy; `1` the edge answered and said something is wrong — a mesh member's check failing,
+or the auth service not answering the per-request revocation check (requests still succeed then,
+on a bounded stale answer, which is exactly why this needs watching); `2` the check could not ask at
+all. Failures print the reason to stderr, so `--quiet` in a crontab mails only when something is
+wrong.
+
 ## Verify before you ship
 
 Every suite in this repo is meant to be run, not admired:

@@ -120,11 +120,10 @@ class SessionStore {
    * and never when a live session is renewed.
    *
    * Surfaces that belong to one account key their work on this rather than on
-   * the token value. The sync engine is the reason it exists: it holds in-memory
-   * run receipts (credentials for one account's runs) and must restart on an
-   * account switch, but a silent rotation used to look exactly like a switch, so
-   * keying on the token would throw away a learner's un-pushed receipts every
-   * few minutes.
+   * the token value. The billing latch is the reason it exists: one plan
+   * read per account, re-armed on a sign-in or account switch — but a silent
+   * token rotation must never look like a switch, so keying on the token
+   * would re-hit billing every few minutes.
    */
   epoch = $state(0);
   /**
@@ -480,22 +479,6 @@ class SessionStore {
     }
   }
 
-  async askTutor(input: {
-    missionId: string;
-    code: string;
-    failingChecks: string[];
-    /** The learner's real compiler/runtime output, so the tutor explains the
-        error actually in front of them rather than a hypothetical one. */
-    errorOutput?: string;
-    hintLevel: number;
-  }) {
-    return this.request<{ text: string; source: string }>("/api/tutor/ask", {
-      method: "POST",
-      token: await this.resolveToken(),
-      body: input,
-    });
-  }
-
   async plans() {
     return this.request<{ plans: { slug: string; name: string }[] }>("/api/billing/plans", {
       token: await this.resolveToken(),
@@ -526,6 +509,17 @@ class SessionStore {
     return this.request<{
       subscription: { plan: string | null; status: string | null; entitled: boolean; currentPeriodEnd: string | null };
     }>("/api/billing/subscription", { token: await this.resolveToken() });
+  }
+
+  /**
+   * Verified proof, synced from the IDE: attested records the platform's own
+   * signatures verify, newest first. Rendered as-is — rows are never
+   * synthesized, cached as credentials, or mixed with local practice.
+   */
+  async myProofs() {
+    return this.request<{
+      proofs: { competencyId: string; level: string; kind: string; issuedAt: string }[];
+    }>("/api/proofs", { token: await this.resolveToken() });
   }
 }
 

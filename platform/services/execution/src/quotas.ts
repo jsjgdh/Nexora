@@ -36,6 +36,22 @@ export class Quotas {
     return Math.max(0, this.dailyQuota - used);
   }
 
+  /**
+   * Give back a daily run that was reserved but never performed.
+   *
+   * `acquire` counts the day up front so concurrent requests cannot collectively
+   * overspend the allowance. But when the runner itself then refuses the job —
+   * a saturated queue — nothing ran, so the reservation must be undone or a
+   * learner spends their allowance on our backpressure. Concurrency is given
+   * back separately by the release function `acquire` returned; this only
+   * reverses the daily count.
+   */
+  refund(userId: string): void {
+    const day = this.today();
+    const cur = this.days.get(userId);
+    if (cur && cur.day === day && cur.count > 0) cur.count -= 1;
+  }
+
   acquire(userId: string): () => void {
     const day = this.today();
     const cur = this.days.get(userId);

@@ -44,6 +44,22 @@ export function webhookSecret(): string {
   return process.env.DODO_PAYMENTS_WEBHOOK_SECRET ?? "";
 }
 
+/* Two webhook guards (defense-in-depth, both opt-in via config so a bare dev
+   boot is unaffected):
+     - expectedBusinessId: the merchant/account id we treat as ours. A valid
+       signature only proves Dodo sent the event, not that it belongs to US; on
+       a reused secret a foreign merchant's subscription.active must not land.
+     - isLiveMode: true only when pointed at the live Dodo host. There, a
+       test_mode (sandbox) payment is nonsense and must never grant entitlement
+       — the cheapest "free Pro" vector if a test delivery reaches a live consumer. */
+export function expectedBusinessId(): string {
+  return process.env.DODO_BUSINESS_ID ?? "";
+}
+
+export function isLiveMode(): boolean {
+  return dodoBase().includes("live.dodopayments.com");
+}
+
 export interface CheckoutSession {
   sessionId: string;
   checkoutUrl: string;
