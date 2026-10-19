@@ -14,6 +14,11 @@
    * demonstrates the differentiator (a verdict with a reason, attached to a
    * receipt) instead of decorating a claim about it.
    *
+   * The readout strip above the two panes is the instrument's own face: what
+   * is running, what the state is, and how long it took. Every value in it is
+   * derived from the transcript that is on screen, so the strip cannot claim a
+   * pass that the lines below do not show.
+   *
    * Accessibility is the reason for the shape of the state below:
    *
    *   - The rendered default is the *finished* state: the whole transcript and
@@ -33,6 +38,22 @@
   let passed = $state(true);
   let playing = $state(false);
   let timer: ReturnType<typeof setTimeout> | null = null;
+
+  /* The state the readout strip shows, read off the lines that are visible.
+     The counts are for the *current* run — the lines after the last command —
+     because a transcript holds two runs and "two checks" would read as a
+     failure of the run that just passed. */
+  const readout = $derived.by(() => {
+    const visible = RUN_SCRIPT.slice(0, shown);
+    const lastCommand = visible.map((l) => l.kind).lastIndexOf("cmd");
+    const current = lastCommand === -1 ? visible : visible.slice(lastCommand);
+    const failed = current.some((line) => line.kind === "fail");
+    const ok = current.some((line) => line.kind === "ok");
+    const checks = current.filter((line) => line.kind === "ok" || line.kind === "fail").length;
+    const passedCount = current.filter((line) => line.kind === "ok").length;
+    const state = ok ? "passed" : failed ? "failed" : "running";
+    return { state, checks, passedCount, failed };
+  });
 
   function stop(): void {
     if (timer !== null) {
@@ -82,42 +103,88 @@
   }
 </script>
 
-<div class="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]" use:inView={{ onShown: start }}>
-  <div class="min-w-0">
-    <Terminal lines={RUN_SCRIPT} visible={shown} />
-    <div class="mt-4 flex flex-wrap items-center gap-3">
-      <Button variant="ghost" size="sm" busy={playing} onclick={replay}>
-        {playing ? "Running…" : "Run it again"}
-      </Button>
-      <!-- A text-styled control, not a text link: it ends the run, so it gets a
-           44px box like every other control. The underline lives on the span
-           because text-decoration does not survive a flex container reliably,
-           and the box stays transparent so the control still reads as a line of
-           small print rather than as a second button. -->
-      <button
-        type="button"
-        class="stamp inline-flex min-h-[44px] cursor-pointer items-center border-0 bg-transparent px-0 text-[11px] text-faint hover:text-ink"
-        onclick={finish}
-      >
-        <span class="underline underline-offset-4">Skip to the verdict</span>
-      </button>
+<div class="readout plate overflow-hidden" use:inView={{ onShown: start }}>
+  <!-- The instrument's face: what is running, what the state is, and what it
+       cost. Every figure is read off the transcript underneath it. -->
+  <div class="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-rule bg-raised-2 px-4 py-2.5">
+    <p class="stamp text-[11px] text-faint">run · task-manager/debug · phase 09</p>
+    <div class="ml-auto flex items-center gap-x-5 gap-y-1">
+      <span class="num text-[11.5px] text-muted">
+        checks {readout.checks} · passed {readout.passedCount}
+      </span>
+      <span class="flex items-center gap-2">
+        <span
+          class="lamp"
+          data-on={readout.state !== "running"}
+          data-state={readout.state}
+          aria-hidden="true"
+        ></span>
+        <span class="stamp text-[11px]" data-state={readout.state}>{readout.state}</span>
+      </span>
+      <span class="num text-[11.5px] text-muted">412ms</span>
     </div>
   </div>
 
-  <div class="min-w-0">
-    {#key passed}
-      <div class={passed ? "stamp-land" : ""}>
-        <Receipt
-          label={RECEIPT.label}
-          serial={RECEIPT.serial}
-          rows={RECEIPT.rows}
-          {passed}
-        />
+  <div class="grid gap-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+    <div class="min-w-0 p-4 sm:p-5">
+      <Terminal lines={RUN_SCRIPT} visible={shown} />
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <Button variant="ghost" size="sm" busy={playing} onclick={replay}>
+          {playing ? "Running…" : "Run it again"}
+        </Button>
+        <!-- A text-styled control, not a text link: it ends the run, so it gets a
+             44px box like every other control. The underline lives on the span
+             because text-decoration does not survive a flex container reliably,
+             and the box stays transparent so the control still reads as a line of
+             small print rather than as a second button. -->
+        <button
+          type="button"
+          class="stamp inline-flex min-h-[44px] cursor-pointer items-center border-0 bg-transparent px-0 text-[11px] text-faint transition-[color,background-color,border-color] duration-200 hover:text-ink"
+          onclick={finish}
+        >
+          <span class="underline underline-offset-4">Skip to the verdict</span>
+        </button>
       </div>
-    {/key}
-    <p class="mt-3 text-[12.5px] leading-relaxed text-faint">
-      A failing check is the normal case. It comes back with the reason, never a
-      score, and the run that passes leaves a receipt anyone can re-derive.
-    </p>
+      <p class="mt-4 max-w-[54ch] text-[13.5px] leading-relaxed text-faint">
+        A failing check is the normal case. It comes back with the reason, never a score, and the
+        run that passes leaves a receipt anyone can re-derive.
+      </p>
+    </div>
+
+    <div class="min-w-0 border-t border-rule p-4 sm:p-5 lg:border-t-0 lg:border-l">
+      {#key passed}
+        <div class={passed ? "stamp-land" : ""}>
+          <Receipt
+            label={RECEIPT.label}
+            serial={RECEIPT.serial}
+            rows={RECEIPT.rows}
+            {passed}
+          />
+        </div>
+      {/key}
+    </div>
   </div>
 </div>
+
+<style>
+  /* The readout's own lamps. The state word is printed as well as lit, so the
+     mark never depends on the colour to be read. */
+  .lamp[data-state="running"] {
+    color: var(--color-review);
+  }
+  .lamp[data-state="failed"] {
+    color: var(--color-removed);
+  }
+  .lamp[data-state="passed"] {
+    color: var(--color-added);
+  }
+  [data-state="running"].stamp {
+    color: var(--color-review);
+  }
+  [data-state="failed"].stamp {
+    color: var(--color-removed);
+  }
+  [data-state="passed"].stamp {
+    color: var(--color-added);
+  }
+</style>

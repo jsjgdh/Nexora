@@ -50,6 +50,11 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: axe accessibility scan
         run: npm run verify:a11y
+      # The UX sweep asks the question the other two do not: does the site read,
+      # reflow and respond to the keyboard, on the production build. It reuses
+      # the browser installed above.
+      - name: UX sweep
+        run: npm run verify:ux
 
   platform:
     name: service mesh — build + tests
@@ -74,11 +79,28 @@ jobs:
       - run: npm run build
       - name: suite
         run: npm run verify
-      # Vendored curriculum snapshots must match the frontend source exactly.
-      - name: curriculum snapshots in sync
+      # Vendored IDE content must equal what the generators emit. The generators
+      # read nexora-ide, a sibling checkout that exists on a contributor's machine
+      # and is not part of this repo, so the gate is conditional instead of a
+      # command that throws on a clean runner. With the sibling: regenerate, then
+      # refuse an uncommitted diff over BOTH data dirs the generators write —
+      # curriculum's snapshot (sync:curriculum) and execution's design registry
+      # and attestation fixtures (sync:design, sync:fixtures), which no earlier
+      # step looked at. The retired `services/*/src/vendor` path is gone from the
+      # diff because no vendor directory exists anymore; verify.mjs pins that.
+      # Without the sibling, `npm run verify` above already re-derived the
+      # committed snapshot's content hash from its own bytes and printed that the
+      # source match could not be checked — this says the same thing out loud
+      # rather than pretending to gate it.
+      - name: vendored IDE content in sync
         run: |
-          npm run sync:curriculum
-          git diff --exit-code -- services/*/src/vendor services/curriculum/src/data
+          if [ -d ../../nexora-ide ]; then
+            npm run sync
+            git diff --exit-code -- services/curriculum/src/data services/execution/src/data
+          else
+            echo "::notice::no nexora-ide sibling on this runner, so the generators cannot re-derive the vendored bytes here"
+            echo "checkout nexora-ide beside branchcraft to gate them; npm run verify already refused a snapshot that does not hash to its own stamp"
+          fi
 
   # Boots the whole mesh (Postgres + seven services + the app) and drives the
   # real HTTP surface. Too slow for every push; runs nightly and on demand.

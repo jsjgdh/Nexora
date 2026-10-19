@@ -18,7 +18,7 @@
   );
   const body = $derived(
     isMissing
-      ? "Nothing here was deleted — the address simply does not match a page on this site. The download is the fastest way back to the work."
+      ? "Nothing here was deleted. The address simply does not match a page on this site. The download is the fastest way back to the work."
       : "Reload once; if it happens again, the download still works and the IDE on your machine is unaffected."
   );
   const detail = $derived(
@@ -47,11 +47,11 @@
 
   {#if detail}
     <pre
-      class="nice-scroll mt-8 max-w-[80ch] overflow-x-auto border border-rule bg-panel p-4 font-mono text-[12px] leading-relaxed text-faint">{detail}</pre>
+      class="mt-8 max-w-[80ch] border border-rule bg-panel p-4 font-mono text-[12px] leading-relaxed text-faint [overflow-wrap:anywhere] whitespace-pre-wrap">{detail}</pre>
   {/if}
 
   <div class="mt-10 flex flex-wrap items-center gap-3">
-    <ActionLink href="/download" island>Get the IDE</ActionLink>
+    <ActionLink href="/download" island>Download the IDE</ActionLink>
     <ActionLink href="/" variant="ghost">Back to the front</ActionLink>
   </div>
 </div>

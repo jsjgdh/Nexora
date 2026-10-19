@@ -1,39 +1,99 @@
 <script lang="ts">
-  import { FOOTER_LINKS, BRAND } from "$lib/content/site";
+  import { FOOTER_LINKS, BRAND, MASTHEAD } from "$lib/content/site";
+  import { LEGAL_LINKS } from "$lib/legal";
   import { inView } from "$lib/motion";
 
-  /* The close.
+  /* The title block.
    *
-   * The last thing on the page is the product's whole claim at poster scale,
-   * because a front door that ends on a legal line has wasted its most-read
-   * position. Under it, one row of real links and nothing else: no newsletter
-   * the product cannot send, no social account that does not exist, no
-   * "made with" badge. */
+   * A drawing ends with a title block: a ruled set of cells, each one holding
+   * one fact about the thing on the sheet — what it is, what it is called,
+   * which revision, what it is not. A site that is arguing for evidence
+   * should end the way a drawing ends, and it should hold the same discipline:
+   * four cells, one job each, and nothing in them that is not true.
+   *
+   * The block is ruled by the cells themselves: the container carries the top
+   * and left rules, every cell carries a bottom and a right one, and there is
+   * no gap — so the grid reads as one table at one, two or four columns
+   * without the borders ever doubling up.
+   *
+   * There is no newsletter the product cannot send, no social account that
+   * does not exist, and no "made with" badge. The legal row is a cell of the
+   * block rather than a line beneath it, because those documents have to be
+   * reachable from every page — a policy you cannot find is the same as no
+   * policy — and a title block is exactly where a drawing keeps its
+   * revisions. The list comes from `$lib/legal`, so the footer and the
+   * sitemap cannot disagree about which documents exist. */
 
   let year = new Date().getFullYear();
 </script>
 
 <footer class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
-    <p class="display max-w-[24ch] text-[clamp(1.75rem,5.2vw,4rem)] text-ink" use:inView>
-      <span class="line-mask" data-shown="false"><span>Not finished.</span></span>
-      <span class="line-mask" data-shown="false"><span>Proven.</span></span>
-    </p>
+  <div class="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
+    <!-- The measurement scale: the tick rule the block sits on. It is drawn
+         from a gradient, so it costs no request and no image. -->
+    <div class="scale" aria-hidden="true"></div>
 
-    <div class="mt-14 flex flex-wrap items-center gap-x-6 gap-y-1 border-t border-rule pt-4">
-      <span class="stamp text-[12px] font-semibold tracking-[0.14em] text-ink">{BRAND}</span>
-      {#each FOOTER_LINKS as link (link.href)}
-        <!-- 44px tall like every other control here, and taller than the line of
-             type it prints: a row of 20px link text is a row of targets a thumb
-             misses, and the footer is where a phone reaches last. -->
-        <a
-          href={link.href}
-          class="inline-flex min-h-[44px] items-center text-[12.5px] text-faint transition-[color,background-color,border-color] duration-200 hover:text-accent"
-        >
-          {link.label}
-        </a>
-      {/each}
-      <span class="num ml-auto text-[11.5px] text-faint">© {year}</span>
+    <div
+      class="fade-up grid border-t border-l border-rule bg-panel sm:grid-cols-2 lg:grid-cols-4"
+      use:inView
+    >
+      <div class="border-r border-b border-rule p-6">
+        <p class="display text-[clamp(1.5rem,3.2vw,2.1rem)] text-ink">{BRAND}</p>
+        <p class="mt-3 max-w-[26ch] text-[13px] leading-relaxed text-muted">
+          {MASTHEAD.descriptor}.
+        </p>
+        <p class="stamp mt-5 text-[11px] text-faint">signed receipts, not badges</p>
+      </div>
+
+      <div class="border-r border-b border-rule p-6">
+        <p class="stamp text-[11px] text-faint">the product</p>
+        <ul class="mt-3">
+          {#each FOOTER_LINKS as link (link.href)}
+            <!-- 44px tall like every other control here, and taller than the
+                 line of type it prints: a row of 20px link text is a row of
+                 targets a thumb misses, and the footer is where a phone reaches
+                 last. -->
+            <li>
+              <a
+                href={link.href}
+                class="inline-flex min-h-[44px] items-center text-[13.5px] text-muted transition-[color,background-color,border-color] duration-200 hover:text-accent"
+              >
+                {link.label}
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </div>
+
+      <div class="border-r border-b border-rule p-6">
+        <p class="stamp text-[11px] text-faint">the documents</p>
+        <ul class="mt-3">
+          {#each LEGAL_LINKS as link (link.href)}
+            <li>
+              <a
+                href={link.href}
+                class="inline-flex min-h-[44px] items-center text-[13.5px] text-muted transition-[color,background-color,border-color] duration-200 hover:text-accent"
+              >
+                {link.label}
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </div>
+
+      <div class="border-r border-b border-rule p-6">
+        <p class="stamp text-[11px] text-faint">the record</p>
+        <p class="reading mt-3 max-w-[32ch] text-[15px] leading-relaxed text-muted">
+          Every finished phase leaves a receipt anyone can re-derive, at
+          <a
+            href="/verify"
+            class="text-ink underline decoration-rule-strong underline-offset-4 transition-[color,background-color,border-color] duration-200 hover:text-accent"
+          >
+            /verify
+          </a>, with no account.
+        </p>
+        <p class="num mt-5 text-[11.5px] text-faint">© {year}</p>
+      </div>
     </div>
   </div>
 </footer>

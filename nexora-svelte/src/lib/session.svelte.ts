@@ -346,8 +346,129 @@ class SessionStore {
     this.persist(start.accessToken, start.user);
   }
 
-  async register(email: string, password: string, name: string) {
-    await this.startSession(REGISTER_PATH, { email, password, name: name || undefined });
+  /**
+   * Create an account, carrying the notice the learner was shown.
+   *
+   * The declarations are not decoration: a production deployment refuses to
+   * create an account without them (see the auth service's consentRequired), and
+   * the *versions* travel with the request so the record the platform keeps says
+   * which wording was on screen rather than which wording happened to be current
+   * when the row was written. A mismatch is a 409 with nothing created, and the
+   * page turns that into "reload and read them again".
+   */
+  async register(
+    email: string,
+    password: string,
+    name: string,
+    declarations: {
+      acceptTerms: boolean;
+      acceptPrivacy: boolean;
+      ageAffirmed: boolean;
+      documentVersions: { terms: string; privacy: string };
+    }
+  ) {
+    await this.startSession(REGISTER_PATH, {
+      email,
+      password,
+      name: name || undefined,
+      ...declarations,
+    });
+  }
+
+  /* ---- the rights surface (see company/legal/COMPLIANCE-MATRIX.md) ----
+   *
+   * Four calls, and every one of them is a right with a deadline attached rather
+   * than a support request: export (access and portability), deletion (erasure),
+   * consent records (Art. 7(1) proof, shown back to the person who gave them) and
+   * the request ledger for everything that needs a human answer.
+   *
+   * They go straight to the gateway rather than through the broker routes under
+   * /auth/session: that broker exists to keep a refresh token out of the page's
+   * reach, and these calls need only the short-lived access token already in
+   * memory.
+   */
+
+  /** This half of the export. Billing answers for its own half; the account page
+   * merges the two so the file a learner downloads is the whole record, with each
+   * half labelled by the service that produced it. */
+  async exportAuth() {
+    return this.request<Record<string, unknown>>("/api/auth/account/export", {
+      token: await this.resolveToken(),
+    });
+  }
+
+  async exportBilling() {
+    return this.request<{ export: Record<string, unknown> }>("/api/billing/export", {
+      token: await this.resolveToken(),
+    });
+  }
+
+  /**
+   * Erase the account. The word is required by the server as well as here: this
+   * is the one action a learner cannot undo, so it is confirmed by typing rather
+   * than by a checkbox a stray click could reach.
+   */
+  async deleteAccount(reason?: string) {
+    return this.request<{
+      deleted: Record<string, number>;
+      retained: { category: string; reason: string; basis: string }[];
+      processorsQueued: string[];
+      receiptId: string;
+    }>("/api/auth/account/delete", {
+      method: "POST",
+      token: await this.resolveToken(),
+      body: { confirm: "DELETE", reason: reason || undefined },
+    });
+  }
+
+  /** What this account is currently bound to, with versions and bases. */
+  async myConsents() {
+    return this.request<{
+      consents: {
+        document: string;
+        version: string;
+        purpose: string;
+        basis: string;
+        acceptedAt: string;
+        withdrawnAt: string | null;
+      }[];
+      currentVersions: { terms: string; privacy: string };
+    }>("/api/auth/consents", { token: await this.resolveToken() });
+  }
+
+  async withdrawConsent(document: string) {
+    return this.request<{ withdrawn: boolean; document: string; effect: string | null }>(
+      "/api/auth/consents/withdraw",
+      { method: "POST", token: await this.resolveToken(), body: { document } }
+    );
+  }
+
+  async fileRightsRequest(kind: string, detail: string, nominee?: string) {
+    return this.request<{
+      request: { id: string; kind: string; status: string; dueAt: string };
+      responseDays: number;
+      immediate: string | null;
+    }>("/api/auth/rights", {
+      method: "POST",
+      token: await this.resolveToken(),
+      body: nominee ? { kind, detail, nominee } : { kind, detail },
+    });
+  }
+
+  async myRightsRequests() {
+    return this.request<{
+      requests: {
+        id: string;
+        kind: string;
+        status: string;
+        detail: string;
+        createdAt: string;
+        dueAt: string;
+        resolvedAt: string | null;
+        resolution: string | null;
+      }[];
+      responseDays: number;
+    }>("/api/auth/rights", { token: await this.resolveToken() });
   }
 
   async login(email: string, password: string) {
@@ -435,7 +556,7 @@ class SessionStore {
     const token = this.token;
     if (!apiConfigured || !token) {
       this.persist(null, null);
-      throw new Error("Sign in first — this ends sessions on every device.");
+      throw new Error("Sign in first. This ends sessions on every device.");
     }
     this.persist(null, null);
     let res: Response;

@@ -14,10 +14,13 @@
  * The transition names its properties instead of using `transition-colors`,
  * which also covers `outline-color` — and a focus ring that fades in is a ring
  * that is not there yet. Measured on the primary variant: the ring began at the
- * element's own text colour (the newsprint ground on an accent fill, which is
+ * element's own text colour (the room's ground on an accent fill, which is
  * invisible) and only reached the accent after 200ms, so a keyboard user got no
  * indicator for the first sixth of a second. Focus is instant; only the hover
- * colours move. */
+ * colours move.
+ *
+ * The press is real too: an action sinks by one pixel while it is held down,
+ * so a click has a physical answer rather than only a colour change. */
 
 export type ActionVariant = "primary" | "ghost" | "quiet" | "danger";
 export type ActionSize = "sm" | "md";
@@ -25,7 +28,8 @@ export type ActionSize = "sm" | "md";
 export function actionClass(variant: ActionVariant = "primary", size: ActionSize = "md"): string {
   const base =
     "inline-flex items-center justify-center gap-3 border font-semibold whitespace-nowrap " +
-    "transition-[color,background-color,border-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] disabled:cursor-not-allowed disabled:opacity-50";
+    "transition-[color,background-color,border-color,transform] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] " +
+    "active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50";
   const sizing = size === "sm" ? "min-h-[44px] px-3 text-[12.5px]" : "min-h-[44px] px-5 text-[13.5px]";
   const skin =
     variant === "primary"

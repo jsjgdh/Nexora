@@ -10,12 +10,14 @@
     signOutEverywhere as signOutOfClerk,
   } from "$lib/clerk";
   import Button from "$lib/components/Button.svelte";
+  import Check from "$lib/components/Check.svelte";
   import { cn } from "$lib/format";
   import PageHead from "$lib/components/PageHead.svelte";
   import Headline from "$lib/components/Headline.svelte";
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
+  import { EFFECTIVE_DATE } from "$lib/legal";
 
   /* Two sign-in methods, one boundary. Email/password talks to the
      local-mode auth service; Clerk (when PUBLIC_CLERK_PUBLISHABLE_KEY is
@@ -29,6 +31,23 @@
   let name = $state("");
   let error = $state<string | null>(null);
   let busy = $state(false);
+
+  /* The two affirmations registration carries.
+   *
+   * Not consent to process — the account rests on the contract, which is why the
+   * form does not gate on a checkbox to create one — but the record of the notice
+   * having been given, which GDPR Arts. 13–14, California's notice-at-collection
+   * and India's DPDP notice rule each require at the point of collection. The
+   * platform refuses the account without them in a production deployment, so this
+   * is the submission rather than a client-side nicety, and the *version* travels
+   * with it so the record says which wording was on screen.
+   *
+   * The age line is deliberately blunt about the threshold. GDPR Art. 8 makes
+   * under-16s a special case, COPPA covers under-13s, and India's DPDP sets the
+   * line at 18; the strictest that can be honoured by a self-serve signup, without
+   * collecting a child's data to verify it, is to ask and to refuse. */
+  let agree = $state(false);
+  let age = $state(false);
 
   /** Account-wide sign-out: armed by one click, performed by the next. */
   let confirmEverywhere = $state(false);
@@ -72,9 +91,20 @@
     if (busy) return;
     busy = true;
     error = null;
+    if (mode === "register" && (!agree || !age)) {
+      error =
+        "Both boxes are required to create an account: the terms and privacy notice, and the age statement.";
+      return;
+    }
     try {
       if (mode === "login") await session.login(email.trim(), password);
-      else await session.register(email.trim(), password, name.trim());
+      else
+        await session.register(email.trim(), password, name.trim(), {
+          acceptTerms: agree,
+          acceptPrivacy: agree,
+          ageAffirmed: age,
+          documentVersions: { terms: EFFECTIVE_DATE, privacy: EFFECTIVE_DATE },
+        });
       goto("/profile");
     } catch (err) {
       error = err instanceof Error ? err.message : "Something went wrong.";
@@ -128,7 +158,7 @@
 
 <PageHead
   title={pageTitle("Account")}
-  description="Sign in to unlock IDE courses per your tier, or keep the bundled base course locally — it works without an account."
+  description="Sign in to unlock IDE courses per your tier, or keep the bundled base course locally. It works without an account."
   path="/auth"
 />
 
@@ -145,7 +175,7 @@
       />
       <p class="mt-6 max-w-[44ch] text-[14.5px] leading-relaxed text-muted">
         An account unlocks IDE courses per your tier. The base course bundled in the IDE works
-        without one — and it stays that way.
+        without one, and it stays that way.
       </p>
 
       <div class="mt-10 border-t border-rule pt-6">
@@ -153,7 +183,7 @@
         <p class="mt-3 max-w-[46ch] text-[13.5px] leading-relaxed text-muted">
           In the IDE, choose sign-in: it shows a short code and opens this site. Approve the code at
           <a href="/auth/ide" class="text-accent underline underline-offset-4">IDE sign-in</a>
-          and the IDE signs itself in — your password is typed here and nowhere else.
+          and the IDE signs itself in. Your password is typed here and nowhere else.
         </p>
       </div>
 
@@ -161,7 +191,7 @@
         <p class="stamp text-[11px] text-faint">what we never ask for</p>
         <p class="mt-3 max-w-[46ch] text-[13.5px] leading-relaxed text-muted">
           Not your GitHub password, not a wallet, not a phone number. An email and a password, or
-          the provider's own sign-in — nothing this product cannot justify needing.
+          the provider's own sign-in, which is nothing this product cannot justify needing.
         </p>
       </div>
     </div>
@@ -202,7 +232,7 @@
             the IDE works without one.
           </p>
           <div class="mt-5">
-            <ActionLink href="/download" variant="ghost" size="sm" island>Get the IDE</ActionLink>
+            <ActionLink href="/download" variant="ghost" size="sm" island>Download the IDE</ActionLink>
           </div>
         </Plate>
       {:else if session.loggedIn && session.user}
@@ -228,10 +258,10 @@
           <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
             {#if clerkConfigured}
               Sessions on this account are managed by Clerk, so ending them on every device is done
-              from its dashboard — signing out here ends this device.
+              from its dashboard. Signing out here ends this device.
             {:else}
-              “Sign out everywhere” ends every session on this account — every tab and every device,
-              including this one — for a device you no longer hold or trust.
+              “Sign out everywhere” ends every session on this account, every tab and every device,
+              including this one, for a device you no longer hold or trust.
             {/if}
           </p>
         </Plate>
@@ -267,7 +297,7 @@
             <div class="mt-5 border-l border-review pl-4" role="alert">
               <p class="stamp text-review">sign-in is unreachable</p>
               <p class="mt-2 text-[13.5px] leading-relaxed text-muted">
-                The sign-in service did not answer. Nothing here depends on it — try again, or keep
+                The sign-in service did not answer. Nothing here depends on it. Try again, or keep
                 learning in the IDE without an account.
               </p>
             </div>
@@ -326,7 +356,7 @@
             </div>
             <div class="mt-5">
               <label for="auth-password" class="stamp block text-faint">
-                password{mode === "register" ? " — 10 characters or more" : ""}
+                password{mode === "register" ? ": 10 characters or more" : ""}
               </label>
               <input
                 id="auth-password"
@@ -338,6 +368,21 @@
                 class="mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[14px] text-ink placeholder:text-faint"
               />
             </div>
+            {#if mode === "register"}
+              <div class="mt-6 space-y-3 border-t border-rule pt-5">
+                <Check id="auth-agree" bind:checked={agree}>
+                  I have read the <a
+                    href="/terms"
+                    class="text-accent underline underline-offset-4">terms</a
+                  >, and the <a href="/privacy" class="text-accent underline underline-offset-4"
+                    >privacy notice</a
+                  >, and I accept them. Which version I read is recorded with this account.
+                </Check>
+                <Check id="auth-age" bind:checked={age}>
+                  I am 16 or older, or I have a parent's or guardian's permission to use this.
+                </Check>
+              </div>
+            {/if}
             {#if error}
               <div class="mt-5 border-l border-removed pl-4" role="alert">
                 <p class="stamp text-removed">that did not work</p>

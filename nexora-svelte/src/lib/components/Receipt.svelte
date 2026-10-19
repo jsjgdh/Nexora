@@ -2,9 +2,9 @@
   /* The receipt: the product's own output, printed.
    *
    * This is the only object in the build allowed to use the paper surface at
-   * full strength. Everything else is charcoal and hairline, so the eye has
-   * exactly one place to land — which is the whole argument of the design: the
-   * thing worth looking at is the thing that proves the work.
+   * full strength. Everything else is the dark room and a hairline, so the eye
+   * has exactly one place to land — which is the whole argument of the design:
+   * the thing worth looking at is the thing that proves the work.
    *
    * Two details are load-bearing rather than decorative. The label says this is
    * an example and not a credential, because a real-looking receipt a visitor
@@ -48,7 +48,7 @@
 
   <div class="flex items-center justify-between gap-3">
     <p class="stamp text-[10.5px] paper-faint">
-      {passed ? "signed · ed25519 · re-derivable at /verify" : "no verdict yet — the check has not run"}
+      {passed ? "signed · ed25519 · re-derivable at /verify" : "no verdict yet, the check has not run"}
     </p>
     <span class="verdict" data-passed={passed}>
       {passed ? "OK" : "NOT OK"}
@@ -59,9 +59,9 @@
 </div>
 
 <style>
-  /* The paper's own inks. `accent` is unreadable on a light surface, so the
-     verdict uses the two inks that belong to paper: the green that passes it
-     and the red pen that marks it. */
+  /* The paper's own inks. The amber lamp is unreadable on a light surface, so
+     the verdict uses the two inks that belong to paper: the green that passes
+     it and the red pen that marks it. */
   .paper-ink {
     color: var(--color-paper-ink);
   }

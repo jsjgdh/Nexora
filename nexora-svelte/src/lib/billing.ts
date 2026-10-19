@@ -17,7 +17,7 @@ export function portalReturnUrl(origin: string): string {
 /** Start a Dodo hosted checkout for a plan slug. Returns where to send the learner. */
 export async function startCheckout(plan: string): Promise<string> {
   const user = session.user;
-  if (!user) throw new Error("Sign in first — checkout needs an account to attach the subscription to.");
+  if (!user) throw new Error("Sign in first. Checkout needs an account to attach the subscription to.");
   const r = await session.checkout({
     plan,
     email: user.email,
@@ -36,7 +36,7 @@ export async function startCheckout(plan: string): Promise<string> {
  */
 export async function openBillingPortal(): Promise<string> {
   const user = session.user;
-  if (!user) throw new Error("Sign in first — the billing portal belongs to your account.");
+  if (!user) throw new Error("Sign in first. The billing portal belongs to your account.");
   const r = await session.portal({ returnUrl: portalReturnUrl(window.location.origin) });
   return r.portalUrl;
 }

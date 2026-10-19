@@ -13,19 +13,32 @@
    * One course is open at a time and the first one starts open, so the section
    * is never a wall of closed drawers. The trigger is a real button with
    * `aria-expanded` and `aria-controls`; the closed panel is `inert`, so a
-   * keyboard cannot tab into a drawer the eye cannot see. */
+   * keyboard cannot tab into a drawer the eye cannot see.
+   *
+   * `focus` is how the field above opens a course: it names the course, and
+   * the drawer opens. It is the same state the button sets, so there is one
+   * truth about which drawer is open. */
+
+  let { focus }: { focus?: string | null } = $props();
 
   let openSlug = $state<string | null>(COURSES[0]?.slug ?? null);
+
+  /* A course named from outside opens itself. The effect is keyed on the
+     name, so the same course named twice does not re-open a drawer the
+     reader has since closed. */
+  $effect(() => {
+    if (focus) openSlug = focus;
+  });
 
   function toggle(slug: string): void {
     openSlug = openSlug === slug ? null : slug;
   }
 </script>
 
-<div class="border-t border-ink">
+<div class="border-t border-rule-strong">
   {#each COURSES as course (course.slug)}
     {@const isOpen = openSlug === course.slug}
-    <div class="border-b border-ink">
+    <div class="border-b border-rule-strong">
       <h3 class="m-0">
         <button
           type="button"
@@ -35,7 +48,7 @@
           onclick={() => toggle(course.slug)}
           class="group flex w-full cursor-pointer items-center gap-5 bg-transparent px-0 py-6 text-left sm:py-8"
         >
-          <span class="display min-w-0 flex-1 text-[clamp(2rem,5.4vw,4.4rem)] text-ink">
+          <span class="display min-w-0 flex-1 text-[clamp(1.75rem,4.6vw,3.6rem)] text-ink">
             {course.title}
           </span>
           <span class="hidden shrink-0 text-right sm:block">
@@ -97,13 +110,16 @@
     overflow: hidden;
   }
 
-  /* A drawn plus/minus, in the same one-pixel ink as every other rule. */
+  /* A drawn plus/minus, in the same one-pixel rule as every other rule, with
+     the lamp amber when the drawer is open. */
   .plus {
     position: relative;
     width: 34px;
     height: 34px;
-    border: 1px solid var(--color-ink);
-    transition: background 200ms var(--ease-out);
+    border: 1px solid var(--color-rule-strong);
+    transition:
+      background 200ms var(--ease-out),
+      border-color 200ms var(--ease-out);
   }
   .plus::before,
   .plus::after {
@@ -123,11 +139,12 @@
     transform: translate(-50%, -50%) rotate(90deg);
   }
   .plus[data-open="true"] {
-    background: var(--color-ink);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
   }
   .plus[data-open="true"]::before,
   .plus[data-open="true"]::after {
-    background: var(--color-paper-2);
+    background: var(--color-ground);
   }
   .plus[data-open="true"]::after {
     transform: translate(-50%, -50%) rotate(0deg);

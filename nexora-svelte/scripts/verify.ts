@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { sitemapPaths } from "../src/lib/seo";
 import * as COPY from "../src/lib/content/site";
+import * as LEGAL from "../src/lib/legal";
 import { isExpiring, parseSessionStart, refreshDelayMs, tokenExpiryMs } from "../src/lib/session-core";
 
 let passed = 0;
@@ -27,6 +28,39 @@ function ok(name: string, cond: boolean, detail?: string) {
 }
 
 const srcUrl = (rel: string): URL => new URL(`../src/${rel}`, import.meta.url);
+
+/**
+ * A count in English, for a headline that has to say it in words.
+ *
+ * The gate used to carry a table of the counts it had ever seen, which meant
+ * it only knew how to check the curriculum sizes that had already happened.
+ * A course line landed and the table had no entry for it, so the headline
+ * check went quiet at exactly the moment it was needed. This derives the word
+ * instead, so any count can be checked.
+ */
+function numberWords(n: number): string | null {
+  if (!Number.isInteger(n) || n < 0 || n > 999) return null;
+  const ones = [
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+    "seventeen", "eighteen", "nineteen",
+  ];
+  const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  if (n < 20) return ones[n]!;
+  if (n < 100) {
+    const rest = n % 10;
+    return rest === 0 ? tens[Math.floor(n / 10)]! : `${tens[Math.floor(n / 10)]}-${ones[rest]}`;
+  }
+  const hundreds = ["one hundred", "two hundred", "three hundred", "four hundred", "five hundred",
+    "six hundred", "seven hundred", "eight hundred", "nine hundred"];
+  if (n < 1000) {
+    const rest = n % 100;
+    return rest === 0
+      ? hundreds[Math.floor(n / 100)]!
+      : `${hundreds[Math.floor(n / 100)]}, ${numberWords(rest)}`;
+  }
+  return null;
+}
 const srcFiles: string[] = [];
 {
   const walkSrc = (dir: string): void => {
@@ -88,9 +122,27 @@ console.log("== the front door describes the real product ==");
     "projects",
     "roadmap",
     "lab",
-    "api",
   ]) {
     ok(`no classroom route remains at /${gone}`, !existsSync(join(routesDir, gone)));
+  }
+
+  // `/api` is the one entry on that list that may exist, because it holds a
+  // server endpoint rather than a way to learn: the mail handler behind the
+  // rights requests. What the ban is actually about is a page a visitor could
+  // be taught in, so it is asserted on the page files under the directory —
+//  a server route teaches nobody, and a page added beneath it would fail here
+  // before it could be linked.
+  {
+    const apiDir = join(routesDir, "api");
+    const apiPages = existsSync(apiDir)
+      ? readdirSync(apiDir, { recursive: true, withFileTypes: true }).filter(
+          (e) => e.isFile() && e.name === "+page.svelte"
+        )
+      : [];
+    ok(
+      "the API route serves no page, so it is not a second way to learn",
+      apiPages.length === 0
+    );
   }
 
   // The content lib is gone with them: no route may import the mission model,
@@ -114,18 +166,267 @@ console.log("== the front door describes the real product ==");
     ok(`no route references ${banned}`, offenders.length === 0);
   }
 
-  // The crawler contract matches the emitted surface exactly: the six public
-  // pages, no mission URLs, no classroom entries.
+  // The crawler contract matches the emitted surface exactly: the front door
+  // plus the legal documents, no mission URLs, no classroom entries.
   const paths = sitemapPaths();
   ok(
-    "the sitemap is exactly the six public pages",
+    "the sitemap is exactly the public pages and the legal documents",
     JSON.stringify([...paths].sort()) ===
-      JSON.stringify(["/", "/auth", "/auth/ide", "/download", "/pricing", "/verify"].sort())
+      JSON.stringify(
+        [
+          "/",
+          "/ai",
+          "/auth",
+          "/auth/ide",
+          "/accessibility",
+          "/cookies",
+          "/download",
+          "/employers",
+          "/pricing",
+          "/privacy",
+          "/privacy-choices",
+          "/security",
+          "/dpa",
+          "/subprocessors",
+          "/terms",
+          "/verify",
+        ].sort()
+      )
   );
   ok(
     "no sitemap entry names a mission or a classroom page",
     paths.every((p) => !p.startsWith("/mission/"))
   );
+
+  // The legal surface. The audit this answers found that the product collected
+  // identities, payments and learner code while every one of these documents was
+  // missing. Each is now a real route on disk — asserted, not assumed, because a
+  // footer link with no page behind it is worse than no link — reachable from
+  // the footer, advertised to crawlers, and driven from one list so the three
+  // cannot drift apart.
+  for (const link of LEGAL.LEGAL_LINKS) {
+    const docPath = link.href.slice(1);
+    ok(`the legal document at ${link.href} exists`, existsSync(join(routesDir, docPath, "+page.svelte")));
+    ok(`${link.href} is in the sitemap`, paths.includes(link.href));
+  }
+  {
+    const footerSrc = readFileSync(
+      new URL("../src/lib/components/Footer.svelte", import.meta.url),
+      "utf8"
+    );
+    ok(
+      "every legal document is linked from the footer, from the one list",
+      footerSrc.includes("LEGAL_LINKS") && footerSrc.includes("{link.href}")
+    );
+  }
+  {
+    // The operator-placeholder gate, asserted in both directions. A document
+    // must not print an in-force date while the party responsible for it is
+    // still unnamed, and it must not sit labelled a draft after the details are
+    // real. So the switch cannot be flipped without the facts, and the facts
+    // cannot be set without the switch. <DocStatus> is the one component that
+    // reads it, which is what keeps the six pages consistent.
+    const statusSrc = readFileSync(
+      new URL("../src/lib/components/DocStatus.svelte", import.meta.url),
+      "utf8"
+    );
+    const unnamed = [LEGAL.LEGAL_ENTITY, LEGAL.GOVERNING_LAW].some((v) =>
+      v.includes("[[")
+    );
+    ok("the legal status line is driven by the operator switch", statusSrc.includes("OPERATOR_READY"));
+    ok(
+      LEGAL.OPERATOR_READY
+        ? "the operator is named, so the documents may state their effective date"
+        : "no legal document claims to be in force while the operator is unnamed",
+      LEGAL.OPERATOR_READY ? !unnamed : unnamed
+    );
+  }
+
+  /* ------------------------------------------------------------------------
+   * The rights surface: the difference between publishing rights and having
+   * them. The audit's findings F-01/F-04/F-05/F-13 were "no notice at the point
+   * of collection", "no deletion and no export", "no lawful-basis architecture"
+   * and "no age gate" — every one of which is a mechanism rather than a
+   * sentence. Each assertion below pins a mechanism to the place a user meets
+   * it, so a future redesign cannot keep the paragraph and drop the control.
+   * ---------------------------------------------------------------------- */
+
+  {
+    // 1. The notice travels with the registration, and the age affirmation is
+    //    part of it. Sent from the page that creates accounts, because the duty
+    //    is at the point of collection — a notice three clicks away is not one.
+    const authPage = readFileSync(new URL("../src/routes/auth/+page.svelte", import.meta.url), "utf8");
+    ok(
+      "sign-up carries the notice: acceptance, age affirmation and the document versions",
+      authPage.includes("acceptTerms") &&
+        authPage.includes("acceptPrivacy") &&
+        authPage.includes("ageAffirmed") &&
+        authPage.includes("documentVersions") &&
+        authPage.includes("EFFECTIVE_DATE")
+    );
+    ok(
+      "both affirmations are required before the account request is sent",
+      authPage.includes("if (mode === \"register\" && (!agree || !age))") &&
+        authPage.includes("Both boxes are required")
+    );
+    ok(
+      "the age statement is stated in words, not implied by a checkbox label",
+      authPage.includes("16 or older") && authPage.includes("guardian")
+    );
+
+    // 2. The version the page sends must be the version the platform serves.
+    //    These are two files in two trees that cannot import each other, and a
+    //    drift between them makes every registration fail with a 409 — so the
+    //    failure has to land here, in a suite, rather than on a sign-up form.
+    const contractsPath = new URL("../../platform/packages/contracts/src/index.ts", import.meta.url);
+    if (existsSync(contractsPath)) {
+      const contractsSrc = readFileSync(contractsPath, "utf8");
+      ok(
+        "the front door and the platform agree on the document version they serve",
+        contractsSrc.includes(`terms: "${LEGAL.EFFECTIVE_DATE}"`) &&
+          contractsSrc.includes(`privacy: "${LEGAL.EFFECTIVE_DATE}"`),
+        `front door sends ${LEGAL.EFFECTIVE_DATE}; contracts must list the same terms/privacy version`
+      );
+      // 3. The retention the notice prints has a code counterpart, and the
+      //    answered-request record keeps what California asks it to keep.
+      const rightsPath = new URL("../../platform/services/auth/src/rights.ts", import.meta.url);
+      const rightsSrc = existsSync(rightsPath) ? readFileSync(rightsPath, "utf8") : "";
+      ok(
+        "the retention schedule the notice prints is enforced by a sweep in code",
+        rightsSrc.includes("export async function pruneRetention") &&
+          rightsSrc.includes("24 months") &&
+          rightsSrc.includes("DELETE FROM refresh_tokens WHERE expires_at < now()")
+      );
+      ok(
+        "an erasure cuts off the credential before deleting the account, in one statement",
+        rightsSrc.includes("deleted_subject_revocations") &&
+          rightsSrc.includes("WITH counts AS (") &&
+          rightsSrc.includes("DELETE FROM users WHERE id = $1")
+      );
+      ok(
+        "the deletion response names what it keeps and the basis for keeping it",
+        rightsSrc.includes("ERASURE_RETENTIONS") && rightsSrc.includes("legal-obligation")
+      );
+    } else {
+      console.log("  ~ skipped the platform/contracts assertions (no platform tree in this checkout)");
+    }
+
+    // 4. The page where the rights actually work, and the two that must be
+    //    immediate rather than promised.
+    const accountPagePath = new URL("../src/routes/account/+page.svelte", import.meta.url);
+    ok("the data-rights hub exists at /account", existsSync(fileURLToPath(accountPagePath)));
+    const accountPage = existsSync(accountPagePath) ? readFileSync(accountPagePath, "utf8") : "";
+    ok(
+      "/account offers the export, the erasure and the request ledger",
+      accountPage.includes("session.exportAuth()") &&
+        accountPage.includes("session.deleteAccount(") &&
+        accountPage.includes("session.fileRightsRequest(") &&
+        accountPage.includes("session.withdrawConsent(")
+    );
+    ok(
+      "/account states that the self-service route is not the only route",
+      accountPage.includes("not the only one") && accountPage.includes("cannot sign in")
+    );
+    {
+      // The typed word is enforced in two places, and both are asserted: the page
+      // will not arm the button until the learner has typed it, and the client
+      // sends it as a literal the platform's schema also demands — so a re-built
+      // form cannot quietly turn an irreversible action back into one click.
+      const sessionSrc = readFileSync(new URL("../src/lib/session.svelte.ts", import.meta.url), "utf8");
+      ok(
+        "erasure is confirmed by a typed word, not a checkbox",
+        accountPage.includes('confirmText !== "DELETE"') &&
+          accountPage.includes("eraseArmed") &&
+          sessionSrc.includes('confirm: "DELETE"')
+      );
+    }
+    ok(
+      "/account shows what is retained after a deletion, with the basis",
+      accountPage.includes("deletion.retained") && accountPage.includes("basis")
+    );
+
+    // 5. Consumer pre-contract terms, before the price and in the same place as
+    //    the decision (California's ARL as amended by AB 2863; EU/UK distance
+    //    selling). The five facts live in $lib/legal so the page, the terms and
+    //    the checkout cannot describe one subscription three ways.
+    const pricingPage = readFileSync(new URL("../src/routes/pricing/+page.svelte", import.meta.url), "utf8");
+    ok(
+      "the pricing page prints the renewal, cancellation, refund and withdrawal terms",
+      pricingPage.includes("SUBSCRIPTION_TERMS") &&
+        ["renewal", "cancellation", "refund", "withdrawal", "priceChange"].every((k) =>
+          Object.prototype.hasOwnProperty.call(LEGAL.SUBSCRIPTION_TERMS, k)
+        )
+    );
+    ok(
+      "the consumer terms are before the money, not only on the terms page",
+      pricingPage.indexOf("SUBSCRIPTION_TERMS") > 0 && pricingPage.includes("Before you pay")
+    );
+
+    // 6. The California-shaped choices page: the no-sale statement, the
+    //    no-account-needed rule, and no switch for a thing that never happens.
+    const choicesPage = readFileSync(
+      new URL("../src/routes/privacy-choices/+page.svelte", import.meta.url),
+      "utf8"
+    );
+    ok(
+      "the choices page states that nothing is sold or shared, and keeps the right",
+      choicesPage.includes("is sold, rented, or shared") &&
+        choicesPage.includes("Global Privacy Control") &&
+        choicesPage.includes("RIGHT_KINDS")
+    );
+    ok(
+      "the choices page advertises a route that needs no account and no fee",
+      choicesPage.includes("PRIVACY_CONTACT") &&
+        choicesPage.includes("no account required") &&
+        choicesPage.includes("no charge")
+    );
+
+    // 7. The AI Act's Article 50 disclosure, in the product, in words a person
+    //    reads before they use an assistant — plus the statement this product can
+    //    actually prove: no model decides an assessment.
+    const aiPage = readFileSync(new URL("../src/routes/ai/+page.svelte", import.meta.url), "utf8");
+    ok(
+      "the AI page carries the interaction disclosure and the no-AI-decides statement",
+      aiPage.includes("AI_DISCLOSURE.interaction") &&
+        aiPage.includes("AI_DISCLOSURE.decides") &&
+        aiPage.includes("AI_DISCLOSURE.transfer")
+    );
+    ok(
+      "the AI page names every system it bundles, with its provider",
+      aiPage.includes("AI_SYSTEMS") && LEGAL.AI_SYSTEMS.length >= 3 &&
+        LEGAL.AI_SYSTEMS.every((s) => s.provider.length > 2 && s.sends.length > 10)
+    );
+    ok(
+      "the AI disclosure says no AI grades work, in the product's own words",
+      /no AI grades your work/i.test(LEGAL.AI_DISCLOSURE.decides) &&
+        /deterministic rule engine/i.test(LEGAL.AI_DISCLOSURE.decides)
+    );
+
+    // 8. The notice points at the mechanisms instead of describing a product
+    //    that no longer matches — the direction this assertion fails in matters.
+    const privacySrc = readFileSync(new URL("../src/routes/privacy/+page.svelte", import.meta.url), "utf8");
+    ok(
+      "the privacy notice links the account controls, the choices page and the AI page",
+      privacySrc.includes('href="/account"') &&
+        privacySrc.includes('href="/privacy-choices"') &&
+        privacySrc.includes('href="/ai"')
+    );
+    ok(
+      "the privacy notice no longer claims the deletion control is unbuilt",
+      !/self-serve delete button does not exist/i.test(privacySrc)
+    );
+
+    // 9. The regime dates are stated, because a claim about a duty is only
+    //    checkable with the date beside it: India's DPDP duties are not in force
+    //    until May 2027, the AI Act's transparency duty has been in force since
+    //    August 2026, and saying so is more honest than claiming both.
+    ok(
+      "each regime's status is published with its date",
+      LEGAL.REGIME_DATES.length >= 6 &&
+        LEGAL.REGIME_DATES.some((r) => /DPDP/.test(r.regime) && /2027/.test(r.date)) &&
+        LEGAL.REGIME_DATES.some((r) => /AI Act/.test(r.regime) && /2026/.test(r.date))
+    );
+  }
 }
 
 console.log("\n== identity and billing: one token boundary, one checkout path ==");
@@ -287,7 +588,7 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   );
   ok(
     "the edition line sits on its own rule, instead of floating over the nameplate as small print",
-    headerSrc.includes("border-b border-rule py-1")
+    headerSrc.includes("border-b border-rule py-3 sm:py-1")
   );
   ok(
     "and the actions on that line are 44px targets, not the 36px house stock",
@@ -330,7 +631,7 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   ok(
     "and the shared action vocabulary names the properties it moves, for the same reason",
     readFileSync(new URL("../src/lib/ui.ts", import.meta.url), "utf8").includes(
-      "transition-[color,background-color,border-color] duration-200"
+      "transition-[color,background-color,border-color,transform] duration-200"
     )
   );
 
@@ -486,15 +787,49 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   // present, the homepage's listed ids must equal the manifest's — no more,
   // no fewer. Absent (a front-door-only checkout), say so rather than pass
   // silently.
-  const ideManifest = new URL("../../../nexora-ide/extensions/nexora/curriculum/shipped/manifest.json", import.meta.url);
+  const shippedDir = new URL(
+    "../../../nexora-ide/extensions/nexora/curriculum/shipped/",
+    import.meta.url
+  );
+  const registry = new URL("index.json", shippedDir);
   let manifestIds: string[] | null = null;
+  let manifestCourses: {
+    id: string;
+    title: string;
+    phases: { id: string; title: string; tier: string }[];
+  }[] = [];
+  let registryMissing = false;
   try {
-    manifestIds = JSON.parse(readFileSync(ideManifest, "utf8")).phases.map((p: { id: string }) => p.id);
+    const index = JSON.parse(readFileSync(registry, "utf8")) as {
+      courses: { id: string; manifest: string }[];
+    };
+    manifestCourses = index.courses.map((course) => {
+      const manifest = JSON.parse(readFileSync(new URL(course.manifest, shippedDir), "utf8")) as {
+        id: string;
+        title: string;
+        phases: { id: string; title: string; tier: string }[];
+      };
+      return { id: manifest.id, title: manifest.title, phases: manifest.phases };
+    });
+    manifestIds = manifestCourses.flatMap((course) => course.phases.map((phase) => phase.id));
   } catch {
     manifestIds = null;
+    registryMissing = existsSync(fileURLToPath(shippedDir));
   }
   if (manifestIds === null) {
-    console.log("  (course-list drift not checked: nexora-ide sibling absent)");
+    // A registry that is missing while its directory is present is a failure,
+    // not a reason to skip: the gate used to go quiet exactly when it was
+    // needed, and the site kept claiming a curriculum that had moved on.
+    ok(
+      "the curriculum registry is there when the shipped curriculum is",
+      !registryMissing,
+      registryMissing
+        ? "the shipped curriculum directory exists but its index.json could not be read"
+        : undefined
+    );
+    if (!registryMissing) {
+      console.log("  (course-list drift not checked: nexora-ide sibling absent)");
+    }
   } else {
     // The phase lists moved into the content module with the copy; the page
     // renders them from there. The gate follows them, so it still fails when a
@@ -509,20 +844,53 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
         manifestIds.every((id) => listed.includes(id)) &&
         new Set(listed).size === listed.length
     );
-    // The headline count is prose, and prose drifts first. Map the manifest
-    // total to its English word and require it — adding phase 33 without
+    // The course titles are the same kind of claim: a course the site names
+    // that does not ship is an invented course, and a shipped course the site
+    // does not name is a phase a learner cannot find.
+    const siteCourses = COPY.COURSES.map((course) => ({
+      slug: course.slug,
+      title: course.title,
+      count: course.phases.length,
+    }));
+    ok(
+      "the site names every shipped course, with its own title and phase count",
+      manifestCourses.every((course) => {
+        const site = siteCourses.find((c) => c.slug === course.id);
+        return (
+          site !== undefined &&
+          site.title === course.title &&
+          site.count === course.phases.length
+        );
+      }) && siteCourses.length === manifestCourses.length
+    );
+
+    // The headline count is prose, and prose drifts first. Turn the shipped
+    // total into its English word and require it — adding a phase without
     // updating the headline fails here, not in a learner's screenshot.
-    const words: Record<number, string> = {
-      28: "Twenty-eight", 29: "Twenty-nine", 30: "Thirty", 31: "Thirty-one",
-      32: "Thirty-two", 33: "Thirty-three", 34: "Thirty-four", 35: "Thirty-five",
-      36: "Thirty-six",
-    };
+    const words = numberWords(manifestIds.length);
     ok(
       "the headline count matches the shipped total",
-      words[manifestIds.length] !== undefined &&
-        readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8").includes(
-          `${words[manifestIds.length]} phases`
-        )
+      words !== null &&
+        readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8")
+          .toLowerCase()
+          .includes(`${words} phases`)
+    );
+
+    // The readings on the bench carry the counts too, and they drift the same
+    // way. The free count is the one a learner acts on: it is what the free
+    // tier actually opens, so it has to be the shipped number.
+    const freeCount = manifestCourses
+      .flatMap((course) => course.phases)
+      .filter((phase) => phase.tier === "free").length;
+    const freeFact = COPY.FACTS.find((fact) => fact.label.includes("free"));
+    ok(
+      `the free-phase reading matches the shipped free phases (${freeCount})`,
+      freeFact !== undefined && freeFact.value === String(freeCount)
+    );
+    ok(
+      "the masthead's status matches the shipped counts",
+      COPY.MASTHEAD.status.includes(`${manifestCourses.length} courses`) &&
+        COPY.MASTHEAD.status.includes(`${manifestIds.length} phases`)
     );
   }
 }
@@ -561,7 +929,16 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
   // The four page surfaces plus the sheet: the artefact is a surface a visitor
   // reads on, so it is held to the same floor as the rest of the page rather
   // than trusted because it is white.
+  // The two families are measured separately, and the reason is arithmetic
+  // rather than taste: no colour can clear 4.5:1 against both a near-black and
+  // a near-white surface, so one shared palette could only ever be measured
+  // against one of them. The room has its own ink ramp, and the sheet has its
+  // own four inks — which is why the amber lamp is never used on the sheet,
+  // and why the sheet's verdict is printed in the paper's green and red
+  // rather than in the room's.
   const surfaces = ["ground", "panel", "raised", "raised-2", "paper"];
+  const darkSurfaces = ["ground", "panel", "raised", "raised-2"];
+  const paperInks = ["paper-ink", "paper-muted", "pen", "pass"];
   const svelteFiles = srcFiles.filter((f) => f.endsWith(".svelte"));
   const shortName = (f: string): string => f.slice(f.replace(/\\/g, "/").lastIndexOf("/") + 1);
 
@@ -627,7 +1004,7 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
     shortControls.length === 0
   );
 
-  const rampPairs = ["ink", "muted", "faint"].flatMap((t) => surfaces.map((s) => ({ t, s, r: ratio(token(t), token(s)) })));
+  const rampPairs = ["ink", "muted", "faint"].flatMap((t) => darkSurfaces.map((s) => ({ t, s, r: ratio(token(t), token(s)) })));
   const tightestRamp = rampPairs.reduce((a, b) => (b.r < a.r ? b : a));
   ok(
     `every text role clears 4.5:1 on every surface (tightest: ${tightestRamp.t} on ${tightestRamp.s} at ${round2(tightestRamp.r)}:1)`,
@@ -635,7 +1012,7 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
   );
 
   const stateText = ["accent", "added", "review", "removed", "approved"];
-  const statePairs = stateText.flatMap((t) => surfaces.map((s) => ({ t, s, r: ratio(token(t), token(s)) })));
+  const statePairs = stateText.flatMap((t) => darkSurfaces.map((s) => ({ t, s, r: ratio(token(t), token(s)) })));
   const tightestState = statePairs.reduce((a, b) => (b.r < a.r ? b : a));
   ok(
     `the state colours are readable as words, not only as tints (tightest: ${tightestState.t} on ${tightestState.s} at ${round2(tightestState.r)}:1)`,
@@ -643,8 +1020,8 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
   );
 
   ok(
-    `accent-dim is held to 3:1 because it is only ever a border or a focus ring (${surfaces.map((s) => round2(ratio(token("accent-dim"), token(s)))).join(", ")})`,
-    surfaces.every((s) => ratio(token("accent-dim"), token(s)) >= 3) &&
+    `accent-dim is held to 3:1 because it is only ever a border or a focus ring (${darkSurfaces.map((s) => round2(ratio(token("accent-dim"), token(s)))).join(", ")})`,
+    darkSurfaces.every((s) => ratio(token("accent-dim"), token(s)) >= 3) &&
       srcFiles.every((f) => !readFileSync(f, "utf8").includes("text-accent-dim"))
   );
 
@@ -659,16 +1036,35 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
     `a field's boundary is not decoration: ${fieldFiles.length} files with text fields each carry border-control`,
     fieldFiles.length >= 1 && fieldFiles.every((f) => readFileSync(f, "utf8").includes("border-control"))
   );
-  const controlRatios = surfaces.map((s) => ratio(token("control"), token(s)));
+  const controlRatios = darkSurfaces.map((s) => ratio(token("control"), token(s)));
   ok(
     `and that boundary clears 3:1 everywhere it can sit (${controlRatios.map(round2).join(", ")}:1)`,
     controlRatios.every((r) => r >= 3) && ratio(token("control"), token("raised")) > ratio(token("rule"), token("raised"))
   );
 
+  // The sheet's own ink set, measured against the sheet. This is the half of
+  // the palette the room's ramp cannot reach: the sheet is the one light
+  // surface on the page, and the amber lamp is unreadable on it.
+  const paperRatios = paperInks.map((t) => ({ t, r: ratio(token(t), token("paper")) }));
+  const tightestPaper = paperRatios.reduce((a, b) => (b.r < a.r ? b : a));
+  ok(
+    `every ink on the sheet clears 4.5:1 on the sheet (tightest: ${tightestPaper.t} at ${round2(tightestPaper.r)}:1)`,
+    paperRatios.every((p) => p.r >= 4.5)
+  );
+  // And the room's lamps never land on the sheet, where the amber one is a
+  // 1.6:1 smear. The receipt is the only object allowed on the paper, so the
+  // rule can be checked there rather than argued about everywhere.
+  ok(
+    "the sheet never borrows the room's lamps",
+    !/\b(text|bg|border)-(accent|added|removed|review|approved)\b/.test(
+      readFileSync(new URL("../src/lib/components/Receipt.svelte", import.meta.url), "utf8")
+    )
+  );
+
   ok(
     "the focus ring is one accent hairline, and accent clears 3:1 on every surface it is drawn on",
     /:focus-visible\s*\{[^}]*outline:\s*1px solid var\(--color-accent\)/.test(css) &&
-      surfaces.every((s) => ratio(token("accent"), token(s)) >= 3)
+      darkSurfaces.every((s) => ratio(token("accent"), token(s)) >= 3)
   );
 
   // The probe cannot prove this one from the outside: a tab that is not the
@@ -969,6 +1365,11 @@ console.log("\n== the design is held to the same rules as the product ==");
   // "mastery" by accident.
   const corpus = JSON.stringify([
     COPY.HERO,
+    COPY.HIRING,
+    COPY.AUDIENCES,
+    COPY.SPEC,
+    COPY.EMPLOYER,
+    COPY.FACTS,
     COPY.WEDGE,
     COPY.STEPS,
     COPY.DISCLOSURE,
@@ -1039,10 +1440,10 @@ console.log("\n== the design is held to the same rules as the product ==");
   // loads a raster asset. A texture file is the one thing a press world would
   // reach for and never need.
   ok(
-    "the press is drawn, not downloaded — its textures are gradients, not images",
-    /\.halftone\s*\{/.test(css) &&
-      /\.perf-edge\s*\{/.test(css) &&
-      css.includes("repeating-conic-gradient") &&
+    "the bench is drawn, not downloaded — its textures are gradients, not images",
+    /\.plot\s*\{/.test(css) &&
+      /\.scale\s*\{/.test(css) &&
+      css.includes("repeating-linear-gradient") &&
       !srcFiles.some(
         (f) => f.endsWith(".svelte") && /\.(png|jpe?g|webp|avif)\b/.test(readFileSync(f, "utf8"))
       )
@@ -1117,6 +1518,342 @@ console.log("\n== the design is held to the same rules as the product ==");
   );
 }
 
-console.log(`\nALL ${passed} ASSERTIONS PASSED`);
+console.log("\n== the bench: the design is held to the rules it set for itself ==");
+// The copy is literal-typed, so a direct comparison against the empty string
+// is a comparison the compiler can prove impossible. The check is widened on
+// purpose: it asks whether a field is filled in, not what its type is.
+const nonEmpty = (value: string): boolean => value.trim().length > 0;
+{
+  const landingSrc = readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../src/app.css", import.meta.url), "utf8");
+  const footerSrc = readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8");
+
+  // Two audiences, one page. The selector is a control with two real states,
+//  and both arguments are full sections further down, so the switch is a
+//  convenience and never the only way in — a crawler, a reader with the
+//  script off, and a screen reader all meet the whole argument without it.
+  ok(
+    "the front door answers both audiences",
+    COPY.AUDIENCES.length === 2 &&
+      landingSrc.includes("<AudienceSwitch") &&
+      landingSrc.includes("learnerHero") &&
+      landingSrc.includes("HIRING") &&
+      COPY.AUDIENCES.every((a) => nonEmpty(a.id) && nonEmpty(a.label) && nonEmpty(a.lineOne))
+  );
+  ok(
+    "the hiring argument is a section of its own, not only a hero variant",
+    landingSrc.includes('id="employers"') && landingSrc.includes("<EmployerBoard")
+  );
+  ok(
+    "and it says as much about what does not exist as about what does",
+    COPY.EMPLOYER.notYet.length >= 3 && COPY.EMPLOYER.checks.length >= 3
+  );
+  ok(
+    "and every hiring claim names the artefact behind it",
+    COPY.EMPLOYER.checks.every((c) => nonEmpty(c.claim) && nonEmpty(c.evidence))
+  );
+
+  // The differentiator, stated as readings rather than as an adjective.
+  ok(
+    "the product's differentiator is a datasheet, not a promise",
+    COPY.SPEC.length === 3 && landingSrc.includes("<SpecSheet")
+  );
+  ok(
+    "and it is grouped into clusters, so it reads as a product rather than as a list of rows",
+    COPY.SPEC.every((g) => nonEmpty(g.cluster) && g.rows.length > 0) &&
+      readFileSync(
+        new URL("../src/lib/components/SpecSheet.svelte", import.meta.url),
+        "utf8"
+      ).includes("{group.cluster}")
+  );
+  ok(
+    "every reading in the datasheet names a parameter, a value and a limit",
+    COPY.SPEC.every((g) =>
+      g.rows.every((r) => nonEmpty(r.param) && nonEmpty(r.value) && nonEmpty(r.note))
+    ) && COPY.SPEC.reduce((n, g) => n + g.rows.length, 0) >= 8
+  );
+
+  // The measurements on the bench are the real ones, drawn from the same
+  // module the drift gate reads.
+  ok(
+    "the readings on the bench are drawn from the shipped content",
+    landingSrc.includes("<FactStrip") && COPY.FACTS.length === 4
+  );
+  ok(
+    "the manifest is drawn as a plate of lights, from the shipped curriculum",
+    landingSrc.includes("<PhaseMatrix") && COPY.ALL_PHASES.length > 0
+  );
+
+  // The chrome is a title block: the product, the documents, and the record.
+  ok(
+    "the footer is a drawing's title block, and the legal documents are a cell of it",
+    footerSrc.includes("the product") &&
+      footerSrc.includes("the documents") &&
+      footerSrc.includes("LEGAL_LINKS") &&
+      footerSrc.includes("{link.href}")
+  );
+
+  // Prose is prose. The reading face is a distinct primitive, the lede uses
+  // it, and no label or control ever does — a mono label set in a serif is a
+  // label that has stopped being a label.
+  ok(
+    "the reading face is its own primitive, and the hero lede is set in it",
+    css.includes(".reading") && landingSrc.includes('class="reading')
+  );
+  ok(
+    "and no label or control is set in the reading face",
+    !srcFiles.some((f) => f.endsWith(".svelte") && /class="[^"]*\breading\b[^"]*\bstamp\b/.test(readFileSync(f, "utf8")))
+  );
+
+  // The copy rules the design brief states as bans, applied to the surface
+  // this site owns: no em-dash in a visible string, one label per intent,
+  // and no kicker above a heading.
+  {
+    const marketingCopy = JSON.stringify([
+      COPY.HERO,
+      COPY.HIRING,
+      COPY.AUDIENCES,
+      COPY.SPEC,
+      COPY.EMPLOYER,
+      COPY.FACTS,
+      COPY.WEDGE,
+      COPY.STEPS,
+      COPY.DISCLOSURE,
+      COPY.NO_LIST,
+      COPY.FAQ,
+      COPY.BILLING_COMMITMENTS,
+      COPY.FREE_TIER_POINTS,
+      COPY.RUN_SCRIPT,
+      COPY.RECEIPT,
+      COPY.MASTHEAD,
+      COPY.NAV,
+      COPY.FOOTER_LINKS,
+      COPY.POSITIONING,
+      COPY.TAGLINE,
+      COPY.MARKET,
+      COPY.PROPS,
+      COPY.LANDSCAPE,
+      COPY.HERO_VARIANTS,
+    ]);
+    ok(
+      "the copy carries no em-dash",
+      !marketingCopy.includes("—") && !marketingCopy.includes("–")
+    );
+    ok(
+      "and no visible string in the marketing surface does either",
+      !srcFiles
+        .filter(
+          (f) => f.includes("/lib/components/") || f.endsWith("/routes/+page.svelte")
+        )
+        .some((f) => {
+          const src = readFileSync(f, "utf8")
+            .replace(/\/\*[\s\S]*?\*\//g, "")
+            .replace(/<!--[\s\S]*?-->/g, "");
+          return /"[^"\n]*[—–][^"\n]*"/.test(src);
+        })
+    );
+    {
+      // One intent, one label, across every page and every piece of chrome.
+      const labelFiles = srcFiles.filter(
+        (f) => f.endsWith(".svelte") || f.endsWith(".ts")
+      );
+      // Only the labels themselves: a page's meta description is prose and may
+      // name the product in full.
+      const otherLabels = labelFiles.filter((f) => {
+        const src = readFileSync(f, "utf8");
+        return (
+          />(Get the IDE|Get the NEXORA IDE|Download the NEXORA IDE)</.test(src) ||
+          /label:\s*"(Get the IDE|Get the NEXORA IDE|Download the NEXORA IDE)"/.test(src)
+        );
+      });
+      ok(
+        "one label per intent: the download is called the same thing everywhere",
+        COPY.HERO.primary === "Download the IDE" &&
+          COPY.FOOTER_LINKS[0]?.label === "Download the IDE" &&
+          COPY.STEPS[0]?.link.label === "Download the IDE" &&
+          otherLabels.length === 0
+      );
+    }
+    ok(
+      "and no section carries a kicker above its heading",
+      !/<p[^>]*\bstamp\b[^>]*>[^<]*<\/p>\s*<h[123]/.test(landingSrc)
+    );
+    ok(
+      "and the hero carries no more than the selector, the poster, the lede and the actions",
+      !/hero-note/.test(landingSrc)
+    );
+  }
+
+  // The provenance rule: the argument comes from the research, and not from
+  // the front door that was here before. The old sentences are frozen in
+  // `scripts/legacy-front-door.txt`, one per line, and the narrative blocks
+  // may not repeat one of them.
+  //
+  // The product's own facts are exempt, and deliberately so. "A model may
+  // explain a failure; it never decides one" describes the rule engine, and
+  // no market research could have said it. The rule is about the argument,
+  // not about the vocabulary.
+  {
+    const legacy = readFileSync(
+      new URL("./legacy-front-door.txt", import.meta.url),
+      "utf8"
+    )
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    const flatten = (value: unknown): string[] => {
+      if (typeof value === "string") return [value];
+      if (Array.isArray(value)) return value.flatMap(flatten);
+      if (value && typeof value === "object") {
+        return Object.values(value).flatMap(flatten);
+      }
+      return [];
+    };
+
+    const sentences = flatten([
+      COPY.MARKET,
+      COPY.PROPS,
+      COPY.LANDSCAPE,
+      COPY.HERO_VARIANTS,
+      COPY.WEDGE,
+      COPY.HERO,
+      COPY.HIRING,
+      COPY.POSITIONING,
+      COPY.TAGLINE,
+    ])
+      .join(" ")
+      .split(/(?<=[.!?])\s+/)
+      .map((sentence) => sentence.trim())
+      .filter((sentence) => sentence.length > 0);
+
+    const carried = sentences.filter((sentence) => legacy.includes(sentence));
+    ok(
+      "the narrative comes from the research, and repeats no sentence of the previous front door",
+      legacy.length > 0 && carried.length === 0
+    );
+    if (carried.length) {
+      console.log("      carried over: " + carried.join(" | "));
+    }
+  }
+
+  // The research-driven content has to stay honest by construction: every
+  // figure names the study it came from, every proposition says something,
+  // and the headline variants are three different ways of saying one true
+  // thing rather than three different promises.
+  {
+    ok(
+      "every market reading names the study it came from",
+      COPY.MARKET.readings.length >= 3 &&
+        COPY.MARKET.readings.every(
+          (reading) =>
+            nonEmpty(reading.value) &&
+            nonEmpty(reading.label) &&
+            reading.source.length > 3
+        )
+    );
+    ok(
+      "and every figure in the market block carries a unit",
+      COPY.MARKET.readings.every((reading) => /[%+]/.test(reading.value))
+    );
+    ok(
+      "there are three propositions for each audience, and both say something",
+      COPY.PROPS.learner.length === 3 &&
+        COPY.PROPS.employer.length === 3 &&
+        [...COPY.PROPS.learner, ...COPY.PROPS.employer].every(
+          (prop) => nonEmpty(prop.title) && nonEmpty(prop.body) && prop.title.length > 8
+        )
+    );
+    ok(
+      "and the market's categories are described rather than dismissed",
+      COPY.LANDSCAPE.kinds.length === 5 &&
+        COPY.LANDSCAPE.kinds.every(
+          (kind) => nonEmpty(kind.name) && nonEmpty(kind.leaves) && kind.leaves.length > 20
+        ) &&
+        nonEmpty(COPY.LANDSCAPE.ours)
+    );
+    ok(
+      "the headline test has three variants, and each one is a different way of saying it",
+      COPY.HERO_VARIANTS.length === 3 &&
+        COPY.HERO_VARIANTS.every(
+          (variant) =>
+            nonEmpty(variant.lineOne) &&
+            nonEmpty(variant.lineTwo) &&
+            nonEmpty(variant.lede)
+        ) &&
+        new Set(COPY.HERO_VARIANTS.map((variant) => variant.lineOne)).size === 3 &&
+        new Set(COPY.HERO_VARIANTS.map((variant) => variant.lineTwo)).size === 3 &&
+        new Set(COPY.HERO_VARIANTS.map((variant) => variant.lede)).size === 3
+    );
+    ok(
+      "and the page renders exactly one of them, chosen on the server",
+      landingSrc.includes("HERO_VARIANTS.find") &&
+        landingSrc.includes("data-headline-variant") &&
+        !landingSrc.includes("HERO_VARIANTS.map")
+    );
+
+    // The sign-in code the demo prints has to be a real face of the code the
+    // platform mints: eight characters from an alphabet with no 0, 1, I or O
+    // in it, printed as four and four. A demo that shows an impossible code
+    // is a screenshot of a product that does not exist.
+    const deviceSrc = readFileSync(
+      new URL("../src/lib/components/DeviceCode.svelte", import.meta.url),
+      "utf8"
+    );
+    const demoCode = /const CODE = "([^"]+)"/.exec(deviceSrc)?.[1] ?? "";
+    ok(
+      "the demo prints a code in the platform's own format",
+      /^[A-HJKMNP-Z2-9]{4}-[A-HJKMNP-Z2-9]{4}$/.test(demoCode)
+    );
+    ok(
+      "and the real sign-in page asks for the same code, in the same words",
+      readFileSync(new URL("../src/routes/auth/ide/+page.svelte", import.meta.url), "utf8").includes(
+        "Is that the code on your screen?"
+      ) && readFileSync(new URL("../src/routes/auth/ide/+page.svelte", import.meta.url), "utf8").includes(
+        "data-device-agree"
+      )
+    );
+  }
+
+  // A state is never carried by a colour alone. The lamp is a shape and the
+  //  state is a word, and the readout prints the word beside the lamp so the
+  //  mark is legible before it is legible as a hue.
+  ok(
+    "a state is always printed as a word beside its lamp",
+    readFileSync(new URL("../src/lib/components/ProofRun.svelte", import.meta.url), "utf8").includes(
+      "{readout.state}"
+    ) &&
+      readFileSync(new URL("../src/lib/components/ProofRun.svelte", import.meta.url), "utf8").includes(
+        "data-state={readout.state}"
+      )
+  );
+}
+
+  // The page must read without its script, and a stalled reveal must not be
+  // able to hide it. The reveal hides a heading in CSS, so the hidden state
+  // is scoped to a class the script sets on <html> before the first paint:
+  // without JavaScript the class is never set and the heading is simply there.
+  // The other failure — a browser that has stopped ticking its transitions —
+  // is caught by the motion module, which settles a reveal outright once its
+  // transition's own time has passed.
+  {
+    const htmlSrc = readFileSync(new URL("../src/app.html", import.meta.url), "utf8");
+    const motionSrc = readFileSync(new URL("../src/lib/motion.ts", import.meta.url), "utf8");
+    const css = readFileSync(new URL("../src/app.css", import.meta.url), "utf8");
+    ok(
+      "the page reads without its script, and a stalled reveal cannot hide it",
+      htmlSrc.includes('class="no-js"') &&
+        htmlSrc.includes('classList.replace("no-js", "js")') &&
+        css.includes(".js .line-mask > span") &&
+        css.includes(".js .fade-up") &&
+        motionSrc.includes("settle(")
+    );
+    ok(
+      "and the reveal's hidden state is never applied outside that class",
+      !/\n\s*\.line-mask > span\s*\{/.test(css) && !/\n\s*\.fade-up\s*\{/.test(css)
+    );
+  }
+
+  console.log(`\nALL ${passed} ASSERTIONS PASSED`);
 
 

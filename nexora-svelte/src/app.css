@@ -1,85 +1,88 @@
 @import "tailwindcss";
 
-/* NEXORA — THE PRESS.
-   A print room, not a dark SaaS page.
+/* NEXORA — THE BENCH.
+   A calibration bench, not a page of cards.
 
-   The ground is newsprint and the ink is black: the whole site is a press
-   that prints one thing — the proof of what you built. The previous world put
-   a single lit object on charcoal; this one inverts it, because the object
-   was always paper and the honest way to show paper is to stand in daylight
-   rather than a spotlight.
+   The world is a dim measurement room: a deep, cool graphite ground, one warm
+   signal lamp, and a grid ruled to the nearest millimetre. Everything the site
+   says about the product is a *reading* — a check that passed, a check that
+   failed, a file hash, a duration — so the site is built like the instrument
+   that takes the reading. Hairlines are the structure. A surface is a step in
+   the light, never a glow. Nothing is rounded, nothing floats, and nothing
+   is decorated.
 
-   The colour that means something is the press blue, and it can only mean
-   something if nothing else is doing its job. It is reserved for exactly
-   three states — reachable, next, verified — and is never decoration. The
-   pen red marks a correction; the green ink passes a sheet.
+   The one light thing on the page is the printed sheet: the receipt the
+   product emits. It is a separate object on purpose — the artefact the whole
+   site is arguing for should be the only thing that catches the lamp.
+
+   The lamp is the only hue that means "act here": amber. Green means a check
+   passed, red means one failed, steel means a check is pending, violet means
+   a phase is finished. No lamp is ever used for both. The pen red and the pass
+   green on the sheet are the paper's own inks, because an amber lamp cannot be
+   read on white stock.
 
    Every value below is measured, not chosen by eye: scripts/verify.ts reads
-   this block back, computes the WCAG ratio of each text role against all four
-   surfaces, and fails the suite if any pair drops below its floor. Text roles
-   clear 4.5:1; borders and control edges clear 3:1, and a field boundary must
-   clear 3:1 AND be stronger than a plain rule. */
+   this block back, computes the WCAG ratio of each text role against the four
+   dark surfaces, and fails the suite if any pair drops below its floor. Text
+   roles clear 4.5:1, borders and control edges clear 3:1, and a field
+   boundary must clear 3:1 AND be stronger than a plain rule. The sheet has its
+   own ink set, measured against the sheet. */
 @theme {
-  /* The four surfaces, newsprint to fresh stock. None of them is #ffffff: a
-     pure white surface is the value a screen defaults to, and it reads flat
-     and synthetic next to warm newsprint. The lit surfaces carry the page's
-     own hue instead, so a sheet laid on the page is stock rather than a hole
-     punched through to the browser. */
-  --color-ground: #efece3;
-  --color-panel: #f6f4ee;
-  --color-raised: #fdfcf7;
-  --color-raised-2: #e5e1d4;
+  /* The four dark surfaces, from the room to the instrument face. None of them
+     is #000000: a pure black ground is the value a screen defaults to, and
+     beside a cool graphite it reads as a hole rather than as a surface. */
+  --color-ground: #0b0e12;
+  --color-panel: #11151b;
+  --color-raised: #181d25;
+  --color-raised-2: #212832;
+
+  /* The sheet. The one printed artefact rather than the room: warm stock,
+     black ink, the red pen that marks it, the green ink that passes it. */
+  --color-paper: #f1efe8;
+  --color-paper-2: #f8f7f2;
+  --color-paper-ink: #14171c;
+  --color-paper-muted: #5a6068;
+  --color-pen: #b3261e;
+  --color-pass: #126b3e;
 
   /* Structure: a hairline is one pixel and never a halo. */
-  --color-rule: #cfc9b8;
-  --color-rule-strong: #9a9382;
-  --color-control: #6f6a5a;
+  --color-rule: #232a34;
+  --color-rule-strong: #3b4553;
+  --color-control: #6e7a8b;
 
   /* The ink ramp. */
-  --color-ink: #14120d;
-  --color-muted: #55503f;
-  --color-faint: #5f5b4a;
+  --color-ink: #eef2f7;
+  --color-muted: #a9b4c2;
+  --color-faint: #8a96a6;
 
-  /* The signal. Exactly one hue, exactly three meanings. */
-  --color-accent: #1b3fd0;
-  --color-accent-bright: #2a4fe0;
-  --color-accent-dim: #4a6ae0;
+  /* The signal. Exactly one hue, and it means exactly one thing: act here. */
+  --color-accent: #ffb020;
+  --color-accent-bright: #ffc55a;
+  --color-accent-dim: #a8761f;
 
-  /* State inks. Each means one thing; none is ever the message alone. */
-  --color-added: #1a6b3a;
-  --color-review: #7d5200;
-  --color-removed: #b3261e;
-  --color-approved: #5b3fd0;
-
-  /* The sheet. The one surface that is a printed artefact rather than the
-     page: stock, black ink, the red pen that corrects it, the green ink that
-     passes it. Warmest of the four, because it is the object rather than the
-     page — and still clear of the newsprint ground it is laid on. */
-  --color-paper: #fbf9f3;
-  --color-paper-2: #fdfcf8;
-  --color-paper-ink: #14120d;
-  --color-paper-muted: #6b6656;
-  --color-pen: #b3261e;
-  --color-pass: #1a6b3a;
+  /* State lamps. Each means one thing; none is ever the message alone. */
+  --color-added: #3fd07f;
+  --color-review: #7fa8d8;
+  --color-removed: #ff6b6b;
+  --color-approved: #c08cff;
 
   /* Type: three families, which is the ceiling. One grotesque carries the
-     poster line *and* running text — it has an optical-size axis, so the text
-     cut is the same family rather than a second face doing the same job. One
-     editorial serif for the single moment that wants another voice, and one
-     typewriter for every number and every file name. A fourth family (a
-     separate body sans) used to sit here, and it was the face that made the
-     page read as four; it earned nothing the grotesque's text cut does not. */
-  --font-text: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI",
-    Roboto, sans-serif;
+     poster line and the running text — it has an optical-size and a width
+     axis, so the text cut is the same family rather than a second face doing
+     the same job. One monospace for every number, every identifier and every
+     file name, because on this page a number is always a reading and a reading
+     is always monospaced. One serif for the single voice that belongs to a
+     third party rather than to us: what a hiring manager reads, and what the
+     record says. */
+  --font-text: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-sans: var(--font-text);
   --font-display: var(--font-text);
-  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
-  --font-mono: "Courier Prime", ui-monospace, "SF Mono", "Cascadia Mono",
-    monospace;
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: clip;
@@ -113,16 +116,25 @@ html {
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* A fresh sheet casts a real shadow: an offset and a soft blur, never a
-     zero-offset halo. */
-  --shadow-sheet: 0 18px 40px -26px rgb(20 18 13 / 0.55), 0 2px 0 rgb(20 18 13 / 0.06);
-  --shadow-stack: 0 30px 70px -40px rgb(20 18 13 / 0.6);
+  /* On a dark ground a drop shadow is invisible and a halo is a lie, so
+     elevation is declared once and only once: by the border and by the step
+     in the surface. Nothing on this site casts a shadow, because the repo's
+     own interface rules forbid it and because a rule at one device pixel does
+     the job a shadow would only approximate. There is no shadow token to
+     reach for, and that is the point. */
+
+  /* The radius scale, and it is the whole scale: nothing is a card, so
+     nothing is rounded. A panel and a control are square, the focus ring is
+     a single pixel of curve, and the only two marks drawn as circles are the
+     state lamp and the arrow inside an action, because a circle is what those
+     two things are. */
+  --radius: 0px;
+  --radius-dot: 999px;
 
   /* The folio is pinned to the top of every page, so it is the one layer that
-     has to out-paint everything it crosses: the rail travels the right edge and
-     the CTA bar sits at the bottom, and neither may ever cover the section bar.
-     There is no layer above the folio, because there is nothing above the
-     pointer: the pointer is the platform's. */
+     has to out-paint everything it crosses. There is no layer above the
+     folio, because there is nothing above the pointer: the pointer is the
+     platform's. */
   --z-nav: 50;
   --z-rail: 45;
 }
@@ -132,17 +144,26 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 15.5px;
-  line-height: 1.6;
+  line-height: 1.62;
   overflow-x: clip;
 }
 
-/* Data, gutters, counts and captions are tabular and mono. */
+/* Data, gutters, counts and captions are tabular and mono. A reading is
+   always monospaced: the digits have to line up in a column to be a column. */
 .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* The editorial voice: only ever a short pull, never a paragraph. */
+/* The reading face.
+   One rule, applied everywhere: prose is set in the serif, and everything
+   that is not prose is set in the grotesque. A heading, a label, a
+   measurement, a table value and a control are not prose, so they keep the
+   grotesque and its tighter, more mechanical voice; a paragraph someone is
+   meant to read rather than scan is set in the reading face, which has the
+   pace for it. The rule is not decorative — a reader who finds the serif
+   knows they have reached a sentence, and a reader who finds the grotesque
+   knows they have reached a label. */
 .serif {
   font-family: var(--font-serif);
   font-style: italic;
@@ -150,10 +171,17 @@ body {
   letter-spacing: 0;
 }
 
+.reading {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
 /* ---------- Browser surfaces are part of the world ---------- */
 
 ::selection {
-  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
   color: var(--color-ink);
 }
 
@@ -170,12 +198,10 @@ a {
   text-decoration-thickness: 1px;
 }
 
-/* A named section has to clear the sticky bar it is jumped to from. That bar is
-   the folio — a 2px rule, a 44px row and a 1px rule, 47px in all — plus a line
-   of air, because arriving with the heading touching the rule is not arriving.
-   Without this, `/#courses` puts the section's first line behind the folio and
-   the reader lands somewhere other than the nav promised. Only anchored
-   sections move; nothing else on the page does. */
+/* A named section has to clear the sticky bar it is jumped to from. That bar
+   is the folio — a 2px rule, a 44px row and a 1px rule, 47px in all — plus a
+   line of air, because arriving with the heading touching the rule is not
+   arriving. Only anchored sections move; nothing else on the page does. */
 section[id] {
   scroll-margin-top: 4.5rem;
 }
@@ -184,7 +210,7 @@ section[id] {
   caret-color: var(--color-accent);
 }
 .code-field::selection {
-  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .nice-scroll {
@@ -206,12 +232,13 @@ section[id] {
   background: transparent;
 }
 
-/* ---------- The plate ----------
-   One container primitive. On paper a plate is a *sheet laid on the page*:
-   a hairline, a white face and a real shadow, so it reads as stock rather
-   than as a tinted box. Elevation is declared by border, background and the
-   one sheet shadow — never by a glow. `crosshair` anchors the top-left
-   corner the way a print plate is registered. */
+/* ---------- The panel ----------
+   One container primitive. On a bench, a panel is a faceplate: a hairline
+   around it, one step brighter than the surface it sits on, and a one-pixel
+   top highlight so the edge catches the lamp. Elevation is declared by
+   border, background and that highlight — never by a glow. `crosshair` puts
+   a registration sight in the top-left corner the way a machined face is
+   indexed. */
 
 .plate {
   position: relative;
@@ -222,10 +249,9 @@ section[id] {
 .plate-step {
   background: var(--color-raised);
   border: 1px solid var(--color-rule-strong);
-  box-shadow: var(--shadow-sheet);
 }
 
-/* Registration crosshair — two one-pixel marks, no colour of its own. */
+/* Registration sight — two one-pixel marks, no colour of its own. */
 .crosshair::before,
 .crosshair::after {
   content: "";
@@ -246,100 +272,119 @@ section[id] {
   height: 9px;
 }
 
-/* ---------- The press ----------
-   A machine in the margin: an inked slot, and a sheet that feeds out of it
-   line by line. The slot is structure; the sheet is the artefact. */
+/* ---------- The bench ----------
+   Two textures, both drawn rather than downloaded, and both used as grounds
+   for one artefact each rather than as wallpaper.
 
-.press-slot {
-  position: relative;
-  height: 14px;
-  background: var(--color-ink);
-  border-radius: 2px;
-}
-.press-slot::after {
-  content: "";
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 4px;
-  height: 2px;
-  background: color-mix(in srgb, var(--color-paper) 55%, transparent);
+   `.plot` is the graph paper under the readout: a 28px grid ruled in the
+   faintest hairline the room allows, so a panel can be read as a surface
+   something was measured on.
+
+   `.scale` is the rule with ticks along it — the way a bench carries a
+   measurement scale. It is a repeating gradient, not an image, and it is the
+   only place on the site where a rule repeats. */
+
+.plot {
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-rule) 45%, transparent) 0 1px,
+      transparent 1px 28px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-rule) 45%, transparent) 0 1px,
+      transparent 1px 28px
+    );
 }
 
-/* A perforated foot, cut with a repeating conic gradient rather than an
-   image asset. */
-.perf-edge {
-  height: 10px;
-  background-image: repeating-conic-gradient(
-    from -45deg at 50% 0,
-    var(--color-paper) 0deg 90deg,
-    transparent 90deg 180deg
+.scale {
+  height: 8px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--color-rule-strong) 0 1px,
+    transparent 1px 12px
   );
-  background-size: 12px 12px;
-  background-position: 50% 0;
+  background-position: 0 bottom;
+  background-repeat: repeat-x;
+  background-size: 12px 8px;
 }
 
-/* Halftone: the press's own texture, drawn from a gradient rather than an
-   image. Used sparingly, as a ground for one artifact. */
-.halftone {
-  background-image: radial-gradient(
-    color-mix(in srgb, var(--color-ink) 20%, transparent) 0.7px,
-    transparent 0.8px
-  );
-  background-size: 5px 5px;
+/* A lamp: the state light. It is a disc with a ring, and the ring — not the
+   fill — is what carries the colour, so the mark is legible as a shape
+   before it is legible as a hue. */
+.lamp {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.lamp[data-on="true"] {
+  background: currentColor;
 }
 
 /* ---------- Type primitives ---------- */
 
-/* The oversized structural line. Bricolage carries a width axis: condensed is
+/* The oversized structural line. Archivo carries a width axis: condensed is
    what makes a headline read as a poster rather than as large body copy. */
 .display {
   font-family: var(--font-display);
   font-weight: 800;
-  font-variation-settings: "wdth" 80;
-  letter-spacing: -0.035em;
-  line-height: 0.88;
+  font-variation-settings: "wdth" 84;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
   text-wrap: balance;
   overflow-wrap: anywhere;
 }
 
 /* A second voice for the poster line: outlined ink, for the one word the
-   page wants to be read twice. Ink-stroke on paper, never a gradient. */
+   page wants to be read twice. Ink-stroke on the dark ground, never a
+   gradient. */
 .outline-ink {
   color: transparent;
   -webkit-text-stroke: 1.5px var(--color-ink);
 }
 
-/* A micro-label: printed monospace, natural casing, clean tracking. */
+/* A micro-label: the instrument's own label plate. Monospace, natural
+   casing, wide tracking, and never a colour on its own. */
 .stamp {
   font-family: var(--font-mono);
   font-size: 11.5px;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 /* ---------- The reveal ----------
-   Type arrives the way a sheet is fed into a press: masked, once, and not
-   again. Every animated primitive in the build funnels through one of these
-   so the reduced-motion path stays a single decision. */
+   Type arrives the way a reading settles on a display: masked, once, and
+   not again. Every animated primitive in the build funnels through one of
+   these so the reduced-motion path stays a single decision.
+
+   The hidden state exists only when the script that can undo it is running.
+   Without JavaScript there is nothing to set `data-shown`, so the type is
+   simply *there* — which is the only correct answer for a page whose
+   headings carry the whole argument. The `js` class is set on <html> by an
+   inline script before the page paints, so the two states can never both
+   apply, and a page that fails to load its script still reads. */
 
 .line-mask {
   display: block;
   overflow: hidden;
 }
 
-.line-mask > span {
+.js .line-mask > span {
   display: block;
   transform: translateY(105%);
   transition: transform 900ms var(--ease-out);
 }
 
-[data-shown="true"] .line-mask > span,
-.line-mask[data-shown="true"] > span {
+.js [data-shown="true"] .line-mask > span,
+.js .line-mask[data-shown="true"] > span {
   transform: translateY(0);
 }
 
-.fade-up {
+.js .fade-up {
   opacity: 0;
   transform: translateY(1.25rem);
   transition:
@@ -347,20 +392,20 @@ section[id] {
     transform 700ms var(--ease-out);
 }
 
-.fade-up[data-shown="true"],
-[data-shown="true"] .fade-up {
+.js .fade-up[data-shown="true"],
+.js [data-shown="true"] .fade-up {
   opacity: 1;
   transform: translateY(0);
 }
 
 /* A hairline that draws itself in, left to right. */
-.draw {
+.js .draw {
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 800ms var(--ease-out);
 }
-.draw[data-shown="true"],
-[data-shown="true"] .draw {
+.js .draw[data-shown="true"],
+.js [data-shown="true"] .draw {
   transform: scaleX(1);
 }
 
@@ -380,7 +425,7 @@ section[id] {
   animation: feed 220ms steps(4, end) both;
 }
 
-/* ---------- Diff rows ----------
+/* ---------- Phase rows ----------
    The atom of the curriculum: a mark gutter, a mono position, a name, a
    state word. Form carries the state; the tint is a reinforcement, never the
    message. Solid = demonstrated, dashed = pending, dotted = not in this
@@ -388,7 +433,7 @@ section[id] {
 
 .phase-row {
   display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  grid-template-columns: 3.25rem minmax(0, 1fr) auto;
   align-items: center;
   column-gap: var(--space-3);
   border-top: 1px solid var(--color-rule);
@@ -436,15 +481,14 @@ section[id] {
 
 /* ---------- The receipt ----------
    The signature object: the product's own output, printed. It is white stock
-   on newsprint — a separate sheet, held off the page by an offset shadow so
-   it reads as an artefact laid down rather than a white box. */
+   in a dark room — a separate sheet, held off the page by a real offset
+   shadow so it reads as an artefact laid down rather than as a white box. */
 
 .receipt {
   background: var(--color-paper);
   color: var(--color-paper-ink);
   font-family: var(--font-mono);
-  border: 1px solid var(--color-rule);
-  box-shadow: var(--shadow-stack);
+  border: 1px solid var(--color-rule-strong);
 }
 
 /* The stamp lands like a decision: once, late, and hard. */
@@ -502,8 +546,7 @@ section[id] {
 
 /* ---------- The pen ----------
    The one authored moment kept from the previous build because it was the
-   best thing in it: the red circle drawn around the thing that matters. On
-   paper it is simply a pen. */
+   best thing in it: the red circle drawn around the thing that matters. */
 @keyframes draw-circle {
   from {
     stroke-dashoffset: 100;
@@ -520,6 +563,8 @@ section[id] {
 
 .prose-nexora p {
   margin: 0 0 var(--space-3);
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
   line-height: 1.7;
   color: var(--color-muted);
 }
@@ -546,6 +591,32 @@ details.nexora-details > summary::-webkit-details-marker {
   display: none;
 }
 
+/* ---------- The cut between pages ----------
+   A view transition is a cross-fade, and only a cross-fade: both documents
+   are the same instrument, so a wipe or a slide would be theatre. The whole
+   thing is skipped where the reader has asked for less motion, and the
+   navigation is then exactly what it always was. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-out 150ms var(--ease-out) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-in 220ms var(--ease-out) both;
+  }
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* ---------- Reduced motion ----------
    One decision, applied everywhere: everything static, nothing hidden. */
 @media (prefers-reduced-motion: reduce) {
@@ -563,8 +634,122 @@ details.nexora-details > summary::-webkit-details-marker {
   .fade-up,
   .draw,
   .feed {
-    transform: none;
-    opacity: 1;
-    clip-path: none;
+    transform: none !important;
+    opacity: 1 !important;
+    clip-path: none !important;
+  }
+}
+
+/* ---------- Print ----------
+   The legal documents get printed, signed and filed, and a dark sheet with
+   pale ink is unreadable on paper and expensive in toner. So print gets the
+   paper palette the receipt already uses: a white ground, ink text, and
+   rules that survive on white. The chrome that only means something on a
+   screen is removed, because a printed masthead and a printed download bar
+   are noise on a filed document.
+
+   The override is in tokens rather than in utility classes, so every part of
+   the page that reads a token flips at once and nothing has to be restyled by
+   hand. */
+@media print {
+  :root {
+    --color-ground: #f8f7f2;
+    --color-panel: #f8f7f2;
+    --color-raised: #f8f7f2;
+    --color-raised-2: #f1efe8;
+    --color-rule: #c8c8c2;
+    --color-rule-strong: #8b8b83;
+    --color-control: #6b6b64;
+    --color-ink: #14171c;
+    --color-muted: #343941;
+    --color-faint: #565c64;
+    --color-accent: #6f4600;
+    --color-accent-bright: #6f4600;
+    --color-accent-dim: #6f4600;
+    --color-added: #0f5c36;
+    --color-review: #27456b;
+    --color-removed: #a5221b;
+    --color-approved: #53328a;
+    --color-paper: #f8f7f2;
+    --color-paper-2: #f8f7f2;
+    --color-paper-ink: #14171c;
+    --color-paper-muted: #565c64;
+  }
+
+  html,
+  body {
+    background: #f8f7f2 !important;
+    color: #14171c !important;
+  }
+
+  /* Screen chrome: the masthead, the folio, the footer, the scroll rail and
+     the fixed download bar. The folio is sticky, so it would otherwise print
+     on every page. */
+  header,
+  footer,
+  .folio,
+  .rail,
+  .ctabar {
+    display: none !important;
+  }
+
+  /* The reveal is a screen effect. On paper nothing is hidden, so the
+     headings and the fade-ups are simply there. */
+  .line-mask > span,
+  .fade-up,
+  .draw,
+  .feed {
+    transform: none !important;
+    opacity: 1 !important;
+    clip-path: none !important;
+  }
+
+  /* A heading does not end a page and a row does not break across one. */
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+  li,
+  tr,
+  figure,
+  pre {
+    break-inside: avoid;
+  }
+
+  /* The employer one-pager is meant to be printed on one sheet, so its
+     vertical rhythm is compressed and its type is sized for paper. The zoom
+     is what makes the claim true: at full size the page runs to nearly two
+     sheets, and a document that is called a one-pager and prints on two is
+     a document nobody prints. The suite measures the printed height so the
+     claim cannot quietly stop being true. */
+  .onepager {
+    max-width: none !important;
+    padding: 0 !important;
+    zoom: 0.62;
+  }
+  .onepager h1 {
+    font-size: 19pt !important;
+  }
+  .onepager h2,
+  .onepager h3 {
+    font-size: 11.5pt !important;
+  }
+  .onepager section {
+    margin-top: 0.9rem !important;
+    padding-top: 0.6rem !important;
+  }
+  .onepager li {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+  }
+
+  /* A printed link is useless without its address. Internal links keep their
+     label, because a reader holding the document has the site to hand. */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: var(--color-faint);
+    word-break: break-all;
   }
 }

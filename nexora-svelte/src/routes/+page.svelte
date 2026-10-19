@@ -2,44 +2,105 @@
   import PageHead from "$lib/components/PageHead.svelte";
   import Headline from "$lib/components/Headline.svelte";
   import SectionHead from "$lib/components/SectionHead.svelte";
-  import Reveal from "$lib/components/Reveal.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
+  import AudienceSwitch from "$lib/components/AudienceSwitch.svelte";
   import ProofRun from "$lib/components/ProofRun.svelte";
   import ProofChain from "$lib/components/ProofChain.svelte";
   import ScrollRail from "$lib/components/ScrollRail.svelte";
   import DeviceCode from "$lib/components/DeviceCode.svelte";
-  import TierGrid from "$lib/components/TierGrid.svelte";
+  import PhaseMatrix from "$lib/components/PhaseMatrix.svelte";
+  import PhaseField from "$lib/components/PhaseField.svelte";
   import CourseLedger from "$lib/components/CourseLedger.svelte";
-  import { inView, inViewStagger } from "$lib/motion";
+  import SpecSheet from "$lib/components/SpecSheet.svelte";
+  import FactStrip from "$lib/components/FactStrip.svelte";
+  import EmployerBoard from "$lib/components/EmployerBoard.svelte";
+  import MarketPanel from "$lib/components/MarketPanel.svelte";
+  import PropositionStack from "$lib/components/PropositionStack.svelte";
+  import CategoryMap from "$lib/components/CategoryMap.svelte";
+  import { inView, inViewStagger, reduced } from "$lib/motion";
   import { SITE_DESCRIPTION, SITE_TITLE } from "$lib/seo";
-  import { HERO, WEDGE, STEPS, DISCLOSURE, NO_LIST, FAQ } from "$lib/content/site";
+  import {
+    HERO,
+    HERO_VARIANTS,
+    HIRING,
+    MARKET,
+    LANDSCAPE,
+    WEDGE,
+    STEPS,
+    DISCLOSURE,
+    NO_LIST,
+    FAQ,
+    POSITIONING,
+  } from "$lib/content/site";
 
-  /* The front door, as a press.
+  /* The front door, as a bench.
    *
    * One argument, told in order, and every section is a different shape on
-   * purpose: a masthead, an artefact, an editorial column, a ruled form, a
-   * demonstration, a plate of lights, a chain, a ledger, a set of limits, and
-   * a poster to close. The previous build said the same words with the same
-   * card three times over; this one gives each claim the layout it deserves —
-   * cards are the lazy container and there is not one on this page.
+   * purpose: a poster and a live readout, three arguments read as columns, a
+   * datasheet, a ruled form, a demonstration, the manifest as a plate of
+   * lights, a chain scrubbed against the scroll, the hiring manager's bench,
+   * a set of limits, a plain list of questions, and a poster to close. The
+   * previous build said the same words with the same card three times over;
+   * this one gives each claim the layout it deserves — cards are the lazy
+   * container and there is not one on this page.
    *
    * Every number and every phase comes from `$lib/content/site`, the module
    * the suite reads. Nothing here is invented: no testimonial, no customer
    * logo, no download that does not exist, no price.
    *
    * `downloadHref` is named once and used by every call on the page — the
-   * masthead, the handshake, the close, the bar — so a change of destination
-   * cannot leave one behind, and the suite can count them. */
+   * hero, the close, the bar — so a change of destination cannot leave one
+   * behind, and the suite can count them. */
 
   const downloadHref = "/download";
   const pricingHref = "/pricing";
   const verifyHref = "/verify";
+  const coursesHref = "/#courses";
+  const employersHref = "/#employers";
 
   const railSections = [
     { id: "why", label: "Why" },
+    { id: "market", label: "Market" },
+    { id: "buy", label: "Buying" },
+    { id: "measures", label: "Measures" },
     { id: "courses", label: "Courses" },
+    { id: "employers", label: "Hiring" },
     { id: "limits", label: "Limits" },
   ];
+
+  /* The headline the server assigned.
+   *
+   * The research's §5 asks for a headline split test, and a test needs the
+   * assignment to happen before the first byte, so the server picks one
+   * variant and this page renders exactly that one. The other two are not in
+   * the document: a page that renders every variant is a menu, and a menu
+   * measures nothing. */
+  let { data }: { data: { headline: string } } = $props();
+  const variant =
+    HERO_VARIANTS.find((v) => v.id === data.headline) ?? HERO_VARIANTS[0];
+
+  /* The two doors. The learner is the default because the download is the
+     product's front door; the hiring variant is one click away and has a
+     full section of its own further down the page. */
+  let audience = $state("learner");
+  const learnerHero = {
+    ...HERO,
+    lineOne: variant.lineOne,
+    lineTwo: variant.lineTwo,
+    lede: variant.lede,
+  };
+  const active = $derived(audience === "employer" ? HIRING : learnerHero);
+
+  /* The field picks a phase; the ledger shows the course. A click on a point
+     opens the drawer it belongs to and brings it into view, so the picture is
+     a way into the list rather than a picture of it. */
+  let focusedCourse = $state<string | null>(null);
+
+  function openCourse(pick: { courseSlug: string }): void {
+    focusedCourse = pick.courseSlug;
+    const head = document.getElementById(`course-head-${pick.courseSlug}`);
+    head?.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+  }
 
   /* The bar appears once the masthead is behind you and leaves at the footer.
      It is mounted rather than hidden, so there is never a focusable element
@@ -69,128 +130,181 @@
 
 <ScrollRail sections={railSections} />
 
-<!-- ===================== 1 · The front page =====================
-     A newspaper's front page: one poster line, and the lede set in the
-     editorial serif. No kicker above the heading — the line is the whole top of
-     the page and it can carry itself.
+<!-- = 1 · The front page =====================
+     A poster, and the instrument that produced the claim. The reader chooses
+     which question they arrived with, mine or my employer's, and the poster
+     answers it.
 
-     This section used to open with its own dateline rule ("NEXORA · the proof
-     desk" / "one way to learn · free to start"). That row is gone because the
-     masthead above now *is* that dateline, and two ruled datelines 100px apart
-     do not read as print hierarchy — they read as a mistake. The two strings
-     moved into `MASTHEAD` in the content module, so they are printed once.
+     The hero carries four things and no more: the selector, the poster, the
+     lede, and the two actions. The offer line used to sit here as a line of
+     small print under the buttons, which is where a reader's eye does not
+     go; it lives in the door section instead, next to the step that explains
+     it.
 
-     The poster line is sized by measurement, not by taste. In the 1216px
-     measure this page renders at, "The proof is what's left." sets on one line
-     up to 160px and wraps at 166px — and `13vw` of a 1280px window is 166px, so
-     every laptop got three lines where the copy asks for two, which pushed the
-     download past the fold. The clamp caps under that wrap threshold instead, so
-     the line holds two at every width.
+     The readout below is not an illustration: it is the product's own output,
+     running. It gets the full measure of the page rather than half a column,
+     because the receipt is a physical object with a shape, and a shape needs
+     room. A receipt squeezed into 250px is a receipt that wraps its own
+     labels. -->
 
-     The padding is deliberately heavier at the bottom than the top: a block with
-     symmetric air floats above the artefact it belongs to, and this one should
-     pull *into* the page below it rather than hover over it. That air is also
-     why the artefact band carries no top margin of its own.
+<section class="relative overflow-x-clip" data-headline-variant={data.headline}>
+  <div class="hero-block mx-auto max-w-[1320px] px-5 pt-8 pb-12 sm:px-8 sm:pt-10 sm:pb-14">
+    <AudienceSwitch bind:value={audience} />
 
-     The lede's and the button row's margins are 2rem rather than the 2.25/2.5rem
-     they were, and the 12px that saves is spent on the masthead above: the
-     nameplate grew to the largest size the fold allows, and at 1280x720 the
-     difference is whether the closing note is a readable line or a line sliced
-     in half by the fold. A cut line is worse than either end.
-
-     Finally the short sheet. On a 320x568 screen this block cannot hold
-     headline, lede, controls and the note above the fold at full size: the
-     poster line sets three lines there (one, then two), and at 48px each of
-     those lines is 42px of leading, so the note lands 57px under the fold.
-     Setting the block smaller on *every* phone to fix that would spend the
-     poster on the many for one, so the reduction is scoped to short viewports
-     (see the media query in the style block, where the 65px it saves is broken
-     down): the press sets its type to fit the sheet it is printing on, not the
-     sheet it wishes it had. -->
-<section class="relative overflow-x-clip">
-  <div class="hero-block mx-auto max-w-[1320px] px-5 pt-6 pb-14 sm:px-8 sm:pt-8 sm:pb-16">
     <Headline
       as="h1"
-      lines={[HERO.lineOne, HERO.lineTwo]}
-      class="text-[clamp(3rem,11vw,9.5rem)] text-ink"
+      lines={[active.lineOne, active.lineTwo]}
+      class="mt-8 text-[clamp(2.6rem,6.6vw,5.6rem)] text-ink"
     />
-    <p
-      class="hero-lede mt-8 max-w-[62ch] font-serif text-[clamp(1.25rem,2.4vw,1.9rem)] leading-snug text-muted"
-    >
-      {HERO.lede}
-    </p>
 
-    <div class="hero-actions mt-8 flex flex-wrap items-center gap-3">
-      <ActionLink href={downloadHref} island>{HERO.primary}</ActionLink>
-      <ActionLink href="#courses" variant="ghost">{HERO.secondary}</ActionLink>
+    <div
+      class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16"
+    >
+      <!-- The lede is prose, so it is set in the reading face. Everything
+           that is a label, a reading or a control is not. -->
+      <p class="reading max-w-[54ch] text-[clamp(1.2rem,2.1vw,1.55rem)] leading-snug text-ink">
+        {active.lede}
+      </p>
+
+      <div class="hero-actions flex flex-wrap items-center gap-3 lg:justify-end">
+        {#if audience === "learner"}
+          <ActionLink href={downloadHref} island>{active.primary}</ActionLink>
+          <ActionLink href={coursesHref} variant="ghost">{active.secondary}</ActionLink>
+        {:else}
+          <ActionLink href={employersHref} island>{active.primary}</ActionLink>
+          <ActionLink href={downloadHref} variant="ghost">{HERO.primary}</ActionLink>
+        {/if}
+      </div>
     </div>
-    <p class="hero-note mt-4 text-[12.5px] text-faint">{HERO.note}</p>
   </div>
 
-  <!-- The artefact: the one thing on the page the press actually produces.
-       Everything above is type; this is the object, and it is printed live. -->
-  <div id="hero-run" class="halftone border-y border-ink">
-    <div class="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
-      <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <h2 class="display max-w-[18ch] text-[clamp(1.6rem,3.2vw,2.6rem)] text-ink">
-          A run leaves the reason, and then a receipt.
+  <!-- The artefact band: the one thing on the page the bench actually
+       produces. Everything above is type; this is the object, and it is
+       printed live. The band is ruled to the millimetre, because that is what
+       a bench is: a surface you measure on, not a panel you look at. -->
+  <div id="hero-run" class="plot border-y border-rule bg-ground">
+    <div class="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 sm:py-16">
+      <div class="mb-8 max-w-[62ch]">
+        <h2 class="display text-[clamp(1.4rem,2.6vw,2.1rem)] text-ink">
+          A failure, its reason, and a receipt.
         </h2>
-        <p class="stamp max-w-[30ch] text-[11px] leading-relaxed text-muted">
-          a failure, its reason, the same check passing, and the sheet anyone can re-derive
+        <p class="reading mt-3 text-[15.5px] leading-relaxed text-muted">
+          The same check passing once the cause is fixed, and the sheet anyone can re-derive.
         </p>
       </div>
       <ProofRun />
     </div>
   </div>
+
+  <!-- The measurements, as a readout row. -->
+  <div class="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
+    <FactStrip />
+  </div>
 </section>
 
-<!-- ===================== 2 · The argument =====================
-     An editorial column: one claim held at the left, three arguments read as
-     hanging text at the right. No cards, no borders — the space does the
-     dividing. -->
+<!-- = 2 · The argument =====================
+     Three arguments, read as columns: a mono position, a claim, and the
+     reasoning under it. No cards, no borders around the content — the rules
+     do the dividing. -->
 <section id="why" class="border-t border-rule">
-  <div class="mx-auto grid max-w-[1320px] gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
-    <div class="min-w-0">
-      <h2 class="display text-[clamp(2rem,4.6vw,3.4rem)] text-ink">
-        Tutorials do not fail you. They stop.
-      </h2>
-      <p class="mt-6 max-w-[42ch] text-[15px] leading-relaxed text-muted">
-        Two of the three things an interview asks for — that you can build, and that you can prove
-        it — are exactly the two a video never produced.
-      </p>
-    </div>
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+    <SectionHead
+      title="The two things a video never produced."
+      caption="Two of the three things an interview asks for, that you can build and that you can prove it, are exactly the two a video never produced."
+      wide
+    />
 
-    <div class="min-w-0" use:inViewStagger>
-      {#each WEDGE as cell (cell.kicker)}
-        <article class="fade-up border-t border-ink pt-6 pb-8 last:pb-0" data-stagger-item>
-          <h3 class="display max-w-[24ch] text-[clamp(1.25rem,2.3vw,1.75rem)] text-ink">
+    <div class="mt-14 grid gap-x-12 gap-y-10 lg:grid-cols-3" use:inViewStagger>
+      {#each WEDGE as cell (cell.title)}
+        <article class="fade-up border-t border-rule-strong pt-6" data-stagger-item>
+          <h3 class="display max-w-[20ch] text-[clamp(1.3rem,2.2vw,1.7rem)] text-ink">
             {cell.title}
           </h3>
-          <p class="mt-3 max-w-[58ch] text-[15px] leading-relaxed text-muted">{cell.body}</p>
+          <p class="reading mt-3 max-w-[42ch] text-[15.5px] leading-relaxed text-muted">{cell.body}</p>
         </article>
       {/each}
     </div>
   </div>
 </section>
 
-<!-- ===================== 3 · The door =====================
-     A ruled form: three steps on the left rail, their instructions on the
-     right, each step a full-width row under a heavy rule. Numbers are real
-     here — the order is the point — so they are allowed to be loud. -->
+<!-- = 3 · The market =====================
+     Four readings from the hiring research, each with the study it came from,
+     and the turn that connects them to the product. The sources are printed
+     because a number with no source is a rumour, and a rumour is what this
+     page is arguing against. -->
+<section id="market" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+    <SectionHead title={MARKET.title} caption={MARKET.caption} wide />
+    <div class="mt-14">
+      <MarketPanel />
+    </div>
+  </div>
+</section>
+
+<!-- = 4 · The propositions =====================
+     What the reader is actually buying, in the voice of the audience they
+     chose at the top of the page. The switch in the hero speaks here too, so
+     a hiring manager is never handed a learner's promise. -->
+<section id="buy" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+    <SectionHead
+      title="What you are actually buying."
+      caption="Three propositions, and they change with the audience you chose at the top of the page. The promise underneath is the same either way: the work, in the place you already work, judged by something you can check."
+      wide
+    />
+    <div class="mt-14">
+      <PropositionStack {audience} />
+    </div>
+  </div>
+</section>
+
+<!-- = 5 · The datasheet =====================
+     The competitor's claim, restated as measurements. Every row is a promise
+     the product can keep today, and every one of them can be checked. -->
+<section id="measures" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+    <SectionHead
+      title="What the bench measures."
+      caption="Eight readings, in three groups, and the value each one actually holds today. None of them is a badge, and none of them needs a sales call to check."
+      wide
+    />
+    <div class="mt-14">
+      <SpecSheet />
+    </div>
+  </div>
+</section>
+
+<!-- = 6 · The market's shape =====================
+     Five kinds of product the reader could buy instead, and the line each one
+     stops at. The names are off: a category is a fair thing to describe, and
+     a competitor is not. -->
 <section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+    <SectionHead title={LANDSCAPE.title} caption={LANDSCAPE.caption} wide />
+    <div class="mt-14">
+      <CategoryMap />
+    </div>
+  </div>
+</section>
+
+<!-- = 7 · The door =====================
+     A ruled form: three steps on the left, their instructions on the right,
+     each step a full-width row under a heavy rule. Numbers are real here —
+     the order is the point — so they are allowed to be loud. -->
+<section class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
     <SectionHead
       title="Download. Approve a code. Your tier opens the rest."
-      caption="Learning happens in the IDE — this site holds the download, the account and the proof. There is no second way to learn here, which is the point."
+      caption="Learning happens in the IDE. This site holds the download, the account and the proof. There is no second way to learn here, which is the point."
       wide
     />
 
-    <div class="mt-14 border-t-2 border-ink">
+    <div class="mt-14 border-t-2 border-rule-strong">
       {#each STEPS as step (step.id)}
         {@const points = "points" in step ? step.points : step.steps}
-        <div class="grid gap-6 border-b border-ink py-9 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
+        <div class="grid gap-6 border-b border-rule-strong py-9 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
           <div class="flex min-w-0 gap-6">
-            <span class="num pt-1 text-[clamp(2rem,4vw,2.8rem)] leading-none font-bold text-accent">
+            <span class="num pt-1 text-[clamp(1.8rem,3.4vw,2.5rem)] leading-none font-bold text-accent">
               {step.n}
             </span>
             <h3 class="display max-w-[18ch] text-[clamp(1.4rem,2.6vw,2.1rem)] text-ink">
@@ -199,7 +313,7 @@
           </div>
 
           <div class="min-w-0">
-            <p class="max-w-[58ch] text-[15px] leading-relaxed text-muted">{step.caption}</p>
+            <p class="reading max-w-[58ch] text-[16px] leading-relaxed text-muted">{step.caption}</p>
             <ul class="mt-6 grid gap-3">
               {#each points as point, i (`${step.id}-${i}`)}
                 <li class="grid grid-cols-[auto_1fr] gap-4 text-[14.5px] leading-relaxed text-ink">
@@ -220,21 +334,20 @@
       {/each}
     </div>
 
-    <p class="mt-8 text-[13px] text-faint">
-      Free to download, and the base course is bundled with the installer — so the first judged
-      verdict never waits on an account.
+    <p class="reading mt-8 max-w-[68ch] text-[15.5px] leading-relaxed text-muted">
+      {HERO.note}
     </p>
   </div>
 </section>
 
-<!-- ===================== 4 · The handshake =====================
+<!-- = 8 · The handshake =====================
      A demonstration, not a paragraph: the two panes of the device-code
      handshake, side by side, with the approve on this side. -->
 <section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
     <SectionHead
       title="The IDE never asks for your password."
-      caption="It prints a short code and opens this site. You sign in here, approve the code, and the editor signs in by itself — nothing to paste, nowhere to mistype. Try the two halves below."
+      caption="It prints a short code and opens this site. You sign in here, approve the code, and the editor signs in by itself. Nothing to paste, nowhere to mistype. Try the two halves below."
     />
     <div class="mt-12">
       <DeviceCode />
@@ -242,32 +355,44 @@
   </div>
 </section>
 
-<!-- ===================== 5 · The lights =====================
-     A plate of thirty-two squares lit by tier: the pricing story told as one
-     object rather than as two cards. -->
-<section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
+<!-- = 9 · The manifest =====================
+     The curriculum as a plate of lights and a ledger of phases. Thirty-two
+     squares, one per shipped phase, and the real names underneath. -->
+<section id="courses" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
     <SectionHead
-      title="Your tier opens the courses."
-      caption="The base course is free forever and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have."
+      title="Three courses. Eighty phases. One editor."
+      caption="Everything below ships inside the IDE and is judged there. This site teaches nothing itself. Open a course to read its real phase list."
+      wide
     />
-    <div class="mt-12">
-      <TierGrid />
+
+    <div class="mt-14">
+      <PhaseField onselect={openCourse} />
     </div>
-    <div class="mt-8">
-      <ActionLink href={pricingHref} variant="ghost" island>See pricing</ActionLink>
+
+    <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+      <div class="min-w-0">
+        <PhaseMatrix />
+        <p class="mt-5 text-[13px] leading-relaxed text-faint">
+          Phase names are the shipped manifest, not marketing copy: the build fails if this list and
+          the IDE disagree.
+        </p>
+      </div>
+      <div class="min-w-0">
+        <CourseLedger focus={focusedCourse} />
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ===================== 6 · The chain =====================
+<!-- = 10 · The chain =====================
      A full-bleed band, scrubbed against the scroll: the one section whose
      shape is a machine running rather than a column of text. -->
-<section class="border-y border-ink bg-panel">
-  <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
+<section class="border-y border-rule-strong bg-panel">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
     <SectionHead
       title="From your keyboard to someone else's browser."
-      caption="Scroll it. Each link only holds while the one before it does — a receipt that cannot be re-derived is a badge, and this site does not issue badges."
+      caption="Scroll it. Each link only holds while the one before it does. A receipt that cannot be re-derived is a badge, and this site does not issue badges."
     />
     <div class="mt-14">
       <ProofChain />
@@ -275,37 +400,34 @@
   </div>
 </section>
 
-<!-- ===================== 7 · The ledger =====================
-     The curriculum as ruled rows that open, not a grid of equal cards. -->
-<section id="courses" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
+<!-- = 11 · The hiring manager =====================
+     The other half of the market, and the other half of the promise. What is
+     true of a finished phase, and what is not built yet. -->
+<section id="employers" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
     <SectionHead
-      title="Three courses. Thirty-two phases. One editor."
-      caption="Everything below ships inside the IDE and is judged there — this site teaches nothing itself. Open a course to read its real phase list."
+      title="Juniors arrive with work, not with promises."
+      caption="Entry-level hiring has tightened, and the thing that survives it is evidence rather than a claim. Here is exactly what a finished phase leaves behind, and exactly what does not exist yet."
       wide
     />
-    <div class="mt-12">
-      <CourseLedger />
+    <div class="mt-14">
+      <EmployerBoard {verifyHref} />
     </div>
-    <p class="mt-8 text-[13px] text-faint">
-      Phase names are the shipped manifest, not marketing copy — the build fails if this list and the
-      IDE disagree.
-    </p>
   </div>
 </section>
 
-<!-- ===================== 8 · The limits =====================
+<!-- = 12 · The limits =====================
      The one place the page raises its voice: what the product will not do,
      set on heavy rules, then exactly where its certainty stops. -->
 <section id="limits" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
     <h2 class="display max-w-[16ch] text-[clamp(2.2rem,5.2vw,3.8rem)] text-ink">
       What NEXORA will not do.
     </h2>
 
-    <ul class="mt-12 grid gap-8 border-t-2 border-ink pt-8 lg:grid-cols-3 lg:gap-12">
+    <ul class="mt-12 grid gap-8 border-t-2 border-rule-strong pt-8 lg:grid-cols-3 lg:gap-12">
       {#each NO_LIST as line, i (`no-${i}`)}
-        <li class="text-[15px] leading-relaxed text-muted" use:inView>
+        <li class="reading text-[16px] leading-relaxed text-muted" use:inView>
           <span class="num mb-3 block text-[12px] text-removed" aria-hidden="true">✗</span>
           {line}
         </li>
@@ -330,7 +452,7 @@
             >
               {row.label}
             </p>
-            <p class="max-w-[52ch] text-[15px] leading-relaxed text-muted">{row.body}</p>
+            <p class="reading max-w-[52ch] text-[16px] leading-relaxed text-muted">{row.body}</p>
           </div>
         {/each}
       </div>
@@ -342,11 +464,11 @@
   </div>
 </section>
 
-<!-- ===================== 9 · The questions =====================
+<!-- = 13 · The questions =====================
      A plain ruled list; the answers are the content, so nothing frames them. -->
 <section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
-    <SectionHead title="The five questions, answered plainly." wide />
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+    <SectionHead title="The questions, answered plainly." wide />
     <div class="mt-12 border-t border-rule">
       {#each FAQ as item, i (`q-${i}`)}
         <details class="nexora-details border-b border-rule">
@@ -357,7 +479,7 @@
             <span class="flex-1">{item.q}</span>
             <span class="stamp shrink-0 text-[14px] text-accent" aria-hidden="true">+</span>
           </summary>
-          <p class="max-w-[68ch] pb-6 pl-[2.6rem] text-[14.5px] leading-relaxed text-muted">
+          <p class="reading max-w-[68ch] pb-6 pl-[2.6rem] text-[16px] leading-relaxed text-muted">
             {item.a}
           </p>
         </details>
@@ -366,24 +488,22 @@
   </div>
 </section>
 
-<!-- ===================== 10 · The close =====================
-     A poster to end on. The one place the outlined ink line is used, because
-     this is the single sentence the page wants read twice. -->
-<section class="border-t-2 border-ink">
-  <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
+<!-- = 14 · The close =====================
+     A poster to end on, and the one promise the whole page has been making. -->
+<section class="border-t-2 border-rule-strong">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
     <Headline
       as="p"
-      lines={["Nobody is coming", "to check your work."]}
-      class="text-[clamp(2.4rem,8vw,6rem)] text-ink"
+      lines={["You still have to build it.", "We just tell you when it works."]}
+      class="text-[clamp(2.2rem,6.4vw,5rem)] text-ink"
     />
     <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-      <p class="max-w-[46ch] text-[15px] leading-relaxed text-muted">
-        So the product does it, deterministically, and hands you the artefact. You still have to
-        build the thing — that part was never the tutorial's to give.
+      <p class="reading max-w-[48ch] text-[17px] leading-relaxed text-muted">
+        {POSITIONING}
       </p>
       <div class="flex flex-wrap items-center gap-3 lg:justify-end">
         <ActionLink href={downloadHref} island>{HERO.primary}</ActionLink>
-        <ActionLink href={pricingHref} variant="ghost">See pricing</ActionLink>
+        <ActionLink href={pricingHref} variant="ghost">Compare tiers</ActionLink>
       </div>
     </div>
     <div id="foot-sentinel" class="h-px" aria-hidden="true"></div>
@@ -391,9 +511,10 @@
 </section>
 
 {#if pastHero && !atFooter}
-  <aside class="ctabar" aria-label="Get the IDE">
-    <p class="stamp hidden text-[11.5px] text-faint sm:block">
-      Free to download · base course included
+  <aside class="ctabar" aria-label="Download the IDE">
+    <p class="stamp text-[11.5px] text-faint">
+      <span class="sm:hidden">Free</span>
+      <span class="hidden sm:inline">Free to download · base course included</span>
     </p>
     <ActionLink href={downloadHref} size="sm" island>{HERO.primaryShort}</ActionLink>
   </aside>
@@ -408,17 +529,18 @@
     z-index: 40;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: var(--space-4);
     padding: var(--space-3) clamp(var(--space-5), 4vw, var(--space-8));
-    background: var(--color-ink);
-    border-top: 2px solid var(--color-ink);
+    background: var(--color-panel);
+    border-top: 1px solid var(--color-rule-strong);
+    box-shadow: 0 -18px 34px -30px rgb(0 0 0 / 0.9);
     animation: ctabar-in 260ms var(--ease-out) both;
   }
-  /* On the black bar the type has to come from the paper side of the palette,
-     not the ink ramp — ink on ink is unreadable and no token pairs them. */
+  /* On the panel the type has to come from the ink ramp — the room's own dark
+     is the page's ground, and a label on it would disappear. */
   .ctabar :global(.stamp) {
-    color: var(--color-paper-2);
+    color: var(--color-faint);
   }
   @keyframes ctabar-in {
     from {
@@ -430,40 +552,24 @@
       transform: translateY(0);
     }
   }
-  /* The short sheet: a short viewport, whatever its width, because the shortage
-     is vertical. This is a print decision — the press sets its type to fit the
-     page it is printing on. The 65px it saves at 320x568 is 21px of leading
-     (the poster line sets three lines, and 40px lines lead 35px where 48px
-     lines lead 42px) plus 44px of air.
+  /* The short sheet: a short viewport, whatever its width, because the
+     shortage is vertical. The bench sets its type to fit the page it is
+     printing on.
 
-     The only type that moves is the poster line's floor (2.5rem instead of
-     3rem). Above ~364px wide the clamp's middle term drives the size, so on a
-     short laptop window the headline is untouched and only the air tightens;
-     on a narrow phone the line itself sets smaller, which is the case that
-     needs it. Measured: the closing note moves from 57px below the fold to
-     inside it at 320x568, from 31px below to inside at 1024x600, and nothing
-     changes at 375x667, 390x844, 768x1024, 1280x720 or 1440x900. */
+     The only type that moves is the poster line's floor (2rem instead of
+     2.5rem). Above ~364px wide the clamp's middle term drives the size, so on
+     a short laptop window the headline is untouched and only the air
+     tightens; on a narrow phone the line itself sets smaller, which is the
+     case that needs it. */
   @media (max-height: 660px) {
     .hero-block {
       padding-top: var(--space-3);
     }
     .hero-block :global(h1) {
-      font-size: clamp(2.5rem, 11vw, 9.5rem);
-    }
-    .hero-block .hero-lede {
-      margin-top: var(--space-5);
+      font-size: clamp(2rem, 6.6vw, 5.6rem);
     }
     .hero-block .hero-actions {
       margin-top: var(--space-5);
-    }
-    .hero-block .hero-note {
-      margin-top: var(--space-2);
-    }
-  }
-
-  @media (min-width: 640px) {
-    .ctabar {
-      justify-content: space-between;
     }
   }
 </style>

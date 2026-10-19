@@ -31,11 +31,29 @@ const axePath = require.resolve("axe-core/axe.min.js");
 const allRoutes = [
   "/",
   "/pricing",
+  "/employers",
   "/auth",
   "/auth/ide",
   "/profile",
   "/verify",
   "/download",
+  // The legal documents are public pages like any other, so they are scanned
+  // like any other. A policy nobody can read with a screen reader is not a
+  // policy that was published.
+  "/privacy",
+  "/privacy-choices",
+  "/ai",
+  "/terms",
+  "/cookies",
+  "/subprocessors",
+  "/dpa",
+  "/security",
+  "/accessibility",
+  // The data-rights hub, scanned signed-out: this is the page where a control
+  // that only exists behind a sign-in would be invisible to anyone who needs it
+  // (and California forbids making a request conditional on an account), so the
+  // signed-out state is the one that has to be usable.
+  "/account",
   "/route-that-does-not-exist",
 ];
 const routes = process.env.AXE_ROUTES

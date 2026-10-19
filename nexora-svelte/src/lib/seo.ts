@@ -17,15 +17,15 @@ export const SITE_URL_FALLBACK = "http://localhost:5173";
 export const SITE_NAME = "NEXORA";
 
 /** The shell's title, and the title any page without its own falls back to. */
-export const SITE_TITLE = "NEXORA — Download the IDE. Base course included.";
+export const SITE_TITLE = "NEXORA: a course that runs inside a real IDE, and proves what you built.";
 
 /** The shell's description: the promise with its framing clause. */
 export const SITE_DESCRIPTION =
-  "NEXORA teaches programming inside a desktop IDE: download it with the base course bundled, sign in through the browser, and unlock courses per your tier.";
+  "A course that runs inside a real desktop IDE. Every phase is a working app, every check comes back with a reason, and every pass leaves a signed receipt.";
 
 /** The same promise without the frame — what a social card has room for. */
 export const SITE_TAGLINE =
-  "Learn programming inside a desktop IDE — with every step decided by evidence, not by time served.";
+  "Learn programming inside a desktop IDE, with every step decided by evidence rather than by time served.";
 
 /** Crawlers truncate around here; a description longer than this is wasted. */
 export const META_DESCRIPTION_LIMIT = 160;
@@ -47,16 +47,37 @@ export function absoluteUrl(origin: string, path: string): string {
 }
 
 /** The public, account-free pages. `/profile` is deliberately absent: it is a
-    signed-in view, and a crawler has nothing to index behind it. Only the
-    front door is listed — the download, the account, the tier, and the proof.
-    Learning happens in the desktop IDE, so no classroom route is advertised. */
+    signed-in view, and a crawler has nothing to index behind it. The front door
+    is listed — the download, the account, the tier, and the proof — together
+    with the legal documents, which are public by design: a policy a visitor
+    cannot read without an account is not a policy.
+
+    The legal paths are the same ones the footer prints from `$lib/legal`; that
+    module is the single source of truth for the list, and `scripts/verify.ts`
+    asserts this array and the footer link list agree.
+
+    `/account` is deliberately absent, and it is the only public-facing page that
+    is. It is a signed-in tool, not a document: a crawler has no account, so every
+    visit is a sign-in prompt. What it must never become is the *only* route to a
+    right — the notice publishes the contact address for exactly that reason, and
+    California requires that a request be possible without an account. */
 const PUBLIC_PATHS = [
   "/",
   "/pricing",
+  "/employers",
   "/auth",
   "/auth/ide",
   "/verify",
   "/download",
+  "/privacy",
+  "/privacy-choices",
+  "/ai",
+  "/terms",
+  "/cookies",
+  "/subprocessors",
+  "/dpa",
+  "/security",
+  "/accessibility",
 ];
 
 /** Every indexable path: exactly the public pages. Nothing else is emitted. */

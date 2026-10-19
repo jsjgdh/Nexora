@@ -1,0 +1,59 @@
+A course ends when the author stops talking.
+A desktop editor with the course inside it.
+A few are your browser's report of what it saw, and the platform has to take that on trust.
+A miss comes back with the reason, never a score
+A model may explain a failure; it never decides one.
+A programming course that runs inside a real IDE, and refuses to call you finished until a rule engine agrees.
+A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.
+Anyone can re-derive it at /verify without an account, and the platform answers too.
+Assessment stays free — a verdict you have to pay for is not a verdict you can trust.
+Assessment stays free — a verdict you have to pay for is not one you can trust
+Base course bundled with the IDE — offline, no account
+Base course, bundled — works offline, no account
+Computed-style and scripted checks report what your browser observed.
+Do I learn in the browser or in the IDE?
+Each link only holds while the one before it does — a receipt that cannot be re-derived is a badge, and this site does not issue badges.
+Everything below ships inside the IDE and is judged there — this site teaches nothing itself.
+example receipt · an illustration, not your work
+flex cursor-pointer items-baseline gap-5 py-5 text-[15.5px] font-semibold text-ink
+Free — the base course, judged end to end
+Further courses per your tier, inside the same IDE
+hero-block mx-auto max-w-[1320px] px-5 pt-6 pb-14 sm:px-8 sm:pt-8 sm:pb-16
+It asks you to build something and explain it.
+It explains a failure; it never grades one.
+It prints a short code and opens this site.
+It shows a short code and opens this site — you sign in here, approve the code, and go back.
+Learning happens in the IDE — this site holds the download, the account and the proof.
+mt-12 grid gap-8 border-t-2 border-ink pt-8 lg:grid-cols-3 lg:gap-12
+mx-auto grid max-w-[1320px] gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20
+No email, no retention maze, no “are you sure?” loop.
+not ok 1 - completing a task removes it from the list
+Nothing to collect: no completion badge, no badge at all, and no score for finishing.
+ok 1 - completing a task removes it from the list
+Open a course to read its real phase list.
+Pro — every further phase, fetched per entitlement
+Purchasing-power discounts are applied as a discount you can see, never as a higher local price.
+Real local workspace: your files, your tests, your mistakes
+Sixteen phases, from first install to working alone.
+So the thing worth having is a record of work that ran, that a stranger can re-derive without trusting us.
+Some checks can be recomputed by the platform from your own run.
+src/store.js:42 — the filter runs before the delete resolves
+Tests run against your code and a miss tells you the reason.
+The base course is free forever and assessment is never gated.
+The base course ships in the installer and runs offline, so the first judged verdict is minutes away rather than an account away.
+The desktop build is not hosted, so the download is not live.
+The IDE download, the base course, every check and every verdict.
+The IDE shows a code like KQ7M-XR42 and opens your browser.
+The IDE that won't tell you you've learned something until it can prove it — and that tells you when it can't.
+The interview does not ask what you finished.
+The platform cannot re-derive them, so they are labelled as yours, never as ours.
+The renewal date is shown before you pay and in your profile, every time — never only at the point of cancelling.
+The run is re-executed server-side against a signed receipt bound to the hash of the file it judged.
+There is no portfolio export and no employer-facing record yet, and we do not claim one.
+There is no second way to learn here, which is the point.
+They freeze because following and building are different skills, and only one of them was ever practised.
+This one ends when your own code runs and a test says so — and it will say no, with the reason.
+This site holds your download, your account and your proof — the lessons, the editor and the tests live in the desktop app.
+We say which is which, on every phase, before you start it.
+You sign in here, approve the code, and the editor signs in by itself — nothing to paste, nowhere to mistype.
+You sign in on this site and approve that code.

@@ -8,6 +8,7 @@
   import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
   import { BILLING_COMMITMENTS, FREE_TIER_POINTS } from "$lib/content/site";
+  import { SUBSCRIPTION_TERMS } from "$lib/legal";
 
   /* Pricing backed by the real plans feed — never hardcoded copy. The API
      names plans only (no amounts travel through it), so prices live where
@@ -97,14 +98,11 @@
       <p class="num mt-5 text-[clamp(2rem,4vw,2.75rem)] leading-none text-ink">$0</p>
       <ul class="mt-6 grid gap-3 border-t border-rule pt-6">
         {#each FREE_TIER_POINTS as point, i (`free-${i}`)}
-          <li class="flex gap-3 text-[13.5px] leading-relaxed text-muted">
-            <span class="num shrink-0 text-[11px] text-added">+</span>
-            <span>{point}</span>
-          </li>
+          <li class="text-[13.5px] leading-relaxed text-muted">{point}</li>
         {/each}
       </ul>
       <div class="mt-7">
-        <ActionLink href="/download" island>Get the IDE</ActionLink>
+        <ActionLink href="/download" island>Download the IDE</ActionLink>
       </div>
     </Plate>
 
@@ -148,7 +146,7 @@
           </p>
         {:else if plans.length === 0}
           <p class="text-[14px] leading-relaxed text-muted">
-            No paid plans published yet — everything stays free until they are.
+            No paid plans published yet. Everything stays free until they are.
           </p>
         {:else}
           <ul class="grid gap-3">
@@ -163,7 +161,7 @@
           </ul>
           <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
             Prices are shown on the secure checkout (Dodo Payments) before anything is charged. The
-            renewal date is on that page too, before you pay — not only at the point of cancelling.
+            renewal date is on that page too, before you pay, and not only at the point of cancelling.
           </p>
         {/if}
       </div>
@@ -174,7 +172,7 @@
        the loudest thing anyone says about a competitor in this category is that
        they felt cheated on money rather than that the teaching was bad. These
        are commitments the product has to keep, so the suite asserts them where
-       they are stated. Refund window marked for legal review. -->
+       they are stated. -->
   <section class="mt-16" aria-label="Billing commitments">
     <h2 class="display text-[clamp(1.5rem,2.8vw,2.1rem)] text-ink">How billing works here.</h2>
     <div class="grid gap-8 border-t border-rule pt-8 sm:grid-cols-2">
@@ -185,5 +183,58 @@
         </div>
       {/each}
     </div>
+  </section>
+
+  <!-- Before the price, not after it.
+       California's Automatic Renewal Law (as amended by AB 2863) requires the
+       renewal terms to be clear and conspicuous, in visual proximity to the
+       consent, *before* checkout completes — and the same facts are what the EU
+       Consumer Rights Directive calls pre-contract information. Both point at the
+       same place: someone deciding whether to pay should be able to read the
+       renewal, the cancellation route, the refund position and the withdrawal
+       right here, without opening another document or reaching a checkout page.
+       The five sentences live in $lib/legal so the terms, this page and the
+       checkout cannot describe one subscription three ways. -->
+  <section class="mt-16" aria-labelledby="paid-terms">
+    <h2 id="paid-terms" class="display text-[clamp(1.5rem,2.8vw,2.1rem)] text-ink">
+      Before you pay: the terms of the subscription.
+    </h2>
+    <p class="mt-4 max-w-[62ch] text-[13.5px] leading-relaxed text-muted">
+      No price is printed on this page on purpose. The plan and its amount are shown on the secure
+      checkout, where the money is charged. These are the terms that go with it, in the same place as
+      the decision rather than in a document behind a link.
+    </p>
+    <dl class="mt-8 grid gap-6 border-t border-rule pt-8 sm:grid-cols-2">
+      <div class="max-w-[46ch]">
+        <dt class="text-[15px] font-semibold text-ink">It renews until you cancel</dt>
+        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.renewal}</dd>
+      </div>
+      <div class="max-w-[46ch]">
+        <dt class="text-[15px] font-semibold text-ink">Cancelling</dt>
+        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.cancellation}</dd>
+      </div>
+      <div class="max-w-[46ch]">
+        <dt class="text-[15px] font-semibold text-ink">Refunds</dt>
+        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.refund}</dd>
+      </div>
+      <div class="max-w-[46ch]">
+        <dt class="text-[15px] font-semibold text-ink">Your 14-day right of withdrawal</dt>
+        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.withdrawal}</dd>
+      </div>
+      <div class="max-w-[46ch]">
+        <dt class="text-[15px] font-semibold text-ink">If a price changes</dt>
+        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.priceChange}</dd>
+      </div>
+      <div class="max-w-[46ch]">
+        <dt class="text-[15px] font-semibold text-ink">Free trials</dt>
+        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.trial}</dd>
+      </div>
+    </dl>
+    <p class="mt-8 max-w-[62ch] text-[12.5px] leading-relaxed text-faint">
+      The same terms are in the
+      <a href="/terms" class="text-accent underline underline-offset-4">terms of service</a>, and the
+      subscription itself is run by the payment provider as merchant of record, which is why
+      cancelling happens in its portal rather than in a form here.
+    </p>
   </section>
 </div>

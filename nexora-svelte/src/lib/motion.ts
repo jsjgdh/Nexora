@@ -29,6 +29,36 @@ export function reduced(): boolean {
 const clamp01 = (n: number): number => (n < 0 ? 0 : n > 1 ? 1 : n);
 
 /**
+ * The safety net for the reveal.
+ *
+ * The reveal is a CSS transition, and a transition that never finishes leaves
+ * the heading where it started — which on this site would hide the argument
+ * itself. A browser that has stopped ticking its transitions (a backgrounded
+ * tab on a throttled clock, a compositor that gave up, an embedded webview)
+ * is a real failure mode, not a hypothetical one, so once the element has
+ * been marked as shown a timer settles it outright: the transition is
+ * switched off and the final state is written as a plain value.
+ *
+ * A browser that ticks its transitions never reaches this path, because the
+ * transition has already finished by the time the timer fires. The timer is
+ * deliberately longer than the longest transition in the build.
+ */
+function settle(node: HTMLElement): void {
+  window.setTimeout(() => {
+    const targets = new Set<HTMLElement>();
+    if (node.classList.contains("fade-up")) targets.add(node);
+    for (const el of node.querySelectorAll<HTMLElement>(".fade-up, .line-mask > span")) {
+      targets.add(el);
+    }
+    for (const target of targets) {
+      target.style.transition = "none";
+      target.style.transform = "translateY(0)";
+      target.style.opacity = "1";
+    }
+  }, 1400);
+}
+
+/**
  * Reveal once, when the element is far enough into the viewport.
  *
  * Sets `data-shown="true"` rather than adding an animation, so the visual
@@ -51,6 +81,7 @@ export function inView(
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         node.dataset.shown = "true";
+        settle(node);
         io.disconnect();
         params.onShown?.();
       }
@@ -80,7 +111,10 @@ export function inViewStagger(
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         items.forEach((item, i) => {
-          window.setTimeout(() => (item.dataset.shown = "true"), i * step);
+          window.setTimeout(() => {
+            item.dataset.shown = "true";
+            settle(item);
+          }, i * step);
         });
         io.disconnect();
       }

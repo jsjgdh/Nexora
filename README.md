@@ -8,7 +8,7 @@ Two applications live here.
 
 | Path | What it is | Stack |
 |---|---|---|
-| [`nexora-svelte/`](nexora-svelte) | The learner app — roadmap, lesson workspace, assessment, progress | SvelteKit 5 (Svelte 5 runes), Tailwind v4, adapter-node |
+| [`nexora-svelte/`](nexora-svelte) | The front door — the site, the download, the account, and the proof | SvelteKit 5 (Svelte 5 runes), Tailwind v4, adapter-node |
 | [`platform/`](platform) | The service mesh — auth, curriculum, progress, execution, tutor, billing behind one gateway | Fastify + TypeScript, Postgres per service, Docker Compose |
 
 Contributor-facing truth lives at the root: [`TODO.md`](TODO.md) (what is left
@@ -37,8 +37,10 @@ LLM in the grading path. AI may explain, never grade.
 
 ## Run the learner app
 
-The public entry is `/`. The learner roadmap lives at `/roadmap`; sign-up and account-free lesson
-flows both return learners there.
+The public entry is `/`. It is the front door and nothing more: the download, the account, the tier,
+and the proof surface at `/verify`. The learning itself happens in the desktop IDE, and there is no
+second way to learn here. `/employers` is the same argument as a document: the hiring manager's
+one-pager, which prints on a single sheet.
 
 ```bash
 cd nexora-svelte
@@ -91,11 +93,13 @@ Every suite in this repo is meant to be run, not admired:
 ```bash
 cd nexora-svelte && npm run check       # svelte-check: types across every component
 cd nexora-svelte && npm run verify      # assertion suite over curriculum, checks, placement, sync
+cd nexora-svelte && npm run verify:a11y # axe over every public route
+cd nexora-svelte && npm run verify:ux   # reflow, no-script, reduced-motion and keyboard sweep
 cd platform && npm run verify           # contracts, crypto, gateway, execution, tutor, billing
 cd platform && npm run verify:e2e       # the compose stack over real HTTP
 ```
 
-CI runs the first three on every push and PR (see [`.github/workflows/verify.yml`](.github/workflows/verify.yml));
+CI runs the four learner-app jobs on every push and PR (see [`.github/workflows/verify.yml`](.github/workflows/verify.yml));
 the compose e2e runs nightly and on demand.
 
 ## Conventions that are not negotiable

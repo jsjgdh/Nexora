@@ -10,7 +10,12 @@
    * the pointer. It is `aria-hidden` and the label carries the meaning, so a
    * screen reader hears the destination once rather than twice; the `magnet`
    * action is skipped entirely on touch and under reduced motion, which leaves
-   * an ordinary, perfectly good link. */
+   * an ordinary, perfectly good link.
+   *
+   * The circle is drawn from the element's own colour rather than from a
+   * fixed one, because an action can sit on an amber fill or on the dark
+   * ground and a circle that only works on one of them is a circle that is
+   * invisible half the time. */
 
   type Props = {
     href: string;
@@ -56,7 +61,7 @@
     width: 1.6rem;
     height: 1.6rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--color-ground) 12%, transparent);
+    background: color-mix(in srgb, currentColor 16%, transparent);
     transition: transform 320ms var(--ease-sheet);
   }
   a:hover .island {

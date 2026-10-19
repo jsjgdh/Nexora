@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request, cookies, url }) => {
   const presented = /^Bearer (.+)$/.exec(request.headers.get("authorization")?.trim() ?? "")?.[1] ?? null;
   if (!presented) {
     return json(
-      { error: { code: "unauthorized", message: "Sign in first — this ends sessions on every device." } },
+      { error: { code: "unauthorized", message: "Sign in first. This ends sessions on every device." } },
       { status: 401 }
     );
   }

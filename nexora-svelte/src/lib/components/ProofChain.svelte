@@ -50,7 +50,10 @@
   <ol class="chain-list">
     {#each LINKS as link, i (link.n)}
       <li class="chain-link" class:on={i < reached}>
-        <span class="chain-node num" aria-hidden="true">{link.n}</span>
+        <span class="chain-node" aria-hidden="true">
+          <span class="chain-dot"></span>
+          <span class="num">{link.n}</span>
+        </span>
         <span class="chain-title">{link.title}</span>
         <span class="chain-sub">{link.sub}</span>
       </li>
@@ -94,13 +97,31 @@
     border-top: 1px solid var(--color-rule);
     padding-top: var(--space-3);
   }
+  /* The node: a reading point on the trace. It is a hollow square that fills
+     when the rule reaches it, so the state is carried by the shape before it
+     is carried by the colour. */
   .chain-node {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: 11px;
     color: var(--color-faint);
     transition: color 300ms var(--ease-out);
   }
+  .chain-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border: 1px solid currentColor;
+    transition:
+      background-color 300ms var(--ease-out),
+      border-color 300ms var(--ease-out);
+  }
   .chain-link.on .chain-node {
     color: var(--color-accent);
+  }
+  .chain-link.on .chain-dot {
+    background: currentColor;
   }
   .chain-title {
     font-size: 14.5px;

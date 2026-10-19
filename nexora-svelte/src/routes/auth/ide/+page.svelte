@@ -2,6 +2,7 @@
   import { page } from "$app/state";
   import { apiConfigured, session } from "$lib/session.svelte";
   import Button from "$lib/components/Button.svelte";
+  import Check from "$lib/components/Check.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
   import Headline from "$lib/components/Headline.svelte";
   import Plate from "$lib/components/Plate.svelte";
@@ -25,6 +26,21 @@
   let error = $state<string | null>(null);
   let approved = $state(false);
 
+  /* The reader has to confirm that the code here is the code on their screen.
+   *
+   * The IDE opens this page with the code in the query string, and a code in
+   * a query string is a code anybody can put in a link. RFC 8628 §3.2 asks the
+   * client to show the user the code and have them confirm it, precisely
+   * because a link can be planted. Approving a code that belongs to somebody
+   * else signs their editor into this account, so the confirmation is not
+   * decoration: the approve button stays disabled until the reader has ticked
+   * the box, and changing the code clears the tick. */
+  let confirmed = $state(false);
+  $effect(() => {
+    code.trim();
+    confirmed = false;
+  });
+
   let phases = $state<{ id: string; title: string; goal: string; tier: string }[]>([]);
   let manifestNote = $state<string | null>(null);
 
@@ -37,7 +53,7 @@
       .catch(() => {
         // The manifest is a nicety here, not the task: approval must work even
         // when the curriculum service is unreachable.
-        manifestNote = "The course list could not be loaded right now — approval still works.";
+        manifestNote = "The course list could not be loaded right now. Approval still works.";
       });
   });
 
@@ -52,7 +68,7 @@
     } catch (err) {
       error =
         (err as { status?: number }).status === 404
-          ? "That code is not valid. Check the IDE and try again — codes expire after 15 minutes."
+          ? "That code is not valid. Check the IDE and try again. Codes expire after 15 minutes."
           : err instanceof Error
             ? err.message
             : "Something went wrong.";
@@ -81,7 +97,7 @@
       />
       <p class="mt-6 max-w-[46ch] text-[14.5px] leading-relaxed text-muted">
         Your IDE shows a short code and opened this page. Sign in, approve that code, and the IDE
-        signs itself in — no password typed anywhere but here.
+        signs itself in. No password is typed anywhere but here.
       </p>
 
       <div class="mt-10 grid gap-4 border-t border-rule pt-6">
@@ -107,7 +123,7 @@
         <Plate>
           <p class="stamp text-muted">checking your session</p>
           <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
-            One moment — the page is asking the server who you are before it can approve anything.
+            One moment. The page is asking the server who you are before it can approve anything.
           </p>
         </Plate>
       {:else if !session.loggedIn}
@@ -123,7 +139,7 @@
         </Plate>
       {:else if approved}
         <Plate crosshair>
-          <p class="text-[15px] font-semibold text-ink">Approved — return to your IDE.</p>
+          <p class="text-[15px] font-semibold text-ink">Approved. Return to your IDE.</p>
           <p class="mt-2 text-[13.5px] leading-relaxed text-muted">
             It signs in by itself from here. This page has nothing more to do.
           </p>
@@ -149,13 +165,34 @@
                 <p class="mt-2 text-[13.5px] leading-relaxed text-muted">{error}</p>
               </div>
             {/if}
+            {#if code.trim().length > 0}
+              <div class="mt-6 border-t border-rule pt-5">
+                <p class="max-w-[46ch] text-[14.5px] leading-relaxed text-ink">
+                  An IDE is asking to sign in with code
+                  <span class="num font-semibold">{code.trim()}</span>. Is that the code on your screen?
+                </p>
+                <Check
+                  bind:checked={confirmed}
+                  attrs={{ "data-device-agree": "" }}
+                  class="mt-3 max-w-[46ch]"
+                >
+                  Yes, this is the code on my screen.
+                </Check>
+              </div>
+            {/if}
             <div class="mt-6">
-              <Button type="submit" busy={busy}>{busy ? "Approving…" : "Approve this IDE"}</Button>
+              <Button
+                type="submit"
+                busy={busy}
+                disabled={!confirmed || code.trim().length === 0}
+              >
+                {busy ? "Approving…" : "Approve this IDE"}
+              </Button>
             </div>
           </form>
           <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
             Approving signs the IDE in as {session.user?.email ?? "this account"}. Wrong codes are
-            refused without saying why — a prober learns nothing from guessing.
+            refused without saying why, because a prober learns nothing from guessing.
           </p>
         </Plate>
       {/if}
@@ -180,7 +217,7 @@
             </ul>
             <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
               Free phases ship inside the IDE. Pro phases appear there once your subscription is
-              active — fetched per entitlement, never written to disk.
+              active, fetched per entitlement, never written to disk.
             </p>
           </Plate>
         </section>

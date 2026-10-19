@@ -6,26 +6,46 @@ something the engine cannot verify.**
 ## Workflow
 
 ```bash
-cd nexora-svelte && npm ci && npm run check && npm run verify
+cd nexora-svelte && npm ci && npm run check && npm run verify && npm run build
+cd nexora-svelte && npm run verify:a11y && npm run verify:ux
 cd platform      && npm ci && npm run build && npm run verify
 ```
 
-All four must be green before a change is considered finished. `npm run check` is the type gate
-(svelte-check over every component); `npm run verify` is the assertion suite. If your change adds
-behaviour, add assertions for it in the same commit — both suites are plain Node scripts with a
-tiny `ok(...)` helper, and they are meant to grow.
+All of them must be green before a change is considered finished. `npm run check` is the type gate
+(svelte-check over every component); `npm run verify` is the assertion suite. `npm run verify:a11y`
+is an axe scan over every public route, and `npm run verify:ux` is a sweep over the production
+build for the questions the other two do not ask: does the site reflow, does it read without the
+script, does it read without motion, can it be driven from the keyboard, and do the anchors land
+where the navigation promised. If your change adds behaviour, add assertions for it in the same
+commit — all four are plain Node scripts with a tiny `ok(...)` helper, and they are meant to grow.
 
 ### Changing curriculum content
 
-`nexora-svelte/src/lib/` is the single source of truth. The backend services embed a
-version-stamped snapshot of it:
+The IDE repo (`nexora-ide`, checked out as a **sibling** of this one — both under
+the same parent directory) is the single source of truth for the course, the design
+challenges and the suites the platform re-runs for attestation. The services embed
+version-stamped snapshots of it, all generated and none edited by hand:
 
 ```bash
-cd platform && npm run sync:curriculum
+cd platform && npm run sync        # regenerate all three snapshots
+cd platform && npm run sync:check  # assert the committed bytes are current
 ```
 
-Skipping this makes the curriculum service serve stale content. The suite detects drift by content
-hash, so you will be told rather than silently shipping a mismatch.
+`sync` runs `sync:curriculum` (the course and its roadmap, under
+`services/curriculum/src/data`), `sync:design` (the structural-check registry) and
+`sync:fixtures` (the attestation suites), the last two under
+`services/execution/src/data`.
+
+**The release order is one-way: the IDE content commit lands before the platform
+sync commit.** A platform commit that re-syncs content the IDE has not published
+vendors bytes no learner can produce, and the next content PR fails `sync:check`
+over a diff it did not author. An IDE content commit with no sync behind it leaves
+the services serving and judging the previous revision until someone notices. The
+stamp is what makes the interval checkable from this repo alone:
+`services/curriculum/src/data/ide-version.ts` holds the content hash the snapshot
+must produce, so `npm run verify` refuses a hand-edit or a stale copy even where no
+`nexora-ide` checkout exists — and says out loud when the source match itself could
+not be checked, rather than passing on nothing.
 
 ## What a mission must contain
 

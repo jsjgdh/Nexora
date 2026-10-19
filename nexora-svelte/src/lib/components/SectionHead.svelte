@@ -32,7 +32,7 @@
     <span class="line-mask"><span>{title}</span></span>
   </h2>
   {#if caption}
-    <p class="fade-up mt-4 text-[15px] leading-relaxed text-muted" style="transition-delay: 90ms">
+    <p class="reading fade-up mt-4 max-w-[62ch] text-[16px] leading-relaxed text-muted" style="transition-delay: 90ms">
       {caption}
     </p>
   {/if}

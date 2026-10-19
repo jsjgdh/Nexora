@@ -1,13 +1,13 @@
 <script lang="ts">
   import { scrollProgress } from "$lib/motion";
 
-  /* The dossier spine.
+  /* The bench scale.
    *
    * A one-pixel rail on the right edge with a tick per section, and a marker
    * that reports how far down the document you are. The progress value is
    * written to a CSS custom property by the action rather than into Svelte
    * state, so scrolling never re-renders a component — the browser moves one
-   * element's `top`.
+   * element's `height`.
    *
    * It is `aria-hidden` and it is not a navigation control: a progress
    * indicator a screen-reader user cannot use is decoration, and the sections
@@ -58,12 +58,17 @@
     height: 34vh;
     background: var(--color-rule);
   }
+  /* The fill is scaled, not resized: a height transition on an element that
+     changes on every scroll frame is a layout pass on every frame, and the
+     browser can do this one on the compositor instead. */
   .rail-fill {
     position: absolute;
     inset: 0 0 auto 0;
-    height: calc(var(--scroll-progress, 0) * 100%);
+    height: 100%;
     background: var(--color-accent);
-    transition: height 80ms linear;
+    transform: scaleY(var(--scroll-progress, 0));
+    transform-origin: top center;
+    transition: transform 80ms var(--ease-out);
   }
   .rail-ticks {
     display: flex;

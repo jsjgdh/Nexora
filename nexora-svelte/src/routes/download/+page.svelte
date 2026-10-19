@@ -24,7 +24,7 @@
   const available = downloadUrl.length > 0;
 
   const STEPS = [
-    { n: "01", text: "Download the IDE — the base course ships inside it." },
+    { n: "01", text: "Download the IDE. The base course ships inside it." },
     { n: "02", text: "Sign in when you want more: the IDE opens this site, you log in here." },
     { n: "03", text: "Your tier decides which courses appear inside the IDE." },
   ];
@@ -32,7 +32,7 @@
 
 <PageHead
   title={pageTitle("Download")}
-  description="Download the NEXORA IDE — the only way to learn. The base course ships inside it and works offline with no account."
+  description="Download the NEXORA IDE, the only way to learn. The base course ships inside it and works offline with no account."
   path="/download"
 />
 
@@ -44,7 +44,7 @@
   />
   <p class="mt-7 max-w-[52ch] font-serif text-[clamp(1.05rem,2vw,1.5rem)] leading-snug text-muted">
     A desktop editor with the base course inside it. Install it, open it, and the first judged
-    verdict is minutes away — no account, no browser tab, no second surface to choose between.
+    verdict is minutes away: no account, no browser tab, no second surface to choose between.
   </p>
 </div>
 
@@ -56,19 +56,44 @@
       {#if available}
         <p class="mt-4 max-w-[46ch] text-[14.5px] leading-relaxed text-muted">
           One installer, the base course bundled. Pick the build for your operating system on the
-          download page — the download is free and needs no account.
+          download page. The download is free and needs no account.
         </p>
         <div class="mt-7">
-          <ActionLink href={downloadUrl} external island>Download the NEXORA IDE</ActionLink>
+          <ActionLink href={downloadUrl} external island>Download the IDE</ActionLink>
         </div>
       {:else}
         <p class="mt-4 max-w-[52ch] text-[14.5px] leading-relaxed text-muted">
           The desktop build is not published yet. The IDE is the only way to learn, so there is
-          nothing to start in the browser instead — check back for the download rather than a dead
+          nothing to start in the browser instead. Check back for the download rather than a dead
           link.
         </p>
         <div class="mt-7">
           <ActionLink href="/pricing" variant="ghost" island>See pricing while you wait</ActionLink>
+        </div>
+        <!-- What a reader can do today, without the build. The curriculum is
+             public and complete, and the verifier works on a receipt anybody
+             already holds, so neither of them needs the installer. -->
+        <div class="mt-8 border-t border-rule pt-6">
+          <p class="stamp text-faint">what you can do right now</p>
+          <ul class="mt-4 grid gap-3">
+            <li class="grid grid-cols-[auto_1fr] gap-4 text-[14px] leading-relaxed text-ink">
+              <span class="num pt-0.5 text-[11px] text-accent" aria-hidden="true">01</span>
+              <span>
+                Read the curriculum. Every shipped phase is listed by name, and the list is the same
+                manifest the IDE ships.
+              </span>
+            </li>
+            <li class="grid grid-cols-[auto_1fr] gap-4 text-[14px] leading-relaxed text-ink">
+              <span class="num pt-0.5 text-[11px] text-accent" aria-hidden="true">02</span>
+              <span>
+                Check a receipt. If you have one, you can re-derive it here without an account.
+              </span>
+            </li>
+          </ul>
+          <div class="mt-5 flex flex-wrap items-center gap-3">
+            <ActionLink href="/#courses" variant="quiet" size="sm">Read the curriculum</ActionLink>
+            <ActionLink href="/verify" variant="quiet" size="sm">Open the verifier</ActionLink>
+          </div>
         </div>
       {/if}
 
