@@ -76,16 +76,20 @@ We will write to you once, when the desktop build is published, and not again. T
 
 To be removed before then, reply to this message with the word "remove" and we will delete the address.
 
-— NEXORA`
+NEXORA`
           : kind === "employer"
             ? `Thank you for writing to us.
 
-A person reads this mailbox, and we answer hiring enquiries within two working days. We will reply to the address you gave, and we will say plainly if we are not the right fit for the role.
+A person reads this mailbox, and every enquiry is answered. We will reply to the address you gave, and we will say plainly if we are not the right fit for the role.
 
 We keep your message only to answer you. It is not added to any list, and it is deleted when the thread is over or when you ask us to delete it.
 
-— NEXORA`
-            : `Thank you for contacting NEXORA.\n\nWe received your message and will follow up at ${email} within the window that applies to this kind of request.\n\n— NEXORA`,
+NEXORA`
+            : `Thank you for contacting NEXORA.
+
+We received your message and will follow up at ${email} within the window that applies to this kind of request.
+
+NEXORA`,
     });
   } catch {
     // The sender acknowledgement is best-effort. The operator already has the

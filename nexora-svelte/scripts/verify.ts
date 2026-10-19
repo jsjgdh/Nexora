@@ -1144,10 +1144,16 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
         mailEndpointSrc.includes("HIRING_CONTACT")
     );
     ok(
-      "the page says what happens next and how long a reply takes",
+      "the page says what happens next, and only promises what can be kept",
       employersSrc.includes("HIRING_ENQUIRY.lead") &&
         employersSrc.includes("HIRING_ENQUIRY.next") &&
-        COPY.HIRING_ENQUIRY.lead.includes(COPY.HIRING_ENQUIRY.replyTime)
+        COPY.HIRING_ENQUIRY.lead.includes(COPY.HIRING_ENQUIRY.replyTime) &&
+        // A response time is a promise about a person reading a mailbox. The
+        // site does not publish a time it cannot check, so the copy states the
+        // commitment instead, and this fails if a time creeps back in.
+        !/\b(?:working days|hours|minutes|24 hours|48 hours)\b/.test(
+          `${COPY.HIRING_ENQUIRY.lead} ${COPY.HIRING_ENQUIRY.sent}`
+        )
     );
     ok(
       "and it says plainly when the mail provider is not configured",

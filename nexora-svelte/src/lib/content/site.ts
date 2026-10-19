@@ -860,18 +860,23 @@ export const HIRING_CONTACT = "hiring@nexora.dev";
 
 export const HIRING_ENQUIRY = {
   title: "Tell us what you are hiring for.",
-  lead: "One form, and a person reads it. We answer hiring enquiries within two working days.",
+  lead: "One form, and a person reads it. Every enquiry is answered.",
   next: "What happens next: we read it, we reply to the address you gave, and we say plainly if we are not the right fit for the role.",
   privacy:
     "Your name, your work email and what you are hiring for go to the studio's hiring mailbox. They are used to answer you and for nothing else, they are not added to a list, and the message is deleted when the thread is over or when you ask us to delete it.",
-  replyTime: "two working days",
+  /* No response time is promised here. A time a reader can hold us to is a
+     commitment about a person answering a mailbox, and the honest thing the
+     site can say is what is true of the mechanism: a person reads it, and
+     every enquiry is answered. The time belongs in the reply, where it can
+     be kept, not on the page, where it cannot. */
+  replyTime: "Every enquiry is answered",
   notConfigured:
     "This build has no mail provider configured, so the form cannot send. Write to the address on this page instead, and it reaches the same person.",
   name: "your name",
   email: "your work email",
   need: "what you are hiring for",
   submit: "Send it",
-  sent: "Your message is with us. A person reads this mailbox and answers within two working days.",
+  sent: "Your message is with us. A person reads this mailbox, and every enquiry is answered.",
   failed: "That did not go through. Try again, or write to hiring@nexora.dev.",
 } as const;
 
