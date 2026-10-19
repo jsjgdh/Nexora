@@ -78,6 +78,13 @@ Pro do not exist.
 - [ ] Rubrics as data (which checks prove *demonstrated* vs *independent*)
   and provenance per mission (author, reviewer, source, licence) — the
   portfolio reads these, so they must exist where the portfolio reads.
+- [x] The curriculum is five courses, and the mesh serves them as five
+  (2026-10-19): the Go half of the Task Manager course is now "Go
+  fundamentals" (14 phases) and "Go in production" (21), with the JavaScript
+  app on its own (18), Rust Ledger (24) and the side course (3). Eighty
+  phases, nine free, seventy-one paid, and the free nine did not move. The
+  curriculum service reads the IDE's shipped index instead of one hardcoded
+  file, and the front door's copy is gated against it in both directions.
 
 ## 4. Web front door upkeep (P1)
 
@@ -88,10 +95,29 @@ sign up, log in, pay, and manage their subscription.
 
 Live today: Clerk login/signup on `/auth` (password forms kept for local
 mode), real plans on `/pricing`, hosted checkout with pending-until-webhook
-return on `/profile`, subscription status view. Missing:
+return on `/profile`, subscription status view. The front door is also in
+local mode until a platform is connected, and it used to say "cloud accounts
+not connected" where the sign-in form should have been.
 
-- [ ] Auth error paths driven: rejected login, expired token, offline
-  mid-lesson, failed sync — each leaves work saved and says what happened.
+- [x] The whole product runs on one machine without Docker (2026-10-19):
+  `platform/npm run dev:stack` starts a Postgres (PGlite over the Postgres
+  wire protocol), the five services and the migrations, writes the app's
+  `.env`, and the front door leaves local mode. Proven over real HTTP:
+  register, login, `/me`, the device code, the password reset, and the app's
+  own broker. Guide: `platform/LOCAL.md`.
+- [x] Auth error paths driven (2026-10-19): rejected login, expired token,
+  offline mid-lesson, failed sync — each leaves work saved and says what
+  happened. The screen after signing in is the account home: who you are,
+  your tier, what the platform has verified, the IDE, the session, and the
+  data rights.
+- [x] The two identity flows the platform was missing (2026-10-19):
+  password reset and email verification. Neither says whether an address has
+  an account, a password change ends every session the account holds, and
+  the mail is skipped with a reason when no provider is configured.
+- [x] The price is decided and singular (2026-10-19): Pro is $29 a month and
+  $290 a year, in one place in the copy module, with the platform's plan
+  configuration saying the same. The provider's dashboard has to match
+  before checkout is switched on.
 - [x] Subscription management: "Manage subscription" opens a Dodo customer
   portal session (new backend endpoint minting the session for the stored
   `dodo_customer_id`; frontend redirects). Cancel, card update, and invoice
