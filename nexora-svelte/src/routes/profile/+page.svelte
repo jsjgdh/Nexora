@@ -188,15 +188,15 @@
             <p class="mt-3 text-[13px] text-removed" role="alert">{portalError}</p>
           {/if}
           <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
-            Cancel, update your card and read invoices in the payment provider's portal — this opens
+            Cancel, update your card and read invoices in the payment provider's portal: this opens
             it for your account.
           </p>
         {:else if checkoutReturn}
           <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
-            <span class="stamp text-review">payment received — confirming</span><br />
+            <span class="stamp text-review">payment received: confirming</span><br />
             <span class="mt-2 block">
               You are back from checkout. Pro activates when the payment provider confirms, usually
-              within a minute — the redirect itself grants nothing.
+              within a minute. The redirect itself grants nothing.
             </span>
           </p>
           <div class="mt-5 border-t border-rule pt-5">
@@ -206,7 +206,7 @@
           </div>
         {:else}
           <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
-            Free plan — the nine free phases in the IDE are free. Pro unlocks the further courses per your
+            Free plan: the nine free phases in the IDE are free. Pro unlocks the further courses per your
             tier, inside the IDE you already have.
           </p>
           {#if plans.length > 0}
@@ -233,7 +233,7 @@
         <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
           Your tier decides which courses appear inside the IDE. Approve the IDE's sign-in code at
           <a href="/auth/ide" class="text-accent underline underline-offset-4">/auth/ide</a>
-          — the password is typed here, never in the IDE.
+          . The password is typed here, never in the IDE.
         </p>
         <div class="mt-5 border-t border-rule pt-5">
           <ActionLink href="/auth/ide" variant="ghost" size="sm" island>Approve a code</ActionLink>
@@ -256,7 +256,7 @@
           <p class="mt-4 text-[13.5px] text-removed" role="alert">{proofsError}</p>
         {:else if proofs.length === 0}
           <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
-            No verified runs yet — attested work appears here after the platform re-judges it.
+            No verified runs yet. Attested work appears here after the platform re-judges it.
             Practice stays in the IDE.
           </p>
         {:else}
@@ -269,7 +269,7 @@
             {/each}
           </ul>
           <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
-            Verified means the platform signed it — each row re-derives at
+            Verified means the platform signed it. Each row re-derives at
             <a href="/verify" class="text-accent underline underline-offset-4">/verify</a>.
             It says nothing about who wrote it, only that the platform judged it.
           </p>

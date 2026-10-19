@@ -15,7 +15,7 @@
   <p class="num text-[11.5px] text-faint">in force from {EFFECTIVE_DATE}</p>
 {:else}
   <p class="mt-3 border-l border-rule pl-3 text-[12.5px] leading-relaxed text-muted">
-    <span class="text-ink">Draft — not yet in force.</span> The operator's legal name and a monitored
+    <span class="text-ink">Draft. Not yet in force.</span> The operator's legal name and a monitored
     contact address are still placeholders, so this document is published early and labelled honestly
     rather than dated as final. Nothing here is a claim that a live, reviewed policy exists.
   </p>

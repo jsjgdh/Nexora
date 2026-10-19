@@ -49,7 +49,7 @@
   <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
     When a customer brings learners to this service, <span class="text-ink">{LEGAL_ENTITY}</span>
     processes their personal data on the customer's instructions. This page states what that
-    means — and what is still missing before it can be signed.
+    means and what is still missing before it can be signed.
   </p>
 </div>
 
@@ -64,7 +64,7 @@
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Status of this document</h2>
           <p class="mt-3">
             <span class="text-ink">Stated first, so nothing below is misread:</span> the full
-            instrument behind this page is a draft template awaiting legal review — not an executed
+            instrument behind this page is a draft template awaiting legal review, not an executed
             contract. It cannot be signed until the blockers at the bottom of this page are closed:
             the operator's remaining identity details, the executed subprocessor contracts, the
             completed transfer clauses, and legal review itself. What this page offers a reviewer is
@@ -102,7 +102,7 @@
           <ul class="mt-3 grid gap-3">
             {#each SUBPROCESSORS as p (p.name)}
               <li>
-                <span class="text-ink">{p.name}</span> — {p.purpose.toLowerCase()}; touches
+                <span class="text-ink">{p.name}</span>: {p.purpose.toLowerCase()}; touches
                 {p.data.toLowerCase()}; processes in {p.location}.
               </li>
             {/each}
@@ -110,7 +110,7 @@
           <p class="mt-3">
             <span class="text-ink">Honest status:</span> the subprocessor terms are drafted but none
             is confirmed as signed and on file. The AI assistants (GitHub Copilot, Claude, OpenAI)
-            run on our own provider accounts under their published terms — not yet as executed data
+            run on our own provider accounts under their published terms, not yet as executed data
             processing agreements. A new subprocessor is announced here at least 30 days before it
             begins, and an objection on data-protection grounds can end the affected service without
             penalty.
@@ -124,7 +124,7 @@
             as merchant of record), and a global edge network (installer hosting). Using the service
             can therefore move personal data across borders. Where GDPR or UK GDPR data leaves the
             EEA or the UK for a country without an adequacy decision, the transfer rests on the
-            Standard Contractual Clauses — and the UK Addendum where UK data is involved — completed
+            Standard Contractual Clauses, and the UK Addendum where UK data is involved, completed
             on the official template text, plus a transfer impact assessment.
           </p>
           <p class="mt-3">
@@ -155,8 +155,8 @@
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Rights, breach, and deletion</h2>
           <p class="mt-3">
-            We assist with data-subject requests — access, correction, erasure, restriction,
-            portability, objection — within a stored 30-day deadline. Self-service export and
+            We assist with data-subject requests (access, correction, erasure, restriction,
+            portability, objection) within a stored 30-day deadline. Self-service export and
             erasure live on the <a class="text-accent underline" href="/account">account page</a>;
             requests from anyone who cannot sign in go to
             <span class="text-ink">{PRIVACY_CONTACT}</span>, and the full list is on
@@ -164,7 +164,7 @@
           </p>
           <p class="mt-3">
             Breach notification and end-of-service deletion or return are committed in the draft
-            instrument — with the candid note that detection tooling (security-event logging and
+            instrument, with the candid note that detection tooling (security-event logging and
             alerting) is the part still being built; the retention sweep itself runs on a timer
             against the published schedule. Billing
             records required by tax and accounting law are retained and severed from the person
@@ -224,10 +224,10 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">read with</p>
         <ul class="mt-4 grid gap-3 text-[13px] leading-relaxed">
-          <li><a class="text-accent underline" href="/subprocessors">Subprocessors</a><span class="text-faint"> — the list in force</span></li>
-          <li><a class="text-accent underline" href="/privacy">Privacy notice</a><span class="text-faint"> — what is collected and why</span></li>
-          <li><a class="text-accent underline" href="/terms">Terms</a><span class="text-faint"> — the agreement for using the service</span></li>
-          <li><a class="text-accent underline" href="/security">Security</a><span class="text-faint"> — measures and residuals</span></li>
+          <li><a class="text-accent underline" href="/subprocessors">Subprocessors</a><span class="text-faint">: the list in force</span></li>
+          <li><a class="text-accent underline" href="/privacy">Privacy notice</a><span class="text-faint">: what is collected and why</span></li>
+          <li><a class="text-accent underline" href="/terms">Terms</a><span class="text-faint">: the agreement for using the service</span></li>
+          <li><a class="text-accent underline" href="/security">Security</a><span class="text-faint">: measures and residuals</span></li>
         </ul>
       </Plate>
 

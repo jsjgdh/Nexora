@@ -30,7 +30,7 @@
 
 <PageHead
   title={pageTitle("Security")}
-  description="How NEXORA protects accounts, verdicts and the code it runs — and what is not in place yet."
+  description="How NEXORA protects accounts, verdicts and the code it runs, and what is not in place yet."
   path="/security"
 />
 
@@ -57,7 +57,7 @@
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Access and identity</h2>
           <p class="mt-3">
-            An access token is deliberately short-lived — minutes, not hours — and carries a per-token
+            An access token is deliberately short-lived (minutes, not hours) and carries a per-token
             identifier, so a credential can be refused the moment you sign out instead of staying valid
             until it happens to expire. A sign-out presents the token you were holding, and the edge
             asks the identity service about that identifier before it trusts the next request.
@@ -86,7 +86,7 @@
           <p class="mt-3">
             TLS terminates at the edge, and only the gateway is a public API surface; the internal
             services and the database are not published to the internet. Cross-origin access is
-            exact-origin — a configured address, never a wildcard — and carries no credentials.
+            exact-origin (a configured address, never a wildcard) and carries no credentials.
           </p>
           <p class="mt-3">
             The HTML origin sends a baseline of security headers:
@@ -109,7 +109,7 @@
             A finished run produces a receipt that is signed twice over: an HMAC for checks internal to
             the platform, and an <span class="text-ink">Ed25519 signature</span> from a key the
             operator holds, verifiable by anyone who has the published public key. That second
-            signature is what makes a verdict portable — a stranger re-derives it without an account,
+            signature is what makes a verdict portable: a stranger re-derives it without an account,
             without asking us, and without learning anything that would let them mint one.
           </p>
           <p class="mt-3">
@@ -123,14 +123,14 @@
           <p class="mt-3">
             A design verdict follows the same shape and signs only the structural checks a machine can
             re-derive. Rubric weights and any model output are not in the signed bytes by
-            construction, because no model decides whether anything passed — only a rule engine does.
+            construction, because no model decides whether anything passed. Only a rule engine does.
           </p>
         </section>
 
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">The code runner</h2>
           <p class="mt-3">
-            Code you submit for a hosted run executes in an isolated tier — one container per job,
+            Code you submit for a hosted run executes in an isolated tier: one container per job,
             with the network cut off and the filesystem read-only where the language allows it. The
             platform's other, single-process tier would run your program as a child of the very
             service that holds the platform's own credentials, so it is
@@ -140,7 +140,7 @@
           </p>
           <p class="mt-3">
             <span class="text-ink">Stated plainly:</span> hardening the isolation boundary itself is
-            in progress. The platform's own security audit names this as its residual critical risk —
+            in progress. The platform's own security audit names this as its residual critical risk:
             the isolated tier exists and the unsafe tier is refused, but the isolation has not been
             proven against a determined attacker on a live host. We would rather write that sentence
             than imply the work is finished.
@@ -173,7 +173,7 @@
             <li>No SOC 2 report and no ISO 27001 certification. The repository contains neither.</li>
             <li>No uptime or availability service level.</li>
             <li>
-              No bug-bounty programme. Reports are welcome and handled, but for free — see below.
+              No bug-bounty programme. Reports are welcome and handled, but for free: see below.
             </li>
             <li>
               No security-event log or alerting dashboard. Sign-in failures, token reuse and failed
@@ -224,7 +224,7 @@
         <p class="stamp text-[11px] text-faint">report a vulnerability</p>
         <p class="num mt-4 text-[13px] text-ink">{SECURITY_CONTACT}</p>
         <p class="mt-2 text-[12.5px] leading-snug text-faint">
-          Privately, please — not a public issue. No bounty is offered, and we say so rather than
+          Privately, please. Not a public issue. No bounty is offered, and we say so rather than
           promise one.
         </p>
       </Plate>

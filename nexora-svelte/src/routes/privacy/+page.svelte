@@ -129,8 +129,8 @@
           <p class="mt-3">
             Most of it we hold to perform the contract you asked for: an account needs an identity, a
             subscription needs a payment record, a hosted run needs the code it is asked to run. A
-            smaller part we hold on our legitimate interest in keeping the service secure and working
-            — refusing a forged receipt, detecting a replayed sign-in. We do not use any of it to
+            smaller part we hold on our legitimate interest in keeping the service secure and working:
+            refusing a forged receipt, detecting a replayed sign-in. We do not use any of it to
             train a model, and no model decides whether you passed; assessment is deterministic, and
             only a rule engine can pass or fail a check.
           </p>
@@ -160,7 +160,7 @@
           <p class="mt-3">
             We do not sell your data, and we do not share it for advertising. A short list of
             companies process it on our behalf, each under a contract and each touching only what its
-            job needs — sign-in, payment, the installer download, and the AI assistants you may
+            job needs: sign-in, payment, the installer download, and the AI assistants you may
             choose to use. The current list, with what each one touches, is on the
             <a class="text-accent underline" href="/subprocessors">subprocessor page</a>.
           </p>
@@ -185,7 +185,7 @@
           </p>
           <p class="mt-3">
             <span class="text-ink">Stated plainly:</span> a scheduled sweep now runs, and these are
-            the periods it enforces — session tokens past their own expiry, device codes a day after
+            the periods it enforces: session tokens past their own expiry, device codes a day after
             they lapse, and the request and erasure ledgers twenty-four months after they are closed.
             What that sweep deliberately never touches is an unanswered request or an outstanding
             processor deletion: a task that is still owed is not data we are finished with.
@@ -208,14 +208,14 @@
             <a class="text-accent underline" href="/privacy-choices">your privacy choices</a>.
           </p>
           <p class="mt-3">
-            If you cannot sign in — or never had an account — write to
+            If you cannot sign in, or never had an account, write to
             <span class="text-ink">{PRIVACY_CONTACT}</span> and the same clock runs from the moment
             it arrives: {RIGHTS_RESPONSE_DAYS} days. No account is needed to ask, there is no charge,
             and we will tell you if we cannot do something and why rather than quietly ignore it.
           </p>
           <p class="mt-3">
             Two honest limits. One: an erasure keeps the transaction record, because accounting law
-            requires it — the record is severed from you and the deletion response names it. Two: a
+            requires it: the record is severed from you and the deletion response names it. Two: a
             receipt you have already shared, or a signed verdict a third party is holding, cannot be
             un-shared by deleting your account, because it was designed to be re-checkable without
             asking us.
@@ -226,7 +226,7 @@
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Children</h2>
           <p class="mt-3">
             Creating an account requires affirming that you are 16 or older, or that a parent or
-            guardian has agreed — the strictest of the thresholds that apply here, applied at sign-up
+            guardian has agreed: the strictest of the thresholds that apply here, applied at sign-up
             rather than discovered afterwards. There is no AI grading and no behavioural tracking of
             any user, child or adult, and no advertising. If a minor's account exists without that
             agreement, write to us and it will be removed.
@@ -317,7 +317,7 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">reach a person about any of this</p>
         <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
-          The form below sends the same address pre-filled for the purpose you pick — privacy, rights,
+          The form below sends the same address pre-filled for the purpose you pick: privacy, rights,
           or security. Use it when you want a reply from us, or open your mailer with the address
           pre-filled when you prefer.
         </p>

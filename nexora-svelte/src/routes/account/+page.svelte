@@ -532,7 +532,7 @@
               {#each deletion.retained as r (r.category)}
                 <li>
                   <span class="text-ink">{r.category}</span>
-                  — {r.reason}
+                  <span class="block text-muted">{r.reason}</span>
                   <span class="text-faint">(basis: {r.basis})</span>
                 </li>
               {/each}

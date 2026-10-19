@@ -53,7 +53,7 @@
   />
   <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
     This site sets one cookie of its own, and it is the one that keeps you signed in. There is no
-    analytics, no advertising, and no tracking of any kind — so there is nothing here for a banner to
+    analytics, no advertising, and no tracking of any kind, so there is nothing here for a banner to
     ask you about.
   </p>
 </div>
@@ -86,23 +86,23 @@
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Its attributes</h2>
           <ul class="mt-3 grid gap-2">
             <li>
-              <span class="text-ink">HttpOnly</span> — no script on the page can read it, so a
+              <span class="text-ink">HttpOnly</span>: no script on the page can read it, so a
               cross-site scripting bug cannot walk off with a thirty-day credential.
             </li>
             <li>
-              <span class="text-ink">SameSite=Lax</span> — a cross-site form post cannot reach the
+              <span class="text-ink">SameSite=Lax</span>: a cross-site form post cannot reach the
               session endpoints carrying it.
             </li>
             <li>
-              <span class="text-ink">Secure over https</span> — it is only marked secure when the site
+              <span class="text-ink">Secure over https</span>: it is only marked secure when the site
               is actually served over https, so a plain-http development host is not silently broken.
             </li>
             <li>
-              <span class="text-ink">Path scoped to the session endpoints</span> — it is sent to the
+              <span class="text-ink">Path scoped to the session endpoints</span>: it is sent to the
               sign-in, refresh and sign-out routes, and to no other page or API call.
             </li>
             <li>
-              <span class="text-ink">Thirty days</span> — it matches the lifetime of the refresh
+              <span class="text-ink">Thirty days</span>: it matches the lifetime of the refresh
               session it carries, and signing out clears it.
             </li>
           </ul>
@@ -113,7 +113,7 @@
             Why there is no consent banner
           </h2>
           <p class="mt-3">
-            A consent banner exists to get permission for cookies that are not strictly necessary —
+            A consent banner exists to get permission for cookies that are not strictly necessary:
             analytics, advertising, measurement. Strictly necessary cookies are exempt, and this site
             currently sets nothing else. So the honest position is: there is nothing to consent to,
             and a banner asking anyway would be theatre. That is still disclosed here rather than left
@@ -122,7 +122,7 @@
           <p class="mt-3">
             <span class="text-ink">The forward rule, stated so it cannot be forgotten:</span> the
             first non-essential cookie, analytics script, or third-party pixel added to this site must
-            arrive with a real consent mechanism and an updated version of this notice — not before
+            arrive with a real consent mechanism and an updated version of this notice: not before
             it, and not after it while it runs unconsented. That is a requirement on whoever adds it,
             and it is written here as one.
           </p>
@@ -160,7 +160,7 @@
           <p class="mt-3">
             Your browser can delete or block cookies for this site, and we do not fight that. What
             breaks is only what depends on being signed in: the next page load finds no session and
-            asks you to sign in again. Nothing else is affected — the learning app is local-first, so
+            asks you to sign in again. Nothing else is affected. The learning app is local-first, so
             with no account and no network it still runs, keeping your work on your own machine.
           </p>
           <p class="mt-3">
@@ -187,7 +187,7 @@
         <ul class="mt-4 grid gap-4">
           <li class="text-[13.5px] leading-relaxed text-muted">
             <span class="text-ink">one cookie</span><br />
-            <span class="num text-[12.5px] text-ink">nexora_refresh</span> — the signed-in session,
+            <span class="num text-[12.5px] text-ink">nexora_refresh</span>: the signed-in session,
             HttpOnly and path-scoped to the session endpoints.
           </li>
           <li class="text-[13.5px] leading-relaxed text-muted">
@@ -196,7 +196,7 @@
           </li>
           <li class="text-[13.5px] leading-relaxed text-muted">
             <span class="text-ink">no consent banner</span><br />
-            Because there is nothing non-essential to consent to — and the first thing that is, gets a
+            Because there is nothing non-essential to consent to. The first thing that is gets a
             real mechanism first.
           </li>
         </ul>

@@ -29,7 +29,7 @@
 </script>
 
 <svelte:head>
-  <title>{status} — {title}</title>
+  <title>{status}: {title}</title>
 </svelte:head>
 
 <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">

@@ -29,7 +29,7 @@
 
 <PageHead
   title={pageTitle("Terms of service")}
-  description="The agreement for using the NEXORA web app, the desktop IDE and the hosted runner — including renewal, cancellation and acceptable use."
+  description="The agreement for using the NEXORA web app, the desktop IDE and the hosted runner, including renewal, cancellation and acceptable use."
   path="/terms"
 />
 
@@ -40,7 +40,7 @@
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
   <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
-    These terms cover the three surfaces you can use — this website, the desktop IDE, and the hosted
+    These terms cover the three surfaces you can use: this website, the desktop IDE, and the hosted
     runner that executes code you submit. Where the product cannot do what a clause would claim, the
     clause says what it actually does.
   </p>
@@ -82,7 +82,7 @@
           <p class="mt-3">
             A paid tier <span class="text-ink">renews automatically</span> at the end of each billing
             period until you cancel. The renewal date and the amount are shown before you pay and
-            again in your account, at every renewal — never only at the moment you try to leave. If a
+            again in your account, at every renewal, never only at the moment you try to leave. If a
             renewal price changes, we tell you before it takes effect.
           </p>
         </section>
@@ -91,7 +91,7 @@
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Cancellation and refunds</h2>
           <p class="mt-3">
             You can cancel in two clicks from your account, in the product, through the payment
-            provider's own portal — no email, no retention loop, no “are you sure?” maze. Cancelling
+            provider's own portal: no email, no retention loop, no “are you sure?” maze. Cancelling
             stops future renewals; access continues to the end of the period you have already paid
             for. Card details, invoices and cancellation all live with the payment provider, which
             acts as the merchant of record for the sale.
@@ -104,7 +104,7 @@
           <p class="mt-3">
             If you are a consumer in the EU or the UK, you have a 14-day right of withdrawal for a
             distance purchase, and by starting a paid tier you ask us to begin supplying the digital
-            content immediately — which is why access opens at once rather than at the end of that
+            content immediately, which is why access opens at once rather than at the end of that
             period. Where you have not yet used the paid content and the withdrawal window is still
             open, tell us and we will refund it.
           </p>
@@ -154,7 +154,7 @@
             <span class="text-ink">You keep ownership of the code you write.</span> We claim no
             ownership of it. To provide the service we need a narrow licence: to store, transmit and
             execute what you submit, and to re-judge it when you ask for attestation. That licence
-            exists only to run the features you use, and it ends when the material is deleted — except
+            exists only to run the features you use, and it ends when the material is deleted, except
             for a receipt you have already shared, which was designed to remain checkable by a third
             party without asking us.
           </p>
@@ -167,8 +167,8 @@
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">What a verdict is, and is not</h2>
           <p class="mt-3">
-            Checks are deterministic: tests run against your code, a rule engine — not a language
-            model — decides pass or fail, and a failure comes back with the reason. A signed receipt
+            Checks are deterministic: tests run against your code, a rule engine (not a language
+            model) decides pass or fail, and a failure comes back with the reason. A signed receipt
             proves that the platform ran a particular program and observed a particular result; anyone
             holding it can re-check it without asking us.
           </p>
@@ -185,7 +185,7 @@
             <span class="text-ink">There is no service-level agreement.</span> We do not promise an
             uptime figure, and no status page or alerting exists yet. Hosted runs depend on a shared
             runner queue and may be refused when it is saturated. We may add, change or discontinue
-            features — including a course or a tier — and where a change materially reduces what you
+            features, including a course or a tier, and where a change materially reduces what you
             paid for, we will tell you and you may cancel for a refund of the unused period.
           </p>
         </section>
@@ -195,7 +195,7 @@
           <p class="mt-3">
             The service is provided “as is” and “as available”, without warranties of any kind, express
             or implied, including any implied warranty of merchantability, fitness for a particular
-            purpose, or non-infringement — to the fullest extent the law where you live allows.
+            purpose, or non-infringement, to the fullest extent the law where you live allows.
           </p>
           <p class="mt-3">
             To the extent the law allows, we are not liable for indirect or consequential loss, lost
@@ -211,10 +211,10 @@
           <p class="mt-3">
             You may stop using the service at any time and may ask us to close your account. We may
             suspend or end your access if you materially break these terms, if we are required to by
-            law, or if we discontinue the service — and when we discontinue it, we will give
+            law, or if we discontinue the service, and when we discontinue it, we will give
             reasonable notice rather than switching it off without warning. Clauses that by their
-            nature should survive termination — ownership, the limits on liability, and the honest
-            description of what a receipt means — continue to apply.
+            nature should survive termination (ownership, the limits on liability, and the honest
+            description of what a receipt means) continue to apply.
           </p>
         </section>
 

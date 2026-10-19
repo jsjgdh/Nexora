@@ -1934,6 +1934,30 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
         })
     );
     {
+      // The rule is about what a reader sees, so the check has to look at the
+      // markup text and not only at quoted strings: a dash typed straight into
+      // a page is exactly the case that slipped through, on the account home,
+      // where a retained-record line read "category — reason".
+      const dashPages = srcFiles
+        .filter((f) => f.endsWith(".svelte"))
+        .filter((f) => {
+          const markup = readFileSync(f, "utf8")
+            // Comments say why, and they are not read by anyone.
+            .replace(/<!--[\s\S]*?-->/g, "")
+            // The script and style blocks are code, and the string check above
+            // already covers the strings inside them.
+            .replace(/<script[\s\S]*?<\/script>/g, "")
+            .replace(/<style[\s\S]*?<\/style>/g, "");
+          return /[—–]/.test(markup);
+        })
+        .map((f) => f.split("/src/").pop() ?? f);
+      ok(
+        "and no page shows a dash in its own text, on any route",
+        dashPages.length === 0,
+        dashPages.length ? `a dash is visible on: ${dashPages.join(", ")}` : ""
+      );
+    }
+    {
       // One intent, one label, across every page and every piece of chrome.
       const labelFiles = srcFiles.filter(
         (f) => f.endsWith(".svelte") || f.endsWith(".ts")

@@ -55,7 +55,7 @@
   <div class="mt-10 border border-rule p-6">
     <p class="stamp text-[11px] text-accent">do not sell or share my personal information</p>
     <p class="mt-4 max-w-[70ch] text-[15px] leading-relaxed text-ink">
-      Nothing you give this platform is sold, rented, or shared for advertising — not to data brokers,
+      Nothing you give this platform is sold, rented, or shared for advertising: not to data brokers,
       not to advertisers, not to an analytics provider, because there is no analytics provider. There
       is no cross-context behavioural advertising, and no profile of you is built for one.
     </p>
@@ -64,7 +64,7 @@
       would be decoration. What stays true is the right itself: if you ask {LEGAL_ENTITY} to stop
       selling or sharing your personal information, the answer is a record of the request and a
       confirmation that it was never happening. A Global Privacy Control signal in your browser is
-      honoured on the same basis — there is nothing for it to switch off, and nothing on this site
+      honoured on the same basis: there is nothing for it to switch off, and nothing on this site
       sets a cookie that would need one.
     </p>
   </div>
@@ -84,7 +84,7 @@
       <div class="mt-10 border-t border-rule pt-6">
         <p class="stamp text-[11px] text-faint">how to exercise them</p>
         <p class="mt-4 max-w-[62ch] text-[13.5px] leading-relaxed text-muted">
-          Two routes, and neither requires the other. Signed in, the account page holds every control —
+          Two routes, and neither requires the other. Signed in, the account page holds every control,
           including a download of your whole record and self-service deletion. Signed out, or if you
           never had an account, write to <span class="text-ink">{PRIVACY_CONTACT}</span> and the same
           clock runs from the moment it arrives: {RIGHTS_RESPONSE_DAYS} days, with no account required
@@ -101,7 +101,7 @@
         <p class="mt-4 max-w-[62ch] text-[13.5px] leading-relaxed text-muted">
           Exercising any right here changes nothing about your access, your price or your tier. There
           is no financial incentive offered for personal information, so there is no incentive scheme
-          to disclose. Assessment — which is the thing a learner might expect a "right" to touch — is
+          to disclose. Assessment (which is the thing a learner might expect a "right" to touch) is
           free at every tier and stays free; no check is ever behind the paywall.
         </p>
       </div>
@@ -109,7 +109,7 @@
       <div class="mt-8 border-t border-rule pt-6">
         <p class="stamp text-[11px] text-faint">write to the operator</p>
         <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
-          When you cannot sign in — or never had an account — the same address handles privacy
+          When you cannot sign in, or never had an account, the same address handles privacy
           requests and security reports. Use the form below when you want a reply from us, or open
           your mailer with the address pre-filled when you prefer.
         </p>
@@ -125,7 +125,7 @@
           {#each REGIME_DATES as row (row.regime)}
             <li class="text-[13px] leading-relaxed text-muted">
               <span class="text-ink">{row.regime}</span>
-              <span class="block text-faint">{row.duty} — {row.date}</span>
+              <span class="block text-faint">{row.duty}: {row.date}</span>
             </li>
           {/each}
         </ul>
@@ -135,7 +135,7 @@
         <p class="stamp text-[11px] text-faint">retention, in one line</p>
         <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
           Your account and its records are held while the account exists, and an erasure request
-          removes them — with the transaction record kept because accounting law requires it, stated
+          removes them, with the transaction record kept because accounting law requires it, stated
           before you commit rather than after.
         </p>
         <p class="mt-3 text-[12.5px] leading-relaxed text-faint">

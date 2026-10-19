@@ -67,7 +67,7 @@
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">What we work to</h2>
           <p class="mt-3">
             <span class="text-ink">WCAG 2.1 level AA</span> is the target for this website and for the
-            NEXORA IDE. It is the standard we check against and measure ourselves by — not a
+            NEXORA IDE. It is the standard we check against and measure ourselves by, not a
             certification we hold, and not a claim that we have met every criterion today. The rest of
             this page is the difference between those two sentences.
           </p>
@@ -129,8 +129,8 @@
             <li>
               <span class="text-ink">The IDE's interactive lab surfaces have not had the same pass.</span>
               The desktop app is a fork of an editor that carries its own accessibility work, but the
-              interactive panels this product adds to it — the design studio and the debugging
-              investigation panels — are custom webview surfaces, and they have not yet been put
+              interactive panels this product adds to it (the design studio and the debugging
+              investigation panels) are custom webview surfaces, and they have not yet been put
               through the automated pass the website has.
             </li>
           </ul>
@@ -153,7 +153,7 @@
           </h2>
           <p class="mt-3">
             An accessibility conformance report (ACR, in the VPAT format) is
-            <span class="text-ink">not yet available</span> — producing one honestly requires the
+            <span class="text-ink">not yet available</span>: producing one honestly requires the
             commissioned audit above, and a report written before that would be a claim this page has
             just spent its length refusing to make. If you need one for a review, ask at
             <span class="text-ink">{PRIVACY_CONTACT}</span>; when one exists, this page will say so

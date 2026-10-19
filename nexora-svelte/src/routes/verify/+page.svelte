@@ -177,7 +177,7 @@
 
 <PageHead
   title={pageTitle("Verify a receipt")}
-  description="Paste a NEXORA receipt — a code run or a design verdict — and the platform answers whether it issued it."
+  description="Paste a NEXORA receipt (a code run or a design verdict) and the platform answers whether it issued it."
   path="/verify"
 />
 
@@ -188,7 +188,7 @@
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
   <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
-    A receipt proves the platform ran a program or re-judged a design — not that a learner claims it did. This page checks
+    A receipt proves the platform ran a program or re-judged a design, not that a learner claims it did. This page checks
     its signature in your own browser, against the platform's published key, and the platform
     answers too. Neither half borrows the other's authority.
   </p>
@@ -229,7 +229,7 @@
           role="status"
         >
           {#if local.valid === true}
-            <p class="font-semibold text-added">Offline check passed — signed by the published key.</p>
+            <p class="font-semibold text-added">Offline check passed. Signed by the published key.</p>
           {:else if local.valid === false}
             <p class="font-semibold text-removed">Offline check failed.</p>
           {:else}
@@ -247,7 +247,7 @@
           role="status"
         >
           {#if result.valid}
-            <p class="font-semibold text-added">Valid — issued by this platform.</p>
+            <p class="font-semibold text-added">Valid. Issued by this platform.</p>
             <ul class="mt-3 grid gap-1.5 text-muted">
               <li>Issued: <span class="num text-[12.5px] text-ink">{result.issuedAt}</span></li>
               {#if result.kind === "design"}
@@ -274,7 +274,7 @@
           {#if result.verifiedBy}
             <p class="mt-3 text-[12.5px] text-faint">
               Platform verification: {result.verifiedBy === "ed25519" ? "Ed25519 signature" : "HMAC signature"}{result.offlineVerifiable
-                ? " — also re-derivable offline"
+                ? ", also re-derivable offline"
                 : ""}.
             </p>
           {/if}
@@ -307,7 +307,7 @@
         <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
           Whether the work is good, or whose hands wrote it. A code receipt is evidence that a program
           ran and what it printed; a design receipt is evidence that the platform re-derived the
-          structural checks over a graph — nothing more, and we do not imply more.
+          structural checks over a graph, nothing more, and we do not imply more.
         </p>
       </Plate>
     </div>
@@ -316,7 +316,7 @@
   <div class="mt-16">
     <SectionHead
       title="A verdict you cannot re-derive is a badge."
-      caption="This page takes no account and writes nothing. If the signature fails, it says so — and if the platform is unreachable, it says that instead of guessing."
+      caption="This page takes no account and writes nothing. If the signature fails, it says so, and if the platform is unreachable, it says that instead of guessing."
     />
   </div>
 </div>

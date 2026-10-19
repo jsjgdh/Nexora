@@ -116,7 +116,7 @@
           {#each REGIME_DATES as row (row.regime)}
             <li class="text-[13px] leading-relaxed text-muted">
               <span class="text-ink">{row.regime}</span>
-              <span class="block text-faint">{row.duty} — {row.date}</span>
+              <span class="block text-faint">{row.duty}: {row.date}</span>
             </li>
           {/each}
         </ul>
