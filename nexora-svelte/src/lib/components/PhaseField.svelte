@@ -20,10 +20,10 @@
    *      eighty. A reader who never sees the picture still gets the whole
    *      curriculum, which is the same promise the plate of lights makes.
    *   2. The picture is optional in every direction. Without WebGL, without
-   *      the script, or without the renderer loading, what is left is the list,
-   *      and the list is in the server-rendered document rather than added to
-   *      it afterwards. The list is the field's real estate; the canvas is
-   *      drawn on top of it.
+   *      the script, or without the renderer loading, what is left is the
+   *      list, and the list is in the server-rendered document rather than
+   *      added to it afterwards. The list is the field's real estate; the
+   *      canvas is drawn on top of it.
    *   3. Nothing moves for a reader who asked for less motion. Under reduced
    *      motion the renderer is never fetched at all: the same eighty points
    *      are projected onto the sheet in two dimensions and drawn once, so the
@@ -46,6 +46,16 @@
   let canvas = $state<HTMLCanvasElement | null>(null);
   let picked = $state<PhasePick | null>(null);
 
+  /**
+   * What the canvas is doing.
+   *
+   * "booting" is the state before the field has decided anything, "live" is a
+   * field that is drawing, and "unavailable" is a browser that cannot draw
+   * one. The last of those is the only one that changes what the page says,
+   * and it says less rather than more: the field was never the content.
+   */
+  let fieldState = $state<"booting" | "live" | "unavailable">("booting");
+
   const totals = $derived.by(() => {
     const all = COURSES.reduce((n, course) => n + course.phases.length, 0);
     const free = COURSES.reduce(
@@ -55,7 +65,7 @@
     return { all, free, pro: all - free };
   });
 
-  /** The name of the phase under the pointer, in the panel's own line. */
+  /** The name under the pointer, in the panel's own line. */
   const readout = $derived(
     picked
       ? `${String(picked.index + 1).padStart(2, "0")} · ${picked.title} · ${picked.courseTitle} · ${picked.tier}`
@@ -74,6 +84,11 @@
   $effect(() => {
     const element = canvas;
     if (!element) return;
+
+    /* The canvas is bound once and removed with the component, so the element
+       is fixed for the life of the effect. Naming it in a const of its own
+       gives the closures below a type that is not a question mark. */
+    const target: HTMLCanvasElement = element;
 
     let disposed = false;
     let stopped: (() => void) | null = null;
@@ -100,13 +115,17 @@
         if (reduced()) {
           // The same points, in two dimensions, drawn once. The renderer is
           // never asked for, so it is never downloaded.
-          stopped = field.drawPhaseFieldFlat(element, { onpick: report, onselect: choose });
+          stopped = field.drawPhaseFieldFlat(target, { onpick: report, onselect: choose }).destroy;
+          fieldState = "live";
           return;
         }
 
-        if (!field.supportsWebGL()) return;
+        if (!field.supportsWebGL()) {
+          fieldState = "unavailable";
+          return;
+        }
 
-        const handle = await field.mountPhaseField(element, {
+        const handle = await field.mountPhaseField(target, {
           onpick: report,
           onselect: choose,
         });
@@ -115,15 +134,17 @@
           return;
         }
         stopped = handle.destroy;
+        fieldState = "live";
       } catch {
         // A renderer that will not load is not a reason to leave the reader
         // without the curriculum. The list below the canvas is the field's
         // other half and it is already in the document.
         stopped = null;
+        fieldState = "unavailable";
       }
     }
 
-    observer.observe(element);
+    observer.observe(target);
 
     return () => {
       disposed = true;
@@ -149,32 +170,48 @@
   </p>
 
   <div class="px-5 py-6">
-    <canvas
-      bind:this={canvas}
-      aria-hidden="true"
-      class="block h-[26rem] w-full border border-rule bg-ground"
-    ></canvas>
+    <div class="relative" data-phase-canvas>
+      <canvas
+        bind:this={canvas}
+        aria-hidden="true"
+        class="block h-[26rem] w-full border border-rule bg-ground"
+      ></canvas>
+      {#if fieldState === "unavailable"}
+        <p
+          class="absolute inset-0 flex items-center justify-center px-6 text-center text-[13.5px] leading-relaxed text-muted"
+        >
+          This browser cannot draw the field, so the field is not drawn. The curriculum is the
+          ledger below, and every phase of it is named there.
+        </p>
+      {/if}
+    </div>
+
     <p class="mt-3 max-w-[70ch] text-[12.5px] leading-relaxed text-faint">
       One point per shipped phase, on three arms of one spine. The open phases are green and the
-      ones that open with Pro are amber. Move the pointer to name a phase, or click one to open
-      its course in the ledger below.
+      ones that open with Pro are amber.
+    </p>
+
+    <p class="mt-2 max-w-[70ch] text-[12.5px] leading-relaxed text-faint">
+      The field is a picture of the curriculum. The list below it is the curriculum itself, and
+      every phase of it is named there.
     </p>
   </div>
 
   <!-- The list. This is the field without the picture, and it is in the
        server-rendered document, so it is there for a reader with no script, no
-       WebGL, or no patience for a canvas. Every course, every phase, and every
-       count, spelled out. -->
-  <div class="border-t border-rule px-5 py-5">
+       WebGL, or no patience for a canvas. Every course, every phase and every
+       count, spelled out: the canvas is a reading of the curriculum, and this
+       is the curriculum. -->
+  <div class="border-t border-rule px-5 py-5" data-phase-list>
     {#each COURSES as course (course.slug)}
       {@const free = course.phases.filter(([, , tier]) => tier === "free").length}
-      <div class="grid gap-2 py-4 first:pt-0 sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] sm:gap-6">
-        <p class="text-[13.5px] font-semibold text-ink">
-          {course.title}
-          <span class="num ml-2 text-[11.5px] text-faint">
+      <div class="grid gap-2 py-3 first:pt-0 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-6">
+        <div>
+          <p class="text-[13.5px] font-semibold text-ink">{course.title}</p>
+          <p class="num mt-1 text-[11.5px] text-faint">
             {course.phases.length} phases · {free} open on free
-          </span>
-        </p>
+          </p>
+        </div>
         <p class="text-[12.5px] leading-relaxed text-muted">
           {course.phases.map(([, title]) => title).join(", ")}
         </p>
@@ -182,3 +219,12 @@
     {/each}
   </div>
 </section>
+
+<style>
+  /* Without the script there is no field to draw, so the canvas's box is
+     removed rather than left as a hole. The text around it stays: the
+     curriculum is in the ledger either way. */
+  :global(.no-js) [data-phase-canvas] {
+    display: none;
+  }
+</style>

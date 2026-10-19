@@ -149,6 +149,12 @@ try {
 console.log(`axe scanned ${routes.length} production routes.`);
 if (failures.length) {
   console.error(`${failures.length} route/rule findings:\n${failures.join("\n")}`);
+  // The server's own words are printed with the findings: a route that answers
+  // 500 says why in the log, and a sweep that hides it cannot be debugged from
+  // the sweep alone.
+  if (serverOutput.trim()) {
+    console.error("\nserver output:\n" + serverOutput.trim().slice(0, 4000));
+  }
   process.exitCode = 1;
 } else {
   console.log("No WCAG A/AA or axe best-practice violations found.");

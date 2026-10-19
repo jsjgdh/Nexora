@@ -386,14 +386,14 @@ function readToken(name: string): string {
 }
 
 /**
- * How near the pointer has to be, in CSS pixels, to be sitting on a point.
+ * How near the pointer has to be, in CSS pixels, to be on a point.
  *
- * The reticle is drawn on the point the pointer is on, so a reader can see
- * which one the field has heard. Past this distance the pointer is over the
- * field but not on anything, and the field says the nearest phase rather than
- * pretending the pointer is on it.
+ * The field picks the nearest point within this distance and says nothing
+ * about points further away, because a phase the pointer is nowhere near is
+ * not the phase the reader is asking about. The reticle is drawn on the point
+ * that was picked, so a reader can see which one the field heard.
  */
-const PICK_RADIUS = 22;
+const PICK_RADIUS = 24;
 
 /**
  * Whether this browser can draw the field at all.
@@ -580,15 +580,11 @@ export async function mountPhaseField(
 
   const onPointerMove = (event: PointerEvent): void => {
     const { node, distance } = nearest(event.clientX, event.clientY);
-    // On a point: the reticle says so, and the name is that point's. Off a
-    // point but over the field: the nearest phase is still named, because a
-    // reader who moved the pointer wants to know what is near it.
-    if (node && distance <= PICK_RADIUS) {
-      report(node);
-      return;
-    }
-    report(null);
-    options.onpick?.(node ? { ...node } : null);
+    // The nearest point within the threshold is the one the field has heard.
+    // Past the threshold the pointer is over the field but on nothing, and the
+    // field says nothing rather than naming a phase the pointer is nowhere
+    // near.
+    report(node !== null && distance <= PICK_RADIUS ? node : null);
   };
 
   const onPointerLeave = (): void => {
@@ -596,8 +592,8 @@ export async function mountPhaseField(
   };
 
   const onClick = (event: PointerEvent): void => {
-    const { node } = nearest(event.clientX, event.clientY);
-    if (node) options.onselect?.({ ...node });
+    const { node, distance } = nearest(event.clientX, event.clientY);
+    if (node !== null && distance <= PICK_RADIUS) options.onselect?.({ ...node });
   };
 
   canvas.addEventListener("pointermove", onPointerMove);
@@ -801,20 +797,21 @@ export function drawPhaseFieldFlat(
     const py = event.clientY - rect.top;
     let best: FieldNode | null = null;
     let bestDistance = Infinity;
-    layout.nodes.forEach((node, i) => {
+    for (let i = 0; i < layout.nodes.length; i++) {
+      const node = layout.nodes[i]!;
       const point = screen[i]!;
       const distance = Math.hypot(point[0] - px, point[1] - py);
       if (distance < bestDistance) {
         bestDistance = distance;
         best = node;
       }
-    });
-    const on = best && bestDistance <= PICK_RADIUS ? best : null;
+    }
+    const on = best !== null && bestDistance <= PICK_RADIUS ? best : null;
     if (on !== picked) {
       picked = on;
       paint();
     }
-    options.onpick?.(best ? { ...best } : null);
+    options.onpick?.(on === null ? null : { ...on });
   };
 
   const onPointerLeave = (): void => {
@@ -830,15 +827,16 @@ export function drawPhaseFieldFlat(
     const py = event.clientY - rect.top;
     let best: FieldNode | null = null;
     let bestDistance = Infinity;
-    layout.nodes.forEach((node, i) => {
+    for (let i = 0; i < layout.nodes.length; i++) {
+      const node = layout.nodes[i]!;
       const point = screen[i]!;
       const distance = Math.hypot(point[0] - px, point[1] - py);
       if (distance < bestDistance) {
         bestDistance = distance;
         best = node;
       }
-    });
-    if (best) options.onselect?.({ ...best });
+    }
+    if (best !== null && bestDistance <= PICK_RADIUS) options.onselect?.({ ...best });
   };
 
   canvas.addEventListener("pointermove", onPointerMove);
