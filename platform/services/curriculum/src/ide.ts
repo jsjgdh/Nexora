@@ -48,6 +48,10 @@ export interface IdePhase {
   goal: string;
   level: number;
   authored: boolean;
+  /** The workspace this phase runs in, when it is not the course's own project
+   *  (the Go track carries `go-ledger`/`go-deps`). Passed through untouched so
+   *  the extension can name the right workspace; absent for base-project phases. */
+  project?: string;
   activities: string[];
 }
 
@@ -141,6 +145,7 @@ function parseDoc(raw: unknown): ParsedDoc {
       goal: str(q.goal, `phase ${i} goal`),
       level: num(q.level, `phase ${i} level`),
       authored: bool(q.authored, `phase ${i} authored`),
+      ...(typeof q.project === "string" && q.project.length > 0 ? { project: q.project } : {}),
       activities: ids,
     };
   });

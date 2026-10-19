@@ -22,7 +22,7 @@ import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -162,7 +162,30 @@ describe("compose stack", () => {
     // what it costs to walk, never a one-item course hiding the rest.
     const manifest = await api("/api/curriculum/ide/manifest");
     assert.equal(manifest.status, 200);
-    assert.equal(manifest.json.manifest.phases.length, 12);
+    /* Not a magic number. This line used to read `=== 12`, which was true of the
+       curriculum once and then quietly became a claim about a course nobody was
+       shipping any more (the IDE has grown past forty phases). So compare against
+       the roadmap the IDE actually authors, falling back to the snapshot this image
+       was built from when nexora-ide is not checked out beside branchcraft - and
+       keep the floor, because a source that reads as a stub would otherwise match
+       a stub deployment perfectly. */
+    const ideRoadmap = join(
+      root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum", "shipped", "task-manager.manifest.json"
+    );
+    const source = existsSync(ideRoadmap)
+      ? JSON.parse(readFileSync(ideRoadmap, "utf8"))
+      : (await import("../services/curriculum/dist/data/ide-manifest.js")).IDE_MANIFEST;
+    assert.ok(source.phases.length >= 40, `the roadmap source is a stub (${source.phases.length} phases)`);
+    assert.equal(
+      manifest.json.manifest.phases.length,
+      source.phases.length,
+      "the deployed roadmap is not the roadmap the IDE ships (rebuild the image, then re-sync)"
+    );
+    assert.deepEqual(
+      manifest.json.manifest.phases.map((p) => p.id),
+      source.phases.map((p) => p.id),
+      "the roadmap arrives in the order the course teaches it"
+    );
     assert.ok(manifest.json.manifest.phases.some((p) => p.tier === "free"));
     assert.ok(manifest.json.manifest.phases.some((p) => p.tier === "pro"));
     // Paid bodies are gated twice: no identity reads as "sign in" (401),

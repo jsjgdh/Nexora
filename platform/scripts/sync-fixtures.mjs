@@ -34,6 +34,7 @@ const PROJECT_ROOTS = {
   "unfamiliar-codebase": "fixtures/unfamiliar-codebase",
   "go-ledger": "fixtures/go-ledger",
   "go-deps": "fixtures/go-deps",
+  "go-persist": "fixtures/go-persist",
 };
 
 let doc;

@@ -2,9 +2,13 @@ import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
 import { Readable } from "node:stream";
 import {
+  billingEraseSchema,
   checkoutSchema,
   portalSchema,
+  type BillingEraseResponse,
+  type BillingExport,
   type CheckoutResponse,
+  type LawfulBasis,
   type PlanInfo,
   type PortalResponse,
   type SubscriptionView,
@@ -291,6 +295,122 @@ export function registerBillingRoutes(
       throw err;
     }
     return reply.code(200).send({ ok: true });
+  });
+
+  /* This service's half of a data-subject request.
+   *
+   * The split is honest rather than tidy: the subscription record lives in its own
+   * database, behind its own service, and an export assembled only from the auth
+   * service would quietly omit the payment history — which is the part a person
+   * is most likely to be asking about and the part a tax authority is most
+   * interested in. So each service exports what it holds, and the download on the
+   * account page merges the two and labels which half came from where.
+   */
+  app.get("/export", async (req) => {
+    const userId = requireUserId(req);
+    const [sub, checkouts, events] = await Promise.all([
+      pool.query("SELECT * FROM billing_subscriptions WHERE user_id = $1", [userId]),
+      pool.query(
+        "SELECT plan, status, created_at, paid_at FROM billing_checkouts WHERE user_id = $1 ORDER BY created_at DESC",
+        [userId]
+      ),
+      pool.query("SELECT type, received_at FROM billing_events WHERE payload #>> '{data,metadata,user_id}' = $1 ORDER BY received_at DESC LIMIT 500", [userId]),
+    ]);
+    const row = sub.rows[0];
+    const entitled = row?.status === "active" || row?.status === "past_due";
+    const out: BillingExport = {
+      format: "nexora-account-export",
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      controller: process.env.OPERATOR_LEGAL_NAME ?? "[[ operator legal name — set before publishing ]]",
+      service: "billing",
+      subscription: {
+        plan: row?.plan ?? null,
+        status: row?.status ?? null,
+        entitled,
+        currentPeriodEnd: row?.current_period_end ? new Date(row.current_period_end).toISOString() : null,
+        dodoCustomerId: row?.dodo_customer_id ?? null,
+      },
+      checkouts: checkouts.rows.map(
+        (r: { plan: string; status: string; created_at: Date; paid_at: Date | null }) => ({
+          plan: r.plan,
+          status: r.status,
+          createdAt: new Date(r.created_at).toISOString(),
+          paidAt: r.paid_at ? new Date(r.paid_at).toISOString() : null,
+        })
+      ),
+      webhookEvents: events.rows.map((r: { type: string; received_at: Date }) => ({
+        type: r.type,
+        receivedAt: new Date(r.received_at).toISOString(),
+      })),
+      notIncluded: [
+        {
+          category: "Card and bank details",
+          where: "Held by the payment provider (Dodo Payments), which is the merchant of record; they were never sent to or stored by this platform.",
+        },
+        {
+          category: "The body of the provider's webhook payloads",
+          where: "Stored for reconciliation and summarised here as event type and time; the payload itself is the provider's record of a payment event.",
+        },
+      ],
+    };
+    return { export: out };
+  });
+
+  /* Erasure, for this service's copy of the record (GDPR Art. 17(3)(b),
+     CCPA §1798.105(d)).
+
+     Called by the auth service over the mesh, never by a browser: the route is
+     not under `/api`, so the public edge cannot route to it at all, and the
+     chassis' mesh key is the only thing that opens it. The subject arrives as a
+     user id because that is what these rows are keyed on — a pseudonym would
+     arrive as a subject this service has never heard of.
+
+     What it does NOT do is delete the transaction. Accounting and tax law require
+     the record of what was sold, when and for how much, and Art. 17(3)(b) is the
+     exception that says so; a deletion flow that destroyed invoiced revenue data
+     would be an unlawful act dressed as a lawful one. What it does instead is
+     sever the person from the transaction: the provider's customer reference goes,
+     and every vendor payload — the copies that carry an email address — is
+     replaced with a redaction marker that keeps the event type and its time for
+     reconciliation. What remains is an amount, a date and a random identifier,
+     which the retention schedule states plainly and the deletion response repeats
+     to the learner rather than hiding. */
+  app.post("/internal/erase", async (req) => {
+    const body = parseOr400(billingEraseSchema, req.body);
+    const userId = body.userId;
+    const known = await pool.query(
+      "SELECT 1 FROM billing_subscriptions WHERE user_id = $1 UNION ALL SELECT 1 FROM billing_checkouts WHERE user_id = $1 LIMIT 1",
+      [userId]
+    );
+    if ((known.rowCount ?? 0) === 0) {
+      // Nothing of this subject ever reached this service. The auth service reads
+      // 404 as "nothing to do", which is the outcome being asked for.
+      throw new ApiError(404, "not_found", "No billing record for this subject.");
+    }
+    const severed = await pool.query(
+      "UPDATE billing_subscriptions SET dodo_customer_id = NULL, updated_at = now() WHERE user_id = $1 AND dodo_customer_id IS NOT NULL",
+      [userId]
+    );
+    const redacted = await pool.query(
+      "UPDATE billing_events SET payload = jsonb_build_object('redacted', 'erasure-request', 'redacted_at', now()::text) " +
+        "WHERE payload #>> '{data,metadata,user_id}' = $1 AND payload->>'redacted' IS NULL",
+      [userId]
+    );
+    app.log.info(
+      { userId, severed: severed.rowCount ?? 0, redacted: redacted.rowCount ?? 0 },
+      "billing records severed from the subject; transaction rows retained under legal obligation"
+    );
+    const retained: { category: string; reason: string; basis: LawfulBasis }[] = [
+      {
+        category: "Transaction rows (plan, status, amounts and dates, keyed by a random user id)",
+        reason:
+          "Accounting and tax law require the record of what was sold, when and for how much.",
+        basis: "legal-obligation",
+      },
+    ];
+    const out: BillingEraseResponse = { anonymised: true, retained };
+    return out;
   });
 
   app.get("/subscription", async (req) => {

@@ -25,7 +25,20 @@ import { ApiError } from "@nexora/service-kit";
 export interface TapResult {
   name: string;
   passed: boolean;
+  /**
+   * The suite declared this test not-run (TAP `# SKIP <reason>`), with the
+   * reason verbatim. Same rule as the extension's `parseTap`: a skip is the
+   * environment's fact — this sandbox has no Docker daemon either — never a
+   * verdict, and only set when the directive is present so an ordinary run
+   * parses to exactly the results it always did.
+   */
+  skipped?: boolean;
+  skipReason?: string;
 }
+
+/** TAP's not-run directive: `ok 3 - name # SKIP reason`. Never on a `not ok`
+ *  line — a suite that failed cannot declare itself not-run after the fact. */
+const SKIP_DIRECTIVE = / # SKIP(?:[ \t]+(.*))?$/;
 
 /** Same regex as the extension's `parseTap`: `ok` / `not ok` lines only. */
 export function parseTap(output: string): TapResult[] {
@@ -33,7 +46,13 @@ export function parseTap(output: string): TapResult[] {
   for (const line of output.split("\n")) {
     const m = /^(not )?ok\b(?:\s+\d+)?(?:\s+-\s+|\s+)(.+?)\s*$/.exec(line.trim());
     if (!m) continue;
-    out.push({ name: (m[2] ?? "").trim(), passed: !m[1] });
+    const raw = (m[2] ?? "").trim();
+    const skip = m[1] ? null : SKIP_DIRECTIVE.exec(raw);
+    if (skip) {
+      out.push({ name: raw.slice(0, skip.index).trim(), passed: true, skipped: true, skipReason: (skip[1] ?? "").trim() });
+      continue;
+    }
+    out.push({ name: raw, passed: !m[1] });
   }
   return out;
 }
@@ -43,17 +62,34 @@ export interface AttestCheck {
   tests: string[];
 }
 
-/** Same rule as the extension's `judgeChecks`: present AND passing, else fail. */
+/** Same rule as the extension's `judgeChecks`: present AND passing, else fail.
+ *  A test the suite declared `# SKIP` is present-but-not-run: it does not fail
+ *  its check, and a check decided entirely by skips passes with the reasons
+ *  shown — this sandbox has no Docker daemon, and a learner is never failed
+ *  here for infrastructure the IDE already named not-run locally. */
 export function judgeAttestChecks(
   checks: AttestCheck[],
   results: TapResult[]
 ): { checkId: string; passed: boolean; reason: string }[] {
-  const byName = new Map(results.map((r) => [r.name, r.passed]));
+  const byName = new Map(results.map((r) => [r.name, r]));
   return checks.map((c) => {
     const missing = c.tests.filter((t) => !byName.has(t));
-    const failing = c.tests.filter((t) => byName.get(t) === false);
+    const failing = c.tests.filter((t) => {
+      const r = byName.get(t);
+      return r !== undefined && r.passed === false && r.skipped !== true;
+    });
     if (missing.length === 0 && failing.length === 0) {
-      return { checkId: c.id, passed: true, reason: "Verified against your code, re-run on this platform." };
+      const reasons = c.tests
+        .map((t) => byName.get(t))
+        .filter((r): r is TapResult => r?.skipped === true)
+        .map((r) => r.skipReason || "the suite declared it not-run");
+      return {
+        checkId: c.id,
+        passed: true,
+        reason: reasons.length > 0
+          ? `Verified against your code, re-run on this platform. Not run here either: ${reasons.join("; ")} \u2014 this sandbox has no such tool, and a missing tool is never a verdict.`
+          : "Verified against your code, re-run on this platform.",
+      };
     }
     if (missing.length > 0) {
       return {

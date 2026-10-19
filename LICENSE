@@ -1,0 +1,34 @@
+NEXORA — service repository
+Copyright (c) 2026 [[ operator legal name — set before publishing ]]
+All rights reserved.
+
+This repository is NOT open source, and no licence is granted by its presence
+here. Nothing in it may be copied, modified, distributed, sublicensed or used to
+build a competing product without the copyright holder's prior written
+permission. Access to the source does not carry a licence to it.
+
+This repository is the service mesh and the web front door. It is a different
+repository from the desktop IDE, which is a fork of an editor distributed under
+its own upstream licence; that upstream licence and its third-party notices
+govern that code and travel with those builds (`nexora-ide/LICENSE.txt`,
+`nexora-ide/ThirdPartyNotices.txt`).
+
+## Why this file exists
+
+The workspace had no licence file at all, which is not a neutral state: under
+default copyright, "no licence" means "all rights reserved", but the absence of a
+written notice leaves every reader — a customer's counsel doing diligence, a
+contributor, an investor — to guess. This file makes the default explicit rather
+than implied. The decision and its reasoning are recorded in
+`company/DECISIONS.md`.
+
+Third-party components used by this repository are the property of their
+respective authors and are governed by their own licences; a machine-readable
+inventory is maintained in `branchcraft/platform/package-lock.json` and
+`branchcraft/nexora-svelte/package-lock.json`.
+
+## Contributions
+
+Contributions are accepted only under the terms described in
+`CONTRIBUTING.md`. Please do not send a contribution you are not able to license
+to the copyright holder.

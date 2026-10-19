@@ -21,6 +21,7 @@ import {
   revokeAccountBefore,
   revokeCredential,
 } from "./revocation-store.js";
+import { assertDeclarationsAllowed, registerRightsRoutes, signupStatement } from "./rights.js";
 import { ApiError, clientIp, newId, parseOr400, requireUserId, receiptEdPublicKey, sha256, verifyReceiptEd, verifyReceiptSignature } from "@nexora/service-kit";
 import { randomBytes } from "node:crypto";
 import {
@@ -173,6 +174,11 @@ async function issuePair(pool: Pool, userId: string, refreshId = newId()) {
 }
 
 export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
+  /* Lawful-basis records, erasure, export and the rights ledger. Registered from
+     here so one call site mounts the whole identity surface, and so a deployment
+     cannot end up with accounts it has no way to give back. */
+  registerRightsRoutes(app, pool);
+
   app.post("/register", async (req, reply) => {
     // Before parseOr400 and long before hashPassword: the point of the budget is
     // that the expensive part does not run once it is spent.
@@ -184,13 +190,29 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
     const existing = await pool.query("SELECT id FROM users WHERE lower(email) = $1", [email]);
     if (existing.rowCount) throw new ApiError(409, "conflict", "An account with this email already exists.");
     const id = newId();
+    /* The notice check runs before the hash and before any SQL. This is where the
+     * audit's F-05 ("no lawful-basis or consent architecture") and F-13 ("no age
+     * gate") are actually closed for sign-up: an account in a production
+     * deployment cannot be created by someone who has not affirmed that they were
+     * shown the terms and the privacy notice, and that they are old enough (or
+     * have a guardian's permission) to hold one. The refusal costs no bcrypt work
+     * and leaves nothing to roll back. */
+    assertDeclarationsAllowed(body);
     const passwordHash = await hashPassword(body.password);
+    /* Account and acceptance record, in ONE statement: see signupStatement for why
+     * this is a data-modifying CTE rather than an explicit transaction. The
+     * property that matters is "no account exists without its record of what the
+     * learner was shown", and a single statement makes that the database's
+     * guarantee instead of something the code has to remember. */
     let created: { rows: { id: string; email: string; name: string | null; created_at: Date }[] };
     try {
-      created = await pool.query(
-        "INSERT INTO users (id, email, name, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, email, name, created_at",
-        [id, email, body.name?.trim() || null, passwordHash]
-      );
+      const stmt = signupStatement(body, {
+        id,
+        email,
+        name: body.name?.trim() || null,
+        passwordHash,
+      });
+      created = await pool.query(stmt.sql, stmt.params);
     } catch (err) {
       // The SELECT above is a fast path, not the correctness mechanism: two
       // registrations for one address racing each other both pass it, and the

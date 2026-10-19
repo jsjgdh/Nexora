@@ -9,10 +9,52 @@ export interface ErrorEnvelope {
 
 /* ---------- auth ---------- */
 
+/* Registration, and the four affirmations that ride with it.
+ *
+ * The account itself is processed on the contract basis (GDPR Art. 6(1)(b)) —
+ * we cannot deliver courses to someone without an identity to attach them to —
+ * so no consent is required to sign up, only *information*. What the four
+ * fields below record is not the permission to process: it is the evidence that
+ * the information was given. GDPR Arts. 13–14, India's DPDP Rules (notice,
+ * itemised and separate from other information) and California's notice-at-
+ * collection all require the notice to be delivered at the point of collection,
+ * and the operator has to be able to show it was.
+ *
+ *   acceptTerms / acceptPrivacy  the learner was shown a document of a known
+ *                                version and affirmed it. Art. 7(1) proof of
+ *                                consent is the analogue; here it is proof of
+ *                                disclosure, which is what the notice duty
+ *                                actually asks for.
+ *   ageAffirmed                  the learner is 16 or over, or has a parent's
+ *                                or guardian's permission. GDPR Art. 8 makes
+ *                                under-16s a special case, COPPA covers
+ *                                under-13s, and DPDP sets the line at 18 — the
+ *                                strictest of the three is the one this product
+ *                                applies to a self-serve signup.
+ *   documentVersions             which wording the learner says they read,
+ *                                refused unless it matches the version this
+ *                                deployment serves. A client cannot invent a
+ *                                version number to get out of the notice duty.
+ *
+ * All four are optional in the schema and required by policy, not by parsing:
+ * the deployment switch `NEXORA_REQUIRE_CONSENT` (on by default in production)
+ * is what refuses a registration without them, so a development build and the
+ * existing end-to-end suite keep their old wire shape and the refusal lives
+ * where the law does — in the refusal to operate, not in a parser.
+ */
 export const registerSchema = z.object({
   email: z.string().email().max(254),
   password: z.string().min(10).max(200),
   name: z.string().min(1).max(80).optional(),
+  acceptTerms: z.boolean().optional(),
+  acceptPrivacy: z.boolean().optional(),
+  ageAffirmed: z.boolean().optional(),
+  documentVersions: z
+    .object({
+      terms: z.string().min(1).max(32),
+      privacy: z.string().min(1).max(32),
+    })
+    .optional(),
 });
 export type RegisterRequest = z.infer<typeof registerSchema>;
 
@@ -141,6 +183,195 @@ export interface PublicUser {
   email: string;
   name: string | null;
   createdAt: string;
+}
+
+/* ---------- lawful basis, consent records and data-subject rights ----------
+ *
+ * One vocabulary shared by the service that writes the records, the front door
+ * that displays them and the verification suite that asserts them. Everything a
+ * regulator asks for about a *request* — what was asked, when it arrived, when
+ * it was answered and what the answer was — has one shape here rather than a
+ * convention per endpoint.
+ *
+ * The deadline constants are the statutory ones, kept in one place because a
+ * page that promises "within one month" and a service that computes a different
+ * `due_at` is a misstatement the suite cannot see unless they agree by
+ * construction.
+ */
+
+/** The documents a learner can accept, and the purposes consent is asked for. */
+export const CONSENT_DOCUMENTS = ["terms", "privacy", "age-affirmation"] as const;
+
+/**
+ * The version stamp of the documents this deployment serves, and the one fact a
+ * client cannot be trusted to supply.
+ *
+ * Registration carries the versions the learner says they read, and the service
+ * refuses anything that is not listed here. That makes the recorded version an
+ * assertion by the party with something at stake rather than a claim by the
+ * party filling in a form — a client cannot quietly report "terms v1" while the
+ * page rendered v3, and a document that is rewritten without bumping this is
+ * caught by the suite instead of by a regulator.
+ *
+ * These two values are the `EFFECTIVE_DATE` of the published documents. The
+ * front door sends its own copy of that date (it does not import this package),
+ * so a drift between the two surfaces makes sign-up fail loudly with a version
+ * mismatch — which is the direction this failure should point.
+ */
+export const CURRENT_DOCUMENT_VERSIONS = { terms: "2026-10-16", privacy: "2026-10-16" } as const;
+export type ConsentDocument = (typeof CONSENT_DOCUMENTS)[number];
+
+/**
+ * Why each purpose is legitimate processing, in the only three words that
+ * matter: which GDPR Article 6 basis the operator relies on. `contract` is the
+ * account, the courses and the payment (and is what makes the account itself
+ * lawful without a checkbox); `consent` is everything genuinely optional, which
+ * today is the AI assistants and nothing else.
+ */
+export const LAWFUL_BASES = ["contract", "consent", "legal-obligation", "legitimate-interests"] as const;
+export type LawfulBasis = (typeof LAWFUL_BASES)[number];
+
+/**
+ * The statutory clocks, in days, that a rights request is answered against —
+ * and the shorter internal target the operator actually commits to.
+ *
+ * GDPR Art. 12(3) is one month; CCPA §1798.130 is 45 calendar days with one
+ * further 45; India's DPDP Rules set 90 days for a grievance. The strictest is
+ * therefore one month, and a single 30-day clock satisfies all three, which is
+ * why there is one number here instead of a branch per jurisdiction.
+ */
+export const RIGHTS_RESPONSE_DAYS = 30;
+export const RIGHTS_STATUTORY_DAYS = { gdpr: 30, ccpa: 45, dpdp: 90 } as const;
+
+/**
+ * The rights a person can exercise, named once.
+ *
+ * `erasure`, `access`, `portability`, `rectification`, `restriction` and
+ * `objection` are the GDPR set; `withdraw-consent` is Art. 7(3); `nomination` is
+ * DPDP s.14 ("in the event of death or incapacity"); `opt-out-sale` is kept in
+ * the list although nothing is sold or shared — a request to stop selling
+ * personal data has to be answerable in words, and the honest answer is that it
+ * was never happening.
+ */
+export const RIGHTS_KINDS = [
+  "access",
+  "erasure",
+  "portability",
+  "rectification",
+  "restriction",
+  "objection",
+  "withdraw-consent",
+  "nomination",
+  "opt-out-sale",
+] as const;
+export type RightsKind = (typeof RIGHTS_KINDS)[number];
+
+/** A request a person files, and the answer the operator gives it. */
+export const rightsRequestSchema = z.object({
+  kind: z.enum(RIGHTS_KINDS),
+  /** The requester's own words. Kept because an obligation to act cannot be
+   * judged from a dropdown, and because the reasoned answer quotes it back. */
+  detail: z.string().min(1).max(4000),
+  /** The person a nomination names, only for `nomination`. */
+  nominee: z.string().min(1).max(200).optional(),
+});
+export type RightsRequest = z.infer<typeof rightsRequestSchema>;
+
+export interface RightsRequestRecord {
+  id: string;
+  kind: RightsKind;
+  status: "received" | "in-progress" | "completed" | "refused";
+  detail: string;
+  createdAt: string;
+  /** The statutory date this must be answered by, computed at intake. */
+  dueAt: string;
+  resolvedAt: string | null;
+  resolution: string | null;
+}
+
+/**
+ * Withdrawing a consent (GDPR Art. 7(3), DPDP s.6(4)).
+ *
+ * A route rather than a support request, because the right is that withdrawal be
+ * as easy as giving consent was — and the day it takes an email to an operator is
+ * the day it is not. The document is named rather than implied so the record
+ * shows which acceptance was withdrawn, and the answer says what changed as a
+ * result instead of only that a row was updated.
+ */
+export const consentWithdrawSchema = z.object({
+  document: z.enum(CONSENT_DOCUMENTS),
+});
+export type ConsentWithdrawRequest = z.infer<typeof consentWithdrawSchema>;
+
+/** One recorded acceptance, as the learner sees it back. */
+export interface ConsentRecordView {
+  document: ConsentDocument;
+  version: string;
+  /** Which basis the processing under this document rests on. */
+  basis: LawfulBasis;
+  purpose: string;
+  acceptedAt: string;
+  withdrawnAt: string | null;
+}
+
+/**
+ * Erasure is confirmed by the requester typing the word, never by a checkbox:
+ * the action is irreversible and takes every session, proof and consent with
+ * it, so the confirmation has to be something a stray click cannot produce.
+ * A literal in the schema (not an optional boolean) is what makes that
+ * structural rather than a convention the client is trusted to follow.
+ */
+export const deleteAccountSchema = z.object({
+  confirm: z.literal("DELETE"),
+  /** Free-text reason, optional, recorded on the erasure receipt only if given. */
+  reason: z.string().max(500).optional(),
+  /** What the learner was told would be retained, echoed so the record shows
+   * they were told. Never trusted for control flow — the service decides what
+   * it keeps. */
+  acknowledgedRetention: z.boolean().optional(),
+});
+export type DeleteAccountRequest = z.infer<typeof deleteAccountSchema>;
+
+/**
+ * What erasure actually deleted, and what it could not — the two lists are the
+ * point. A deletion flow that reports only success is the kind of claim this
+ * codebase refuses to make, so the response names the retained categories and
+ * the reason each is retained (tax records, and the erasure receipt itself).
+ */
+export interface DeleteAccountResponse {
+  deleted: Record<string, number>;
+  retained: { category: string; reason: string; basis: LawfulBasis }[];
+  /** Handed to the processors that hold their own copy, to be actioned there. */
+  processorsQueued: string[];
+  receiptId: string;
+}
+
+/**
+ * The export (GDPR Art. 15 access and Art. 20 portability, CCPA §1798.110/115,
+ * DPDP access) for everything this service holds. Machine-readable by
+ * construction: it is the artifact a person is entitled to, not a rendering of
+ * it. Billing lives in its own service and its own database, so it is exported
+ * by its own endpoint and merged by whoever assembles the download — stated here
+ * rather than silently omitted, because an export that quietly misses the
+ * payment records is not the export the law describes.
+ */
+export interface AccountExport {
+  format: "nexora-account-export";
+  version: 1;
+  generatedAt: string;
+  controller: string;
+  /** Which service produced this half of the record. */
+  service: "auth" | "billing";
+  subject: PublicUser & { provider: string };
+  consents: ConsentRecordView[];
+  rightsRequests: RightsRequestRecord[];
+  proofs: ProofRecord[];
+  /** Counts, not contents: a refresh-token hash is a credential, and an export
+   * is a file that will be emailed around. */
+  sessions: { active: number; revoked: number; deviceCodes: number };
+  /** Everything this service does NOT hold, named so the reader is not misled
+   * into thinking the file is the whole of the operator's record. */
+  notIncluded: { category: string; where: string }[];
 }
 
 export interface AuthTokens {
@@ -627,4 +858,41 @@ export interface SubscriptionView {
   status: string | null;
   entitled: boolean;
   currentPeriodEnd: string | null;
+}
+
+/*
+ * Billing's half of a data-subject request.
+ *
+ * A subscription record is the one category the operator may lawfully keep after
+ * an erasure request — tax and accounting law requires the transaction record,
+ * and GDPR Art. 17(3)(b) is the exception that says so — so this service's job
+ * on a deletion is not to destroy the row but to sever it from the person: the
+ * email, the display name and the provider's customer id go, the amounts and
+ * dates stay, and the record says plainly that it did.
+ */
+export interface BillingExport {
+  format: "nexora-account-export";
+  version: 1;
+  generatedAt: string;
+  controller: string;
+  service: "billing";
+  subscription: SubscriptionView & { dodoCustomerId: string | null };
+  checkouts: { plan: string; status: string; createdAt: string; paidAt: string | null }[];
+  /** Webhook payloads are kept for reconciliation and are summarised here
+   * rather than dumped: they are vendor records about a payment, and an export
+   * should not become a second copy of the payment provider's logs. */
+  webhookEvents: { type: string; receivedAt: string }[];
+  notIncluded: { category: string; where: string }[];
+}
+
+export const billingEraseSchema = z.object({
+  /** The learner the records belong to. Never taken from a body in a public
+   * route — only the auth service, over the mesh, may ask for this. */
+  userId: z.string().min(1).max(128),
+});
+export type BillingEraseRequest = z.infer<typeof billingEraseSchema>;
+
+export interface BillingEraseResponse {
+  anonymised: boolean;
+  retained: { category: string; reason: string; basis: LawfulBasis }[];
 }

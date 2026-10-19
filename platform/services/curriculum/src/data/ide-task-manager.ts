@@ -3,8 +3,8 @@
 export const IDE_TASK_MANAGER: unknown = {
   "id": "task-manager",
   "title": "Task Manager",
-  "description": "One real app, built in phases, then a Go backend track on a ledger: values, control flow, functions, structs, methods, interfaces, packages, and collections. Each phase is Learn then Solve, then Review.",
-  "version": 18,
+  "description": "Two tracks in one course. The JavaScript track builds one real app, phase by phase, from the first terminal command to a reviewed pull request. The Go track then works a backend on a ledger: values, control flow, functions, structs, methods, interfaces, packages, collections. Two phases leave the app for a project of their own — navigation searches an unfamiliar codebase, and the dependency exercise imports a vendored module in Go Deps. Every phase is Learn, then Solve, then Review.",
+  "version": 44,
   "phases": [
     {
       "id": "setup",
@@ -13,12 +13,14 @@ export const IDE_TASK_MANAGER: unknown = {
       "level": 1,
       "authored": true,
       "activities": [
+        "setup-learn-window",
         "setup-learn-tools",
         "setup-learn-editor",
         "setup-learn-project",
         "setup-ask-terminal",
         "setup-ask-toolchain",
-        "setup-do-firstrun"
+        "setup-do-firstrun",
+        "setup-review-transfer"
       ],
       "interviewQuestions": [
         "Why do you open a fresh terminal after installing Node or Git?",
@@ -34,6 +36,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "fund-learn-values",
+        "fund-learn-collections",
         "fund-ask-predict",
         "fund-do-values",
         "fund-review-transfer"
@@ -41,7 +44,8 @@ export const IDE_TASK_MANAGER: unknown = {
       "interviewQuestions": [
         "What is the difference between a variable and the value it holds?",
         "Explain what a function returns when the caller never uses the return value.",
-        "Why does mutating a list that another part of the program reads cause subtle bugs?"
+        "Why does mutating a list that another part of the program reads cause subtle bugs?",
+        "Why does 1 == \"1\" pass while 1 === \"1\" fails, and which comparison should survive a code review?"
       ]
     },
     {
@@ -52,6 +56,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "web-learn-basics",
+        "web-learn-errors",
         "web-ask-status",
         "web-do-fetch",
         "web-review-transfer"
@@ -59,7 +64,8 @@ export const IDE_TASK_MANAGER: unknown = {
       "interviewQuestions": [
         "What does an HTTP status code in the 400s tell you about who owns the mistake?",
         "How is JSON different from a JavaScript object, and why does it matter on the wire?",
-        "What is an endpoint, and what does a request carry that a response does not?"
+        "What is an endpoint, and what does a request carry that a response does not?",
+        "Why does a failed JSON.parse stop the program while a wrong value would not, and what does that decide about where the catch goes?"
       ]
     },
     {
@@ -126,7 +132,8 @@ export const IDE_TASK_MANAGER: unknown = {
       "activities": [
         "behavior-learn-events",
         "behavior-ask-state",
-        "behavior-do-delete"
+        "behavior-do-delete",
+        "behavior-review-transfer"
       ],
       "interviewQuestions": [
         "What is the difference between an event handler and the event itself?",
@@ -156,7 +163,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "id": "debug",
       "title": "Debug failures",
       "goal": "Investigate broken features using logs, breakpoints, and tests.",
-      "level": 3,
+      "level": 2,
       "authored": true,
       "activities": [
         "debug-learn-read",
@@ -214,6 +221,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "level": 2,
       "authored": true,
       "activities": [
+        "api-learn-promise",
         "api-learn-connect",
         "api-ask-outcome",
         "api-do-load",
@@ -222,7 +230,8 @@ export const IDE_TASK_MANAGER: unknown = {
       "interviewQuestions": [
         "What should the UI show while a request is in flight, and what should it show on failure?",
         "Why must you handle a request that succeeds but returns unusable data?",
-        "What is the difference between an error status and a network failure?"
+        "What is the difference between an error status and a network failure?",
+        "A test prints start, end, between — why does the promise callback run last, and what does that say about the line after an await?"
       ]
     },
     {
@@ -247,7 +256,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "id": "testing",
       "title": "Test the application",
       "goal": "Write tests that would catch a broken implementation — judged by whether they can fail.",
-      "level": 2,
+      "level": 3,
       "authored": true,
       "activities": [
         "testing-learn-fail",
@@ -277,6 +286,42 @@ export const IDE_TASK_MANAGER: unknown = {
         "What is a code review allowed to conclude about code you never ran?",
         "What kind of secret must never appear in a config file you commit?",
         "How would you check an app is ready to deploy without trusting its green tests?"
+      ]
+    },
+    {
+      "id": "pr-review",
+      "title": "Respond to code review",
+      "goal": "Act on a teammate's pull request review comments without breaking existing callers.",
+      "level": 3,
+      "authored": true,
+      "activities": [
+        "pr-review-learn-loop",
+        "pr-review-ask-thread",
+        "pr-review-do-batch",
+        "pr-review-transfer-gate"
+      ],
+      "interviewQuestions": [
+        "When a reviewer asks for a change that would alter a function's return type, what do you check before applying it?",
+        "Why is mutating an array passed in by a caller considered a contract defect even when no test currently fails?",
+        "How do you distinguish a blocking correctness comment from a stylistic preference during a pull request review?"
+      ]
+    },
+    {
+      "id": "ai-audit",
+      "title": "Audit AI-generated code",
+      "goal": "Treat generated code and its confident summary as unreviewed input, find the false claims, and fix the defects.",
+      "level": 3,
+      "authored": true,
+      "activities": [
+        "ai-audit-learn-verify",
+        "ai-audit-ask-claim",
+        "ai-audit-do-sync",
+        "ai-audit-transfer-page"
+      ],
+      "interviewQuestions": [
+        "When an AI assistant generates a pull request with a confident summary, which parts of the summary can you trust without reading the diff?",
+        "Why do AI-generated error handlers frequently pass happy-path tests while causing silent data corruption in production?",
+        "How do you verify that a fallback cache returned on error does not leak shared mutable state across callers?"
       ]
     },
     {
@@ -450,9 +495,28 @@ export const IDE_TASK_MANAGER: unknown = {
       ]
     },
     {
+      "id": "go-pointers",
+      "title": "Go pointers",
+      "goal": "Address versus value: what & and * mean, why a map write panics on nil, and when only a pointer sticks.",
+      "level": 2,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-pointers-learn",
+        "go-pointers-ask",
+        "go-pointers-do",
+        "go-pointers-review"
+      ],
+      "interviewQuestions": [
+        "When must a function take a pointer, and what goes wrong when it takes a value instead?",
+        "Why does writing to a nil map panic while reading from it is safe, and what does that imply for constructors?",
+        "What is the difference between a nil pointer, a nil map, and a nil slice at the point you use one?"
+      ]
+    },
+    {
       "id": "go-embedding",
       "title": "Go embedding",
-      "goal": "Embedding lifts one type’s fields and methods into another: composition that reads like inheritance, with no hierarchy and no subclasses.",
+      "goal": "Embedding lifts one type's fields and methods into another: composition that reads like inheritance, with no hierarchy and no subclasses.",
       "level": 2,
       "authored": true,
       "project": "go-ledger",
@@ -484,8 +548,27 @@ export const IDE_TASK_MANAGER: unknown = {
       "interviewQuestions": [
         "Why does Go return errors as values instead of throwing exceptions?",
         "What is the difference between errors.Is and errors.As, and when do you want each?",
-        "How does wrapping with %w keep a caller’s errors.Is check working?",
+        "How does wrapping with %w keep a caller's errors.Is check working?",
         "When is recover the right tool, and what does it turn a panic into?"
+      ]
+    },
+    {
+      "id": "go-lifecycle",
+      "title": "Go cleanup and panic",
+      "goal": "Defer runs at return, panic means programmer bug, recover belongs at one boundary — and cleanup always runs exactly once.",
+      "level": 2,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-lifecycle-learn",
+        "go-lifecycle-ask",
+        "go-lifecycle-do",
+        "go-lifecycle-review"
+      ],
+      "interviewQuestions": [
+        "In what order do deferred calls run, and what does that imply for nested locks?",
+        "When is panic the right tool, and when is it an error value wearing a costume?",
+        "Where does recover belong, and what must happen to a panic you do not own?"
       ]
     },
     {
@@ -569,43 +652,452 @@ export const IDE_TASK_MANAGER: unknown = {
       ]
     },
     {
+      "id": "go-context",
+      "title": "Contexts and cancellation",
+      "goal": "A context carries deadlines, cancellation, and values down a call tree. Blocking work selects on ctx.Done so it stops the moment the caller gives up, and any function downstream can read the deadline the context already holds.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-context-learn",
+        "go-context-ask",
+        "go-context-do",
+        "go-context-review"
+      ],
+      "interviewQuestions": [
+        "Why is context.Context conventionally the first parameter, and what does passing it down let a caller do?",
+        "How is cancellation signalled through a context, and why must the worker select on ctx.Done() to actually stop?",
+        "What is the difference between context.WithCancel and context.WithTimeout, and what does each leave in ctx.Err()?",
+        "Why should you always call the cancel function you get back, even when a timeout already fires?"
+      ]
+    },
+    {
+      "id": "go-concur",
+      "title": "Worker pools and fan-in",
+      "goal": "Scale the channel pattern: fan work out to several workers reading one jobs channel, then fan their partial results back in. The sender owns the close, so the collected total is the same no matter how the scheduler runs.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-concur-learn",
+        "go-concur-ask",
+        "go-concur-do",
+        "go-concur-review"
+      ],
+      "interviewQuestions": [
+        "What is a worker pool, and how do a shared jobs channel and a results channel shape it?",
+        "How do you fan work out to several goroutines and fan their results back in safely?",
+        "Who must close a channel, and why does ranging over it let the receiver know all the work is finished?",
+        "What does go test -race detect, and what does it need from the machine running the test?"
+      ]
+    },
+    {
+      "id": "go-json",
+      "title": "Go JSON",
+      "goal": "Struct tags as wire format: marshal without depending on Go names, unmarshal without trusting the bytes.",
+      "level": 2,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-json-learn",
+        "go-json-ask",
+        "go-json-do",
+        "go-json-review"
+      ],
+      "interviewQuestions": [
+        "What does a struct tag do, and what happens on the wire when one is misspelled?",
+        "Why must a decode function return an error instead of a half-filled struct?",
+        "What does encoding/json do with fields the target struct does not declare?"
+      ]
+    },
+    {
+      "id": "go-http",
+      "title": "HTTP handlers and a small REST API",
+      "goal": "Turn the ledger into something a client can talk to: route a request by method and path, answer each situation with the status it earns, refuse bad input before it changes anything, and wrap the handler in middleware that tags every response.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-http-learn",
+        "go-http-ask",
+        "go-http-do",
+        "go-http-review"
+      ],
+      "interviewQuestions": [
+        "How does an http.Handler differ from an http.HandlerFunc, and how does a ServeMux route by method and path?",
+        "What decides the status code a REST endpoint returns, and why is 400 not the same as 404 or 405?",
+        "How do you decode and validate a JSON request body in Go, and what do you do when a required field is missing?",
+        "What is middleware in net/http, and how does a wrapper add a header to every response without touching the inner handler?"
+      ]
+    },
+    {
+      "id": "go-routes",
+      "title": "Routing, pagination, and a rate limit",
+      "goal": "Give the API a real routing table: match a request by method and path pattern, pull an id out of the URL and a limit out of the query, answer each failure with the status it actually earned (404 for no such route, 405 for the wrong verb), and wrap the whole thing in a rate limiter that refuses the burst past its budget with 429 before the handler ever runs.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-routes-learn",
+        "go-routes-ask",
+        "go-routes-do",
+        "go-routes-review"
+      ],
+      "interviewQuestions": [
+        "How does a Go 1.22 ServeMux method-and-path pattern differ from switching on r.Method inside one handler, and what does the mux do when a path matches but the method does not?",
+        "How do you read a path value and a query parameter from a request, and why does pagination have to be decided by the server rather than the client?",
+        "When is 405 the honest answer instead of 404 or 400, and what does each one actually tell the caller?",
+        "What is a rate limiter protecting against, and why must it answer 429 and return before it ever calls the handler it wraps?"
+      ]
+    },
+    {
+      "id": "go-auth",
+      "title": "Go auth",
+      "goal": "Passwords hashed once and never stored, tokens signed and expiring: every API the ledger serves finally asks who is calling.",
+      "level": 2,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-auth-learn",
+        "go-auth-ask",
+        "go-auth-do",
+        "go-auth-review"
+      ],
+      "interviewQuestions": [
+        "Why is a password hash with a random salt uncomparable with ==, and what compares it instead?",
+        "What does a token expiry actually enforce, and what can it never enforce without a list?",
+        "Where does the subject live between the middleware and the handler, and why not in a header the client sends?"
+      ]
+    },
+    {
+      "id": "go-tests",
+      "title": "Testing: tables, subtests, and httptest",
+      "goal": "Write code against a suite you cannot rewrite. A hidden, table-driven test is the machine-checkable definition of correct behaviour here: it pins every band of a grader through a slice of cases run under t.Run subtests, and it checks an HTTP handler over a real loopback listener with httptest. Your job is the implementation that survives such a suite — boundaries exact, the out-of-range case refused, the status and the body both right — and the literacy to know that coverage counts what ran, never what you actually asserted.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-tests-learn",
+        "go-tests-ask",
+        "go-tests-do",
+        "go-tests-review"
+      ],
+      "interviewQuestions": [
+        "What makes a Go test table-driven, and why is one slice of cases plus a loop better than a separate test function for every input?",
+        "How do t.Run subtests change what a failure tells you, and what do they cost once a table has hundreds of rows?",
+        "Why test an http.Handler with httptest.NewServer instead of calling it directly with a hand-rolled ResponseWriter, and what does t.Cleanup protect you from?",
+        "Go reports coverage as the percentage of statements a suite executed — give an example of a test at 100 percent coverage that still fails to catch a bug."
+      ]
+    },
+    {
+      "id": "go-perf",
+      "title": "Performance: the cost of a line",
+      "goal": "Ship the function a senior ships. Two implementations can both be correct and one of them is a landmine that only goes off at real size: building a string with += in a loop copies everything gathered so far each turn, so it is O(n^2), while a single-pass build is O(n). This phase makes that cost something you see rather than guess — the standard library as the senior one-liner, sizing a slice when you already know its length, and measuring with benchmarks, AllocsPerRun, and pprof instead of trusting a hunch.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-perf-learn",
+        "go-perf-ask",
+        "go-perf-do",
+        "go-perf-review"
+      ],
+      "interviewQuestions": [
+        "You have two implementations that both return the correct answer. How do you decide which one is faster without guessing, and which metrics would you compare?",
+        "Why does building a string with += inside a loop turn into O(n^2) work, and what would you reach for instead in Go?",
+        "When is preallocating with make([]T, 0, n) worth the effort, and when is a plain append the better choice?",
+        "What can pprof or an allocation profile tell you that a simple benchmark cannot, and how would you use it on a slow handler?"
+      ]
+    },
+    {
+      "id": "go-store",
+      "title": "Data modeling: what the ledger refuses",
+      "goal": "A data model is not the shape of the happy path, it is the set of states you have decided are representable. This phase moves the rules to the one seam every writer shares — the store — so a handler, a migration and a seed script are all held to the same contract: a record with nothing naming it is refused by name, the same id cannot be stored twice, and a refusal changes nothing at all.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-store-learn",
+        "go-store-ask",
+        "go-store-do",
+        "go-store-review"
+      ],
+      "interviewQuestions": [
+        "Where does the validation of a stored record belong, and why not only in the handler that first receives it?",
+        "What does a store owe a caller when it refuses a record — a panic, a silent drop, or an error that names the field?",
+        "Why must a refused record leave the store exactly as it was, and what makes a half-stored write worse than a rejected one?"
+      ]
+    },
+    {
+      "id": "go-db",
+      "title": "Go persistence",
+      "goal": "database/sql against a real file: open, parameterized writes, reads that survive a restart, and a missing row that errors instead of lying.",
+      "level": 2,
+      "authored": true,
+      "project": "go-persist",
+      "activities": [
+        "go-db-learn",
+        "go-db-ask",
+        "go-db-do",
+        "go-db-review"
+      ],
+      "interviewQuestions": [
+        "Why do database calls take parameters instead of a finished query string?",
+        "What does sql.ErrNoRows mean, and what bug follows from returning a zero value instead?",
+        "Who closes rows and database handles, and what leaks when nobody does?"
+      ]
+    },
+    {
+      "id": "go-cache",
+      "title": "Go cache",
+      "goal": "Cache-aside with a TTL and one fetch per stampede: the reads the DB phase made real now answer from memory, honestly bounded in staleness and invalidated on write.",
+      "level": 3,
+      "authored": true,
+      "project": "go-persist",
+      "activities": [
+        "go-cache-learn",
+        "go-cache-ask",
+        "go-cache-do",
+        "go-cache-review"
+      ],
+      "interviewQuestions": [
+        "What does a TTL actually promise, and what refreshing it on every read do to that promise?",
+        "Why does singleflight still need a mutex around the map, and what exactly does each of them protect?",
+        "Who should invalidate — every write path or the cache, and what does each choice cost when one of them forgets?"
+      ]
+    },
+    {
+      "id": "go-ops",
+      "title": "Operations: what the running service admits",
+      "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest — the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-ops-learn",
+        "go-ops-ask",
+        "go-ops-do",
+        "go-ops-review"
+      ],
+      "interviewQuestions": [
+        "What does a readiness endpoint owe an operator when a dependency is down: a stack trace, a connection string, or a name?",
+        "Why must a health check never repeat a connection string, even inside a failure message?",
+        "Who reads a process exit code, and what does an unenumerated failure exiting 0 do to them?"
+      ]
+    },
+    {
+      "id": "go-logging",
+      "title": "Go logging",
+      "goal": "Structured logs from day one: levels, request ids on every line, and secrets that never reach the output.",
+      "level": 2,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-logging-learn",
+        "go-logging-ask",
+        "go-logging-do",
+        "go-logging-review"
+      ],
+      "interviewQuestions": [
+        "What belongs in a log line and what must never appear there?",
+        "How does a request id get onto every line without passing it to every function?",
+        "Why is a nil logger a crash instead of silence, and who should prevent it?"
+      ]
+    },
+    {
+      "id": "go-deps",
+      "title": "Go dependencies",
+      "goal": "Understanding Go module dependencies and how to manage external packages.",
+      "level": 2,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-deps-learn",
+        "go-deps-ask",
+        "go-deps-do",
+        "go-deps-review"
+      ],
+      "interviewQuestions": [
+        "How do you declare and resolve module dependencies in Go?",
+        "What is the difference between direct and indirect dependencies?",
+        "How does Go ensure reproducible builds across environments?"
+      ]
+    },
+    {
+      "id": "go-resilience",
+      "title": "Resilience: retries, backoff, and failing fast",
+      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes — so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-resilience-learn",
+        "go-resilience-ask",
+        "go-resilience-do",
+        "go-resilience-review"
+      ],
+      "interviewQuestions": [
+        "Why is retrying a failed call unconditionally dangerous, and what two bounds turn it from an amplification attack into a sane recovery strategy?",
+        "Describe the difference between a transient failure that a retry can plausibly fix and a permanent one that should fail fast. How would you decide which you have?",
+        "What problem does exponential backoff solve for a single client, and what additional problem does jitter solve for a thousand clients sharing a dependency?",
+        "A retry helper that returns nil after exhausting its attempts is worse than one that returns the last error. Why, and what does the caller lose?"
+      ]
+    },
+    {
+      "id": "go-ship",
+      "title": "Ship: containers and the pipeline that proves it",
+      "goal": "Your machine builds your code because it holds a toolchain you installed and modules you already downloaded; none of that travels. This phase makes the build itself portable — a Dockerfile that compiles in one stage and ships from another, so the artifact is identical everywhere, and a pipeline that re-runs the same commands in a clean room on every push. The lab judges at two altitudes: the file structure is linted on every machine, and when a Docker daemon answers the image is really built and the suite really runs inside it — while a machine without one says so plainly and still gets every file check. Missing infrastructure is never a verdict about your work; a runtime image that ships its toolchain always is.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-ship-learn",
+        "go-ship-ask",
+        "go-ship-do"
+      ],
+      "interviewQuestions": [
+        "Why does copying go.mod and go.sum before the source keep a Docker build fast, and what exactly invalidates that layer?",
+        "What does a multi-stage build buy a Go service that one slimmed-down stage cannot, and why is the toolchain itself the thing to remove?",
+        "What can a pipeline prove on every push that a local go test never can, no matter how green the local run was?",
+        "Why must a container’s runtime process not be root, and which line of the Dockerfile decides that?"
+      ]
+    },
+    {
+      "id": "go-incident",
+      "title": "Debugging, for real",
+      "goal": "Until now the broken apps in this course were models you investigated on paper. This one is your own code: a journal whose flush silently drops the last buffered entry, a suite that is red on arrival, and no list of candidate fixes to pick from. Run the suite, read the failure, form a hypothesis before you touch the code, cite the evidence your fix rests on, then make the real suite green. What is judged is the run — and the order of your reasoning.",
+      "level": 3,
+      "project": "go-ledger",
+      "authored": true,
+      "activities": [
+        "lab-journal-loss"
+      ],
+      "interviewQuestions": [
+        "When a suite is red on arrival, what do you read first — the failing assertion, or the code it points at?",
+        "Why is a hypothesis recorded before the edit worth more than an explanation written after the suite went green?",
+        "What does a green regression check that was green from the start protect you from?",
+        "How do you tell the difference between a fix and a lucky edit that happened to satisfy the tests?"
+      ]
+    },
+    {
       "id": "incident-labs",
       "title": "Debugging labs",
-      "goal": "Two broken apps you investigate rather than run: read the symptom, log, and failing tests, record a hypothesis, then choose the fix that resolves the real cause without a regression. The process is what is judged — a hypothesis must come before the fix.",
+      "goal": "Three broken apps you investigate rather than run: read the symptom, log, and failing tests, record a hypothesis, then choose the fix that resolves the real cause without a regression. The process is what is judged — a hypothesis must come before the fix. Each lab carries the arc itself: the report frames it, the hypothesis and fix are the work, and the verdict on your own event order is the review.",
       "level": 3,
       "authored": true,
       "activities": [
         "lab-race-hang",
-        "lab-data-loss"
+        "lab-data-loss",
+        "lab-breaker-open"
       ],
       "interviewQuestions": [
         "What is the first thing you record when an app misbehaves and the cause is not obvious?",
         "How do you tell a fix that addresses the root cause from one that only hides the symptom?",
         "Why can a fix that makes the test pass still be the wrong fix?",
-        "How do you prove you understood a bug rather than stumbled onto a change that worked?"
+        "How do you prove you understood a bug rather than stumbled onto a change that worked?",
+        "When a dependency gets slow, what decides how much of your load you keep sending at it — and what should stop it?"
       ]
     },
     {
       "id": "design-labs",
       "title": "Design labs",
-      "goal": "Take a concern you have already built in code and design it: decide where state that must survive a reload actually lives, defend the choice against a store that is unreachable, and read your own graph back as an architecture rather than a picture. Judged by the Studio rubric over the graph you draw — no test suite runs here.",
+      "goal": "Take a concern you have already built in code and design it: decide where state that must survive a reload actually lives, defend the choice against a store that is unreachable, and read your own graph back as an architecture rather than a picture. Judged by the Studio rubric over the graph you draw — no test suite runs here. Each lab carries the arc itself: the brief frames it, the graph and its rationale are the work, and reading the rubric back is the review.",
       "level": 3,
       "authored": true,
       "activities": [
         "lab-state-persistence",
-        "lab-url-shortener"
+        "lab-url-shortener",
+        "lab-read-replica"
       ],
       "interviewQuestions": [
         "What is the difference between state that is fast to show and state that is safe to lose?",
         "How would you design a reload so that acknowledged work can never vanish, even if the page closes?",
         "Why route every read and write through one service instead of letting the app touch the store directly?",
-        "When the durable store is unreachable, what should the app show — and what must it never claim?"
+        "When the durable store is unreachable, what should the app show — and what must it never claim?",
+        "When is a stale read the right answer, and what must be declared before you are allowed to serve one?"
       ]
     }
   ],
   "activities": {
+    "setup-learn-window": {
+      "id": "setup-learn-window",
+      "resources": [
+        {
+          "label": "VS Code: User interface",
+          "url": "https://code.visualstudio.com/docs/editing/getting-started/userinterface"
+        }
+      ],
+      "title": "Learn: the window you are in",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "project-setup"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "This is what you see when Nexora opens: the window splits into three regions you will use all course. Left is the sidebar, where the Explorer lists your project as folders; center is the editor, where tabs hold open files; bottom is the terminal, where you type commands."
+        },
+        {
+          "kind": "prose",
+          "body": "You can show or hide each region with a shortcut. This phase has 8 steps: 4 short reads, 2 quick questions, 1 hands-on Solve where you bring the project up, and 1 Review you do alone. Each read ends with Mark as Complete, which unlocks the next step."
+        },
+        {
+          "kind": "example",
+          "body": "The three regions, sketched:",
+          "code": "Sidebar (left)    → Explorer: your project as folders and files\nEditor (center)   → the open file, one tab per file across the top\nTerminal (bottom) → Ctrl+` toggles it; you type commands here\n\nCtrl+B hides or shows the sidebar.    Ctrl+` hides or shows the terminal."
+        },
+        {
+          "kind": "prose",
+          "body": "Two things confuse first-timers. Closing a tab does not delete the file; the file stays on disk and you reopen it with Ctrl+P. A red squiggle under your code is not damage; it means the editor noticed something early, and Ctrl+Shift+M opens the Problems panel with the full explanation. If you cannot find a feature, press Ctrl+Shift+P and type what you want: the palette is the I-do-not-know button."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "You type an edit, then close the tab without saving. What is on disk now?",
+          "items": [
+            "The edit, because a tab is only a view of the file on disk.",
+            "Nothing new — the unsaved edit is gone with the tab.",
+            "The file itself, deleted along with its tab."
+          ],
+          "answer": 1,
+          "explain": "A tab shows a file; a dot on its label means the buffer holds changes the disk does not. Closing drops those changes, which is why the editor asks first, and why the saved version is what Ctrl+P gives back."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Sidebar lists files; editor edits them; terminal runs commands.",
+            "Closing a tab never deletes the file it shows.",
+            "When lost, Ctrl+Shift+P searches every command by name."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "The work folder opens by itself on first run: NEXORA/Task-Manager in your home directory. If the window is empty instead, run NEXORA: Setup Workspace from the palette and reopen there. Then expand one folder, click a file to open it, and press Ctrl+` to show the terminal, then again to hide it. You touched all three regions and changed nothing."
+        }
+      ],
+      "hints": [
+        "The Explorer is the top icon on the far-left activity bar; click it and the sidebar shows your files.",
+        "If a region vanished, the View menu at the top lists every panel by name, with its shortcut beside it."
+      ],
+      "misconceptions": [
+        "A tab is the file itself; it is only your current view. Close it and the file waits on disk for Ctrl+P to reopen it.",
+        "A red underline means you broke something; it is the editor pointing at a pattern worth checking, advice rather than damage."
+      ]
+    },
     "setup-learn-tools": {
       "id": "setup-learn-tools",
+      "resources": [
+        {
+          "label": "Node.js: Download (LTS)",
+          "url": "https://nodejs.org/en/download"
+        },
+        {
+          "label": "Git: Installing Git",
+          "url": "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
+        }
+      ],
       "title": "Learn: get the tools onto this machine",
       "kind": "lesson",
       "mode": "learn",
@@ -616,15 +1108,24 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Two programs have to exist before any code runs: Node.js, because this project and its tests are Node programs, and Git, because a later phase asks you to record what you changed. Install them first. The friction is front-loaded on purpose, so that nothing later fails for a reason you cannot see."
+          "body": "Two programs must exist before any code runs: Node.js, because this project and its tests are Node programs, and Git, because a later phase records what you changed. The friction is front-loaded so nothing later fails for a reason you cannot see."
         },
         {
           "kind": "prose",
-          "body": "Step 1 — Node.js 20 or newer. Open nodejs.org and take the LTS download for your system (the button that says LTS). LTS is the long-support release; 20 or newer is what this project's tests are written against. On Windows run the .msi installer, on macOS the .pkg, on Linux your package manager or a version manager."
+          "body": "Step 1 — Node.js 20 or newer. Open nodejs.org and take the download labeled LTS, the long-support release the tests are written against. On Windows run the .msi, on macOS the .pkg, on Linux use your package manager, or paste the commands below into a terminal."
+        },
+        {
+          "kind": "example",
+          "body": "Install both tools from the terminal (one line per tool):",
+          "code": "Windows (PowerShell):\nwinget install OpenJS.NodeJS.LTS\nwinget install Git.Git\n\nmacOS (Terminal):\nbrew install node\nbrew install git\n\nLinux (Debian/Ubuntu):\nsudo apt install nodejs npm git"
         },
         {
           "kind": "prose",
-          "body": "Step 2 — close the terminal, open a new one, and prove it. A terminal that is already open keeps the environment it started with, so it cannot see anything an installer changed afterwards. Open Terminal ▸ New Terminal and run the two commands below from the project folder."
+          "body": "If a line answers command not found, that package manager is not on your machine — use the website installer from Step 1 instead. One Linux warning: distro repositories can ship a Node older than 20. If node -v reports under 20 after an apt install, take Node from nodejs.org."
+        },
+        {
+          "kind": "prose",
+          "body": "Step 2 — close the terminal, open a new one, and prove it. Open Terminal ▸ New Terminal from the menu. A terminal already open keeps the environment it started with, so it cannot see what an installer changed afterwards. Run the two commands below."
         },
         {
           "kind": "example",
@@ -633,24 +1134,35 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Step 3 — Git, if the second command said it was not found. Install it from git-scm.com, then open one more new terminal and run the same check. Git is not needed to write code; it is needed when a later phase asks you to record it, so a missing Git today is not a wall."
+          "body": "Step 3 — Git, if the second command said not found. Install it from git-scm.com, open one more new terminal, and run the same check. Git is not needed to write code, only to record it later, so a missing Git today is not a wall."
         },
         {
           "kind": "prose",
-          "body": "Step 4 — run the environment check. Press Ctrl+Shift+P (Cmd+Shift+P on macOS), type NEXORA, and choose the environment check. It reports Node, Git, and whether the project's files are where the phases expect them, and every failure names its own fix. If it still reports Node missing after you installed it, quit and reopen the editor: VS Code hands its environment to the terminal, and it read that environment before your install."
+          "body": "Step 4 — run the environment check. Press Ctrl+Shift+P (Cmd+Shift+P on macOS), type NEXORA, and choose it. It reports Node, Git, and the project's files, and every failure names its own fix. If it still says Node is missing, quit and reopen the editor — it started its terminal before your install."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "The installer finished. A terminal you already had open still says node: command not found. What does that tell you?",
+          "items": [
+            "The install failed, so nothing reached the machine and it has to be run again.",
+            "That terminal started before the install, so its PATH is the old one.",
+            "The project is missing the manifest that names where node lives."
+          ],
+          "answer": 1,
+          "explain": "A terminal keeps the environment it was started with, so a PATH entry added afterwards is invisible to it. Open a new terminal and run node -v there: that run is the one that says whether the install worked."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Node 20 or newer runs the project and its tests; Git arrives for the version-control phase.",
-            "A new terminal sees a new PATH; an old terminal keeps the one it started with.",
-            "The environment check names the fix — run it before you debug anything else."
+            "Node 20+ runs the project and tests; Git comes in for version control.",
+            "A new terminal sees the new PATH; an old one does not.",
+            "The environment check names the fix — run it first."
           ]
         },
         {
           "kind": "task",
-          "body": "Open a new terminal and run node -v. Read the version it prints. If it prints nothing, or a number below 20, stop here and install — nothing later in this course can work around a missing runtime, and every failure after this point would point at the wrong thing."
+          "body": "Open a new terminal and run node -v. Read the version it prints. If it prints nothing, or a number below 20, stop here and install — nothing later can work around a missing runtime, and every failure after it would point at the wrong thing."
         }
       ],
       "hints": [
@@ -666,6 +1178,16 @@ export const IDE_TASK_MANAGER: unknown = {
     },
     "setup-learn-editor": {
       "id": "setup-learn-editor",
+      "resources": [
+        {
+          "label": "VS Code: Basic editing and shortcuts",
+          "url": "https://code.visualstudio.com/docs/editing/codebasics"
+        },
+        {
+          "label": "VS Code: Tips and tricks",
+          "url": "https://code.visualstudio.com/docs/editing/getting-started/tips-and-tricks"
+        }
+      ],
       "title": "Learn: move at editor speed",
       "kind": "lesson",
       "mode": "learn",
@@ -688,11 +1210,22 @@ export const IDE_TASK_MANAGER: unknown = {
           "body": "Two habits outlive the list. The first: when you want to do something and cannot see how, press Ctrl+Shift+P and type what you want — the command is almost always there, and the palette shows its shortcut next to the result, which is how these keys become yours. The second: read the Problems panel before running anything. The tooling usually knows what is wrong before you do."
         },
         {
+          "kind": "quickcheck",
+          "body": "You want to change one word where it appears four times on screen. Which key does that without the mouse?",
+          "items": [
+            "Ctrl+D, which puts a cursor on each match.",
+            "Ctrl+P, which opens a file by typing its name.",
+            "Ctrl+Shift+P, which lists every command."
+          ],
+          "answer": 0,
+          "explain": "Ctrl+D takes the word under the cursor and adds the next match on every press, so one edit lands in all four places. The other two keys open things; only Ctrl+D edits in place."
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "Ctrl+Shift+P finds any command by name; Ctrl+P finds any file by name.",
-            "Ctrl+D edits several places at once — the fastest fix for a word that is not a renameable symbol.",
+            "Ctrl+D edits several places at once — the fast fix for repeated words.",
             "F12 and the Problems panel answer most questions before you finish asking them."
           ]
         },
@@ -709,7 +1242,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Shortcuts replace knowing the menu — the palette shows the same commands beside their keys; the keys are the shortcut to the command, not a separate world.",
         "Ctrl+D selects the whole file — it adds the next occurrence of the current selection; Ctrl+Shift+L is the select-everything version.",
-        "The terminal must be restarted after every change — the dev server reloads on save; only new commands need a terminal."
+        "The terminal must be restarted after every change — only a change to the environment needs a new terminal; edits to files do not."
       ]
     },
     "setup-ask-toolchain": {
@@ -728,10 +1261,10 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Reinstall Node — a second install adds the missing piece.",
-        "Open a new terminal and run node -v in the project folder; the proof is a version printed by the tool itself.",
-        "Trust the installer's success message — the terminal is usually just slow.",
-        "Copy the node executable into the project folder so the project can find it."
+        "Reinstall Node — a second install adds the missing piece and puts the new bin folder on the PATH.",
+        "Open a new terminal and run node -v there; the proof is a version the tool prints itself.",
+        "Trust the installer's success message — the terminal is usually just slow to notice the change.",
+        "Copy the node executable into the project folder so the project can find it when it runs."
       ],
       "answer": 1,
       "explanation": "A version printed by the tool is evidence; an installer's success message is a claim about its own work. Terminals inherit the environment that was current when they started, so a terminal opened before the install cannot see it — open a new one. Reinstalling changes nothing if the first install was fine, a slow terminal can still be tested rather than trusted, and a second copy of the executable inside the project is one more thing to keep in sync instead of a fix.",
@@ -764,7 +1297,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the manifest declares a dev script"
           ],
-          "feedback": "package.json has no dev script, so the terminal has nothing to start. Add a dev entry to the scripts block that runs the project's dev server."
+          "feedback": "package.json has no dev script, so nothing declares how the project starts. Add a dev entry to the scripts block — a name and a non-empty command."
         },
         {
           "id": "entry-file",
@@ -785,20 +1318,26 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Read the failing test first: it names the exact file it is looking for. That name is the answer to where.",
-        "A manifest declares what can be run. Without a dev script the terminal has nothing to start, however correct your files are.",
-        "Open package.json with Ctrl+P and compare its scripts block with what the test asks for; then create the entry file the dev script will point at.",
-        "The shape: scripts.dev starts the dev server (this project uses Vite), and src/main.jsx is the entry that finds the root element and renders the app into it.",
-        "Solution review: package.json gains a dev entry beside its test one, and src/main.jsx renders the app into document.getElementById('root'). Run the checks — three tests, three green, and the phase closes."
+        "Two files carry this one: package.json declares the scripts, and src/main.jsx is the entry that has to be created beside the components in src/.",
+        "The suite names its three demands in order: a declared dev script, an entry file beside the components, and an entry that reaches the page's root element. Run it and read which name is still failing.",
+        "A script entry is a name and a command in the scripts block, sitting beside the test one. The entry file is short: find the root element first, then render the app inside it, and nothing else belongs in it.",
+        "The third check is the edge: a file that exists but never looks up the root element fails it. Ask what your entry does with that element before it renders anything.",
+        "A complete answer satisfies the pair together: a declared dev entry with a non-empty command, and an entry file that finds the root element before rendering anything. If `node -v` reports command not found the suite cannot start: open a new terminal, or install Node per the first lesson, then retry."
       ],
       "misconceptions": [
-        "The dev script is the same thing as the entry file — they are two halves of one idea: the script starts a server that immediately fails without the file.",
+        "The dev script is the same thing as the entry file — they are two halves of one idea: the script starts the project, and it fails immediately without the file.",
         "The entry file belongs at the project root — it sits in src/ with the rest of the source, and the page's HTML points at it.",
         "Editing the test to match the code — the suite is this phase's acceptance criteria, not a suggestion."
       ]
     },
     "setup-learn-project": {
       "id": "setup-learn-project",
+      "resources": [
+        {
+          "label": "npm: package.json",
+          "url": "https://docs.npmjs.com/cli/v11/configuring-npm/package-json"
+        }
+      ],
       "title": "Learn: the project on disk",
       "kind": "lesson",
       "mode": "learn",
@@ -809,20 +1348,36 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A project is a folder with a shape: source files where the code lives, a manifest that names the project and its scripts, and a dev server that rebuilds on every save. Learn the shape first and every later phase starts from somewhere familiar."
+          "body": "A project is a folder with a shape: source files where the code lives, a manifest that names the project and its scripts, and a start command the project declares but this workspace never runs. Learn the shape first and every later phase starts from somewhere familiar."
+        },
+        {
+          "kind": "example",
+          "body": "The manifest, and the scripts block this phase adds:",
+          "code": "{\n  \"name\": \"task-manager\",\n  \"scripts\": {\n    \"test\": \"node --test\",\n    \"dev\": \"<the command that starts this project>\"\n  }\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "You edit the test script in package.json, save, and run npm test. Which command runs?",
+          "items": [
+            "The edited one: npm reads the manifest each time it starts.",
+            "The original: npm cached the script when the project was installed.",
+            "Neither, until the folder is deleted and cloned again."
+          ],
+          "answer": 0,
+          "explain": "A script is only a name the manifest declares; npm looks it up when you run it. That is why editing the line and running again is the whole loop, and why package.json is the file to read when a command surprises you."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Source files live under src/; the manifest (package.json) names scripts like dev and test.",
-            "The dev server rebuilds on save — the browser follows the files, not the other way round.",
+            "Source files live under src/; the manifest (package.json) names scripts dev and test.",
+            "A script is only a name the manifest declares until something runs it.",
             "The terminal runs in the project folder; commands assume that location."
           ]
         },
         {
           "kind": "task",
-          "body": "Open the Explorer, find package.json, and read the scripts section. It declares test today; the dev server is the piece this phase adds, and you wire it in the Solve step. Notice the shape while you are here: components under src/, tests beside them."
+          "body": "Open the Explorer, find package.json, and read the scripts section. It declares test today; a dev entry is the piece this phase adds, and you write it in the Solve step. Notice the shape while you are here: components under src/, tests beside them."
         }
       ],
       "hints": [
@@ -845,22 +1400,69 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "The dev server only starts when the command runs in the right place with the right files present."
+          "body": "A declared script means what it says only when the command runs in the right place with the right files present."
         }
       ],
       "options": [
-        "Any folder — npm finds the project on its own.",
         "The project folder containing package.json.",
         "The src/ folder, next to the code.",
-        "The home folder, then navigate in the browser."
+        "The home folder, then find the project by browsing for it.",
+        "Any folder — npm finds the project on its own."
       ],
-      "answer": 1,
-      "explanation": "Scripts belong to the manifest that declares them. Run from the folder containing package.json and the command means what it says.",
+      "answer": 0,
+      "explanation": "Scripts belong to the manifest that declares them, so a command means what it says only in the folder that holds that package.json. Run it in src/ or in your home folder and there is no manifest there to read the dev script from — the tool cannot see a project it was never pointed at. \"Any folder\" is the tempting shortcut: a command can only act on the project it finds where it runs, and if that is the wrong project it silently does the wrong work. Stand in the folder that contains package.json, and the script resolves exactly as written.",
       "hints": [
         "Ask which file declares the dev script, then stand next to it."
       ],
       "misconceptions": [
         "The terminal follows the open file — it follows the folder it was opened in."
+      ]
+    },
+    "setup-review-transfer": {
+      "id": "setup-review-transfer",
+      "title": "Review: build the shape again, somewhere new",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "project-setup"
+      ],
+      "files": [
+        "extras/package.json",
+        "extras/index.js"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/extras-shape.test.mjs",
+      "checks": [
+        {
+          "id": "setup-review-manifest",
+          "label": "The new folder carries a manifest with a start script",
+          "tests": [
+            "the second manifest declares a start script"
+          ],
+          "feedback": "extras/ has no package.json yet, or has one whose scripts block never names start. A manifest is the file that says what can be run: name the project, then give scripts a start entry whose value is an actual command. If the suite cannot run because `node` is command not found, run the environment check first."
+        },
+        {
+          "id": "setup-review-points",
+          "label": "The start command runs a file that is really there",
+          "tests": [
+            "the start command points at a file that is really there"
+          ],
+          "feedback": "The script names a file the folder does not contain. Write extras/index.js and let the command point at it, the way the project's dev script points at its entry — a script and the file it runs are two halves of one shape, and either one alone starts nothing."
+        },
+        {
+          "id": "edge-setup-untouched",
+          "label": "The project you were handed still starts",
+          "tests": [
+            "the project you were handed still declares its dev script"
+          ],
+          "feedback": "Building the second shape cost you the first: the root manifest lost its dev entry, or its entry file went missing. Adding a project means adding a folder, not moving what was already declared — every later phase runs against those files.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "One manifest can serve two folders — a script means what it says only in the folder holding the file that declares it.",
+        "An empty scripts entry still counts as a start — the name is a promise that a command and a real file are waiting behind it."
       ]
     },
     "fund-learn-values": {
@@ -885,11 +1487,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every later phase talks about values, functions, lists, and loops as if you were already fluent. Here each word is defined in plain language with a two-line program you can run. You are not reading this to memorize terms — you are reading it so that when a phase says “return the value,” you know exactly what moves where."
+          "body": "Every later phase assumes these words. Each one gets a plain definition and a small runnable program."
         },
         {
           "kind": "prose",
-          "body": "A value is a piece of data with a type. The ones you will meet constantly are number (3, -1, 2.5), string (text between quotes, like \"Ada\"), and boolean (true or false, and nothing else). Two shapes hold other values: an array is an ordered list, an object is a set of named values. And undefined is what a name holds before you put anything in it."
+          "body": "A value is data with a type. You will meet number (3, 2.5), string (text in quotes), and boolean (true or false). An array is an ordered list; an object holds named values. undefined is what a name holds before you fill it."
         },
         {
           "kind": "example",
@@ -898,20 +1500,44 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A variable is a name with a value in it. The word let makes one; the equals sign puts a value in. Think of a labelled box you can look inside and refill: let score = 0 makes a box called score holding 0, and score = 5 later refills the same box. The name stays; the value inside can change."
+          "body": "A variable is a name with a value in it. let makes one; the equals sign puts a value in. Think of a labelled box: let score = 0 makes a box called score holding 0, and score = 5 later refills the same box. The name stays; the value can change."
         },
         {
           "kind": "prose",
-          "body": "A function is a saved recipe: steps attached to a name you run again by writing the name with parentheses. The parentheses can take inputs, called arguments, which arrive inside the recipe under names called parameters. The function hands its answer back with return — return is what the call becomes. Printing with console.log only shows something on screen; it does not hand a value back. That single difference is the most common point of confusion in beginner code."
+          "body": "A function is a saved recipe you run again by writing its name with parentheses. Those parentheses take inputs called arguments, which arrive as parameters. return hands the answer back."
+        },
+        {
+          "kind": "prose",
+          "body": "console.log only shows a value on screen; it does not hand it back."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "function f() { console.log(1); } — what does const x = f(); put in x?",
+          "items": [
+            "1 — the value it printed comes back as the result.",
+            "undefined — printing is not returning.",
+            "null — a function with no return gives null."
+          ],
+          "answer": 1,
+          "explain": "console.log writes to the screen and hands back nothing, so the call has the value undefined. Only return gives a value to the caller, which is why a function can print the right thing and still leave x empty."
         },
         {
           "kind": "example",
-          "body": "greet has one parameter, name. Calling it with \"Ada\" makes name be \"Ada\" inside, and the whole call becomes the string it returns:",
+          "body": "greet has one parameter, name. Calling greet(\"Ada\") makes the whole call become the string it returns:",
           "code": "function greet(name) {\n  return \"Hello, \" + name + \"!\";\n}\n\ngreet(\"Ada\");             // this becomes \"Hello, Ada!\"\nconsole.log(greet(\"Ada\"));  // and prints it"
         },
         {
           "kind": "prose",
-          "body": "An array is an ordered list under one name. You reach an item by its position, counting from zero — the first item of [\"a\", \"b\", \"c\"] is at index 0, and nums.length is how many items it holds. An object is a set of named values you reach by key, as in task.title. Lists you count through; objects you look up by name."
+          "body": "Four shorthands appear in almost every program ahead: the arrow function, the template literal, strict equality, and the ternary. Each has a one-line shape below."
+        },
+        {
+          "kind": "example",
+          "body": "The four shapes, in code:",
+          "code": "const double = (n) => n * 2;         // arrow function: a compact function\nconst msg = `Hi, ${name}!`;            // template literal: text in backticks\nif (count === 0) {}                    // === compares strictly, no coercion\nconst label = done ? \"done\" : \"open\";  // ternary: choose one of two"
+        },
+        {
+          "kind": "prose",
+          "body": "Reach an array item by position, counting from zero: the first sits at index 0, and length is how many there are. Reach an object's values by key, as in task.title."
         },
         {
           "kind": "example",
@@ -920,11 +1546,11 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A condition runs a block only when something is true: if (score > 10) { ... }. A loop runs a block again and again while a condition holds, so you write the work once and let the machine repeat it. The lines below add a list up without typing one addition per item — which is the entire reason a loop exists."
+          "body": "A condition runs a block only when something is true: if (score > 10) { ... }. A loop runs a block again and again while a condition holds, so you write the work once and the machine repeats it."
         },
         {
           "kind": "example",
-          "body": "Walk nums, adding each item into total. Do the task to trace what total holds after each pass:",
+          "body": "Walk nums, adding each into total; trace what total holds after each pass:",
           "code": "let total = 0;\nfor (let i = 0; i < nums.length; i++) {\n  total = total + nums[i];\n}\n// total is 6"
         },
         {
@@ -932,14 +1558,14 @@ export const IDE_TASK_MANAGER: unknown = {
           "body": "Key Points",
           "items": [
             "A value has a type: number, string, boolean, array, object, or undefined.",
-            "A variable is a named box; let makes one and = puts a value in it.",
-            "A function runs saved steps; return hands the answer back — console.log only prints it.",
-            "An array is counted from zero; an object is looked up by a key."
+            "A variable is a named box; let makes one, = fills it.",
+            "A function runs saved steps; return hands back the answer, not console.log.",
+            "An array is counted from zero; an object is found by a key."
           ]
         },
         {
           "kind": "task",
-          "body": "Trace the loop on paper. nums is [1, 2, 3]. Write what total holds after each pass (start at 0) and what i is each time. Then change one number in the list and predict the new total before checking. When your prediction matches the arithmetic, you have understood the loop rather than memorized it."
+          "body": "Trace the loop on paper: nums is [1, 2, 3]. Write what total holds after each pass (start at 0). Then change one number and predict the new total before checking; when prediction matches arithmetic, you have understood the loop."
         }
       ],
       "visualization": {
@@ -973,6 +1599,100 @@ export const IDE_TASK_MANAGER: unknown = {
         "A variable is its value — it is a box that holds one value now and can hold a different one later, while the name stays the same."
       ]
     },
+    "fund-learn-collections": {
+      "id": "fund-learn-collections",
+      "resources": [
+        {
+          "label": "MDN: Array methods",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array"
+        },
+        {
+          "label": "MDN: Array.prototype.map()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map"
+        }
+      ],
+      "title": "Learn: methods that walk a list for you",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "programming-fundamentals"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "The loop is the shape everything else is built from, but writing it out every time is where the small bugs live: an off-by-one at the end, a total you forgot to return. A handful of list methods do that walking for you."
+        },
+        {
+          "kind": "prose",
+          "body": "map hands back a new list with one result per item, so it keeps the length. filter keeps only the items that passed a test. find hands back the first item that passed, or undefined. some asks whether any item passed; every asks whether all of them did."
+        },
+        {
+          "kind": "example",
+          "body": "One list, four questions asked of it:",
+          "code": "const nums = [1, 2, 3];\n\nnums.map(n => n * 2);     // [2, 4, 6] — one result per item\nnums.filter(n => n > 1);  // [2, 3]    — only the ones that passed\nnums.find(n => n > 1);    // 2         — the first that passed\nnums.some(n => n > 2);    // true      — did any pass?\nnums.every(n => n > 0);   // true      — did all pass?"
+        },
+        {
+          "kind": "prose",
+          "body": "reduce is the odd one: it walks the list carrying a running value and returns that single value. Its second argument is where the carry starts, so a list that turns out empty still has an answer."
+        },
+        {
+          "kind": "example",
+          "body": "A list folded into one number:",
+          "code": "const total = [1, 2, 3].reduce((sum, n) => sum + n, 0);  // 6\n// the 0 is where the carry starts, so [] answers 0 too"
+        },
+        {
+          "kind": "prose",
+          "body": "sort is the one list method that misbehaves twice. With no compare function it converts every item to text and sorts that, so [1, 10, 2, 9] comes back exactly as it went in: \"1\" before \"10\" before \"2\". And it reorders the list you handed it and hands that same list back."
+        },
+        {
+          "kind": "example",
+          "body": "One list, sorted two ways:",
+          "code": "const ages = [1, 10, 2, 9];\n\nages.sort();                // [1, 10, 2, 9] — text order, nothing moved\nages.sort((a, b) => a - b); // [1, 2, 9, 10] — number order\n\nconst copy = [...ages].sort((a, b) => a - b); // ages itself left alone"
+        },
+        {
+          "kind": "prose",
+          "body": "One equality warning belongs here too. === compares two values as they are, without converting them. The double equals converts first, so 1 == \"1\" is true even though a number and text are different things; text from a form or a JSON body is a string, so turn it into a number at the edge and compare with ===."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does [10, 9, 1].sort() hand back?",
+          "items": [
+            "[1, 9, 10] — sorted by numeric value, smallest first.",
+            "[1, 10, 9] — text order, not number order.",
+            "[10, 9, 1] — unchanged, because numbers never sort."
+          ],
+          "answer": 1,
+          "explain": "With no compare function, sort turns each item into text first, so 10 comes before 9. Pass (a, b) => a - b to compare numbers, and copy the list first if the original order still matters."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "map keeps the length; filter, find, some and every do not.",
+            "The function you pass runs once per item, with that item.",
+            "reduce carries one running value; seed it so an empty list answers.",
+            "=== never converts; == converts first, which is why it surprises.",
+            "sort defaults to text order and reorders the list it was given."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In src/foundations.js, sum is a stub that throws. Write it twice in your Notes — once with a for loop, once with reduce — and check on paper that an empty list answers 0 both ways. Then say which version a reviewer reads at a glance. Then write down, before running it, what the example’s bare ages.sort() left behind."
+        }
+      ],
+      "hints": [
+        "Read a method call as its answer, the way you read a function call: nums.map(...) becomes a new list.",
+        "Need the same length? map. A shorter list? filter. One value? reduce."
+      ],
+      "misconceptions": [
+        "map and forEach are the same method — map collects each result into a new list and returns it; forEach walks the list and returns nothing at all.",
+        "map, filter and reduce change the list you called them on — each returns a new value and leaves the original exactly where it was.",
+        "Believing arr.sort() leaves the original alone because it hands back a sorted list — it rearranges the one you passed in, then returns that same array.",
+        "reduce has no starting value to worry about — you hand it one, and a list can be empty, so that seed is the only thing that guarantees an answer.",
+        "Loose equality is a convenient shorthand — it converts one side before comparing, so a string and a number can look equal when they are not."
+      ]
+    },
     "fund-ask-predict": {
       "id": "fund-ask-predict",
       "title": "Reason: what does this program print",
@@ -994,12 +1714,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
+        "0 — reduce starts at 0 and never gets past its first argument.",
         "6 — every number in the list is added together.",
         "5 — only 2 and 3 pass the test, and those two are added.",
-        "3 — filter leaves the largest number standing on its own.",
-        "0 — reduce starts at 0 and never gets past its first argument."
+        "3 — filter leaves the largest number standing on its own."
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "filter(n => n > 1) drops the 1 and keeps [2, 3], because only those two are greater than 1. reduce then folds that smaller list into one number, starting from the 0 you handed it: 0 + 2 is 2, then 2 + 3 is 5. So the answer is 5, not 6 — the value that filter removes never reaches the addition, which is exactly the kind of thing that stays invisible until you trace it by hand.",
       "hints": [
         "Work in stages: write down what filter leaves behind, then add only those numbers."
@@ -1058,11 +1778,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/foundations.js. Each function throws today — that throw line is a placeholder standing exactly where your return belongs.",
-        "The test names the behavior: \"greet wraps a name in a friendly sentence\" means greet(\"Ada\") must become \"Hello, Ada!\".",
-        "sum needs a running total and a for loop over the list; longestWord needs a longest-so-far and one length comparison per word.",
-        "Return hands the value back to whoever called you. A function that only console.logs answers undefined the moment a test asks what it returned.",
-        "Solution review: greet returns the string, sum folds the list with a loop seeded at 0 so an empty list stays 0, and longestWord tracks the biggest word it has seen. Run the checks — four tests, four green, and the phase closes."
+        "Open src/foundations.js: it owns all three functions, and every one of them throws today — that throw line is the placeholder standing where your return belongs.",
+        "The failing names are the spec: a greeting built from the name it was handed, a total over every number in the list, the longest entry, and an empty list that still totals zero.",
+        "sum wants a running total and a walk over the list; longestWord wants a best-so-far plus one length comparison per word; greet just builds its sentence from the name it was given.",
+        "The edge is the empty list: whatever the walk starts from is also the answer when there is nothing to walk, so ask what your total holds before the loop ever runs.",
+        "A complete solution hands answers back rather than printing them: each function returns its value, the total starts at zero so an empty list still answers, and the longest word is compared by length rather than assumed. Run the checks — four tests, and the suite is the judge. If the suite cannot start because `node` is command not found, run the environment check or finish the setup phase first."
       ],
       "misconceptions": [
         "Making console.log print the right thing passes the test — the suite checks the value the function returns, and a print-only function returns undefined.",
@@ -1114,7 +1834,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "largest of a single item is that item"
           ],
-          "feedback": "With only one item there is nothing to compare it against, so the answer is that item. If this fails you started the loop at index 1 expecting a second item — seed the best from index 0 instead.",
+          "feedback": "With only one item there is nothing to compare it against, so the answer is that item. If this fails you started the loop at index 1 expecting a second item — seed the best from index 0 instead. If the suite cannot run because `node` is command not found, run the environment check or finish setup first.",
           "edge": true
         }
       ],
@@ -1146,7 +1866,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every later phase speaks about requests, responses, status codes, JSON, and endpoints as if you already knew the words. Here each one is met plainly, defined by something small you can run. The goal is not to memorize terms. It is that when a phase says \"check the status code,\" you already know who that number is blaming."
+          "body": "Every later phase uses requests, responses, status codes, JSON, and endpoints as if you knew the words. Each gets a plain definition and something small to run, so when a phase says \"check the status code,\" you know who that number blames."
         },
         {
           "kind": "example",
@@ -1155,11 +1875,11 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The first line is the request. It has a method, the verb that says what you want: GET reads, POST creates, PUT or PATCH changes, DELETE removes. It has a path, the part after the machine name, like /api/tasks. A path you may ask about is called an endpoint, and the whole set of endpoints a server offers is its API. A method plus an endpoint names one request."
+          "body": "The first line is the request: a method, the verb that says what you want (GET reads, POST creates, PUT or PATCH changes, DELETE removes), and a path, the part after the machine name, like /api/tasks. A path you may ask about is an endpoint, and all the endpoints a server offers are its API."
         },
         {
           "kind": "prose",
-          "body": "The next line is the response status, a three digit number whose first digit carries the meaning. 2xx succeeded, 3xx says go somewhere else now, 4xx means the request was the problem, 5xx means the server was. Two you meet constantly: 200 is the ordinary yes, and 404 means the server understood you and found nothing at that address. Reading the first digit tells you who owns the trouble before you ever open the body."
+          "body": "The next line is the response status, a three digit number whose first digit carries the meaning. 2xx succeeded, 3xx go somewhere else, 4xx the request was the problem, 5xx the server was. Two you meet constantly: 200 is the ordinary yes, and 404 means the server understood you and found nothing there."
         },
         {
           "kind": "example",
@@ -1168,7 +1888,7 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The body is the real payload, and it is most often written as JSON: braces for an object, brackets for a list, double quotes around text. JSON is only text until you parse it into data, and it turns back into text when you write it. That round trip is all \"sending JSON\" means, and it is the pair of calls you will run in the challenge."
+          "body": "The body is the real payload, most often written as JSON: braces for an object, brackets for a list, double quotes around text. JSON is text until you parse it into data, and turns back into text when you write it. That round trip is all \"sending JSON\" means."
         },
         {
           "kind": "example",
@@ -1177,21 +1897,21 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Two more words the course uses freely. The browser turns a response into something you can see as a living tree of page parts called the DOM, the Document Object Model; when a phase says \"the button is in the DOM,\" it means one node in that tree. None of these terms is a mystery. Each names one moving part of a conversation between two programs."
+          "body": "Two more words. The browser turns a response into a living tree of page parts called the DOM; when a phase says a button is \"in the DOM,\" it means one node in that tree. Each term names one moving part of a conversation between two programs."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A request is a method, the verb, plus an endpoint, the path you point it at.",
-            "The first digit of a status is its meaning: 2xx ok, 3xx redirect, 4xx your fault, 5xx the server.",
-            "JSON is text standing in for data. Parse it to read it, write it to send it.",
-            "The DOM is the tree of parts a page is built from; an API is the set of endpoints a server offers."
+            "A request is a method (the verb) plus an endpoint (the path).",
+            "The first digit of a status is its band: 2xx, 3xx, 4xx, 5xx.",
+            "JSON is text standing in for data: parse to read, write to send.",
+            "The DOM is a page as a tree; an API is its endpoints."
           ]
         },
         {
           "kind": "task",
-          "body": "Before any code, in your own words, write the request you would send to read the list of tasks and the response that says it worked. Then write the request and response for the case where that list was deleted on the server. Name a method, an endpoint, a status, and what the body holds in each. That is the whole vocabulary of this phase, and the challenge below checks you can make it run."
+          "body": "Before any code, in your own words, write the request you would send to read the list of tasks and the response that says it worked, then the same pair for a list already deleted on the server. Name a method, an endpoint, a status, and what the body holds in each."
         }
       ],
       "visualization": {
@@ -1227,6 +1947,67 @@ export const IDE_TASK_MANAGER: unknown = {
         "GET and POST differ only in spelling. GET asks to read and carries no body, POST asks to create and brings one, so a server may answer them in different ways."
       ]
     },
+    "web-learn-errors": {
+      "id": "web-learn-errors",
+      "resources": [
+        {
+          "label": "MDN: try...catch",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch"
+        },
+        {
+          "label": "MDN: JSON.parse()",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse"
+        }
+      ],
+      "title": "Learn: when a call refuses to answer",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "web-http-json"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "The example above turned text into data with JSON.parse. That call has a second ending you have not met: when the text is not JSON at all, it does not hand back a wrong value. It stops, and throws."
+        },
+        {
+          "kind": "prose",
+          "body": "A thrown error is an ordinary value on a journey. It leaves the function it started in and travels outward through every caller until something catches it. If nothing does, it reaches the top and the program stops — the page simply never draws."
+        },
+        {
+          "kind": "example",
+          "body": "Catching the failure and answering with something usable instead:",
+          "code": "function parseTasks(text) {\n  try {\n    const parsed = JSON.parse(text);        // throws when text is not JSON\n    return Array.isArray(parsed) ? parsed : [];\n  } catch (err) {\n    return [];                              // no data, and nothing explodes\n  }\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "The try marks the block you want watched; the catch is handed whatever was thrown inside it. Together they are one decision: which step might fail, and what the caller gets when it does."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "JSON.parse throws on malformed text; it never returns a wrong value.",
+            "A thrown error travels outward until a catch stops it.",
+            "Without a catch, the program stops where the error surfaced."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In your own words, write two sentences in the Notes: what JSON.parse does with the text \"oops\", and what a caller should receive instead. Then change one character in the sample so the parse succeeds, and say what changes."
+        }
+      ],
+      "hints": [
+        "Read a throw as \"stop here and send this value up\" — the nearest try is where the value lands.",
+        "A step that can fail needs an answer on both ends, and the caller is who needs it."
+      ],
+      "misconceptions": [
+        "A thrown error is a value you read back like a return — it does not come back to the caller at all; it skips past them, up the stack, until a catch names it.",
+        "try/catch is only for code you already expect to be broken — it is for any step that can refuse, including a parse of text that came from somewhere you do not control.",
+        "A failed parse means the program is dead — the throw only ends the program if nothing catches it, and a catch turns it back into an ordinary value."
+      ]
+    },
     "web-ask-status": {
       "id": "web-ask-status",
       "title": "Reason: who owns the problem this status describes",
@@ -1243,12 +2024,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "The server crashed and must be restarted, because any status above 400 is a failure.",
-        "The request arrived and was understood, but the thing it named is not there, so the trouble is on the side that asked.",
-        "The connection failed and no reply came back at all, so there is no status to read.",
-        "The request worked but returned an empty task, because 404 means nothing was found in the list."
+        "The connection failed and no reply came back at all, so there is no status number to read.",
+        "The request worked but returned an empty task, because 404 means nothing was found in the list.",
+        "The server crashed and must be restarted, because any status above 400 is a server failure.",
+        "The request arrived and was understood; nothing lives at that address — the fault is yours."
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "A 404 is a complete, successful conversation that ended on your side of it. The request reached the server, was understood, and was answered honestly with the news that nothing lives at that address. That is why it is a 4xx and not a 5xx: the server is fine, it is the address or id you sent that matches nothing stored. A 500 would say the server itself stumbled while trying to answer, and a connection that never reached a server would carry no status at all. So the number points where to look, at your request, before a single line of the body is read.",
       "hints": [
         "Read the first digit as the owner of the problem: 2 you got a good answer, 4 you asked wrongly, 5 the server broke."
@@ -1308,11 +2089,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/web-basics.js. Each function throws today. That throw line is the placeholder sitting exactly where your real return belongs.",
-        "parseJson needs one standard call that reads JSON text into data. Hand back what it gives you, so the caller can read the title and done off the result.",
-        "For statusClass, ask each band the number it starts at: 200 to 300 is success, 300 to 400 is redirect, 400 to 500 is a client error, and from 500 up is a server error. Return the label, not the number.",
-        "buildRequest only names the conversation: an object holding method and path, plus a line that is those two joined by a single space. A template string makes that join easy.",
-        "Solution review: parseJson returns JSON.parse(text); statusClass compares code against each band start and returns the word, with 300 landing in redirect not success; buildRequest returns an object with method, path, and line. Run the checks, five tests, all green, and the phase closes."
+        "Open src/web-basics.js: statusClass names a status band, parseJson reads JSON text back into data, and buildRequest shapes a request — all three throw today where your real return belongs.",
+        "The failing names are the spec: text read back into data, a 201 called a success, a 404 called a client error, the method and the path both named, and a 300 that is not a success.",
+        "statusClass compares the number against the point each band starts at and returns that word; parseJson is one standard call that reads the text into data; buildRequest hands back the method, the path, and the two joined into a single request line.",
+        "The edge sits at the top of the success band: a number that begins the next band must not be labelled with the one before it. Ask what your comparison does at exactly 300.",
+        "A complete solution answers every question the suite asks: the text turned back into data, each band named from the number it starts at, and one request line built from its two parts. Run the checks — five tests, and the suite is the judge. If the suite cannot start because `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Making the code print something passes the test. The suite reads the value each function returns, and a function that only logs answers undefined the moment a check asks what it got.",
@@ -1340,7 +2121,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "toText turns data back into JSON text"
           ],
-          "feedback": "toText is not producing JSON yet. It is the mirror of the parse you just learned: one standard call turns a value into the text a server would send, and you return that string."
+          "feedback": "toText is not producing JSON yet. It is the mirror of the parse you just learned: one standard call turns a value into the text a server would send, and you return that string. If the suite cannot run because `node` is command not found, run the environment check first."
         },
         {
           "id": "ok-band",
@@ -1401,20 +2182,20 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Two habits make these four safe to build on. First, a good operation hands back a NEW list instead of editing the one it was given, so a change you decide to undo never half happened to the original. Second, each operation names the record it targets by an id, a value that marks one item out from all the rest, because a position shifts the moment anything is added or removed."
+          "body": "Two habits make these four safe to build on. First, a good operation hands back a NEW list instead of editing the one it was given, so a change you decide to undo never half happened. Second, each operation names the record it targets by an id, a value that marks one item out from all the rest, because a position shifts the moment anything is added."
         },
         {
           "kind": "prose",
-          "body": "The same four already have a face on the web from the last phase: POST creates, GET reads, PUT or PATCH updates, DELETE removes. When a server finishes a create it often answers 201, a success that means there is now one more thing than before. Learn CRUD on the list and those HTTP verbs stop being a second thing to memorize. They are the same four moves with network names."
+          "body": "The same four have a face on the web from the last phase: POST creates, GET reads, PUT or PATCH updates, DELETE removes. When a server finishes a create, it answers 201, a success that means there is one more thing than before. Learn CRUD on the list and those HTTP verbs stop being a second thing to memorize. They are the same four moves with network names."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Create makes a record, read fetches one, update changes one, delete removes one: that is all CRUD claims.",
-            "Each operation points at one record by its id, because a position is not a stable name.",
-            "A well behaved operation returns a new list and leaves the one it was handed untouched.",
-            "The four HTTP verbs are CRUD over a network: POST, GET, PUT or PATCH, DELETE."
+            "Create makes a record; read, update, delete each act on one.",
+            "Operations name a record by id; a position is not a stable name.",
+            "A good operation returns a new list and leaves the old untouched.",
+            "HTTP verbs are CRUD over a network: POST, GET, PATCH, DELETE."
           ]
         },
         {
@@ -1468,12 +2249,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Create, sent as POST, because a finished state is something new the server has never seen.",
-        "Read, sent as GET, because the app is only checking whether the task was already done.",
         "Update, sent as PUT or PATCH, because one task that already exists is being changed.",
-        "Delete, sent as DELETE, because marking a task done clears it off the list."
+        "Delete, sent as DELETE, because marking a task done clears it off the list.",
+        "Create, sent as POST, because a finished state is something new the server has never seen.",
+        "Read, sent as GET, because the app is only checking whether the task was already done."
       ],
-      "answer": 2,
+      "answer": 0,
       "explanation": "Marking a task done adds nothing and takes nothing away, so it is neither create nor delete, and it is not a read, because the app is telling the server something rather than asking. One existing record is being changed, and that is exactly what an update does; over the network it arrives as a PUT or a PATCH carrying the new value. The task keeps its id the whole time, which is the tell. Update is the only one of the four that leaves both the count and the identity of the records alone while editing what one of them holds.",
       "hints": [
         "Ask which of the four leaves the number of tasks unchanged and edits one record that already has an id. That is the update."
@@ -1531,7 +2312,7 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "id": "edge-missing-delete",
-          "label": "removing an absent id changes nothing",
+          "label": "removeTask of an absent id leaves the list unchanged",
           "tests": [
             "removeTask of a missing id leaves the list unchanged"
           ],
@@ -1540,11 +2321,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/crud.js. Each function throws today, and that throw line is the placeholder sitting exactly where your return belongs.",
-        "addTask and removeTask both return a NEW list. Do not push or splice the one you were handed; build a copy holding what should, or should not, be in it.",
-        "findTask is a search for the item whose id matches, and markDone is a rebuild that flips done to true only on the matching id.",
-        "removeTask keeps the tasks that do not match: a filter whose test is that a task id is not the id you were given leaves out exactly the one you want gone.",
-        "Solution review: addTask returns the old list with the task appended, findTask returns the id match, markDone maps the list flipping done on one id, and removeTask filters that id out, which also answers the missing id case unchanged. Run the checks, five tests, five green, and the phase closes."
+        "Open src/crud.js: it owns all four operations — add a task, find one by id, mark one done, remove one — and each throws today where your return belongs.",
+        "The failing names are the spec, one per operation: a new task at the end, a lookup that finds the named id, only the named task marked done, and a removed id gone from the list.",
+        "All four hand back a new list instead of editing the one they were given: create adds one to a copy, update rebuilds the list changing only the matching id, delete keeps every task whose id is not the one to drop.",
+        "The edge is an id that is nowhere on the list: dropping something absent is not an error and must leave every task standing. Ask what your delete returns when nothing matches.",
+        "A complete solution keeps each promise without touching the list it was handed: the list grows by exactly one, a lookup with no match answers undefined, one record changes while the rest do not, and a missing id deletes nothing. Run the checks — five tests, and the suite is the judge. If the suite cannot start because `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Editing the list in place with push is fine. Other code reads the same list, so a quiet in place edit changes results they did not ask for; return a new list instead.",
@@ -1596,7 +2377,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "drop of an absent id changes nothing"
           ],
-          "feedback": "Dropping an id that no person holds shortened the book. When the id is not present, keeping every person whose id differs from it keeps all of them, and that is the whole answer.",
+          "feedback": "Dropping an id that no person holds shortened the book. When the id is not present, keeping every person whose id differs from it keeps all of them, and that is the whole answer. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -1624,7 +2405,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A regular expression, a regex, is a small pattern that describes the shape of some text, and a program asks whether a string fits it. Every form that checks itself, every search that finds the phone numbers but not the word ten, leans on one. The idea feels cryptic because the notation is dense. Read left to right, though, and every symbol is only a plain claim about characters."
+          "body": "A regular expression, a regex, is a pattern that describes the shape of some text, and a program asks whether a string fits it. Every form that checks itself, every search that finds the phone numbers but not the word ten, leans on one. The idea feels cryptic because the notation is dense. Read left to right, though, and every symbol is only a plain claim about characters."
         },
         {
           "kind": "example",
@@ -1633,7 +2414,11 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Three kinds of symbol carry most of it. The caret and the dollar sign are anchors: they pin the match to the start and the end of the string, so what sits between them has to be the whole thing. A class, written in square brackets like [0-9], means any one character taken from inside it, and a backslash d is a ready made class for any digit. A quantifier says how many: a plus means one or more, a star means zero or more, and braces with a number mean exactly that many."
+          "body": "Three kinds of symbol carry most of it. The caret and the dollar sign are anchors: they pin the match to the start and the end, so what sits between them has to be the whole string. A class, written in square brackets like [0-9], means any one character taken from inside it; a backslash d is a ready made class for any digit."
+        },
+        {
+          "kind": "prose",
+          "body": "The third kind is the quantifier, and it says how many: a plus means one or more, a star means zero or more, and braces around a number mean exactly that many."
         },
         {
           "kind": "example",
@@ -1642,21 +2427,21 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The gap between a good pattern and a wrong one is usually an anchor. A bare digit run asks does the string contain a digit somewhere, and answers yes even for abc123. Put a caret before it and a dollar after it and the same run asks is the string nothing but digits, and answers no. Writing the two anchors is writing the word only, and only is what a validator is for."
+          "body": "The gap between a good pattern and a wrong one is usually an anchor. A bare digit run asks does the string contain a digit somewhere, and answers yes for abc123. Put a caret before and a dollar after and the run asks is the string nothing but digits, and answers no. Writing those anchors is writing the word only, and only is what a validator is for."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A regex is a pattern for the shape of text; the code asks whether a string fits it.",
-            "The anchors pin a pattern to the start and end, forcing it to describe the whole string.",
-            "A class lists the characters allowed at one spot, and a quantifier says how many of them.",
-            "A plus wants at least one; a star allows none, so the empty string tells them apart."
+            "A regex is a pattern for the shape of text a string fits.",
+            "Anchors pin a pattern to both ends, so it means the whole string.",
+            "A class lists allowed characters at one spot; a quantifier says how many.",
+            "A plus wants at least one; a star allows none, so empty differs."
           ]
         },
         {
           "kind": "task",
-          "body": "Before any code, read three patterns out loud as sentences and say which strings each one takes and which it turns away: a caret then a digit run of two to four then a dollar, a hash that may be absent followed by six hex characters, and a bare digit on its own. Ask of each: is it anchored, and what would slip past if it were not. That single act of reading is the whole of this phase."
+          "body": "Before any code, read three patterns aloud as sentences, saying which strings each takes and which it turns away: a caret, a digit run of two to four, a dollar; a hash that may be absent then six hex characters; and a bare digit alone. Ask of each: is it anchored, and what slips past if it is not. That act of reading is the whole phase."
         }
       ],
       "visualization": {
@@ -1708,12 +2493,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Both are the same, because a pattern with no anchors still checks the whole string by default.",
-        "The unanchored run, because anchors only matter once you also use a character class.",
-        "The anchored run, because without the anchors the pattern matches whenever the field merely contains digits, not when it is only digits.",
-        "Neither, because matching digits needs an exact count like four digits to work at all."
+        "The unanchored run, because anchors only start to matter once the pattern also uses a character class.",
+        "The anchored run: unanchored, it matches a field that merely contains digits, not one that is only digits.",
+        "Neither, because matching digits at all needs an exact count such as four digits, and no bare run has one.",
+        "Both are the same, because a pattern with no anchors still checks the whole string against the rule by default."
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "A pattern with no anchors is a search: it reports a match the moment its shape appears anywhere in the string. So a bare digit run finds the 555 hiding inside 555-1234 and answers yes, which is exactly wrong for a field that must be nothing but digits. Adding a caret at the front and a dollar at the end turns the same run into a demand about the whole value: it must begin as digits and finish as digits with nothing else between. A fixed count would still be only a search unless it too were anchored. The anchors are not decoration, they are what changes a find-some into an only-this, and only that reading is a real validation.",
       "hints": [
         "Ask whether the pattern looks for a shape anywhere or demands it be the whole value: only the anchored form does the second."
@@ -1780,11 +2565,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/regex.js. Each function throws today, and that throw is the placeholder sitting exactly where your pattern call belongs.",
-        "A validator returns the answer of a test call: write the pattern between slashes and call its test method on the text, so the function gives back true or false.",
-        "isDigits is anchored on both sides, a start anchor then a digit run then an end anchor, so a stray letter or an empty string has nowhere to hide.",
-        "hasDigit is the opposite: one digit anywhere is enough, so its pattern is a bare digit class with no anchors around it at all.",
-        "Solution review: isDigits tests a caret then a plus digit run then a dollar, hasDigit tests a bare digit, and isHexColor tests a hash then a class of hex characters counted to exactly six, anchored both ends. Run the checks, five tests, five green."
+        "Open src/regex.js: it owns the three shape checks — the whole string is digits, a digit appears anywhere, and the string is a hash plus six hex characters — and each throws today where your pattern call belongs.",
+        "The failing names are the spec: a whole run of digits accepted, a value holding a letter rejected, a digit found anywhere in text, the hash-and-six shape accepted, and the empty string rejected.",
+        "Each function returns the answer of one test call on its pattern: the whole-string checks pin both ends so only a complete match passes, while the check that looks for a digit anywhere is deliberately left unpinned.",
+        "The edges are where the anchors and the quantifiers disagree: a stray letter and an empty value must both fail the whole-string checks, so ask which quantifier refuses nothing at all — the one meaning at least one, or the one meaning none.",
+        "A complete solution reads as three sentences: only digits from end to end, a single digit somewhere inside, and a hash followed by exactly six hex characters with the ends pinned. Run the checks — five tests, and the suite is the judge. If the suite cannot start because `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "A pattern that returns true somewhere is a good validator. A validator answers about the whole value, which is the job of the anchors, not of the match any single digit anywhere would give.",
@@ -1836,7 +2621,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "isAllLetters rejects the empty string"
           ],
-          "feedback": "The empty string came back as all letters. One or more of the class cannot be satisfied by nothing, so anchored with a plus the empty value is false. If it passes, your pattern allowed zero repeats.",
+          "feedback": "The empty string came back as all letters. One or more of the class cannot be satisfied by nothing, so anchored with a plus the empty value is false. If it passes, your pattern allowed zero repeats. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -1848,6 +2633,12 @@ export const IDE_TASK_MANAGER: unknown = {
     },
     "behavior-learn-events": {
       "id": "behavior-learn-events",
+      "resources": [
+        {
+          "label": "React: Responding to Events",
+          "url": "https://react.dev/learn/responding-to-events"
+        }
+      ],
       "title": "Learn: events and state",
       "kind": "lesson",
       "mode": "learn",
@@ -1861,12 +2652,37 @@ export const IDE_TASK_MANAGER: unknown = {
           "body": "Static UI shows data; behavior changes it. An event (a click, a submit) calls a handler, the handler updates state, and the update re-renders the interface. The chain always runs in that order — event, state, render — which is why a screen that does not change means one of the three links broke."
         },
         {
+          "kind": "prose",
+          "body": "A handler is usually a callback: a function one component hands to another so it can call it back. onAdd and onDelete are callbacks — the row calls one, the parent decides what happens."
+        },
+        {
+          "kind": "prose",
+          "body": "A handler carries more than its code: it also carries the names it could see where it was written, kept alive as long as the handler can still be called. That pairing is what a closure is."
+        },
+        {
+          "kind": "prose",
+          "body": "A local variable usually disappears when its function returns; a closure keeps it, because the inner function still reaches for it. That is why a row can call onDelete(task.id) later, long after the code that built it finished."
+        },
+        {
+          "kind": "example",
+          "body": "What the row handler actually remembers:",
+          "code": "function makeRow(task, onDelete) {\n  // this inner function closes over task and onDelete\n  return () => onDelete(task.id);\n}\n\nconst row = makeRow({ id: 7 }, id => console.log(id));\nrow();   // 7 — it still remembers the task it was built with"
+        },
+        {
+          "kind": "prose",
+          "body": "One thing decides what that inner function treats as this. An arrow function has no this of its own; it borrows the one from where it was written, usually the object that owns the state. A plain function gets its this from whoever calls it, which is how a handler ends up changing nothing."
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "Events call handlers; handlers update state; state updates render.",
-            "Forms keep their input in state (controlled inputs) so the UI never disagrees with the data.",
-            "State lives where it is shared — a list's items belong to the list, not the row."
+            "State is what the app remembers; the UI re-renders when it changes.",
+            "State is one array; a handler replaces it, and the list redraws.",
+            "State lives where shared: a list owns its rows, not the reverse.",
+            "A closure is a function plus the names it was written near.",
+            "An arrow function borrows this; it never gets its own.",
+            "A plain function's this comes from whoever calls it."
           ]
         },
         {
@@ -1876,7 +2692,11 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open TaskInput.jsx and trace the draft: where does each keystroke go, what happens on submit, and where does the new task end up?"
+          "body": "Open src/App.jsx and src/components/TaskItem.jsx. Trace one delete: what the row calls, what the parent does with it, and where the smaller list comes from. Write the three links in the Notes."
+        },
+        {
+          "kind": "task",
+          "body": "In src/components/TaskItem.jsx, the row will be handed task and onDelete. Write in the Notes, before any code: which names does the handler you are about to build keep alive, and would it still work if the row were built now and clicked a minute later?"
         }
       ],
       "visualization": {
@@ -1895,7 +2715,9 @@ export const IDE_TASK_MANAGER: unknown = {
       ],
       "misconceptions": [
         "Updating a variable re-renders — only state updates schedule a render; plain variables change silently.",
-        "Reading the input from the DOM on submit — the draft already lives in state; the DOM is the display, not the memory."
+        "Reading the input from the DOM on submit — the draft already lives in state; the DOM is the display, not the memory.",
+        "A closure is a snapshot of the values it closes over — it holds the variables themselves, so a later change to one the inner function reads is visible to it.",
+        "An arrow function binds this to whoever calls it — it has no this of its own; it keeps the one from where it was written."
       ]
     },
     "behavior-ask-state": {
@@ -1914,13 +2736,13 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "The list shows the task, then shows it again — deletion needs a refresh.",
-        "The list shows the task, then removes it — each state update re-renders.",
         "The list never shows the task — adds require a server round-trip.",
-        "The list shows the task twice — appends duplicate without keys."
+        "The list shows the task twice — appends duplicate without keys.",
+        "The list shows the task, then shows it again — a delete only queues a refetch.",
+        "The list shows the task, then removes it — each state update re-renders."
       ],
-      "answer": 1,
-      "explanation": "Every state update re-renders from the current data. Add appends to the array, delete filters it out — the screen is always the array, drawn fresh.",
+      "answer": 3,
+      "explanation": "Every state update re-renders from the current data. Add appends the task to the array and the screen redraws with it; delete filters it out and the screen redraws without it — the view is always the array drawn fresh, so it shows the task once and then not at all. A local state change needs no server round-trip before it appears, an add writes the item a single time rather than duplicating it, and a delete leaves a smaller array to draw rather than a stale copy that lingers until something refreshes.",
       "hints": [
         "Ask what the array holds after each step; the screen follows the array."
       ],
@@ -1970,19 +2792,71 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Which component owns the array? That is where the removal happens.",
-        "The row reports; the parent decides. What travels up is an id, not the decision.",
-        "Filter creates the new array — state updates replace, never mutate in place.",
-        "Run the tests after each change and read which named test fails.",
-        "Solution shape: row button calls onDelete(id); App sets tasks to tasks without that id. Then empty the list — same motion, zero rows."
+        "Two files share this: src/components/TaskItem.jsx owns one row and the delete button inside it, and src/App.jsx owns the array and the function that shrinks it. Each file already receives what it needs — the acting half is what is missing.",
+        "Three failing names, in the order they lead: the delete button reports the task id, deleting a task removes it from the list, and deleting the only task empties the list cleanly.",
+        "The row reports and the parent decides, so an id travels up and the decision stays down. In the parent, the next array is the old one with that id left out — state is replaced, never edited in place.",
+        "The boundary is the last task: one row left is still a list, and nothing about it needs a guard. Ask what your function returns once every task is gone, and let an empty list render like any other.",
+        "A complete answer calls the parent handler from the button with this row's id, builds a new array without that task, and leaves an empty array as valid state. Then run the checks and read which name still fails; if `node` is command not found, run the environment check or finish the setup phase first."
       ],
       "misconceptions": [
         "Removing the DOM node directly — the next render redraws from state and resurrects it.",
         "Mutating the array in place — the update must be a new array or nothing re-renders."
       ]
     },
+    "behavior-review-transfer": {
+      "id": "behavior-review-transfer",
+      "title": "Review: the same three links, a different list",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "web-behavior"
+      ],
+      "files": [
+        "src/notes-behavior.js"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/notes-behavior.test.mjs",
+      "checks": [
+        {
+          "id": "note-append",
+          "label": "Adding a note hands back a new list",
+          "tests": [
+            "adding a note appends it and leaves the list it was given alone"
+          ],
+          "feedback": "The new note did not arrive, or the list you were handed changed on the way out. Build a new array with the extra entry in it — a note nobody has marked starts as not done. The parent still holds the array it gave you, so that one has to stay exactly as it was. If the suite cannot run because `node` is command not found, run the environment check first."
+        },
+        {
+          "id": "note-toggle",
+          "label": "Toggling flips one note and leaves the rest",
+          "tests": [
+            "toggling a note flips only that note"
+          ],
+          "feedback": "Either the wrong rows moved or the chosen one did not. Walk the list and replace only the entry whose id matches, copying its other fields and flipping done; every other note travels untouched. Marking the same note twice must land it back where it started."
+        },
+        {
+          "id": "edge-note-ids",
+          "label": "Every added note carries an id nothing else holds",
+          "tests": [
+            "the first note added to an empty list still gets its own id"
+          ],
+          "feedback": "The list grows, but two notes answer to the same id, so one delete takes two rows. The id has to be earned from what the list already holds — the next number nobody is using yet — not written as a constant, which is what an empty first list lets you get away with until the second add.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Pushing onto the array you were handed — the parent still holds that array, so the screen ends up drawn from two different truths.",
+        "Reusing one id for every new note — nothing looks wrong until a delete on one row answers for both."
+      ]
+    },
     "data-learn-state": {
       "id": "data-learn-state",
+      "resources": [
+        {
+          "label": "MDN: Window.localStorage",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
+        }
+      ],
       "title": "Learn: state and storage are two different memories",
       "kind": "lesson",
       "mode": "learn",
@@ -1993,34 +2867,48 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Your list disappears when you reload, and that is not a bug in your code — it is the difference between two kinds of memory. State lives in memory: it exists while the tab is open, and a reload throws it away. Storage lives on disk: it survives, but nothing on screen reads it unless you tell the app to. Persistence is the bridge between them, and you build it yourself."
+          "body": "Your list disappears when the program runs again, and that is not a bug in your code — it is the difference between two kinds of memory. State lives in memory: it exists while the process runs, and a reload throws it away. Storage survives, but nothing reads it unless you tell the app to. Persistence is the bridge, and you build it yourself."
         },
         {
           "kind": "prose",
-          "body": "The instinct is to keep two copies and edit both. Resist it. Keep one truth — the array in state — and treat storage as a copy you write after every change and read exactly once, at start. One direction, always: state → storage. If you ever edit storage first and hope state follows, you have two truths that can disagree and no way to tell which one is right."
+          "body": "The instinct is to keep two copies and edit both; resist it. Keep one truth — the array in state — and treat storage as a copy you write after every change and read once, at start. One direction: state → storage. If you ever edit storage first and hope state follows, you have two truths that can disagree and no way to tell which one is right."
         },
         {
           "kind": "example",
           "body": "The whole round-trip, in the order it happens:",
-          "code": "const store = createTaskStore(window.localStorage);\nconst [tasks, setTasks] = useState(() => store.load());  // read once, at start\n\nfunction addTask(title) {\n\tconst next = [...tasks, { id: Date.now(), title, done: false }];\n\tsetTasks(next);    // the truth changes\n\tstore.save(next);  // then the copy is written from it\n}"
+          "code": "const store = createTaskStore(storage);        // anything with getItem/setItem\nlet tasks = store.load();                       // read once, at start\n\nfunction addTask(title) {\n\tconst next = [...tasks, { id: Date.now(), title, done: false }];\n\ttasks = next;        // the truth changes\n\tstore.save(next);    // then the copy is written from it\n}"
         },
         {
           "kind": "prose",
           "body": "Storage holds text, so objects travel through JSON: JSON.stringify to write, JSON.parse to read. That conversion is lossy on purpose — functions, undefined and class instances do not survive it, only data does. Which is useful: what you persist is data, and data is the thing you can reason about."
         },
         {
+          "kind": "prose",
+          "body": "Storage holds text, and text can arrive wrong. When a stored value is not JSON — truncated, or written by an older version of your app — JSON.parse throws instead of handing back a value. Wrap the parse in try and answer empty in the catch."
+        },
+        {
+          "kind": "example",
+          "body": "Reading storage so a bad value cannot reach the screen:",
+          "code": "function createTaskStore(storage) {\n  const KEY = 'tasks';\n  return {\n    load() {\n      try {\n        const parsed = JSON.parse(storage.getItem(KEY) ?? '[]');\n        return Array.isArray(parsed) ? parsed : [];\n      } catch {\n        return [];   // unreadable is not the same as empty, but it is the answer here\n      }\n    }\n  };\n}"
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "State is the one truth; storage is a copy written from it, never edited beside it.",
+            "State is the truth; storage is a copy written from it.",
             "Read once at start, write after every change — one direction.",
-            "Storage holds text: JSON.stringify to write, JSON.parse to read.",
-            "A value you read back may not be what you wrote; the reader owns that failure."
+            "Storage holds text: stringify going out, parse coming back.",
+            "A value you read back may not be what you wrote.",
+            "Catch a failing parse; the caller still needs a list."
           ]
         },
         {
           "kind": "task",
-          "body": "Open src/App.jsx and find the array the list is drawn from. Add a task in the running app, reload the page, and watch it disappear. You have just seen where the truth lives — and what a reload costs."
+          "body": "Open src/App.jsx and find the array the list is drawn from. Nothing writes it anywhere, so a fresh import starts from nothing, with the tasks gone. Then run test/persistence.test.mjs and read the failure; if `node` is command not found, run the environment check first."
+        },
+        {
+          "kind": "task",
+          "body": "Before the Solve step, write the four lines you would put around the parse: try, the parse, catch, and the empty list you return. In one sentence, say what the caller gets when the read fails."
         }
       ],
       "visualization": {
@@ -2043,7 +2931,8 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Keeping a second copy in storage and editing both — then there are two truths, and nothing tells you which one is right.",
         "The screen is the data — changing what is on screen changes nothing that survives a reload; the screen is redrawn from the array.",
-        "JSON round-trips everything — it carries data only: functions, undefined and class instances do not come back."
+        "JSON round-trips everything — it carries data only: functions, undefined and class instances do not come back.",
+        "A parse that throws is a crash you cannot recover from — the catch is exactly the place that turns the thrown value back into an ordinary answer the caller can use."
       ]
     },
     "data-ask-shape": {
@@ -2062,12 +2951,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Keep a second copy in storage and edit whichever copy is closer to the code you are already writing.",
         "Read the stored list once when the app starts, and write the current array to storage after every change.",
         "Write the array to storage inside the render, so every draw saves the latest version.",
-        "Store each task under its own key and rebuild the array by reading every key again on each render."
+        "Store each task under its own key and rebuild the array by reading every key again on each render.",
+        "Keep a second copy in storage and edit whichever copy is closer to the code you are already writing today."
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "One truth, one direction: read once at start, write after every change. Two copies edited independently drift, and nothing tells you which one is right — the app's behaviour then depends on the order you happened to write things in. Saving during a render ties persistence to how often the screen draws, which is not the same thing as the data changing. Per-task keys turn the array into something you reconstruct on every read, so every save becomes several writes and every bug becomes a question about key ordering. The smallest correct change is the boring one.",
       "hints": [
         "Ask which option leaves exactly one source of truth."
@@ -2098,7 +2987,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a new task is saved to storage"
           ],
-          "feedback": "The task never reached storage. Save the array after the state update, from state — the copy is written from the truth, never the other way round."
+          "feedback": "The task never reached storage. Save the array after the state update, from state — the copy is written from the truth, never the other way round. If the suite cannot start because `node` is command not found, run the environment check first."
         },
         {
           "id": "loads",
@@ -2119,14 +3008,14 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Decide the storage key once and let a single module own it; the suite expects one key to hold the whole array, as text.",
-        "The suite hands your module a storage object with getItem and setItem — the same shape localStorage has — so the module never needs to know whether it is running in a browser.",
-        "src/storage.js should export createTaskStore(storage) returning { load(), save(tasks) }: load parses what is stored, save writes the array as JSON text.",
-        "load() runs before the learner sees anything, so it has to survive a value it cannot parse: return an empty list instead of throwing, because the value may have been written by an older version of your own app.",
-        "Solution shape: const KEY = 'tasks'; export function createTaskStore(storage) { return { load() { try { const parsed = JSON.parse(storage.getItem(KEY) ?? '[]'); return Array.isArray(parsed) ? parsed : []; } catch { return []; } }, save(tasks) { storage.setItem(KEY, JSON.stringify(tasks)); } }; } — then wire it into App.jsx: load once for the initial state, save after every update."
+        "Two files are in play: src/storage.js is the module you write and it owns storage and nothing else, and src/App.jsx is where it gets wired in — read once for the starting array, saved after every change.",
+        "Three failing names from test/persistence.test.mjs: a new task is saved to storage, the saved list is loaded at start, and a corrupt saved value does not crash the app. The suite drives your module with a stand-in storage object, so no browser is involved.",
+        "One key holds the whole array as text: stringify on the way out, parse on the way back. The suite imports a factory named createTaskStore that hands back an object with a load and a save, so that name and that shape are already fixed for you.",
+        "The boundary is a value that will not parse — truncated, or written by an older version of your own app. Ask what the caller gets when the read fails, and answer it inside the module rather than letting the throw escape.",
+        "A complete answer has one module owning one key, a save that writes the current array as text after every change, and a load that returns the stored array at start — and an empty list when the key is absent or unreadable. In App.jsx the direction is one way: read once, save on change. Then run the checks and read which name still fails; if `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
-        "Writing to storage on a timer instead of on change — a timer rewrites the same value repeatedly and still loses the last change when the tab closes first.",
+        "Writing to storage on a timer instead of on change — a timer rewrites the same value repeatedly and still loses the last change when the process exits first.",
         "Trusting what comes back — a stored value is input from outside your code: it can be missing, truncated, or written by an older version of the app.",
         "Storing the array and a count of open tasks both — the count is derived, and a derived value you also store is a second truth waiting to disagree."
       ]
@@ -2151,7 +3040,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the summary counts the open tasks"
           ],
-          "feedback": "The count does not come from the tasks that were passed in. Filter what is not done and read the length — a number kept beside the array is a number that can go stale."
+          "feedback": "The count does not come from the tasks that were passed in. Filter what is not done and read the length — a number kept beside the array is a number that can go stale. If the suite cannot run because `node` is command not found, run the environment check first."
         },
         {
           "id": "edge-empty",
@@ -2171,7 +3060,13 @@ export const IDE_TASK_MANAGER: unknown = {
     },
     "ui-learn-components": {
       "id": "ui-learn-components",
-      "title": "Learn: React components",
+      "resources": [
+        {
+          "label": "React: Passing Props to a Component",
+          "url": "https://react.dev/learn/passing-props-to-a-component"
+        }
+      ],
+      "title": "Learn: a component is a function",
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -2181,26 +3076,31 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "React breaks your UI into small, reusable pieces called components. Each component manages its own logic, state, and rendering."
+          "body": "A component is one function that builds one piece of the interface. It takes its data in through props and returns the markup for that piece as a string, so it can be called and read without a browser in the room."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Components are JavaScript functions (or classes).",
-            "They return JSX (HTML-like syntax).",
-            "They can receive data via props.",
-            "They can manage their own state using useState."
+            "Components are JavaScript functions: props in, a string out.",
+            "Props are the values one component hands down; the child only reads.",
+            "One function per piece, so a fix lands in one file.",
+            "A component that renders nothing returns an empty string."
           ]
         },
         {
           "kind": "example",
-          "body": "How the Task Manager UI divides into reusable components:",
-          "code": "App\nTaskInput\nTaskList\nTaskItem × many"
+          "body": "One component, called once per task: the parent hands a task down through props.",
+          "code": "function TaskItem({ task }) {\n  return `<li class=\"task-item\">${task.title}</li>`;\n}\n\ntasks.map((task) => TaskItem({ task })).join('');"
+        },
+        {
+          "kind": "example",
+          "body": "How the Task Manager UI divides into pieces:",
+          "code": "App                   // owns the list, and maps one row per task\n  └─ TaskItem × many   // owns one row, and nothing else"
         },
         {
           "kind": "task",
-          "body": "Open the App.jsx file and identify the components. Notice how the TaskInput and TaskList are used inside the main App component."
+          "body": "Open src/App.jsx and src/components/TaskItem.jsx. Say which file owns the list and which owns one row, and what each function receives — then check your answer against what each one actually takes."
         }
       ],
       "visualization": {
@@ -2209,28 +3109,12 @@ export const IDE_TASK_MANAGER: unknown = {
           "root": "App",
           "children": [
             {
-              "root": "TaskInput",
+              "root": "TaskItem × many",
               "props": [
-                "onAdd(title)"
+                "task",
+                "onDelete(id)"
               ],
               "children": []
-            },
-            {
-              "root": "TaskList",
-              "props": [
-                "tasks[]"
-              ],
-              "children": [
-                {
-                  "root": "TaskItem × many",
-                  "props": [
-                    "task",
-                    "onToggle(id)",
-                    "onDelete(id)"
-                  ],
-                  "children": []
-                }
-              ]
             }
           ]
         }
@@ -2240,12 +3124,19 @@ export const IDE_TASK_MANAGER: unknown = {
       ],
       "misconceptions": [
         "A component per visual box regardless of reuse — boxes that appear once are not components, they are markup.",
-        "Passing everything through every level — data should enter where it is used, not travel as luggage."
+        "Passing everything through every level — data should enter where it is used, not travel as luggage.",
+        "A component needs a framework to be a component — here one is a plain function that takes props and returns a string, which is why a test can call it with no browser."
       ]
     },
     "ui-learn-dom": {
       "id": "ui-learn-dom",
-      "title": "Learn: components render to a DOM",
+      "resources": [
+        {
+          "label": "MDN: Document Object Model (DOM)",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model"
+        }
+      ],
+      "title": "Learn: from returned markup to elements",
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -2255,26 +3146,26 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Components are not what the browser shows. JSX describes a tree of components; React turns it into a tree of DOM elements — the actual ul, li and button nodes the browser paints and the user clicks. The two trees have the same shape on a good day and different shapes whenever it matters: one TaskList component renders as many li elements as there are tasks, and conditional rendering means a component can render to nothing at all."
+          "body": "A component is not the page. The function returns markup as text, and a page turns that text into elements — the ul, li and button nodes a user clicks. The two shapes agree on a good day and differ whenever it matters: one row function called per task makes as many elements as there are tasks, and a function can return nothing and render none."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "JSX is a description of UI, not the DOM itself.",
-            "One component can render zero, one, or many DOM elements.",
-            "The Elements panel shows the DOM tree — read it when the UI surprises you.",
-            "Props flow down the component tree; the DOM tree only carries what was rendered."
+            "A call returns markup text; a page turns that into elements.",
+            "One call can produce zero, one, or many elements.",
+            "Compare the call to its output when the interface surprises you.",
+            "Props travel down, and the output carries only what was rendered."
           ]
         },
         {
           "kind": "example",
-          "body": "The same list, two trees — the component you wrote, and the elements the browser got:",
-          "code": "TaskList (component)\n  └─ renders ─▶ ul.task-list (DOM)\n                 ├─ li × task 1\n                 └─ li × task 2"
+          "body": "The function you wrote, and the elements its string becomes:",
+          "code": "TaskItem({ task: { title: \"Buy milk\" } })\n  └─ returns ▶ `<li class=\"task-item\">Buy milk</li>`\n\n// a page would turn that string into one <li> element"
         },
         {
           "kind": "task",
-          "body": "Open the running app in a browser, open the Elements panel, and find the ul the task list renders to. Add a task and watch one li appear. Then find TaskList in the source and say in one sentence why the component did not change while the DOM did."
+          "body": "This project renders no page, so do it by hand: call TaskItem with two different tasks and compare the two strings the calls return. Then say in one sentence why the file did not change while its output did."
         }
       ],
       "visualization": {
@@ -2300,11 +3191,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Components are the names you wrote; elements are the nodes the browser painted — search each tree for its own kind of name."
+        "A function name is the thing you wrote; element names are what its string becomes — read each side for its own kind of name."
       ],
       "misconceptions": [
-        "The JSX you wrote is the DOM — JSX is a description React renders from, and the browser never sees a component.",
-        "One component means one element — a list component renders one element per item, and sometimes none at all."
+        "The string a component returns is the page — it is markup text; a page turns it into elements, and this project never takes that step.",
+        "One call means one element — a row function called per task makes one element per task, and sometimes none at all."
       ]
     },
     "ui-ask-design": {
@@ -2323,12 +3214,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Write all 20 task interfaces separately inside App.",
-        "Create one reusable TaskItem component and render it for each task.",
-        "Create a separate HTML page for every task.",
-        "Put the entire interface into one giant component."
+        "Put the entire interface into one giant component so there is only one file to reason about.",
+        "Write all 20 task interfaces separately inside App, so every row can differ if it needs to.",
+        "Create one reusable TaskItem component and render it for each task in the list.",
+        "Create a separate HTML page for every task, so each row is independent of the rest."
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "What repeats becomes one component; what varies per item becomes its props. Twenty copies is twenty places for a bug to hide, and one giant component cannot be reasoned about in pieces.",
       "hints": [
         "Count how many places a checkbox fix would need to reach in each design."
@@ -2358,7 +3249,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "task list renders a TaskItem per task"
           ],
-          "feedback": "The list still renders tasks without your component. Import TaskItem in the list and render one per task."
+          "feedback": "The list still renders tasks without your component. Import TaskItem in the list and render one per task. If the suite cannot start because `node` is command not found, run the environment check or finish the setup phase first."
         },
         {
           "id": "props",
@@ -2379,11 +3270,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Which file owns one row? Open it and read what it already renders.",
-        "The task enters through props — the component should take no other input.",
-        "Render the title from the prop, then wire the list to map over tasks.",
-        "Run the project's tests after each change; read which named test fails.",
-        "Solution shape: a TaskItem that takes a task and shows its title, mapped once per task in the list. Then make twenty render — same motion, more data."
+        "Two files own this: src/components/TaskItem.jsx owns one row and src/App.jsx owns the list. The row already takes task and onDelete and returns an empty li — what it shows is the unwritten half.",
+        "The suite names what it wants: the list renders one TaskItem per task, a single row shows the title of the task it was handed rather than a fixed one, and twenty tasks still render twenty rows. Read the failing names before the file.",
+        "The title reaches the row on the task it was handed, so it is read from props and nothing is looked up. Then check the list itself: one of the checks is about a row per task, not about the row.",
+        "Twenty tasks is the boundary: the count has to come from the array the list was handed, not from anything a row remembers between calls. A row that repeats one title twenty times is the failure this check catches.",
+        "A complete answer puts the task's own title inside the row's li, keeps the row reading only what it is handed, and leaves the list mapping one row per task. Then run the checks and read which name still fails; if `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Hardcoding one title to pass the first test — the suite checks the prop, not the pixels.",
@@ -2410,7 +3301,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "TaskCard shows the heading from props"
           ],
-          "feedback": "The heading on screen does not come from props. Same motion as TaskItem, different names — read what this file actually receives."
+          "feedback": "The heading on screen does not come from props. Same motion as TaskItem, different names — read what this file actually receives. If the suite cannot run because `node` is command not found, run the environment check first."
         },
         {
           "id": "edge-priority",
@@ -2443,7 +3334,7 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "`src/takehome-subject.js` contains a comment and nothing else. That is not a missing feature. It is the task. A brief says what the behaviour must be and leaves every decision about how open — the function's name, what it does with a list it was not expecting, whether it is allowed to touch what it was given. A tutorial makes those decisions for you and teaches the mechanics. A brief does not, and the gap you cross is the actual work."
+          "body": "`src/takehome-subject.js` contains a comment and nothing else, and that is the task, not a missing feature. A brief says what the behaviour must be and leaves every decision about how open: the function name, what it does with an unexpected list, whether it may touch what it was given. A tutorial decides those and teaches mechanics; a brief does not, and the gap you cross is the work."
         },
         {
           "kind": "example",
@@ -2452,16 +3343,16 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The second one does not tell you what `done` looks like when it is missing, what an empty list should give back, or whether twenty items is different from two. Each of those is a question a working engineer asks *before* writing, and each of them is worth more than the sort itself. Reading a brief is not waiting for permission to start. It is finding the requirements the brief left implicit, because those are the ones the acceptance suite is going to ask about."
+          "body": "The second does not tell you what `done` looks like when missing, what an empty list gives back, or whether twenty items differs from two. Each is a question an engineer asks before writing, and each is worth more than the sort itself. Reading a brief is not waiting for permission to start; it is finding the requirements the brief left implicit, what the acceptance suite asks about."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A brief states behaviour, not implementation. Every unstated decision is yours, and the suite tests them.",
-            "Read for the edges the brief did not mention: empty input, missing fields, and the size where your approach starts to matter.",
-            "Say the contract out loud before you code — one sentence of plain language, no function names.",
-            "The suite is not in your repository. You are solving the brief, not satisfying a list you are holding."
+            "A brief states behaviour, not how; the suite tests your choices.",
+            "Read for the edges the brief skipped: empty input, missing fields, size.",
+            "Say the contract in one plain sentence before coding, no names.",
+            "You are solving the brief, not a list of tests you are holding."
           ]
         },
         {
@@ -2494,13 +3385,13 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "[{ id: 'a' }] — a task with no done field is unfinished, so it is kept.",
-        "[{ id: 'b', done: true }] — a task with no done field cannot be ranked, so it is dropped.",
         "[{ id: 'b', done: true }] — a task with no done field counts as done, so it goes last.",
-        "It does not matter — the caller always passes complete tasks."
+        "It does not matter — the caller always passes complete tasks.",
+        "[{ id: 'a' }] — a task with no done field is unfinished, so it is kept.",
+        "[{ id: 'b', done: true }] — a task with no done field cannot be ranked, so it is dropped."
       ],
-      "answer": 0,
-      "explanation": "The brief never says what a missing flag means, so the decision is yours — and it is a decision, not a lookup. The reasoning that settles it: dropping the task loses data the caller can see and cannot get back, while placing it first is a claim the caller can correct by setting the flag. A field that is absent is not evidence that the task is finished; absent is absence of information, and the safe reading is the one that does not destroy anything. Note that option 4 is the option that gets the task marked wrong — the caller is not guaranteed complete input, and 'it will never happen' is a claim about other people's code that nobody has checked.",
+      "answer": 2,
+      "explanation": "The brief never says what a missing flag means, so the decision is yours — and it is a decision, not a lookup. The reasoning that settles it: dropping the task loses data the caller can see and cannot get back, while placing it first is a claim the caller can correct by setting the flag. A field that is absent is not evidence that the task is finished; absent is absence of information, and the safe reading is the one that does not destroy anything. Note that the dismissive 'it does not matter' answer is the one that gets the task marked wrong — the caller is not guaranteed complete input, and 'it will never happen' is a claim about other people's code that nobody has checked.",
       "hints": [
         "Ask which choice loses information irreversibly. The other answers are recoverable."
       ],
@@ -2521,7 +3412,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "files": [
         "src/takehome-subject.js"
       ],
-      "brief": "rankTasks takes a list of tasks and returns a new list with the unfinished ones first. Keep the original order within each group. Do not modify the list you were given.\n\nA task is finished when its done field is true. A task with no done field is unfinished. An empty list ranks to an empty list.",
+      "brief": "Write src/takehome-subject.js so that rankTasks takes a list of tasks and returns a new list with the unfinished ones first. Keep the original order within each group. Do not modify the list you were given.\n\nA task is finished when its done field is true. A task with no done field is unfinished. An empty list ranks to an empty list.",
       "acceptanceCommand": "node --test --test-reporter=tap acceptance/takehome.acceptance.test.mjs",
       "checks": [
         {
@@ -2594,7 +3485,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "files": [
         "src/takehome-subject.js"
       ],
-      "brief": "Re-submit. Same brief, no hints, no second look at the file you wrote. This is the check a take-home actually is.",
+      "brief": "rankTasks takes a list of tasks and returns a new list with the unfinished ones first. Keep the original order within each group. Do not modify the list you were given.\n\nA task is finished when its done field is true. A task with no done field is unfinished. An empty list ranks to an empty list.\n\nThe brief again, in full, because the brief is the only statement of what to build — no hints, no second look at the file you wrote. This is the check a take-home actually is.\n\nOnce it passes, the JavaScript track is over. Next is the backend track: a new language, a new project on disk, the same Learn → Solve → Review method.",
       "acceptanceCommand": "node --test --test-reporter=tap acceptance/takehome.acceptance.test.mjs",
       "checks": [
         {
@@ -2627,7 +3518,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "an empty task list ranks to nothing"
           ],
-          "feedback": "An empty input is the case nobody tests and everybody ships. Handle it explicitly.",
+          "feedback": "An empty input is the case nobody tests and everybody ships. Handle it explicitly. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -2677,9 +3568,9 @@ export const IDE_TASK_MANAGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Coverage is not the goal; the ability to fail is. A test never run against a bug is decoration.",
+            "The goal is the ability to fail, not coverage.",
             "Test the boundary the spec names, not the value you happened to see.",
-            "Assert on behaviour, not on the implementation's shape — then a correct rewrite still passes.",
+            "Assert on behaviour, not on the implementation's shape — a rewrite still passes.",
             "A suite that passes a broken implementation is a claim, not a check."
           ]
         },
@@ -2734,13 +3625,13 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "assert.ok(cartTotal(items) > 0) — it still returns a number.",
-        "assert.equal(cartCount(items), 2) — it counts the items.",
+        "assert.ok(cartTotal(items) > 0) — it still returns a number, so it passes.",
+        "assert.equal(cartCount(items), 2) — it counts the items, so it passes too.",
         "assert.equal(cartTotal(items, { threshold: 10 }), 22.5) — it expects the discount.",
-        "All three would still pass, so the suite is fine."
+        "All three of them would still pass against that bug, so the suite is fine as it stands."
       ],
       "answer": 2,
-      "explanation": "Only the third one states what the discount is *for*. The other two would pass against the broken version, which is precisely the point: a suite is only as strong as the specific claim it makes.",
+      "explanation": "Only the assertion that expects the discounted total states what the discount is *for*, so deleting the discount turns that one red. The others read a positive number or an item count — values the broken version still returns — which is precisely the point: a suite is only as strong as the specific claim it makes.",
       "hints": [
         "Ask which assertion would have a different answer if the discount were gone."
       ],
@@ -2820,11 +3711,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Run your suite against the broken versions before you run it against the real one. A test you have never seen fail is a guess.",
+        "The file here is test/cart.test.mjs, and you write it yourself against the cart module the project already ships. Run your suite against the broken versions before you run it against the real one: a test you have never seen fail is a guess.",
         "Write one assertion per behaviour the spec names. The spec names three: the threshold, the discount, the rounding.",
         "Pick numbers that sit on the boundary, not numbers you happened to see pass.",
-        "Run the checks and read which breakage you did not notice — the message names it for you.",
-        "Solution shape: a test at the threshold (100 → 90), a test above it, a test below it, and one that produces a fractional cent."
+        "Run the checks and read which breakage you did not notice — the message names it for you. If the suite cannot start because `node` is command not found, run the environment check first.",
+        "The suite is finished when it fails on every broken version and passes the real one: each behaviour the spec names has its own assertion, at least one sits on the exact boundary, and none would survive a cart that ignores the discount."
       ],
       "misconceptions": [
         "Testing only the happy path — a suite that never exercises the boundary cannot see an inverted comparison.",
@@ -2861,7 +3752,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the boundary is decided, not guessed"
           ],
-          "feedback": "You dropped the boundary assertion between attempts. It is the case an off-by-one comparison gets wrong.",
+          "feedback": "You dropped the boundary assertion between attempts. It is the case an off-by-one comparison gets wrong. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -2872,6 +3763,12 @@ export const IDE_TASK_MANAGER: unknown = {
     },
     "navigate-learn-search": {
       "id": "navigate-learn-search",
+      "resources": [
+        {
+          "label": "VS Code: Code Navigation",
+          "url": "https://code.visualstudio.com/docs/editing/editingevolved"
+        }
+      ],
       "title": "Learn: finding things in code you did not write",
       "kind": "lesson",
       "mode": "learn",
@@ -2882,11 +3779,15 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every task so far gave you a project you built. Real work does not: you open a repository you have never seen, someone else's naming, someone else's structure, and a question. Scrolling does not solve that. You need to search — and the tool you reach for decides how long the answer takes.\n\nThe code in this phase is real. vendor/nanoid is nanoid, a library published by someone who has never heard of this project, vendored here at a fixed commit so it cannot change under you. Its file names, its structure, and its answers are theirs. That is deliberate: a search tool can be tested against code arranged to be findable, and a tool that only ever passes on your own tidy layout has not been tested."
+          "body": "Every task so far gave you a project you built. Real work does not: you open a repository you have never seen, with foreign names and a foreign structure, and a question. Scrolling does not solve that — you search, and the tool you reach for decides how long the answer takes."
         },
         {
           "kind": "prose",
-          "body": "The four moves, in the order you actually need them. Ctrl+Shift+F searches text across every file. F12 jumps from a use to the definition. Shift+F12 lists every use of the thing under the cursor. Ctrl+P opens a file by name, and typing @ inside it narrows to symbols. The last one matters more than people expect: if you know the name but not the file, the symbol index beats guessing paths."
+          "body": "The code in this phase is real. vendor/nanoid is nanoid, a published library vendored at a fixed commit so it cannot change under you; its file names and structure are not yours. That is deliberate: a search tool tested only on your own tidy layout has not really been tested."
+        },
+        {
+          "kind": "prose",
+          "body": "The four moves: Ctrl+Shift+F searches text across every file, and F12 jumps from a use to the definition. Shift+F12 lists every use of the thing under the cursor, and Ctrl+P opens a file by name. Typing @ inside Ctrl+P narrows to symbols. That last one matters most — if you know the name but not the file, the symbol index beats guessing paths."
         },
         {
           "kind": "example",
@@ -2901,10 +3802,10 @@ export const IDE_TASK_MANAGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Search text when you know the name; open by symbol when you know the thing but not the file.",
+            "Search text when you know the name; symbols when you know the thing.",
             "A definition and a call site are different files answering different questions.",
-            "A search that stops at the first hit looks like a search that worked.",
-            "When a name is unfamiliar, read the module's imports before its body — the imports are a summary of what it does."
+            "A search that stops at the first hit looks like one that worked.",
+            "Read the imports before the body — they summarize what a module does."
           ]
         },
         {
@@ -2937,12 +3838,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "All four — the search returned them, so all four must need it.",
-        "One — urlAlphabet is defined in url-alphabet/index.js and merely imported by the rest.",
-        "Two — the main entry point and the browser variant.",
-        "None — changing an alphabet means editing package.json."
+        "None — changing an alphabet means editing package.json, since the ids are configured there.",
+        "All four — the search returned them, so all four must carry the name and need the very same edit made in all of them.",
+        "One — urlAlphabet is defined in url-alphabet/index.js and merely imported by the other three files.",
+        "Two — the main entry point and the browser variant, which each keep their own copy of it."
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "A search returns every file whose text contains the name, and most of those are callers. urlAlphabet is defined once, in url-alphabet/index.js; the other three import it and re-export it. This is why 'grep the whole thing' is not the same as 'find the answer' — and it is the difference that stops a four-file edit that should have been one.",
       "hints": [
         "Ask which file the name is written in, as opposed to imported."
@@ -3001,11 +3902,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Two functions return the same wrong answer here. Make one of them do the real work and have the other delegate.",
-        "A definition looks like `export function name` — that is a pattern, and patterns can be matched.",
-        "Call sites are the files that mention the symbol minus the files that define it.",
-        "Run the suite after each change and read which named test fails.",
-        "Solution shape: searchFor returns every file whose text contains the needle; definitions matches the function pattern; callSites is searchFor minus definitions."
+        "One file: search.mjs at the root of this workspace, which owns the search itself — walking vendor/nanoid and reporting what it finds. Its helpers answer through one another, so a single wrong answer surfaces under three names.",
+        "Four failing names from test/navigation.test.mjs: a search finds the file that defines a symbol, a search finds every file rather than the first, call sites are not definitions, and a search that matches nothing says so instead of guessing.",
+        "Two habits have to go: stopping at the first hit, and reading only the top level. The source sits in subdirectories, so the walk has to reach every file before anything is decided; then a definition is the file where the symbol is written, while a call site is a file that mentions it without writing it.",
+        "The empty case is the boundary: nothing matched is a real answer, and the caller needs an empty list rather than an error, because a throw stops the next search. Ask what each function returns when no file matches.",
+        "A complete answer returns every matching file across the whole tree, separates files that write the symbol from files that only use it, and answers an unmatched search with nothing at all. Then run the checks and read which name still fails; if `node` is command not found, run the environment check or finish the setup phase first."
       ],
       "misconceptions": [
         "Returning the first match because it felt right — completeness is the property being judged here, not cleverness.",
@@ -3040,7 +3941,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a search that matches nothing says so instead of guessing"
           ],
-          "feedback": "The search reported something for a name that is not there. On unfamiliar code, a wrong answer is worse than no answer.",
+          "feedback": "The search reported something for a name that is not there. On unfamiliar code, a wrong answer is worse than no answer. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -3051,6 +3952,12 @@ export const IDE_TASK_MANAGER: unknown = {
     },
     "debug-learn-read": {
       "id": "debug-learn-read",
+      "resources": [
+        {
+          "label": "Node.js: Test runner",
+          "url": "https://nodejs.org/api/test.html"
+        }
+      ],
       "title": "Learn: a failing test is a claim about behaviour",
       "kind": "lesson",
       "mode": "learn",
@@ -3061,11 +3968,15 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Until now a failing test meant something was missing. From here it means something is wrong, and that difference changes how you work. A failing test is the project telling you two things in a fixed order: the behaviour it expects, and what it observed instead. Read both before you read any code, because the name bounds the problem and the message describes the evidence — and the file is where you go to find the cause, not to look for clues."
+          "body": "Until now a failing test meant something was missing. From here it means something is wrong, and that changes how you work. A failing test tells you two things in order: the behaviour it expects, and what it observed instead. Read both before the code — the name bounds the problem, the message is the evidence, and the file is where you hunt the cause."
         },
         {
           "kind": "prose",
-          "body": "The order of work matters more than the effort in it. Reproduce the failure yourself first, so it is your observation rather than a report you are trusting. Then read only the names that failed: the tests that passed tell you which behaviour is not in question, which is half of knowing where the cause can be. Then form one hypothesis about the cause, change one thing, and run again. Debugging is not staring at a file until an answer appears; it is a loop of small experiments that each return a result."
+          "body": "The order of work matters more than the effort in it. Reproduce the failure yourself first, so it is your observation rather than a report you are trusting. Then read only the names that failed: the tests that passed tell you which behaviour is not in question, which is half of knowing where the cause can be."
+        },
+        {
+          "kind": "prose",
+          "body": "Then form one hypothesis about the cause, change one thing, and run again. Debugging is not staring at a file until an answer appears; it is a loop of small experiments that each return a result."
         },
         {
           "kind": "example",
@@ -3074,15 +3985,15 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Three failures in one file, with a passing test in the middle of them. The names are not three unrelated problems: two of them describe a value arriving changed, and the third mentions an id that is not in the list at all. Grouping the failures by the thing they are about is what turns a red run into a plan — one cause for the first pair, a separate decision for the third."
+          "body": "Three failures in one file, with a passing test among them. The names are not three unrelated problems: two describe a value arriving changed, and the third mentions an id that is not in the list at all. Grouping failures by what they are about turns a red run into a plan — one cause for the first pair, a separate decision for the third."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A failing test states the expectation and the observation; read both before you read the code.",
-            "Reproduce it yourself, then read the names that failed — the passes are how you bound the search.",
-            "One hypothesis, one change, one run: a change you cannot attribute to a result taught you nothing.",
+            "A failing test states the expectation and the observation; read both first.",
+            "Reproduce it, then read the failed names — the passes bound the search.",
+            "One hypothesis, one change, one run — attribute every result to one thing.",
             "Failures that mention the same value are usually one cause wearing three names."
           ]
         },
@@ -3129,10 +4040,10 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Change the three failing assertions so they describe what the code currently does, and move on.",
-        "Reproduce the failure, read which names failed and what each one expected, and open the code only once you can state a hypothesis.",
-        "Rewrite the function from the top, since the version in the file is clearly wrong.",
-        "Add a log line to every function in the file and read the output until something looks off."
+        "Change the three failing assertions so they describe what the code currently does, then move on.",
+        "Reproduce it, note the failing names and their expectations, then read the code with a hypothesis.",
+        "Rewrite the whole function from the top, since the version in the file is clearly wrong about something.",
+        "Add a log line to every function in the file and read the output until something looks off to you."
       ],
       "answer": 1,
       "explanation": "Reproducing first makes the failure your own observation, and reading the failing names tells you which behaviour is in question before you read any implementation — that is what lets you recognise the cause when you finally see it. Adjusting the assertions deletes the evidence: the test is the claim you are trying to satisfy, and a suite bent to match current behaviour can never fail again, which means it can never tell you anything. A rewrite discards the parts of the file that were right and leaves you with a change too large to attribute to any single cause. Logging everywhere produces volume rather than a hypothesis, and volume is what you already have. The smallest correct change is found by looking for one cause that explains every failure at once.",
@@ -3186,11 +4097,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Read the failing names as a group before opening the file: two of them are about the same value, and the third is about a value that is not there at all.",
-        "The caller keeps the list it handed over. Ask what it can compare after the call, and what it can still see of the list it kept.",
-        "Find the line that changes a task. Then ask whether the thing it changed belongs to this function alone, or is still shared with the list the caller kept.",
-        "The unknown id is a separate question with its own answer: findIndex answers -1 when nothing matches, so decide what the function should do then — and make that decision explicit rather than incidental.",
-        "Solution shape: const index = tasks.findIndex((task) => task.id === id); if (index === -1) { return tasks; } return tasks.map((task, at) => (at === index ? { ...task, done: !task.done } : task)); — a new list, a new object for the task that changed, and no work at all when the id is unknown."
+        "The cause is in src/reducer.js, which owns the list's state transitions; the failing names come from test/reducer.test.mjs. One function there disagrees with its names while the rest of the file passes, so the search is narrow.",
+        "Read the failing names as a group before the file: toggling a task hands back a new list, the list that was passed in is not modified, and toggling an id that is not in the list changes nothing. Two of them are about the same value; the third is about a value that is not there at all.",
+        "The caller keeps the list it handed over, so the function has to build the next list rather than edit the one it was given — and the task that changed needs a copy of its own, because a fresh array holding the same old objects still changes what the caller sees.",
+        "The unknown id is a separate decision with its own answer: a position lookup hands back a sentinel rather than a position when nothing matches, so decide what the function does then and say it explicitly instead of letting it fall through.",
+        "A complete answer leaves every passing behaviour as it was, returns a list the caller can compare with the one it kept, replaces the single task that changed with a copy of itself, and does nothing at all when the id is not in the list. Run the checks and read which name still fails; if `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "A new array is the same as a new value — the array can be new while the task inside it is the object the caller already holds, and then the change reaches both.",
@@ -3218,7 +4129,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the open view shows the tasks that are not done"
           ],
-          "feedback": "The open view is showing the wrong half of the list. Read the comment above the line, then the line: one of them states the intention and the other is what actually runs, and the suite is the evidence for which one wins."
+          "feedback": "The open view is showing the wrong half of the list. Read the comment above the line, then the line: one of them states the intention and the other is what actually runs, and the suite is the evidence for which one wins. If the suite cannot run because `node` is command not found, run the environment check first."
         },
         {
           "id": "edge-empty-view",
@@ -3263,6 +4174,19 @@ export const IDE_TASK_MANAGER: unknown = {
       "hints": [],
       "misconceptions": []
     },
+    "lab-breaker-open": {
+      "id": "lab-breaker-open",
+      "title": "Investigate: the checkout that refused itself",
+      "kind": "incident",
+      "mode": "solve",
+      "guidance": 3,
+      "competencyIds": [
+        "debug-failure-lab"
+      ],
+      "incidentId": "incident-breaker-open",
+      "hints": [],
+      "misconceptions": []
+    },
     "lab-state-persistence": {
       "id": "lab-state-persistence",
       "title": "Design: make the list survive a reload",
@@ -3289,6 +4213,19 @@ export const IDE_TASK_MANAGER: unknown = {
       "hints": [],
       "misconceptions": []
     },
+    "lab-read-replica": {
+      "id": "lab-read-replica",
+      "title": "Design: two replicas behind one writer",
+      "kind": "design",
+      "mode": "solve",
+      "guidance": 3,
+      "competencyIds": [
+        "system-design"
+      ],
+      "designId": "design-read-replica",
+      "hints": [],
+      "misconceptions": []
+    },
     "git-learn-history": {
       "id": "git-learn-history",
       "resources": [
@@ -3307,11 +4244,19 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Git is taught as a save button with opinions, which hides the thing that makes it worth the trouble. A commit is a snapshot that names the snapshot it was made from; a branch is a movable label on one commit; and the history is the graph those names draw. Recovery is the reason to care: once you can read the graph, every repair is one of two moves — go back to a snapshot you can name, or add a commit that undoes another one. Nothing else is available, and nothing else is needed."
+          "body": "Git is taught as a save button with opinions, which hides the idea that makes it worth the trouble. A commit is a snapshot that names the one it came from; a branch is a label that moves; the history is the graph those names draw."
         },
         {
           "kind": "prose",
-          "body": "A conflict is not Git failing. Git merges anything that does not collide, and it stops only where two branches changed the same lines, because choosing there would be guessing about intent. When it stops it writes both versions into the file between markers — three angle brackets, a line of equals, three more — and waits for a person. The markers are the question, not the answer: sometimes both sides are wanted, sometimes one side is, and only someone who reads both can say which."
+          "body": "Once you can read that graph, recovery is only two moves: go back to a snapshot you can name, or add a commit that undoes another. Nothing else is available, and nothing else is needed."
+        },
+        {
+          "kind": "prose",
+          "body": "A conflict is not Git failing. Git merges anything that does not collide, and stops only where two lines of work changed the same text — picking there would be guessing at intent."
+        },
+        {
+          "kind": "prose",
+          "body": "When it stops it writes both versions into the file between markers — three angle brackets, an equals line, three more — and waits for a person. The markers are the question: sometimes both sides are wanted, sometimes one, and only a reader can say which."
         },
         {
           "kind": "example",
@@ -3320,21 +4265,26 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Two things are worth noticing in that picture. The commit at the top has two parents — it is where two lines of work became one history, and it is why nothing has to be thrown away to reconcile them. And every commit below it is still there, untouched, by either branch: a merge adds to the graph, it does not rewrite it. That is what makes the rest of the phase safe."
+          "body": "Two things matter in that picture. The top commit has two parents — where two lines became one history, so nothing is thrown away to reconcile them. And every commit below is still there: a merge adds to the graph, it never rewrites it. That is what makes the rest of the phase safe."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A commit is a snapshot with a parent; a branch is a movable label on one commit.",
-            "Recovery is two moves: return to a named snapshot, or add a commit that undoes another.",
-            "A conflict is Git refusing to guess: both sides changed the same lines, and the markers hold both versions.",
-            "A merge adds a commit with two parents; it never removes the history underneath it."
+            "A commit names its parent; a branch just moves.",
+            "Recovery is two moves: return to a snapshot, or undo with a commit.",
+            "A conflict is Git asking, not failing — read both sides and choose.",
+            "A merge adds a commit with two parents; it rewrites nothing underneath."
           ]
         },
         {
+          "kind": "example",
+          "body": "Build the graph yourself. Make an empty scratch folder OUTSIDE this project — never here — open a terminal in it, and run these one line at a time:",
+          "code": "git init -b main\necho one > f.txt\ngit add -A\ngit commit -m first\ngit switch -c feature\necho two > f.txt\ngit commit -am feature\ngit switch -\necho three > f.txt\ngit commit -am main\ngit merge feature"
+        },
+        {
           "kind": "task",
-          "body": "Build the graph yourself, in a scratch folder outside this project — never in this repository. Make an empty folder, open a terminal in it, and run these one line at a time: git init -b main, then echo one > f.txt, git add -A, git commit -m first, git switch -c feature, echo two > f.txt, git commit -am feature, git switch -, echo three > f.txt, git commit -am main, git merge feature. Stop when Git stops. Then run git log --graph --oneline --all and find the commit where the two lanes meet: that is the question this whole phase is about. Leave the scratch folder where it is."
+          "body": "Stop when Git stops. Then run `git log --graph --oneline --all` and find the commit where the two lanes meet — that is the question this whole phase is about. Leave the scratch folder where it is."
         }
       ],
       "visualization": {
@@ -3379,7 +4329,7 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Run the commands in a folder of their own — a scratch directory, never this project.",
+        "Run the commands in a folder of their own — a scratch directory, never this project. If `git` is command not found, run the environment check or finish the setup phase first.",
         "When Git stops and asks, do not resolve it yet: the next activity is about reading the markers, and you have just made a real one.",
         "git log --graph --oneline --all draws the branches you just made; the commit with two lines coming into it is the merge."
       ],
@@ -3405,12 +4355,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "git reset --hard HEAD~1 — move the branch back to the commit before it, so the last commit is no longer on the branch at all.",
-        "git revert <sha> — write a new commit whose change is the exact opposite of that one, on top of where the branch is now.",
         "git commit --amend — rewrite the pushed commit so it no longer contains the change.",
-        "git checkout -- . — restore the files in the working copy to the last commit and carry on."
+        "git checkout -- . — restore the files in the working copy to the last commit and carry on.",
+        "git reset --hard HEAD~1 — move the branch back to the commit before it, so the last commit is no longer on the branch at all.",
+        "git revert <sha> — write a new commit whose change is the exact opposite of that one, on top of where the branch is now."
       ],
-      "answer": 1,
+      "answer": 3,
       "explanation": "Once other people hold a commit, the branch is shared history, and shared history can only be added to. Every later commit names the one before it as its parent, so moving that commit — with reset or amend — leaves their clone holding a chain that points at a hash that no longer exists on your side: their work cannot be pushed back without repairing the history by hand. Revert is the recovery that is safe on shared history precisely because it does not rewrite anything: it records the undoing as a commit, so the mistake stays visible and the repair is itself part of the history anyone can read. Reset and amend are exactly right on a private branch you have not pushed, and destructive on one you have. Restoring the file changes the working copy only; the next commit would still carry the change.",
       "hints": [
         "Ask which of the four leaves a teammate able to pull and push without repairing their clone."
@@ -3445,7 +4395,7 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "id": "both-sides-kept",
-          "label": "The feature branch's wording survives too",
+          "label": "The label upper-cases the title, as the branch wrote it",
           "tests": [
             "the label upper-cases the title"
           ],
@@ -3470,11 +4420,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Start from the failing names rather than the file: three behaviours are being asked for, and each one belongs to a side of the conflict.",
+        "src/merge.js is the file the merge stopped on, and it owns both sides of the question: the markers in it are Git asking what the function was meant to do, not two versions of the answer. If the suite cannot run because `node` is command not found, run the environment check first.",
         "Read the two sides as two intents, not two blocks of text — one says what the status is, the other says how the title should read. Both are still wanted.",
         "A branch can add a declaration as well as change one. Look for something that appears on only one side: deleting a whole side can quietly drop it.",
-        "Resolve by writing the answer once, above neither side: the title upper-cased, its status in brackets, and the new helper kept exactly as the branch wrote it.",
-        "Solution shape: no marker lines remain; taskLabel returns the upper-cased title with \" (done)\" or \" (open)\" in brackets; taskInitial is kept unchanged. Then run the suite — it is the only judge that matters."
+        "The check that catches a lazy resolution is not about the label at all: it calls a name only the feature branch introduced. Read both sides once more and ask which declarations your merged file must contain for every failing name to pass.",
+        "A finished file has no marker lines, one label that reports status and the branch’s casing together, and every declaration both sides introduced — the suite is the judge, and it fails one name per intent you dropped."
       ],
       "misconceptions": [
         "A conflict is Git failing — it is Git refusing to guess: both sides changed the same lines, and deciding between them takes knowing what the app now needs.",
@@ -3510,7 +4460,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "done tasks sink below the open ones"
           ],
-          "feedback": "A finished task is still at the top. Ordering by the words of the titles alone ignores which half of the list a task belongs in — the two opinions become one comparison, not one of them.",
+          "feedback": "A finished task is still at the top. Ordering by the words of the titles alone ignores which half of the list a task belongs in — the two opinions become one comparison, not one of them. If the suite cannot run because `node` is command not found, open a new terminal or run the environment check.",
           "edge": true
         }
       ],
@@ -3519,6 +4469,78 @@ export const IDE_TASK_MANAGER: unknown = {
         "A conflict between two versions of one function can be kept on both sides — there is one body to write, so the resolution is a decision that satisfies both intents.",
         "The markers say which side is right — Git takes no side at all: the first block is simply where you were standing when you merged.",
         "One name passing means the merge is done — each name states one intent, and only a body that satisfies both is finished."
+      ]
+    },
+    "api-learn-promise": {
+      "id": "api-learn-promise",
+      "resources": [
+        {
+          "label": "MDN: Promise",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise"
+        },
+        {
+          "label": "MDN: await",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await"
+        }
+      ],
+      "title": "Learn: a promise, and the turn it ends",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 2,
+      "competencyIds": [
+        "api-integration"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A promise is an object that stands in for a value you do not have yet. It is pending while you wait, then settled once: fulfilled with a value, or rejected with a reason. Settled is final, so asking again gives the same answer."
+        },
+        {
+          "kind": "prose",
+          "body": "await is how you read that value in a straight line. It pauses the function at that line and resumes it in a later turn, after the current work finishes. That pause is why a loading flag must be raised before the await: everything after it runs later, in a turn no render is watching."
+        },
+        {
+          "kind": "example",
+          "body": "The order the engine actually runs it in:",
+          "code": "console.log(\"start\");\nPromise.resolve().then(() => console.log(\"between\"));\nconsole.log(\"end\");\n\n// prints: start, end, between\n// the then callback is a microtask: it waits for the current turn to end"
+        },
+        {
+          "kind": "prose",
+          "body": "The engine runs your code on one thread with a loop. It finishes the current turn, drains the microtasks a settled promise queued, then moves on. So the code after an await is never \"immediate\"; it runs as soon as the stack is clear."
+        },
+        {
+          "kind": "prose",
+          "body": "Rejection is the other ending. Awaiting a rejected promise throws, which is why the await sits inside a try and the catch is where the reason lands."
+        },
+        {
+          "kind": "example",
+          "body": "The states, and what awaiting a rejection does:",
+          "code": "const p = Promise.resolve(41);                      // fulfilled\nconst q = Promise.reject(new Error(\"no answer\"));    // rejected\n\ntry {\n  await q;            // awaiting a rejection throws here\n} catch (err) {\n  err.message;        // \"no answer\"\n}"
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Pending, then fulfilled or rejected — and settled is final.",
+            "await pauses one function and resumes it in a later turn.",
+            "A rejected promise makes await throw, so the await goes in a try.",
+            "Code after an await runs as a microtask, once the stack is clear."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Predict the order, then check it: a console.log, a Promise.resolve().then(...), then another console.log. Write your answer in the Notes before you look, and if you put the then first, re-read what a turn is."
+        }
+      ],
+      "hints": [
+        "Read await as \"pause this function and let the rest of the world run\", not \"wait here for everything\".",
+        "Once settled, settled: every later await on the same promise gets the same answer or the same reason."
+      ],
+      "misconceptions": [
+        "A promise holds the value it will produce — while it is pending it holds nothing; it is a placeholder that settles exactly once.",
+        "await blocks the whole program — it pauses only the function it is written in, and the engine keeps running everything else meanwhile.",
+        "A rejected promise means a network failure — rejection only says \"no value, here is a reason\"; an HTTP error status is a fulfilled promise carrying a bad answer.",
+        "Code after an await runs immediately after it — it runs in a later turn, once the current work and the queued microtasks are done."
       ]
     },
     "api-learn-connect": {
@@ -3540,14 +4562,25 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "api-integration"
       ],
+      "hints": [
+        "Name the state you are looking at before you render: nothing asked yet, asked and waiting, arrived, failed. An empty list while the request is still in flight is the waiting state, not a bug."
+      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "The list has lived inside this machine's memory for the whole course. Putting it on a server changes one fact and breaks everything you have written: the answer is no longer there when you ask. A call that used to hand back a value now hands back a promise for one, which means every line after it runs before the data arrives. The fix is not a trick with timing. It is admitting the app now has states it never had — nothing asked yet, asked and waiting, arrived, failed — and that your code must be in exactly one of them at any moment."
+          "body": "For the whole course the list lived only in memory. Putting it on a server changes one fact and breaks everything you have written: the answer is no longer there when you ask. A call that used to hand back a value now hands back a promise for one, so every line after it runs before the data arrives."
         },
         {
           "kind": "prose",
-          "body": "Then the trap that costs nearly everyone a day: fetch does not reject when the server says no. It rejects when no answer arrives at all — the address is dead, the connection refused, the network gone. A 500 is a successful fetch. The promise resolved, correctly, carrying a response whose body says the request failed. So a try/catch wrapped around a load will smile quietly through every server error you ever ship, and res.ok is the only thing that tells the two apart."
+          "body": "The fix is not a trick with timing. It is admitting the app now has states it never had: nothing asked yet, asked and waiting, arrived, failed. Your code must be in exactly one of them at any moment."
+        },
+        {
+          "kind": "prose",
+          "body": "Then the trap that costs nearly everyone a day: fetch does not reject when the server says no. It rejects when no answer arrives at all: the address is dead, the connection refused, the network gone. A 500 is a successful fetch."
+        },
+        {
+          "kind": "prose",
+          "body": "The promise resolved, correctly, carrying a response whose body says the request failed. So a try/catch wrapped around a load will smile quietly through every server error you ever ship, and res.ok is the only thing that tells the two apart."
         },
         {
           "kind": "example",
@@ -3556,21 +4589,25 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Two details in that code are the entire lesson. The loading flag is set before the first await, because the turn ends there: a line written after an await runs in a later turn, so a flag raised on it is a flag no render ever observes. And the try/catch lives inside load rather than at whatever calls it — a failure the caller has to remember to handle is a failure that goes unhandled in the next screen somebody adds, and the module that owns the request is the one place that cannot forget."
+          "body": "Two details in that code are the entire lesson. The loading flag is set before the first await, because the turn ends there: a line written after an await runs in a later turn, so a flag raised on it is a flag no render ever observes."
+        },
+        {
+          "kind": "prose",
+          "body": "And the try/catch lives inside load rather than at whatever calls it: a failure the caller has to remember to handle is a failure that goes unhandled in the next screen somebody adds, and the module that owns the request is the one place that cannot forget."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A promise is the shape of an answer that has not arrived; awaiting it ends the turn and resumes later.",
-            "fetch rejects only when nothing answered. Any status code arrives as success — res.ok is the check.",
-            "Name every state the screen can be in, and set the flag before the await and on both paths out.",
-            "An empty list and a failed load look identical and mean different things; only a state variable keeps them apart."
+            "A promise is an answer not yet arrived; awaiting it ends the turn.",
+            "fetch rejects only when nothing answered; any status is success, so check res.ok.",
+            "Name every state it can be in, and set it on both paths.",
+            "An empty list and failed load look alike; only state keeps them apart."
           ]
         },
         {
           "kind": "task",
-          "body": "Before writing any code: open the browser's Network panel, set throttling to Slow 3G, and reload the app so the request is visibly in flight. Watch what the screen does while it waits. Then write four lines in the Notes dock — the four states this app can now be in, and what a learner sees in each. Keep the note; the challenge you are about to be given is judged by whether your code can tell those four apart, and a screen that shows the same nothing for two of them cannot."
+          "body": "Before writing any code: write four lines in the Notes — the four states the module can be in, and what shows in each. The suite hands you a fetch you settle by hand, so “in flight” is a moment you control, not watch. The challenge checks whether your code tells the four apart."
         }
       ],
       "visualization": {
@@ -3596,7 +4633,6 @@ export const IDE_TASK_MANAGER: unknown = {
           ]
         }
       },
-      "hints": [],
       "misconceptions": [
         "fetch rejects when the server returns an error status — it rejects only when no response arrives at all, so a 500 resolves exactly like a success.",
         "Clearing the loading flag on the success path is enough — the failure path then leaves a spinner running forever on the one request worth telling the learner about."
@@ -3618,12 +4654,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "The catch runs and the app shows the error, because a 500 is a failed request.",
-        "The success path runs and the app shows whatever the error body parses to, because fetch resolved.",
+        "The success path runs and shows whatever the error body parses to — fetch resolved.",
         "Nothing continues, because awaiting a response that is not ok leaves the promise pending.",
-        "The await itself throws a TypeError, because reading a bad status is not allowed."
+        "The await itself throws a TypeError, because reading a bad status is not allowed.",
+        "The catch runs and the app shows the error, because a 500 is a failed request."
       ],
-      "answer": 1,
+      "answer": 0,
       "explanation": "fetch resolves whenever an answer arrives; the status code is data inside that answer, not a property of the promise. Only a request that never got any response at all — no server, no route, the network dead — rejects. So for every 4xx and 5xx the catch stays silent and the code walks into res.json() carrying an error document it is about to treat as a list. The check that separates those two outcomes is res.ok, and it has to be written down: nothing infers it on your behalf. Awaiting is not a verdict, it is only a handover.",
       "hints": [
         "Ask of each option what it claims fetch does with a status of 500, and whether that is the same thing as doing nothing with a dead address."
@@ -3656,7 +4692,7 @@ export const IDE_TASK_MANAGER: unknown = {
             "the request is marked loading while it is in flight",
             "the tasks land when the response is ready"
           ],
-          "feedback": "Either the flag was never raised, or it outlived the request. Set the status to loading before the first await — a line after an await runs in a later turn, so a flag raised there is one no render ever sees — and move it to ready only when the data actually arrived."
+          "feedback": "Either the flag was never raised, or it outlived the request. Set the status to loading before the first await — a line after an await runs in a later turn, so a flag raised there is one no render ever sees — and move it to ready only when the data actually arrived. If the suite cannot start because `node` is command not found, run the environment check first."
         },
         {
           "id": "failure",
@@ -3681,7 +4717,7 @@ export const IDE_TASK_MANAGER: unknown = {
         "The suite hands your module a stand-in for fetch: a function that takes a URL and returns a promise, answering with an object that has ok, status and an async json(). Nothing here needs a browser, a port, or a real server.",
         "src/api.js should export createTaskApi(fetchImpl) returning one object holding status, tasks and error plus an async load(): raise the status before you await anything, and set it again on every way out of the function — including the way that throws.",
         "Treat one response as two separate questions: did anything answer at all, which is the promise, and was that answer good, which is res.ok. A 503 passes the first and fails the second, so the ok check has to come before json() and its failure has to land in the same error state as a dead network.",
-        "Solution shape: export function createTaskApi(fetchImpl) { const api = { status: 'idle', tasks: [], error: null }; api.load = async () => { api.status = 'loading'; try { const res = await fetchImpl('/api/tasks'); if (!res.ok) throw new Error('the server answered ' + res.status); api.tasks = await res.json(); api.error = null; api.status = 'ready'; } catch (err) { api.error = String(err.message ?? err); api.tasks = []; api.status = 'error'; } return api; }; return api; } — then call load() when App.jsx starts, and render from the status rather than from the length of the list."
+        "Before you submit, name what a caller can show in each state, and walk the two ways load can leave: the one that returns data and the one that throws. Both must end in a named status, and the failure text has to let a person tell a dead network from a refused request — with the list left empty rather than undefined."
       ],
       "misconceptions": [
         "Awaiting makes the lines below it wait — the turn ends at the await, so anything held only in a local variable is gone by the time the answer comes back.",
@@ -3709,7 +4745,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a new task is sent as JSON text"
           ],
-          "feedback": "The request went out without the task in it, or with an object where text belongs. A body is bytes on a wire: serialize it with JSON.stringify, say what format it is in the content-type, and use the method that states you are creating something rather than asking for it."
+          "feedback": "The request went out without the task in it, or with an object where text belongs. A body is bytes on a wire: serialize it with JSON.stringify, say what format it is in the content-type, and use the method that states you are creating something rather than asking for it. If the suite cannot run because `node` is command not found, run the environment check first."
         },
         {
           "id": "edge-refused",
@@ -3763,25 +4799,25 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The third decision carries more weight than it looks, because the status code is not a label on the outcome — it is the mechanism by which the caller learns the outcome without reading your prose. A client checks the number before it reads a word of the body, and it routes on it. So a server that answers 200 for all four rows above has told the caller nothing at all, and has quietly switched off the branch of the caller's code that would have told a human something went wrong. Correctness in the body does not rescue a lie in the status."
+          "body": "The third decision matters more than it looks: the status code is how the caller learns the outcome without reading your prose. A client checks the number before reading the body, and routes on it. Answering 200 for all four rows above tells the caller nothing, and switches off the code path that would flag a problem."
         },
         {
           "kind": "prose",
-          "body": "And the second decision has an ordering to it that is easy to get wrong: a refusal has to arrive before anything changes. Check the body, then touch the store. Code that writes first and validates after does not fail cleanly — it fails having already damaged the thing the user cared about. That is the same fail-closed rule the review phase asked you to apply to a configuration, now applied to a single request: the safe moment to stop is before you have done anything."
+          "body": "The second decision has an ordering that is easy to get wrong: a refusal must arrive before anything changes. Check the body, then touch the store. Code that writes first and validates after does not fail cleanly; it fails having already damaged what the user cared about. The safe moment to stop is before you have done anything."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A server is a function from a request to an answer: which requests you answer, what they must contain, and which status the situation deserves.",
-            "The status code is the contract. A caller reads it before it reads your body, and 200-for-everything turns off their error handling.",
-            "Refuse before you change anything — validation that runs after the write has already left the damage behind.",
-            "A path you never registered is still a request. Falling through without answering gives the caller a hang, not a 404."
+            "A server is a function from a request to an answer you choose.",
+            "A caller reads the status before the body, so 200-for-everything hides errors.",
+            "Refuse before you change anything; late validation still leaves damage.",
+            "An unregistered path is still a request; falling through hangs, never 404s."
           ]
         },
         {
           "kind": "task",
-          "body": "Before you open the challenge, settle the design on paper. For each of the four requests in the example, name which of the three decisions it is exercising and what you would answer. Then add the fifth case the example does not list — a PATCH to /tasks/t9 when no t9 exists — and decide two things separately: what status you return, and whether the store has been touched by the time you return it. Write both down before writing any code. The suite in the next activity checks four of these outcomes; the fifth is the one the rung after that checks, unaided."
+          "body": "Before the challenge, settle the design on paper. For each of the four example requests, name which of the three decisions it exercises and what you would answer. Then add a fifth case the example omits: a PATCH to /tasks/t9 when no t9 exists. Decide two things separately: what status you return, and whether the store was touched by then. Write both down before writing code."
         }
       ],
       "visualization": {
@@ -3845,12 +4881,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "It is right: the server did not expect this, so it is the server's problem to report.",
         "It is right: 500 is the only code that means 'no task was created', and no task was created.",
-        "It is wrong: the caller sent something unusable, so it is a 400, and the message should name the field.",
-        "It is wrong: no route matches a broken body, so it is a 404."
+        "It is wrong: the caller sent something unusable, so it is a 400 naming the bad field.",
+        "It is wrong: no route matches a broken body, so the honest answer is a 404.",
+        "It is right: the server did not expect this, so it is the server's problem to report."
       ],
-      "answer": 2,
+      "answer": 1,
       "explanation": "The dividing line is who can fix it, not who is surprised by it. A 4xx says the request was the problem and the sender can correct it and resend; a 5xx says the server failed on a request that was fine. Malformed input sits squarely in the first group, however unexpected it is from your side of the wire — the caller can repair it by sending different bytes, and you cannot repair it by trying again. Getting this backwards has a real cost: monitoring alerts on 5xx and not on 4xx, so a code that cries 500 about bad input both hides the genuine outages and makes the error rate look like your fault. And 404 is about the address not existing, never about the contents being unusable — a route that exists and rejects its input is a found route that declined.",
       "hints": [
         "Ask who can fix it and what they would do next. Then ask who gets paged when this number repeats all night, and whether they are the right person."
@@ -3885,7 +4921,7 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "id": "create",
-          "label": "A request that brought something into existence says so, and gives it back",
+          "label": "A POST with a title creates the task and answers 201 with the created task",
           "tests": [
             "a post with a title creates the task and answers 201"
           ],
@@ -3910,11 +4946,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Say the three decisions out loud for each request the suite sends: is there a route for this method and path, is the body usable, and which status did the situation earn. Files that answer all four tests usually fall out of writing those three sentences down first.",
+        "src/task-server.js is the whole server: it holds the tasks it was constructed with and decides the status and the body of every answer the suite gets. Before writing any of it, say the three decisions out loud for each request — is there a route for this method and path, is the body usable, and which number the situation earned.",
         "The suite calls createTaskServer(tasks) and then handle({ method, path, body }) synchronously — no port, no await, no response object, nothing to close. Return { status, body } and no other shape is expected of you.",
         "Match the collection path first and keep the two arms separate: '/tasks' with GET is the read, '/tasks' with POST is the create. Testing the path alone would make a method you never registered look like a route you did, which is the same mistake the fourth check is about.",
         "Validate before you store. If the body carries no usable title, return 400 with a message naming that field and return early without pushing anything; otherwise create the task, give it an id the server chose, and answer 201 with the task itself in the body.",
-        "Last, the fall-through. End the function with a return rather than with the end of the function: anything that reaches the bottom of handle() without hitting one has hung the caller instead of refusing them, and a 404 with no body is a second way to do the same thing."
+        "Last, the fall-through. End the function with a return rather than with the end of the function: anything that reaches the bottom of handle() without hitting one has hung the caller instead of refusing them, and a 404 with no body is a second way to do the same thing. If the suite cannot start because `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Any 2xx will do as long as the body is right — the caller branches on the number before it reads anything, and 200 on a create erases the difference between 'nothing happened' and 'something now exists'.",
@@ -3963,6 +4999,12 @@ export const IDE_TASK_MANAGER: unknown = {
     },
     "review-learn-gate": {
       "id": "review-learn-gate",
+      "resources": [
+        {
+          "label": "Google Engineering Practices: What to Look for in a Code Review",
+          "url": "https://google.github.io/eng-practices/review/reviewer/looking-for.html"
+        }
+      ],
       "title": "Learn: a deploy is a decision, and it needs evidence",
       "kind": "lesson",
       "mode": "learn",
@@ -3973,15 +5015,15 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A review is not an opinion about code. It is the last cheap moment to find something, and after it there is only production, where the same defect costs an outage instead of a comment. So the question is never whether you like this, but what it assumes — and what happens when that assumption turns out to be false somewhere you are not standing."
+          "body": "A review is not an opinion about code. It is the last cheap moment to find something before production, where the same defect costs an outage instead of a comment. So the question is never whether you like this, but what it assumes and what happens when that assumption is false somewhere you are not standing."
         },
         {
           "kind": "prose",
-          "body": "One honest limit before anything else: this phase cannot hand you a real deployment. There is no server here, no pipeline, no container. What it can hand you is the part that does not go out of date — the judgement that decides whether shipping is safe, and the habit of making the machine check that judgement instead of trusting you to hold it."
+          "body": "One honest limit before anything else: this phase cannot hand you a real deployment. What it can hand you is the part that never goes out of date: the judgement that decides whether shipping is safe, and the habit of making the machine check it."
         },
         {
           "kind": "prose",
-          "body": "Configuration is where that judgement matters most, for a reason worth stating plainly: the code is identical on your machine and in production, and the environment is not. So it works here is evidence about exactly one environment, and the first deploy is the first moment this code meets a value nobody handed it by hand."
+          "body": "Configuration is where that judgement matters most: the code is identical on your machine and in production, but the environment is not. So it works here is evidence about exactly one environment, and the first deploy is when this code meets a value nobody handed it by hand."
         },
         {
           "kind": "example",
@@ -3990,26 +5032,26 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Three rules come out of that, and they are the whole phase. A default is a decision: defaulting a value production cannot run without is choosing to run without it, so a fallback is only honest where a wrong value costs an inconvenience rather than a lie. An environment variable is always a string, so a port, a number and a boolean are things you build at the edge, not things you copy through. And a refusal should say everything at once — a boot that names three problems is one restart, while a boot that finds them one at a time is three restarts, at four in the morning, by whoever is on call."
+          "body": "Three rules follow, and they are the whole phase. A default is a decision: defaulting a value production cannot run without is choosing to run without it, so a fallback is honest only when a wrong value costs an inconvenience. A refusal should name every problem at once, so three cost one restart."
         },
         {
           "kind": "prose",
-          "body": "There is a fourth rule, and it is the one that ends careers rather than evenings. A secret is a value you were asked to keep. Naming the variable in an error is help: SESSION_SECRET is too short tells someone exactly what to fix. Quoting the value is a leak, and it does not stay in the terminal — it is copied into the log aggregator, the error tracker, the ticket, and the screenshot somebody pastes into a chat. A report has to be useful without being a confession, and the only way to un-leak a secret is to rotate it."
+          "body": "There is a fourth rule, the one that ends careers rather than evenings. A secret is a value you were asked to keep: naming the variable in an error is help, but quoting the value is a leak, and it spreads into every log, tracker, and screenshot downstream. A report must be useful without being a confession."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A review asks what the code assumes and what breaks when the assumption is wrong elsewhere — not whether it reads nicely.",
-            "Configuration is the only input that differs between your machine and production, which is why it works in one and fails in the other.",
-            "A default for a required value is a decision to run without it; fail closed, and name every problem in one pass.",
-            "Environment variables are strings, so types are built at the edge: a port is a number you parsed, not a value you copied.",
+            "A review asks what the code assumes, not whether it reads nicely.",
+            "Configuration is the input that differs between your machine and production.",
+            "Fail closed on a required value; name every problem in one pass.",
+            "Environment variables are strings, so build types at the edge.",
             "An error may name a secret. It may never quote one."
           ]
         },
         {
           "kind": "task",
-          "body": "Open src/deploy.js and review it before you change a line. Write three findings as comments at the top of the file, all in the same shape: what it assumes, what happens when that assumption is wrong in production, and what you would require before shipping. Then run node --test --test-reporter=tap test/deploy.test.mjs and compare your list with what actually fails. Two things to notice while you do. The suite checks three behaviours and that file holds more than three problems, so a green run was never a clean bill of health — the tests are not the specification. And if one of your findings is about how the code reads rather than what it does, move it to the bottom of the list: style is the cheapest thing a review spends, and spending it first is how reviews get ignored."
+          "body": "Open src/deploy.js and review it before changing a line. Write three findings as comments at the top, each in the same shape: what it assumes, what breaks when that assumption is false in production, and what you would require before shipping. Then run the deploy test and compare your list with what actually fails. Remember: a green run is not a clean bill of health."
         }
       ],
       "visualization": {
@@ -4059,13 +5101,13 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "It has worked for a year, so the risk is theoretical and raising it now is bikeshedding.",
-        "An environment variable is a string, so this hands the server text where a number belongs — and a year on one laptop is a year of never being given a value nobody had already typed.",
-        "The default belongs in a constant at the top of the file so it can be reused elsewhere.",
-        "It should throw rather than fall back, because any default hides a mistake from whoever configured the environment."
+        "The default belongs in a named constant at the top of the file, so it can be reused and changed in one place instead of two.",
+        "It should throw rather than fall back, because any default hides a mistake from whoever configured that environment for you.",
+        "It has worked for a year, so the risk is theoretical, and raising it now is bikeshedding a line that nobody has ever touched.",
+        "An env var is a string, so this hands a server text where a number belongs — and one laptop is not production."
       ],
-      "answer": 1,
-      "explanation": "The first option mistakes familiarity for evidence: a year on one laptop is a year of the same environment, and the first deploy is the first time this line meets a value nobody set by hand. The third is style, which is the cheapest thing a review spends. The fourth is close, and worth saying out loud because it is the tempting answer — but the defect is not the fallback mechanism, it is what the fallback supplies. Throwing on a missing PORT and defaulting a required DATABASE_URL are the same decision in different syntax: both are a policy about a value that is absent, and only one of them keeps the app from running somewhere it should not. The second option is the strongest because it names an assumption and the exact moment it stops holding. PORT arrives as the string 8080, a server asked to bind a string is a deploy that fails somewhere you are not standing, and nothing about a year of laptop use would ever have surfaced it.",
+      "answer": 3,
+      "explanation": "Mistaking familiarity for evidence is the weakest objection: a year on one laptop is a year of the same environment, and the first deploy is the first time this line meets a value nobody set by hand. Moving the default to a constant is style, which is the cheapest thing a review spends. \"It should throw rather than fall back\" is close, and worth saying out loud because it is the tempting answer — but the defect is not the fallback mechanism, it is what the fallback supplies. Throwing on a missing PORT and defaulting a required DATABASE_URL are the same decision in different syntax: both are a policy about a value that is absent, and only one of them keeps the app from running somewhere it should not. The strongest objection is the one about types, because it names an assumption and the exact moment it stops holding. PORT arrives as the string 8080, a server asked to bind a string is a deploy that fails somewhere you are not standing, and nothing about a year of laptop use would ever have surfaced it.",
       "hints": [
         "Sort the options before choosing between them: which are claims about what the code does in an environment nobody has run it in, and which are preferences about how the code reads?"
       ],
@@ -4119,8 +5161,8 @@ export const IDE_TASK_MANAGER: unknown = {
         "Start by reading rather than writing. List what src/deploy.js assumes about the machine it runs on, and for each assumption ask what happens when it is false somewhere you cannot see. That list is the review; the code change is only what the review concluded.",
         "The app needs a report, not a value: loadConfig(env) returns { ok, problems, config }, where ok is false when anything required is missing or wrong, problems holds one sentence per problem naming the variable, and config is the typed configuration or null. Return it rather than throwing — the caller decides whether to exit, and it can only exit once if it is told everything at once.",
         "Required and optional are two lists you write deliberately, and the test is what a wrong value costs. A wrong port costs a restart, so PORT may default. A wrong database address costs a silent write to nowhere, so DATABASE_URL may not, and neither may a session secret that everybody can read in the repository.",
-        "Build the types at the edge instead of trusting them: Number(env.PORT) and Number.isInteger before you accept a port, an explicit read of the words true and 1 for anything boolean, and a length rule for the secret. Then read back the sentence you wrote about a bad secret and check what you typed — the variable name belongs in it and the value does not.",
-        "Solution shape: export function loadConfig(env = process.env) { const problems = []; for (const name of ['DATABASE_URL', 'SESSION_SECRET']) { if (!env[name]) { problems.push(name + ' is not set'); } } const port = Number(env.PORT ?? '3000'); if (!Number.isInteger(port) || port <= 0) { problems.push('PORT must be a positive whole number'); } const sessionSecret = env.SESSION_SECRET ?? ''; if (sessionSecret && sessionSecret.length < 32) { problems.push('SESSION_SECRET is too short — 32 characters minimum'); } if (problems.length > 0) { return { ok: false, problems, config: null }; } return { ok: true, problems: [], config: { port, databaseUrl: env.DATABASE_URL, sessionSecret, debug: env.DEBUG === 'true' || env.DEBUG === '1' } }; } — and make the boot refuse: if (!cfg.ok) { cfg.problems.forEach((p) => console.error(p)); process.exit(1); }"
+        "Build the types at the edge instead of trusting them: turn the port text into a number and refuse anything that is not a positive whole number, read the words true and 1 explicitly rather than trusting truthiness, and give the secret a length rule. Then read your own bad-secret sentence back — the variable name belongs in it and the value does not.",
+        "Finished means the module reports rather than throws, names every problem in one pass instead of stopping at the first, keeps a bad secret’s value out of the message that names the variable, and hands the port over as a number — so a machine it cannot run on is refused at boot rather than at the first request."
       ],
       "misconceptions": [
         "A default is a convenience with no cost attached — for a value production cannot run without, the default is the moment the app chooses to run without it, and nothing logs the choice.",
@@ -4156,7 +5198,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the word false in an environment variable means off"
           ],
-          "feedback": "A flag set to the word false turned the feature on. Truthiness cannot read: every non-empty string is true, including the one that spells the opposite of what it means, so an operator who wrote BETA_SEARCH=false to switch a feature off switched it on. Parse the words instead — true, 1 and yes are on, everything else is off — which is the same discipline the port needed, and the reason this file exists.",
+          "feedback": "A flag set to the word false turned the feature on. Truthiness cannot read: every non-empty string is true, including the one that spells the opposite of what it means, so an operator who wrote BETA_SEARCH=false to switch a feature off switched it on. Parse the words instead — true, 1 and yes are on, everything else is off — which is the same discipline the port needed, and the reason this file exists. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -4165,6 +5207,396 @@ export const IDE_TASK_MANAGER: unknown = {
         "Reading an environment variable is copying it — it is parsing it, because everything in there is text and the type is something you build rather than find.",
         "An absent variable and the word false are both falsy, so they can be handled the same way — one is silence and the other is an instruction, and only a parser tells them apart.",
         "A default is what you fall back to when you have not decided — it is the decision, made once, on behalf of every environment that never states a preference."
+      ]
+    },
+    "pr-review-learn-loop": {
+      "id": "pr-review-learn-loop",
+      "title": "Learn: a pull request is a conversation about contracts",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 3,
+      "competencyIds": [
+        "code-review-collaboration"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Writing code alone lets you invent the contract as you go. Working on a team means every function you touch already has callers you did not write and reviewers protecting invariants you have not met yet. A pull request review is where those invariants become visible before the merge."
+        },
+        {
+          "kind": "prose",
+          "body": "When a review comment arrives on your branch, the job is not to make the reviewer stop talking by changing the minimum line they pointed at. The job is to trace the contract they are defending: what callers expect back, what happens to invalid items in the middle of a batch, and whether your function quietly mutates data the caller still holds."
+        },
+        {
+          "kind": "example",
+          "body": "A batch helper that looks harmless until a caller reuses its input array:",
+          "code": "// Bad: mutates `existing` in place and returns a raw array instead of the v1 shape\nexport function importBatch(existing, incoming) {\n  for (const item of incoming) {\n    item.title = item.title || 'Untitled';\n    existing.push(item);\n  }\n  return existing;\n}"
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Preserve return shapes: swapping the result object for a raw array breaks callers.",
+            "Never mask invalid input with a fake default; report what was rejected.",
+            "Treat caller-owned arrays and objects as read-only: clone into a new structure."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open src/task-batch.js and read all three review comments at the top of the file. Run node --test --test-reporter=tap test/pr-review.test.mjs to see how each comment corresponds to a failing behavioral check."
+        }
+      ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "PR opened",
+            "3 review threads",
+            "check v1 contract",
+            "reject bad items",
+            "preserve inputs",
+            "merge ready"
+          ]
+        }
+      },
+      "resources": [
+        {
+          "label": "MDN: Structured cloning and immutable array patterns",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone"
+        }
+      ],
+      "hints": [
+        "Follow the event-flow diagram from left to right: every review comment maps to a concrete invariant the caller relies on."
+      ],
+      "misconceptions": [
+        "Addressing a review comment means editing only the single line the reviewer highlighted — a contract comment requires checking every return path and caller assumption.",
+        "Defaulting an empty title to Untitled is safer than rejecting it — inventing data hides broken upstream records from the user who uploaded the batch.",
+        "Mutating an input array in place is fine if the caller immediately reassigns the variable — callers in stateful UI frameworks rely on reference inequality to detect changes."
+      ]
+    },
+    "pr-review-ask-thread": {
+      "id": "pr-review-ask-thread",
+      "title": "Reason: which review change breaks existing callers",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 3,
+      "competencyIds": [
+        "code-review-collaboration"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Three existing modules call `const { imported, rejected, count } = importBatch(tasks, rows);`. A teammate rewrites `importBatch` so it returns `imported` directly as an array because \"most callers only care about the list.\""
+        },
+        {
+          "kind": "prose",
+          "body": "What actually happens in those three callers when this branch merges?"
+        }
+      ],
+      "options": [
+        "Destructuring `{ imported, rejected, count }` from an Array binds all three to `undefined`, silently.",
+        "The import statement throws a SyntaxError when the module loads, because the export signature changed under it.",
+        "Nothing breaks as long as the unit test inside `task-batch.test.mjs` is updated to expect an array instead.",
+        "JavaScript maps the first array element to `imported` automatically, so only `count` comes back undefined."
+      ],
+      "answer": 0,
+      "explanation": "Object destructuring on an Array instance looks up properties named `imported`, `rejected`, and `count` on `Array.prototype`. None of those exist, so all three bindings silently evaluate to `undefined` at the call site, and the crash happens much later when a caller reads `imported.length` or `rejected.map`. Updating one test file while breaking three callers is why reviews check contracts across the boundary.",
+      "hints": [
+        "Ask what `{ imported } = [1, 2, 3]` evaluates to in plain JavaScript."
+      ],
+      "misconceptions": [
+        "Object destructuring on an array throws immediately — an Array is an object in JavaScript, so reading unknown property names quietly produces undefined.",
+        "Updating the unit test for the changed function proves the change is safe — a unit test only checks what it calls, not the callers you broke."
+      ]
+    },
+    "pr-review-do-batch": {
+      "id": "pr-review-do-batch",
+      "title": "Solve: resolve all three review threads on importBatch",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 3,
+      "competencyIds": [
+        "code-review-collaboration"
+      ],
+      "files": [
+        "src/task-batch.js"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/pr-review.test.mjs",
+      "checks": [
+        {
+          "id": "v1-contract",
+          "label": "Returns { imported, rejected, count } matching the v1 caller contract",
+          "tests": [
+            "returns the v1 response shape with imported tasks and count"
+          ],
+          "feedback": "Callers destructure `{ imported, rejected, count }` from `importBatch`. Return an object with `imported` (existing tasks followed by valid new tasks), `rejected` (0-based indices of invalid incoming items), and `count` (the number of newly accepted incoming tasks)."
+        },
+        {
+          "id": "reject-blank",
+          "label": "Rejects blank or whitespace-only titles and records their incoming index",
+          "tests": [
+            "rejects blank or whitespace-only titles by incoming index"
+          ],
+          "feedback": "Do not replace blank titles with \"Untitled\". Trim `item.title`, and when the trimmed string is empty, push its 0-based index in `incoming` onto `rejected` and skip importing it."
+        },
+        {
+          "id": "edge-immutable",
+          "label": "Never mutates the caller's existing array or incoming task objects",
+          "tests": [
+            "leaves caller arrays and task objects unmutated"
+          ],
+          "feedback": "You mutated either `existing` (via `.push`) or `item.title` in place. Clone `existing` into a new array and create a new `{ ...item, title: trimmed }` object for each valid incoming task.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Read the three review comments at the top of src/task-batch.js: each names one invariant the exported importBatch must keep, and the suite stays red until all three hold. If the suite cannot run because `node` is command not found, run the environment check first.",
+        "The failing names are the contract: one object carrying the imported tasks, the refused incoming positions and a count; blank titles turned away; and nothing the caller handed you altered.",
+        "Build the answer as new data rather than as edits: two fresh lists, one for what you accept and one for what you refuse, and a single walk over the incoming items by position.",
+        "The edge check asks what the caller still holds afterwards. Which step of yours grows a list it was handed, or writes a trimmed value back onto an object it was given? Neither may happen.",
+        "A complete answer: the returned object holds the caller's own tasks followed by the accepted incoming ones, the 0-based positions of the refused titles, and a count of the newly accepted items — with not one argument of the caller's changed along the way."
+      ],
+      "misconceptions": [
+        "Copying an array with `const copy = existing` prevents mutation — assignment copies the reference, so `copy.push(...)` still mutates the caller's array.",
+        "`count` is `imported.length` — `count` reports how many incoming items were newly imported in this batch, while `imported` holds existing plus accepted items.",
+        "Mutating `item.title = item.title.trim()` is harmless — the caller still holds the `incoming` objects and may inspect what they originally submitted."
+      ]
+    },
+    "pr-review-transfer-gate": {
+      "id": "pr-review-transfer-gate",
+      "title": "Review: enforce merge readiness across review threads unaided",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 3,
+      "competencyIds": [
+        "code-review-collaboration"
+      ],
+      "files": [
+        "src/review-thread.js"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/pr-review-transfer.test.mjs",
+      "checks": [
+        {
+          "id": "blocking-resolved",
+          "label": "Allows merge only when every blocking review thread is resolved",
+          "tests": [
+            "merges only when every blocking review comment is resolved"
+          ],
+          "feedback": "Export `canMergePullRequest(comments)` from `src/review-thread.js`. Return `{ mergeable, unresolvedIds }` where `unresolvedIds` lists the `id` of every comment with `blocking: true` that is not resolved. If the suite cannot run because `node` is command not found, run the environment check first."
+        },
+        {
+          "id": "edge-empty-or-silent",
+          "label": "Refuses an empty review list or a blocking thread resolved with a blank reply",
+          "tests": [
+            "refuses an empty review list or a blocking comment with an empty reply"
+          ],
+          "feedback": "An empty comments array means nobody reviewed the PR (`mergeable: false`). And if a blocking comment supplies a `reply` string that is empty or whitespace-only (`reply.trim().length === 0`), treat it as unresolved and include its `id` in `unresolvedIds`.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Non-blocking nitpicks should block the merge — only comments marked `blocking: true` gate mergeability.",
+        "Clicking Resolve with an empty reply satisfies a blocking thread — a blocking review thread requires an actual response when `reply` is provided."
+      ]
+    },
+    "ai-audit-learn-verify": {
+      "id": "ai-audit-learn-verify",
+      "title": "Learn: fluent summaries are not behavioral evidence",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 3,
+      "competencyIds": [
+        "ai-output-audit"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A coding model optimizes for plausibility. Its summary describes what the prompt asked for, not what the generated lines execute. Treating the summary as proof of correctness is how subtle bugs reach production. This file src/ai-sync.js was authored to simulate an assistant pull request; the notice sits at its top."
+        },
+        {
+          "kind": "prose",
+          "body": "Auditing generated output requires reading the claims in the summary as testable hypotheses and trying to falsify each one against the code. Look specifically at failure paths (`catch` blocks and 5xx branches that return `ok: true`), boundary encoding (raw template-string interpolation into URLs), and shared references (returning a fallback array directly so caller mutations corrupt the cache)."
+        },
+        {
+          "kind": "example",
+          "body": "An AI summary claims \"strictly surfaces HTTP failures as ok: false\", while the generated code does the opposite:",
+          "code": "// Summary claim: \"Surfaces remote failures as ok: false\"\n// Actual generated code:\nif (!res || res.status >= 500) {\n  return { ok: true, fromCache: true, tasks: fallbackCache };\n}"
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Turn each summary claim into a concrete input that would break it.",
+            "Error branches often return ok true with fallback, hiding outages.",
+            "Raw URL interpolation breaks on special characters; uncloned caches leak mutation."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open src/ai-sync.js and compare the three numbered claims in the header comment against the implementation. Run node --test --test-reporter=tap test/ai-audit.test.mjs to watch all three claims fail against the tests."
+        }
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "What the AI summary claimed",
+            "lines": [
+              "5xx -> ok: false",
+              "fallbackCache cloned",
+              "filter.tag URL-encoded"
+            ]
+          },
+          "after": {
+            "title": "What the code actually did",
+            "lines": [
+              "5xx -> ok: true (silent lie)",
+              "fallbackCache returned raw",
+              "?tag=${filter.tag} unescaped"
+            ]
+          }
+        }
+      },
+      "resources": [
+        {
+          "label": "MDN: encodeURIComponent for query parameters",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent"
+        }
+      ],
+      "hints": [
+        "Compare each line in the \"What the AI summary claimed\" box with the actual return statements in src/ai-sync.js."
+      ],
+      "misconceptions": [
+        "If the generated code is clean, well-commented, and passes a happy-path test, the summary accurately describes its edge cases — prose and code are generated token-by-token without executing the edge cases.",
+        "Returning `{ ok: true, fromCache: true }` on a 503 is helpful resilience — `ok: true` tells the caller the remote sync succeeded, hiding the outage.",
+        "Returning `fallbackCache.slice()` is enough to protect cached task objects — a shallow array copy still shares the inner task object references."
+      ]
+    },
+    "ai-audit-ask-claim": {
+      "id": "ai-audit-ask-claim",
+      "title": "Reason: spot the false claim in the generated diff",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 3,
+      "competencyIds": [
+        "ai-output-audit"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "An AI assistant generates `return { ok: false, tasks: fallbackCache.slice() }` when a remote call fails, and writes in the PR description: \"Returns an isolated deep copy of `fallbackCache` so callers can edit task properties offline without mutating the shared cache.\""
+        },
+        {
+          "kind": "prose",
+          "body": "Why is that claim false?"
+        }
+      ],
+      "options": [
+        "`Array.prototype.slice()` mutates `fallbackCache` in place when called with no arguments, so the cache is already changed.",
+        "`slice()` makes a new outer array, but the elements are the same objects, so editing one mutates the cache.",
+        "`ok: false` prevents the caller from reading the `tasks` property on the returned object, so the copy is never reachable.",
+        "It is not false — `slice()` clones both the array and all nested objects inside it, so edits stay local to the caller."
+      ],
+      "answer": 1,
+      "explanation": "`Array.prototype.slice()` performs a shallow copy: the outer Array container is new, so `.push()` on the returned list will not grow `fallbackCache`, but each element `result.tasks[i]` is the exact same object reference as `fallbackCache[i]`. When a caller mutates `result.tasks[0].title`, the shared cache is corrupted for every subsequent caller. Cloning each object (`fallbackCache.map(t => ({ ...t }))`) is required.",
+      "hints": [
+        "Distinguish between mutating the array container (`.push`) and mutating a property on an object inside the array (`tasks[0].title = ...`)."
+      ],
+      "misconceptions": [
+        "`slice()` or `[...arr]` deep-clones objects inside the array — both only copy the outer array of references.",
+        "A confident explanation in a PR description means the author verified object reference isolation — models routinely confuse shallow copy with deep copy in prose."
+      ]
+    },
+    "ai-audit-do-sync": {
+      "id": "ai-audit-do-sync",
+      "title": "Solve: make src/ai-sync.js keep the promises its summary made",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 3,
+      "competencyIds": [
+        "ai-output-audit"
+      ],
+      "files": [
+        "src/ai-sync.js"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ai-audit.test.mjs",
+      "checks": [
+        {
+          "id": "honest-failure",
+          "label": "Reports remote 5xx status or thrown network errors as ok: false",
+          "tests": [
+            "surfaces a 500 or thrown remote failure as ok false instead of pretending sync succeeded"
+          ],
+          "feedback": "Both the `res.status >= 400` branch and the `catch` block in `src/ai-sync.js` are returning `ok: true`. When the remote call fails or returns a non-2xx status, return `ok: false` alongside `fromCache: true` and the cloned fallback tasks."
+        },
+        {
+          "id": "encoded-query",
+          "label": "URL-encodes filter.tag so special characters cannot inject query parameters",
+          "tests": [
+            "encodes special characters in the filter tag before building the query path"
+          ],
+          "feedback": "Building `?tag=${filter.tag}` directly turns `urgent&admin=true` into a second query parameter. Wrap `filter.tag` with `encodeURIComponent(filter.tag)` before interpolating."
+        },
+        {
+          "id": "edge-cache-isolation",
+          "label": "Clones fallbackCache objects so caller edits never corrupt the shared cache",
+          "tests": [
+            "clones fallback cache items so caller mutations never corrupt shared cache"
+          ],
+          "feedback": "Returning `fallbackCache` (or `fallbackCache.slice()`) shares the inner task object references with the caller. Return `fallbackCache.map((t) => ({ ...t }))` so neither `.push()` nor `tasks[0].title = ...` mutates `fallbackCache`.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Read the three numbered claims at the top of src/ai-sync.js: every one of them is currently a lie in the implementation below it. If the suite cannot run because `node` is command not found, run the environment check first.",
+        "Take the three claims in the order they are numbered: the first is about the string a tag becomes, the second about what a failed call reports, and the third about who ends up owning the objects you hand back.",
+        "For the tag, send the value through the encoding function rather than gluing it into the path yourself. For the cache, make one copying step and route every fallback answer through it.",
+        "A refused call must not read as success. Decide what a caller should see when no reply arrives at all, and when the reply comes back carrying a failure status, and make both of those roads reach the same answer.",
+        "A complete answer: a dead network or a failure status reports the sync as failed while still handing back the cached tasks; a tag holding separators cannot become extra query parameters; and every task you return is a copy, so one caller's edit never reaches the shared cache."
+      ],
+      "misconceptions": [
+        "A fallback response should return `ok: true` because the caller received data — `ok` reports whether the synchronization succeeded, and `fromCache: true` tells the caller stale data is available.",
+        "`encodeURI` encodes `&` and `=` inside a query value — `encodeURI` leaves URI delimiter characters untouched; only `encodeURIComponent` encodes a parameter value safely.",
+        "`fallbackCache.slice()` isolates cached objects from mutation — it only clones the outer array, leaving every task object shared."
+      ]
+    },
+    "ai-audit-transfer-page": {
+      "id": "ai-audit-transfer-page",
+      "title": "Review: write a safe paginator that avoids the classic AI off-by-one and splice bugs",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 3,
+      "competencyIds": [
+        "ai-output-audit"
+      ],
+      "files": [
+        "src/ai-paginator.js"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ai-audit-transfer.test.mjs",
+      "checks": [
+        {
+          "id": "page-slice",
+          "label": "Slices the requested 1-based page without mutating the source array",
+          "tests": [
+            "slices the requested 1-based page without mutating the source array"
+          ],
+          "feedback": "Export `paginateTasks(items, page, limit)` from `src/ai-paginator.js`. Return `{ items: slice, hasMore }` for the 1-based `page` using `.slice(start, start + limit)` (never `.splice`, which mutates the caller's array). If the suite cannot run because `node` is command not found, run the environment check first."
+        },
+        {
+          "id": "edge-clamp",
+          "label": "Clamps non-positive or NaN page and limit values to 1",
+          "tests": [
+            "clamps non-positive or NaN page and limit values instead of returning empty or crashing"
+          ],
+          "feedback": "When `page` or `limit` is `<= 0` or not a finite number, clamp it to `Math.max(1, Math.trunc(Number(val) || 1))` before computing `start = (safePage - 1) * safeLimit`.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "`Array.prototype.splice(start, limit)` is a read-only slice — `splice` removes elements from the caller's array in place.",
+        "Page 0 with `start = (page - 1) * limit` safely returns the first page — `(-1) * limit` passes a negative start index to `slice`, returning the tail of the array instead of page 1."
       ]
     },
     "go-values-learn": {
@@ -4177,14 +5609,22 @@ export const IDE_TASK_MANAGER: unknown = {
         "go-values"
       ],
       "hints": [
-        "Say the expected result out loud before you edit. A wrong guess is cheaper in a comment than in a test run.",
-        "The zero value is a real value. Decide what your function does with it before you handle the happy path."
+        "Say what FormatCents(0) and FormatCents(-5) must print before you open the file, and write both answers in a comment — a wrong guess costs a comment, not a run.",
+        "Whole cents means two digits after the dot: divide for the dollars, take the remainder for the cents, and pad that remainder to two places."
       ],
       "misconceptions": [
         "Reading 0 as \"the caller forgot\" — 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
         "Formatting money with a float — the integer of cents is the value; the string is only how it is shown."
       ],
       "lesson": [
+        {
+          "kind": "prose",
+          "body": "You have finished the JavaScript track. This one is written in Go, in a second project on your disk: Go Ledger, which holds money as whole numbers. The method does not change — you still Learn, then Solve, then Review alone — so the level reads 2 again because the language is new, not because you fell behind."
+        },
+        {
+          "kind": "prose",
+          "body": "Two tools run here. The compiler and tester is `go`; the suite you press Run on is a small Node wrapper that calls it and reports TAP, the same format the JavaScript phases used. If `go` is command not found, run the environment check before you touch any Go code."
+        },
         {
           "kind": "prose",
           "body": "Go does not leave a variable empty in the way a blank form is empty. Declare an int and it is already 0. Declare a string and it is already \"\". That starting value is the zero value, and most of the bugs in a first Go program are code that treats 0 as \"not set\" when 0 is a real amount."
@@ -4202,14 +5642,41 @@ export const IDE_TASK_MANAGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "An int starts at 0 and a string starts at \"\". Those are values, not blanks.",
-            "Store money as whole cents. Formatting is a view of the integer, not a second copy of the truth.",
-            "A negative amount is still an amount. The sign belongs in the formatted string."
+            "An int starts at 0, a string at \"\". Values, not blanks.",
+            "Store money as whole cents. Formatting is a view, not a second truth.",
+            "A negative amount is still an amount; the sign belongs in the string."
           ]
         },
         {
           "kind": "task",
           "body": "Open values.go. Before you change anything, say out loud what FormatCents(0) must print and what FormatCents(-5) must print. Write both answers in a comment at the top of the file, then implement the function so both are true."
+        }
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "var cents int",
+            "lines": [
+              "cents is 0",
+              "label is \"\"",
+              "nothing is unset"
+            ]
+          },
+          "after": {
+            "title": "cents = 199",
+            "lines": [
+              "cents is 199",
+              "label is \"\"",
+              "the 0 was a value"
+            ]
+          }
+        }
+      },
+      "resources": [
+        {
+          "label": "Go Spec: type declarations and the zero value",
+          "url": "https://go.dev/ref/spec#Type_declarations"
         }
       ]
     },
@@ -4223,7 +5690,7 @@ export const IDE_TASK_MANAGER: unknown = {
         "go-values"
       ],
       "hints": [
-        "Cover the options you can reject from the lesson, then commit to the one that is left."
+        "Ask what Go writes into an int nobody assigned, and whether that value can be a real amount rather than a blank."
       ],
       "misconceptions": [
         "Reading 0 as \"the caller forgot\" — 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
@@ -4236,13 +5703,13 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Nothing — the request is rejected because paid was never set.",
-        "0 — Go filled the int with its zero value, and 0 is a real payment of nothing.",
-        "nil — integers are references until something is written.",
-        "Whatever the previous request left in that memory."
+        "nil — integers are references until something is written to them.",
+        "Whatever the previous request left in that memory, so it varies by request.",
+        "Nothing — the request is rejected because paid was never set by the caller at all.",
+        "0 — Go filled the int with its zero value, and 0 is a real payment of nothing."
       ],
-      "answer": 1,
-      "explanation": "A declared int is 0 before any assignment. That 0 will be saved, summed, and formatted if you treat \"I never set it\" as \"it has no value\". The zero value is a value. nil is for pointers, slices, maps, and interfaces, not for int. And a local variable is not leftover memory from another call — each call starts from the zero value again. The bug is storing 0 when the field was absent, which you can only see once you believe 0 was stored on purpose by the language."
+      "answer": 3,
+      "explanation": "A declared int is 0 before any assignment. That 0 will be saved, summed, and formatted if you treat \"I never set it\" as \"it has no value\". The zero value is a value. nil is for the kinds of values that can name nothing, and you meet each of those kinds in a later phase — an int is never nil, because 0 is a value. And a local variable is not leftover memory from another call — each call starts from the zero value again. The bug is storing 0 when the field was absent, which you can only see once you believe 0 was stored on purpose by the language."
     },
     "go-values-do": {
       "id": "go-values-do",
@@ -4254,11 +5721,11 @@ export const IDE_TASK_MANAGER: unknown = {
         "go-values"
       ],
       "hints": [
-        "The input is whole cents. 100 is one dollar, 1 is one cent.",
+        "Open values.go. It owns one function, FormatCents, and the whole job is turning a count of whole cents into the string a person reads.",
         "Split the absolute value into dollars and the leftover cents, then decide the sign separately.",
         "Print the leftover with two digits. A remainder of 5 is 05, not 5.",
         "Run go test and read the name of the test that failed before changing anything else.",
-        "Shape: sign, then dollars, then a dot, then two digits of cents. Zero is 0.00. Minus five cents is -0.05."
+        "Shape: sign, then dollars, then a dot, then two digits of cents. Zero is 0.00. Minus five cents is -0.05. If the suite cannot start because `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Reading 0 as \"the caller forgot\" — 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
@@ -4329,7 +5796,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a count of zero returns an empty string"
           ],
-          "feedback": "Zero copies is the empty string. A negative count is also no copies — do not panic and do not wrap around.",
+          "feedback": "Zero copies is the empty string. A negative count is also no copies — do not treat it as an emergency and do not wrap around. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ]
@@ -4343,18 +5810,10 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-control-flow"
       ],
-      "hints": [
-        "Say the expected result out loud before you edit. A wrong guess is cheaper in a comment than in a test run.",
-        "The zero value is a real value. Decide what your function does with it before you handle the happy path."
-      ],
-      "misconceptions": [
-        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
-        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
-      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Go has no while and no ternary. A condition is an if. A loop is a for. A choice among named cases is a switch. Each of those does one job, and a program that uses one of them to do another job is harder to read than it needed to be."
+          "body": "Go has no while and no ternary. A condition is an if, a loop is a for, and a choice among named cases is a switch. Each of those does one job, and a program that uses one of them to do another job is harder to read than it needed to be."
         },
         {
           "kind": "example",
@@ -4366,18 +5825,38 @@ export const IDE_TASK_MANAGER: unknown = {
           "body": "A switch does not fall through to the next case. You do not write break. A case that is not listed lands in default, and default is where \"I did not think about this input\" becomes a deliberate answer instead of a lie. Treating 201 as 200 because both start with 2 is that lie."
         },
         {
+          "kind": "quickcheck",
+          "body": "A switch lists case 200 and has a default. It receives 201. What runs?",
+          "items": [
+            "Runs case 200 and then falls through into default, as C would.",
+            "Nothing falls through: 201 matches no case, so default runs.",
+            "Runs case 200 — both codes belong to the 2xx family.",
+            "Panics, because every status code needs its own case."
+          ],
+          "answer": 1,
+          "explain": "A Go switch runs at most one case and never falls through, so only an exact match counts. 201 matches nothing, and default is the branch that answers the code you never named — a deliberate answer instead of a lie."
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "if decides, for repeats, switch names the cases. Pick the one whose job matches the question.",
-            "Cases do not fall through. default is the branch for every code you did not name.",
-            "A loop needs a condition that changes. An unbounded for is a hung request."
+            "if decides, for repeats, switch names cases. Pick the one that matches.",
+            "Cases do not fall through. default catches every code you did not name.",
+            "A loop needs a condition that changes. An unbounded for hangs the request."
           ]
         },
         {
           "kind": "task",
           "body": "In status.go, list every status code the lesson named and write the word you expect beside it, including one code the lesson did not name. Then make StatusWord return those words. Check the unnamed code against default before you run the tests."
         }
+      ],
+      "hints": [
+        "Write the word for a code the lesson named and the word for one it did not — the second is the case you are really testing.",
+        "Every switch still has to answer when no case matches; that answer lives in default, and so does every typo."
+      ],
+      "misconceptions": [
+        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
+        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
       ]
     },
     "go-control-flow-ask": {
@@ -4389,13 +5868,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-control-flow"
       ],
-      "hints": [
-        "Cover the options you can reject from the lesson, then commit to the one that is left."
-      ],
-      "misconceptions": [
-        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
-        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -4403,13 +5875,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
+        "It takes default, since 201 was not named and cases never fall through.",
+        "It does not compile, because every possible integer has to be a case.",
         "It returns \"ok\", because 201 is a success in the same family as 200.",
-        "It falls through into the 404 case, because that case is next in the source.",
-        "It takes the default branch, because 201 was not named and Go does not fall through.",
-        "It does not compile, because every possible integer has to be a case."
+        "It falls through into the 404 case, because that case is next in the source."
       ],
-      "answer": 2,
-      "explanation": "A Go switch compares the value to each case and stops at the first match. There is no fallthrough unless you write the fallthrough keyword, which this course does not need. 201 matches none of the named cases, so default runs. Grouping 201 with 200 because they \"feel like success\" is a decision the switch did not make — you would have to write it as its own case. Integers are not enums here: an unlisted value is legal and has to be answered, which is what default is for."
+      "answer": 0,
+      "explanation": "A Go switch compares the value to each case and stops at the first match. There is no fallthrough unless you write the fallthrough keyword, which this course does not need. 201 matches none of the named cases, so default runs. Grouping 201 with 200 because they \"feel like success\" is a decision the switch did not make — you would have to write it as its own case. Integers are not enums here: an unlisted value is legal and has to be answered, which is what default is for.",
+      "hints": [
+        "Check whether any case equals 201. If none does, name the branch the switch still runs."
+      ],
+      "misconceptions": [
+        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
+        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
+      ]
     },
     "go-control-flow-do": {
       "id": "go-control-flow-do",
@@ -4419,17 +5898,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-control-flow"
-      ],
-      "hints": [
-        "Open status.go. The function already exists and returns the wrong word for every code.",
-        "Write a switch on the code. One case per word you were given.",
-        "Put unknown in default, not in a case for 0.",
-        "Run the suite. If 201 comes back as ok, that case is too wide.",
-        "Cases: 200 ok, 404 missing, 500 down, default unknown. 201 hits default."
-      ],
-      "misconceptions": [
-        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
-        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
       ],
       "files": [
         "status.go"
@@ -4461,6 +5929,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "201 Created is a different code from 200. Leaving it off the success case is the point — only the codes you named are those words.",
           "edge": true
         }
+      ],
+      "hints": [
+        "Open status.go. The function already exists and returns the wrong word for every code.",
+        "Write a switch on the code. One case per word you were given.",
+        "Put unknown in default, not in a case for 0.",
+        "Run the suite. If 201 comes back as ok, that case is too wide.",
+        "Cases: 200 ok, 404 missing, 500 down, default unknown. 201 hits default."
+      ],
+      "misconceptions": [
+        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
+        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
       ]
     },
     "go-control-flow-review": {
@@ -4471,11 +5950,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-control-flow"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
-        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
       ],
       "files": [
         "sum.go"
@@ -4499,6 +5973,11 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "There is nothing to add when the limit is 0 or negative. Return 0. Do not loop forever waiting for the counter to become negative.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
+        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
       ]
     },
     "go-functions-learn": {
@@ -4510,18 +5989,10 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-functions"
       ],
-      "hints": [
-        "Say the expected result out loud before you edit. A wrong guess is cheaper in a comment than in a test run.",
-        "The zero value is a real value. Decide what your function does with it before you handle the happy path."
-      ],
-      "misconceptions": [
-        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
-        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
-      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A Go function can return two things. The usual pair is the value you wanted and an error. The error is not thrown. It is a value the caller has to look at, and the value beside it is not trustworthy when the error is set. Ignoring the error and using the number anyway is how a bad request becomes a stored zero."
+          "body": "A Go function can return two things: the value you wanted and an error. The error is not thrown. It is a value the caller has to look at, and the value beside it is not trustworthy when the error is set. Ignoring the error and using the number anyway is how a bad request becomes a stored zero."
         },
         {
           "kind": "example",
@@ -4530,21 +6001,41 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "nil error means the number is the answer. A non-nil error means the number is a placeholder — usually the zero value — and the caller stops. ParseQty turns a decimal string into an int. \"3\" works. An empty string does not. \"3a\" does not, because a quantity that is only partly a number is not a quantity."
+          "body": "nil error means the number is the answer, and a non-nil error means the number is only a placeholder that the caller stops at. ParseQty turns a decimal string into an int: \"3\" works, an empty string does not, and \"3a\" does not because a partly-number quantity is not a quantity."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "ParseQty returns (0, err) for a bad string. The caller writes qty, _ := ParseQty(raw). What is stored?",
+          "items": [
+            "0 — the caller discarded the only signal that said so.",
+            "The error, because Go substitutes it when the value is discarded.",
+            "The call does not compile when an error is thrown away.",
+            "Nothing is stored, because the assignment never runs."
+          ],
+          "answer": 0,
+          "explain": "The blank identifier is a deliberate discard: the call compiles, the error is dropped, and qty is 0 — a legal quantity meaning \"none\". The function reported the failure and the caller refused to read it, which is how a bad request becomes a stored zero."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "Return the result and the error together. The caller checks the error first.",
-            "A nil error is the success signal. The number next to a non-nil error is not a result.",
-            "Reject input that is only partly valid. A prefix of digits is not a quantity."
+            "A non-nil error makes its number a placeholder, not a result.",
+            "Reject partly-valid input; a digit prefix is not a quantity."
           ]
         },
         {
           "kind": "task",
           "body": "Call ParseQty(\"\") and ParseQty(\"3\") in your head and write down both return pairs. Then implement the function so those pairs are what the tests observe. Do not print the error — return it."
         }
+      ],
+      "hints": [
+        "Call ParseQty(\"\") in your head first: with nothing to parse, the pair it returns should say so instead of quietly claiming zero.",
+        "Success is (n, nil); failure is (0, err). The number beside a non-nil error is a placeholder the caller must not use."
+      ],
+      "misconceptions": [
+        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
+        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ]
     },
     "go-functions-ask": {
@@ -4556,13 +6047,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-functions"
       ],
-      "hints": [
-        "Cover the options you can reject from the lesson, then commit to the one that is left."
-      ],
-      "misconceptions": [
-        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
-        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -4570,13 +6054,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Nothing — the blank identifier stops the assignment.",
-        "The error, because Go substitutes it when the value is discarded.",
+        "The error, because Go substitutes it when the value is discarded by the caller.",
         "0 — the blank identifier threw away the only signal that 0 was not a real quantity.",
-        "The call does not compile if the error is discarded."
+        "The call does not compile if the error is discarded, so the mistake is caught early.",
+        "Nothing — the blank identifier stops the assignment, so no error is returned at all."
       ],
-      "answer": 2,
-      "explanation": "The blank identifier is a deliberate discard. The call compiles, the error value is dropped, and qty is 0, which is a legal quantity meaning \"none\". The function did its job: it reported failure in the second result. The caller undid that by refusing to read it. Discarding an error is not a compile error in Go, which is why the discipline has to live in the call, not in the type checker. Check the error, and only then trust the number."
+      "answer": 1,
+      "explanation": "The blank identifier is a deliberate discard. The call compiles, the error value is dropped, and qty is 0, which is a legal quantity meaning \"none\". The function did its job: it reported failure in the second result. The caller undid that by refusing to read it. Discarding an error is not a compile error in Go, which is why the discipline has to live in the call, not in the type checker. Check the error, and only then trust the number.",
+      "hints": [
+        "Count how many values ParseQty returns and how many the caller names — the unnamed one carries the verdict."
+      ],
+      "misconceptions": [
+        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
+        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
+      ]
     },
     "go-functions-do": {
       "id": "go-functions-do",
@@ -4586,17 +6077,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-functions"
-      ],
-      "hints": [
-        "The signature is already (int, error). Keep both results.",
-        "An empty string fails before you try to parse it.",
-        "strconv.Atoi rejects trailing junk. Use it, and return its error rather than replacing it with nil.",
-        "When Atoi fails, return 0 and that error. When it works, return the number and nil.",
-        "Success is (n, nil). Failure is (0, err) for \"\" and for \"3a\". Do not return 3 for \"3a\"."
-      ],
-      "misconceptions": [
-        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
-        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ],
       "files": [
         "parse.go"
@@ -4628,6 +6108,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "\"3a\" starts with a digit and is still not a quantity. Reject it. A parser that stops at the first bad byte and returns 3 has accepted a different string than the one it was given.",
           "edge": true
         }
+      ],
+      "hints": [
+        "Open parse.go. It owns ParseQty, whose signature already hands back an int and an error, and the tests read both results — so keep both.",
+        "An empty string fails before you try to parse it.",
+        "strconv.Atoi rejects trailing junk. Use it, and return its error rather than replacing it with nil.",
+        "When Atoi fails, return 0 and that error. When it works, return the number and nil.",
+        "Success is (n, nil). Failure is (0, err) for \"\" and for \"3a\". Do not return 3 for \"3a\"."
+      ],
+      "misconceptions": [
+        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
+        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ]
     },
     "go-functions-review": {
@@ -4638,11 +6129,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-functions"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
-        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ],
       "files": [
         "positive.go"
@@ -4663,9 +6149,14 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "0 returns an error"
           ],
-          "feedback": "Zero is the boundary. It is not positive, so it is an error, same as a negative. Do not treat \"not negative\" as success.",
+          "feedback": "Zero is the boundary. It is not positive, so it is an error, same as a negative. Do not treat \"not negative\" as success. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
+        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ]
     },
     "go-structs-learn": {
@@ -4678,8 +6169,8 @@ export const IDE_TASK_MANAGER: unknown = {
         "go-structs"
       ],
       "hints": [
-        "Say the expected result out loud before you edit. A wrong guess is cheaper in a comment than in a test run.",
-        "The zero value is a real value. Decide what your function does with it before you handle the happy path."
+        "Write the Order struct before the loop: a Cents on its own cannot say which order it belongs to.",
+        "Total(nil) is not an error case — range over nil runs zero times, so the accumulator you started with is the answer."
       ],
       "misconceptions": [
         "Panicking on a nil slice — nil means no elements, and a total of no elements is 0.",
@@ -4697,20 +6188,38 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A nil slice and an empty slice both have no elements. range over either visits nothing, and the sum stays 0. Panicking on nil is treating \"no orders\" as a crash, which is the wrong answer for a total. The ID is part of the fact even when this function does not read it — the next function will, and a struct that only holds what one function needs gets rebuilt every time the fact grows."
+          "body": "A nil slice and an empty slice both have no elements. range over either visits nothing, and the sum stays 0. Panicking on nil is treating \"no orders\" as a crash, wrong for a total. The ID is part of the fact even when this function does not read it, because the next function will, and a struct built for one function gets rebuilt whenever the fact grows."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Total is handed a []Order variable that was never assigned. What should it return?",
+          "items": [
+            "0 — range over nil visits nothing, so nothing is added.",
+            "It should panic, because a nil slice means the caller made a mistake.",
+            "The length of the slice, which is 0 either way.",
+            "-1, so the caller can tell nil apart from an empty slice."
+          ],
+          "answer": 0,
+          "explain": "A nil slice has length 0 and no elements: range walks nothing, the accumulator keeps its zero value, and the total is 0 — the same total an empty slice produces. Somebody with no orders is one situation, not two, and a sentinel like -1 would collide with a real total."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A struct names the fields of one fact. Functions take the struct, not a pile of matching arguments.",
-            "range over a nil slice does nothing. A total of no orders is 0.",
-            "Fields you do not read yet still belong on the struct if they are part of the fact."
+            "A struct names the fields of one fact. Functions take it, not arguments.",
+            "range over a nil slice does nothing: no orders total 0.",
+            "Even fields you do not read yet belong on the struct."
           ]
         },
         {
           "kind": "task",
           "body": "Write the Order struct in order.go with ID and Cents before you write Total. Then say what Total of a nil slice is, and implement the loop so that answer holds."
+        }
+      ],
+      "resources": [
+        {
+          "label": "Go Spec: struct types and field selectors",
+          "url": "https://go.dev/ref/spec#Struct_types"
         }
       ]
     },
@@ -4724,7 +6233,7 @@ export const IDE_TASK_MANAGER: unknown = {
         "go-structs"
       ],
       "hints": [
-        "Cover the options you can reject from the lesson, then commit to the one that is left."
+        "Ask how many times range runs over a nil slice before deciding whether the sum can move."
       ],
       "misconceptions": [
         "Panicking on a nil slice — nil means no elements, and a total of no elements is 0.",
@@ -4733,16 +6242,20 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
+          "body": "`Order` has an ID and an amount in cents. `Total` takes a slice of them, starts a sum at 0, walks the slice with range, and adds each order's cents. The caller hands it a slice variable that was never assigned, so it holds nil."
+        },
+        {
+          "kind": "prose",
           "body": "Total is called with a nil []Order. What should it return?"
         }
       ],
       "options": [
+        "The zero Order's cents, which is a field access on nil.",
         "It should panic, because nil means the caller made a mistake.",
-        "0 — there are no orders to add, and ranging a nil slice visits nothing.",
-        "-1, so the caller can tell nil apart from an empty slice.",
-        "The zero Order's cents, which is a field access on nil."
+        "0 — ranging a nil slice visits nothing, so nothing is added.",
+        "-1, so the caller can tell nil apart from an empty slice."
       ],
-      "answer": 1,
+      "answer": 2,
       "explanation": "A nil slice has length 0 and no elements. range walks nothing, the accumulator stays at its zero value, and the total is 0. That is the same total an empty non-nil slice produces, which is what you want: \"no orders\" is one situation, not two. Panic is for a broken program, not for a cart nobody has added to. A sentinel like -1 collides with a real refund total. And you never field-access the slice itself as if it were an Order — you range it, and nil is a valid thing to range."
     },
     "go-structs-do": {
@@ -4755,7 +6268,7 @@ export const IDE_TASK_MANAGER: unknown = {
         "go-structs"
       ],
       "hints": [
-        "Define type Order struct with ID string and Cents int. The tests build that type.",
+        "The file order.go already owns the Order type the tests construct, with its ID and Cents fields — read it, then make Total add up a slice of them.",
         "Total takes []Order and returns an int. Start the sum at 0.",
         "Range the slice. Add o.Cents. Ignore the index if you do not need it.",
         "Do not special-case nil. The loop already does the right thing when there is nothing to visit.",
@@ -4830,7 +6343,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a line with qty 0 contributes 0"
           ],
-          "feedback": "Qty of 0 is not a bill. Skip it. A negative qty is not a bill either — do not subtract.",
+          "feedback": "Qty of 0 is not a bill. Skip it. A negative qty is not a bill either — do not subtract. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ]
@@ -4843,14 +6356,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-methods"
-      ],
-      "hints": [
-        "Say the expected result out loud before you edit. A wrong guess is cheaper in a comment than in a test run.",
-        "The zero value is a real value. Decide what your function does with it before you handle the happy path."
-      ],
-      "misconceptions": [
-        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
-        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
       ],
       "lesson": [
         {
@@ -4867,18 +6372,38 @@ export const IDE_TASK_MANAGER: unknown = {
           "body": "Balance does not need a pointer: it only reads. Deposit does, and it refuses a non-positive amount. Adding a negative \"deposit\" would be a withdrawal wearing the wrong name. Zero changes nothing, which is the edge — a call that looked like it happened and left the balance where it was."
         },
         {
+          "kind": "quickcheck",
+          "body": "Balance only reads the account. Deposit changes it. Which receiver does Deposit need?",
+          "items": [
+            "A value receiver, because a small struct is cheaper to copy.",
+            "A pointer receiver, because the change must reach the caller.",
+            "A value receiver, because Deposit hands nothing back to the caller.",
+            "Either one — Go promotes the receiver to a pointer when a field is assigned."
+          ],
+          "answer": 1,
+          "explain": "A value receiver is a copy. Deposit would add to that copy and the caller would still hold the old cents, which is why the star is not decoration. Balance may read through a copy because it never writes."
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "A value receiver sees a copy. A pointer receiver sees the caller's value.",
-            "Mutation belongs on the pointer. Forgetting the star is why the balance never moves.",
-            "A deposit of zero or less is not a deposit. Leave the balance alone."
+            "Mutation belongs on the pointer; forgetting the star stalls the balance.",
+            "A zero-or-less deposit is not a deposit; leave the balance alone."
           ]
         },
         {
           "kind": "task",
           "body": "On Account, write Balance so it returns Cents, and Deposit so a second call sees the first call's money. Then call Deposit(0) on paper and confirm the balance did not move."
         }
+      ],
+      "hints": [
+        "Deposit must change the Account the caller holds; check whether the receiver is that value or a copy of it.",
+        "Balance can read through a copy, but Deposit cannot write through one — the star in the receiver is the difference."
+      ],
+      "misconceptions": [
+        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
+        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
       ]
     },
     "go-methods-ask": {
@@ -4890,13 +6415,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-methods"
       ],
-      "hints": [
-        "Cover the options you can reject from the lesson, then commit to the one that is left."
-      ],
-      "misconceptions": [
-        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
-        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -4904,13 +6422,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "10 — the method is attached to Account, so it edits the caller.",
-        "0 — the receiver is a copy, and the addition happened to the copy.",
         "It does not compile, because Cents is unexported to methods.",
-        "10, but only if the caller used a pointer variable."
+        "10, but only if the caller used a pointer variable.",
+        "10 — the method is attached to Account, so it edits the caller itself.",
+        "0 — the receiver is a copy, and the addition happened to the copy."
       ],
-      "answer": 1,
-      "explanation": "A value receiver is a copy passed to the method. Assigning to a.Cents assigns to that copy, which is discarded when the method returns. The caller's Account is unchanged, whether the caller holds a value or a pointer — Go will copy either way when the receiver is not a pointer. The star on the receiver is the difference between a method that reads and a method that updates. Export has nothing to do with it: the method is in the same package as the field."
+      "answer": 3,
+      "explanation": "A value receiver is a copy passed to the method. Assigning to a.Cents assigns to that copy, which is discarded when the method returns. The caller's Account is unchanged, whether the caller holds a value or a pointer — Go will copy either way when the receiver is not a pointer. The star on the receiver is the difference between a method that reads and a method that updates. Export has nothing to do with it: the method is in the same package as the field.",
+      "hints": [
+        "Trace where the addition happened: is that variable the account in main, or a copy the method is holding?"
+      ],
+      "misconceptions": [
+        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
+        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
+      ]
     },
     "go-methods-do": {
       "id": "go-methods-do",
@@ -4920,17 +6445,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-methods"
-      ],
-      "hints": [
-        "Account has a Cents field. Balance returns it.",
-        "If the balance stays 0 after Deposit(10), the receiver is a copy. Add the star.",
-        "Add n only when n is greater than 0.",
-        "Two deposits add. They do not replace the field with n.",
-        "Pointer receiver, ignore n <= 0, otherwise Cents += n. Balance reads Cents."
-      ],
-      "misconceptions": [
-        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
-        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
       ],
       "files": [
         "account.go"
@@ -4947,7 +6461,7 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "id": "twice",
-          "label": "Deposits accumulate",
+          "label": "A second deposit adds to the balance",
           "tests": [
             "two deposits of 10 leave 20"
           ],
@@ -4962,6 +6476,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "Deposit(0) and Deposit(-3) do not change cents. A negative deposit is a withdrawal under the wrong name — refuse it.",
           "edge": true
         }
+      ],
+      "hints": [
+        "Open account.go: it declares the Account type, its Cents field, and the two methods you are asked to finish.",
+        "If the balance stays 0 after Deposit(10), the receiver is a copy. Add the star.",
+        "Add n only when n is greater than 0.",
+        "Two deposits add. They do not replace the field with n.",
+        "Self-review before you run: the update reaches the caller, a second deposit adds to the first, and a deposit of zero or less leaves the balance untouched."
+      ],
+      "misconceptions": [
+        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
+        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
       ]
     },
     "go-methods-review": {
@@ -4972,11 +6497,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-methods"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
-        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
       ],
       "files": [
         "fee.go"
@@ -4997,9 +6517,14 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a fee larger than the balance leaves 0"
           ],
-          "feedback": "When the fee is larger than Cents, the balance becomes 0. It does not go negative, and it does not stay at the old value.",
+          "feedback": "When the fee is larger than Cents, the balance becomes 0. It does not go negative, and it does not stay at the old value. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
+        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
       ]
     },
     "go-interfaces-learn": {
@@ -5010,14 +6535,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-interfaces"
-      ],
-      "hints": [
-        "Say the expected result out loud before you edit. A wrong guess is cheaper in a comment than in a test run.",
-        "The zero value is a real value. Decide what your function does with it before you handle the happy path."
-      ],
-      "misconceptions": [
-        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
-        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
       ],
       "lesson": [
         {
@@ -5031,21 +6548,41 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A nil interface value is not a thing with a price. Calling Price on it panics. An empty slice does not panic: there is nothing to call. The function's job is to add what it was given and to tolerate being given nothing. It is not to know about orders, lines, or accounts — those types grow Price methods on their own side of the seam."
+          "body": "A nil interface value is not a thing with a price, and calling Price on it panics. An empty slice does not panic: there is nothing to call. The function's job is to add what it was given and to tolerate being given nothing. It is not to know about orders, lines, or accounts — those types grow Price methods on their own side of the seam."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "SumPriced is handed a nil Priced value. What happens when the loop calls Price?",
+          "items": [
+            "It panics: there is no concrete value to dispatch to.",
+            "It returns 0, because ranging nil gives nothing to add.",
+            "It skips the nil element and adds the rest of the slice.",
+            "It returns an error, because a nil interface is a failure value."
+          ],
+          "answer": 0,
+          "explain": "A nil interface holds no concrete type, so a method call on it panics — there is nothing to dispatch to. An empty slice is the safe case: a real slice with no elements, so the loop simply adds nothing."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "An interface names methods. Any type with those methods satisfies it, with no declaration.",
-            "The function stays stable while new concrete types appear. That is the point of the seam.",
-            "Range an empty slice safely. Do not call a method on a nil interface."
+            "An interface names methods; any type with them satisfies it, no declaration.",
+            "The function stays stable while new types appear; that is the seam.",
+            "Range an empty slice safely; never call a method on a nil interface."
           ]
         },
         {
           "kind": "task",
           "body": "Write the Priced interface and SumPriced in priced.go. Do not add an Order type in this file. The tests bring their own types that have Price methods — your function should add those without naming them."
         }
+      ],
+      "hints": [
+        "Do not name Order in priced.go: if SumPriced needs a concrete type, the interface is not doing its job.",
+        "The test's own types are the proof — if they compile against Priced, the method set is the only contract."
+      ],
+      "misconceptions": [
+        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
+        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
       ]
     },
     "go-interfaces-ask": {
@@ -5057,13 +6594,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-interfaces"
       ],
-      "hints": [
-        "Cover the options you can reject from the lesson, then commit to the one that is left."
-      ],
-      "misconceptions": [
-        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
-        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5071,13 +6601,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "No — the struct has to say \"implements Priced\" or it is a different type.",
-        "No — the struct has to live in package ledger, next to the interface.",
         "Yes — the method set is the whole contract, and the struct already has it.",
-        "Yes, but only after a conversion function copies it into an Order."
+        "Yes, but only after a conversion function copies it into an Order.",
+        "No — the struct has to say \"implements Priced\" or it is a different type, so the interface never sees it.",
+        "No — the struct has to live in package ledger, next to the interface."
       ],
-      "answer": 2,
-      "explanation": "Go checks interfaces by method set, at the call. If the concrete type has every method the interface lists, the value can be passed as that interface. There is no implements clause to forget, and the type does not have to be in the same package — the tests rely on that, because they define their own priced things. A conversion into some house struct would throw away the seam: the function would again know the concrete type, which is what the interface was introduced to avoid."
+      "answer": 0,
+      "explanation": "Go checks interfaces by method set, at the call. If the concrete type has every method the interface lists, the value can be passed as that interface. There is no implements clause to forget, and the type does not have to be in the same package — the tests rely on that, because they define their own priced things. A conversion into some house struct would throw away the seam: the function would again know the concrete type, which is what the interface was introduced to avoid.",
+      "hints": [
+        "Look for the method the interface names on the concrete type, not for a line that declares it implements."
+      ],
+      "misconceptions": [
+        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
+        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
+      ]
     },
     "go-interfaces-do": {
       "id": "go-interfaces-do",
@@ -5087,17 +6624,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-interfaces"
-      ],
-      "hints": [
-        "Declare type Priced interface { Price() int }.",
-        "SumPriced takes []Priced. Range it and add Price().",
-        "Do not mention any concrete struct. The tests define their own.",
-        "An empty slice: the loop does not run, the sum stays 0.",
-        "The body is a sum of item.Price(). One item, two items, and no items all fall out of that loop."
-      ],
-      "misconceptions": [
-        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
-        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
       ],
       "files": [
         "priced.go"
@@ -5118,7 +6644,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "an empty slice totals 0"
           ],
-          "feedback": "No items means nothing to call. Return 0."
+          "feedback": "An empty slice is the boundary the suite checks: no element is ever asked for its price, and the total still has to be a number the caller can compare."
         },
         {
           "id": "edge-one",
@@ -5129,6 +6655,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "A slice of one still goes through Price. Returning a hardcoded 0, or summing a field that only one test type has, fails this case when the type changes.",
           "edge": true
         }
+      ],
+      "hints": [
+        "Open priced.go: it declares the Priced interface, whose single method is Price() int, and the SumPriced function you are asked to finish.",
+        "SumPriced takes []Priced. Range it and add Price().",
+        "Do not mention any concrete struct. The tests define their own.",
+        "An empty slice: the loop does not run, the sum stays 0.",
+        "Self-review: one item, several items and no items all have to fall out of the same rule that asks each value for its price."
+      ],
+      "misconceptions": [
+        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
+        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
       ]
     },
     "go-interfaces-review": {
@@ -5139,11 +6676,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-interfaces"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
-        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
       ],
       "files": [
         "names.go"
@@ -5164,9 +6696,14 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a single name is returned alone"
           ],
-          "feedback": "With one item there is nothing to separate. Return the name. Do not prefix or suffix the separator.",
+          "feedback": "With one item there is nothing to separate. Return the name. Do not prefix or suffix the separator. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
+        "Switching on the concrete type inside SumPriced — the function then only works for types it was meant to remove."
       ]
     },
     "go-packages-learn": {
@@ -5178,18 +6715,10 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-packages"
       ],
-      "hints": [
-        "Say the expected result out loud before you edit. A wrong guess is cheaper in a comment than in a test run.",
-        "The zero value is a real value. Decide what your function does with it before you handle the happy path."
-      ],
-      "misconceptions": [
-        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
-        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
-      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Everything so far lived in package ledger. That is one boundary. Money formatting is a different concern, and it gets its own directory and its own package name. Code outside that directory can call only the names that start with a capital letter. The compiler enforces the door. A comment that says \"please do not use this\" does not."
+          "body": "Everything so far lived in package ledger, one boundary. Money formatting is a different concern, and it gets its own directory and package name. Code outside that directory can call only names that start with a capital letter. The compiler enforces the door, not a comment that says \"please do not use this\"."
         },
         {
           "kind": "example",
@@ -5204,15 +6733,23 @@ export const IDE_TASK_MANAGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A package is a directory with one package name. Callers import the module path plus that directory.",
-            "Exported names start with a capital letter. Everything else is invisible outside the package.",
-            "One rule lives in one package. The caller imports it instead of reimplementing it."
+            "A package is a directory with one name, imported by path plus folder.",
+            "Exported names start with a capital; the rest is invisible outside.",
+            "One rule lives in one package; callers import it, not reimplement it."
           ]
         },
         {
           "kind": "task",
           "body": "Open money/money.go and implement Cents there. Then make Checkout in checkout.go return money.Cents(cents). Run the tests from the module root so both packages are built together."
         }
+      ],
+      "hints": [
+        "Checkout lives in another package: only a capital letter lets a name cross that boundary, whatever the file is called.",
+        "If the compiler says undefined, read the name you wrote — the import path is the directory, the export is the first letter."
+      ],
+      "misconceptions": [
+        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
+        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
       ]
     },
     "go-packages-ask": {
@@ -5224,13 +6761,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-packages"
       ],
-      "hints": [
-        "Cover the options you can reject from the lesson, then commit to the one that is left."
-      ],
-      "misconceptions": [
-        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
-        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5238,13 +6768,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "It works — the packages are in the same module, so every name is shared.",
         "It works if Checkout is in a file that starts with package money.",
-        "It does not compile — a lowercase name is not exported, and another package cannot see it.",
-        "It compiles and panics at run time, because the function exists but is private."
+        "It does not compile — a lowercase name is not exported to another package.",
+        "It compiles and panics at run time, because the function exists but is private.",
+        "It works — the packages are in the same module, so every name is shared."
       ],
-      "answer": 2,
-      "explanation": "Export is a compile-time rule based on the first letter. A capital letter is visible to importers. A lowercase letter is visible only inside the package that defined it. Being in the same module changes nothing: the module is the unit you download, the package is the unit of visibility. The failure is a compiler error, not a panic, which is the useful part — the boundary is checked before the program runs. If Checkout itself is declared package money, it is not importing anything; it is the same package, and the directory layout has stopped meaning what the lesson said it means."
+      "answer": 1,
+      "explanation": "Export is a compile-time rule based on the first letter. A capital letter is visible to importers. A lowercase letter is visible only inside the package that defined it. Being in the same module changes nothing: the module is the unit you download, the package is the unit of visibility. The failure is a compiler error, not a panic, which is the useful part — the boundary is checked before the program runs. If Checkout itself is declared package money, it is not importing anything; it is the same package, and the directory layout has stopped meaning what the lesson said it means.",
+      "hints": [
+        "The first letter of the function name decides visibility; the directory and the module have no say in it."
+      ],
+      "misconceptions": [
+        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
+        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
+      ]
     },
     "go-packages-do": {
       "id": "go-packages-do",
@@ -5254,17 +6791,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-packages"
-      ],
-      "hints": [
-        "The file money/money.go is package money. Its exported function is Cents.",
-        "Reuse the cents rule from the values phase: sign, dollars, two digits.",
-        "checkout.go imports example.com/ledger/money and returns money.Cents(cents).",
-        "If Checkout is right and money.Cents is wrong, the formatting is still in the wrong place.",
-        "Cents owns the string. Checkout is a one-line call. -5 formats as -0.05 in both."
-      ],
-      "misconceptions": [
-        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
-        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
       ],
       "files": [
         "money/money.go"
@@ -5289,13 +6815,24 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "id": "edge-sign",
-          "label": "The sign is the package's rule",
+          "label": "A negative amount is formatted by money.Cents, not by Checkout",
           "tests": [
             "money.Cents formats -5 as -0.05"
           ],
           "feedback": "Negative cents are part of the same rule. -5 is -0.05. Checkout of -5 has to match, because it is not allowed its own formatter.",
           "edge": true
         }
+      ],
+      "hints": [
+        "The file money/money.go is package money. Its exported function is Cents.",
+        "Reuse the cents rule from the values phase: sign, dollars, two digits.",
+        "checkout.go imports example.com/ledger/money and hands the formatting to that package instead of doing its own.",
+        "If Checkout is right and money.Cents is wrong, the formatting is still in the wrong place.",
+        "Cents owns the string. Checkout is a one-line call."
+      ],
+      "misconceptions": [
+        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
+        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
       ]
     },
     "go-packages-review": {
@@ -5306,11 +6843,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-packages"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
-        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
       ],
       "files": [
         "tax/tax.go"
@@ -5331,9 +6863,14 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a rate of 0 returns the cents unchanged"
           ],
-          "feedback": "Add(200, 0) is 200. WithTax in package ledger must call tax.Add, so a rate of 0 stays 200 there too.",
+          "feedback": "Add(200, 0) is 200. WithTax in package ledger must call tax.Add, so a rate of 0 stays 200 there too. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
+        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
       ]
     },
     "go-collections-learn": {
@@ -5345,18 +6882,10 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-collections"
       ],
-      "hints": [
-        "Say the expected result out loud before you edit. A wrong guess is cheaper in a comment than in a test run.",
-        "The zero value is a real value. Decide what your function does with it before you handle the happy path."
-      ],
-      "misconceptions": [
-        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
-        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
-      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A slice keeps every element and keeps their order. A map keeps one value per key and does not keep an order you can rely on. Indexing orders by SKU is a map, because the question is \"what qty is this SKU\", and a second line for the same SKU replaces the first. Listing SKUs without duplicates, in the order they first appeared, is a slice: the map can tell you \"seen\", but only the slice remembers who arrived first."
+          "body": "A slice keeps every element in order. A map keeps one value per key, with no order. Indexing orders by SKU is a map, because the question is \"what qty is this SKU\", and a later line for the same SKU replaces the first. Listing SKUs without duplicates in first-seen order is a slice: the map records \"seen\", but only the slice remembers who arrived first."
         },
         {
           "kind": "example",
@@ -5365,21 +6894,62 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Reading a missing key returns the zero value, here 0, and ok is false if you ask for it. That 0 is indistinguishable from a SKU whose qty is 0 unless you use the two-result lookup. This phase's index only stores SKUs that appeared, so a SKU that never appeared is absent, not stored as 0. Make the map with map[string]int{} rather than a nil map when you are about to write — writing to a nil map panics."
+          "body": "The dedup loop appends safely for one reason: what comes back is stored in the variable that went in. append may write into the array already behind its argument and hand back a wider slice of that same array, so the slice it returns is the one to keep."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "names = append(names, s) returns a slice. Why keep the value it returns?",
+          "items": [
+            "append may grow in place and hand back a wider slice.",
+            "append always allocates a fresh array, so the old slice is stale.",
+            "The returned slice holds a different element type than the input.",
+            "Nothing changes; append mutates the slice that was passed in."
+          ],
+          "answer": 0,
+          "explain": "append writes into the array behind its argument when capacity is left and returns a slice covering the new element, so the returned value is the one to keep. Dropping it leaves you holding a header that never saw the element you just added."
+        },
+        {
+          "kind": "example",
+          "body": "A slice with a free slot is where it bites:",
+          "code": "names := make([]string, 0, 4)\nfor _, s := range []string{\"milk\", \"bread\", \"egg\"} {\n    names = append(names, s) // len 3, cap 4: one free slot\n}\n\norder := append(names, \"fig\") // the free slot takes it, no new array\nmore := append(names, \"date\") // the same slot, the same array\n\nfmt.Println(order[3]) // \"date\" — order was never touched again"
+        },
+        {
+          "kind": "prose",
+          "body": "Reading a missing key returns the zero value, here 0, and ok is false if you ask for it. That 0 looks like a SKU whose qty is 0 unless you use the two-result lookup. This index stores only SKUs that appeared, so a SKU that never appeared is absent, not stored as 0. Make the map with map[string]int{} before writing, because writing to a nil map panics."
+        },
+        {
+          "kind": "prose",
+          "body": "Ranging that map is where the last surprise lives: Go visits its keys in a different order every run, on purpose. Two runs of one binary print two different lists. So never range a map to build a report or a test expectation; range the slice you kept for order, or sort the keys first."
+        },
+        {
+          "kind": "example",
+          "body": "Ranging the dedup map, then running it again:",
+          "code": "var keys []string\nfor k := range seen {\n    keys = append(keys, k)\n}\nfmt.Println(keys) // not the order you put in, and not next time either"
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A map stores one value per key. Assigning the same key again replaces the value.",
+            "A map stores one value per key; assigning again replaces it.",
             "A slice stores every element in order. Use it when first-seen order matters.",
-            "A missing key reads as the zero value. Use the ok result when zero is also a real value."
+            "A missing key reads as zero; use ok to tell it apart.",
+            "append may reuse the array behind its argument; keep what it returns.",
+            "Range a map for lookups, never for order; keep order in a slice."
           ]
         },
         {
           "kind": "task",
-          "body": "In index.go, build a map from SKU to qty where the later line wins. Say what the map contains for a SKU that never appears, then check with the two-result form before you trust a 0."
+          "body": "In index.go, build a map from SKU to qty where the later line wins. Say what the map contains for a SKU that never appears, then check with the two-result form before you trust a 0. Then write down what order[3] holds after both appends, before running anything. Then run the program twice and note whether the map order held."
         }
+      ],
+      "hints": [
+        "Look a missing SKU up with the two-result form — the second result is what separates absent from stored 0.",
+        "After an append, do not trust an index you worked out before it: growth can move the elements to a new array."
+      ],
+      "misconceptions": [
+        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
+        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent.",
+        "Ranging a map in insertion order — Go picks the order fresh each run, so a report built on that range flips lists between two runs of the same binary."
       ]
     },
     "go-collections-ask": {
@@ -5391,13 +6961,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-collections"
       ],
-      "hints": [
-        "Cover the options you can reject from the lesson, then commit to the one that is left."
-      ],
-      "misconceptions": [
-        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
-        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5405,13 +6968,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "A panic, because \"b\" was never stored.",
-        "nil, because the key is absent.",
-        "0 — the zero value for int — which is the same number they would get for a SKU stored with qty 0.",
-        "false, because the lookup failed."
+        "A panic, because \"b\" was never stored in the map — reading an absent key is a misuse of it.",
+        "nil, because the key is absent, and Go returns nil for any value that is not there.",
+        "0 — the zero value for int — the same number a SKU stored with qty 0 would give.",
+        "false, because the lookup failed, and a failed lookup reports itself that way."
       ],
       "answer": 2,
-      "explanation": "A map read with one result always returns something. For an int value that something is 0 when the key is absent. There is no panic and no nil — nil is not an int. false only appears if you write qty, ok := bySKU[\"b\"], and then ok is false while qty is still 0. That is why a qty of 0 and a missing SKU look identical unless the caller asks for ok. This course's index avoids the ambiguity by not storing a SKU that never appeared, and by treating \"is it in the map\" as the question the tests ask."
+      "explanation": "A map read with one result always returns something. For an int value that something is 0 when the key is absent. There is no panic and no nil — nil is not an int. false only appears if you write qty, ok := bySKU[\"b\"], and then ok is false while qty is still 0. That is why a qty of 0 and a missing SKU look identical unless the caller asks for ok. This course's index avoids the ambiguity by not storing a SKU that never appeared, and by treating \"is it in the map\" as the question the tests ask.",
+      "hints": [
+        "A map lookup answers even for a key nobody stored — ask which value it returns for int, and whether a stored 0 looks the same."
+      ],
+      "misconceptions": [
+        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
+        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
+      ]
     },
     "go-collections-do": {
       "id": "go-collections-do",
@@ -5421,17 +6991,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-collections"
-      ],
-      "hints": [
-        "Make the map with map[string]int{} before the loop. A nil map panics on write.",
-        "Range the lines. Set bySKU[line.SKU] = line.Qty.",
-        "The same SKU written twice keeps the second write. That is what you want here.",
-        "Return the map. Do not add a key for SKUs you did not see.",
-        "Last line wins. Absent stays absent. An empty slice returns an empty map, not nil, so the caller can read it."
-      ],
-      "misconceptions": [
-        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
-        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
       ],
       "files": [
         "index.go"
@@ -5463,6 +7022,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "Do not pre-fill keys. A missing SKU is absent, so a comma-ok lookup reports false. Storing 0 for it makes \"never seen\" look like \"qty zero\".",
           "edge": true
         }
+      ],
+      "hints": [
+        "Open index.go: it owns the by-SKU index and the function you are asked to finish. Make the map before the loop, because a nil map panics on write.",
+        "Range the lines and record each one under its SKU, rather than collecting them into a fresh list of pairs.",
+        "The same SKU written twice keeps the second write. That is what you want here.",
+        "Return the map. Do not add a key for SKUs you did not see.",
+        "Last line wins. Absent stays absent. An empty slice returns an empty map, not nil, so the caller can read it."
+      ],
+      "misconceptions": [
+        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
+        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
       ]
     },
     "go-collections-review": {
@@ -5473,11 +7043,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-collections"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
-        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
       ],
       "files": [
         "unique.go"
@@ -5498,9 +7063,211 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "an empty slice returns an empty slice"
           ],
-          "feedback": "Nothing in, nothing out. Return an empty slice, not nil, so a caller ranging it is safe and a length check reads 0.",
+          "feedback": "Nothing in, nothing out. Return an empty slice, not nil, so a caller ranging it is safe and a length check reads 0. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
+        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
+      ]
+    },
+    "go-pointers-learn": {
+      "id": "go-pointers-learn",
+      "title": "Learn: the address and the value",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-pointers"
+      ],
+      "resources": [
+        {
+          "label": "Go Tour: pointers",
+          "url": "https://go.dev/tour/moretypes/1"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Every variable lives somewhere. The address operator & asks where: &n is the address of n. A pointer holds an address, and the star dereferences it: if p holds the address of n, *p is n itself, and assigning to *p changes n. Go has no pointer arithmetic — a pointer names one value, never a neighborhood."
+        },
+        {
+          "kind": "example",
+          "body": "The two operators, doing opposite jobs:",
+          "code": "n := 5\np := &n     // p holds the address of n\n*p = 7      // n is now 7; the star reaches through\n// p+1 does not compile: addresses are not numbers here"
+        },
+        {
+          "kind": "prose",
+          "body": "Three nils, three behaviors. A nil map reads fine (a missing key is the zero value) but writing to it panics, because there is no backing store yet — make() is what creates one. A nil slice reads and appends fine, because append allocates. A nil pointer does nothing safely: any use panics, so a function that accepts a pointer decides up front what nil means, usually a documented no-op."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "A map field was never made. What happens when the code writes to it?",
+          "items": [
+            "It panics: a nil map has no backing store to write into.",
+            "It works; Go allocates the backing store on that first write.",
+            "It writes the entry, and a later read of that key panics.",
+            "It is a compile error, so the build fails before the program runs."
+          ],
+          "answer": 0,
+          "explain": "A map value is a small header pointing at a store; a nil map has no store, so a write panics while a read is fine and hands back the zero value. make() is what creates the store — reading nil is safe, writing to it never is."
+        },
+        {
+          "kind": "prose",
+          "body": "One rule covers the methods phase retroactively: a method that only reads takes a value, and a method that must change the caller takes a pointer. Copying is the default in Go — function arguments, return values, and range variables are all copies — so sharing has to be asked for with & at the call and * in the signature."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "& takes the address; * follows it. No arithmetic, no neighborhood.",
+            "Everything copies unless shared: arguments, returns, range values.",
+            "A nil map reads but never writes; a nil pointer never does anything safely.",
+            "Read with a value, write with a pointer — one rule, methods included."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open pointers.go. Before you change anything, write in a comment what Reset(&Counter{N: 7}) must leave behind, and what Bump must leave the caller holding. Then implement both so the comments are true."
+        }
+      ],
+      "hints": [
+        "Read *p as \"the value p is pointing at\", wherever it appears.",
+        "A map is already shared through its header: passing one never copies the entries."
+      ],
+      "misconceptions": [
+        "Passing a pointer to read faster — the compiler already copies small values cheaply; a pointer means shared mutation, not speed.",
+        "A nil map is broken — it reads perfectly; only writing needs make().",
+        "Go has pointer arithmetic like C — it does not, and the compiler refuses p+1."
+      ]
+    },
+    "go-pointers-ask": {
+      "id": "go-pointers-ask",
+      "title": "Reason: what sticks and what does not",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-pointers"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Read this call the way the machine will run it. F writes through both of its parameters; the caller hands it a live map and the address of a live int."
+        },
+        {
+          "kind": "example",
+          "body": "One function, two kinds of sharing:",
+          "code": "func F(m map[string]int, p *int) {\n\tm[\"a\"] = 1\n\t*p = 2\n}\n\nm := map[string]int{}\nv := 0\nF(m, &v)"
+        }
+      ],
+      "options": [
+        "m is empty and v is 0 — nothing a call does to its parameters sticks for the caller.",
+        "m holds a:1 but v is still 0 — the map is shared, the int is a copy of it.",
+        "m is empty but v is 2 — the pointer reaches the caller while the map never does.",
+        "m holds a:1 and v is 2 — the map is shared and the pointer writes the caller's int."
+      ],
+      "answer": 3,
+      "explanation": "Both stick, for different reasons. A map value is a small header pointing at a shared store, so the copy the function receives still names the caller's entries — writing m[\"a\"] writes the caller's map. The pointer is explicit sharing: &v hands over the address, and *p = 2 writes the caller's variable through it. The two options that split them each deny one half of Go's model: maps share by construction, pointers share by request. And nothing about this panics — the map was made before the call, and the pointer names a live variable.",
+      "hints": [
+        "Ask what each parameter carries: the map carries a store reference, the pointer carries an address."
+      ],
+      "misconceptions": [
+        "Arguments never affect the caller — value arguments do not, but a map header and a pointer both name caller-owned memory.",
+        "The map must be passed by pointer to change — it must not; the map value already shares its store."
+      ]
+    },
+    "go-pointers-do": {
+      "id": "go-pointers-do",
+      "title": "Solve: Reset and Nudge",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-pointers"
+      ],
+      "files": [
+        "pointers.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/pointers.test.mjs",
+      "checks": [
+        {
+          "id": "reset-report",
+          "label": "Reset reports the old value and reaches zero",
+          "tests": [
+            "reset reports the previous value and reaches zero"
+          ],
+          "feedback": "Reset must zero the counter through the pointer and hand back what was there. Set c.N to 0 and return the value you replaced."
+        },
+        {
+          "id": "copy-stays",
+          "label": "A value copy leaves the caller untouched",
+          "tests": [
+            "a value copy leaves the caller untouched"
+          ],
+          "feedback": "Nudge takes a Counter, not a *Counter. Work on the copy and return it; the caller's N must not move."
+        },
+        {
+          "id": "edge-nil",
+          "label": "Reset on nil reports -1, never panics",
+          "tests": [
+            "reset on nil reports -1, never panics"
+          ],
+          "feedback": "Decide what nil means before you dereference: a nil counter is a no-op reporting -1. Guard first, touch second. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open pointers.go. Reset receives *Counter: c.N = 0 writes through it, and the old value is what you return.",
+        "Nudge receives Counter: raise the copy's N by one and return the copy. No star anywhere in that function.",
+        "A nil *Counter has no N to read. Check for nil before anything else and return the documented -1.",
+        "Run go test and read the failing test name first: each name is the exact behavior still missing.",
+        "Solution review: Reset guards nil (-1), saves the old N, zeroes, and returns the saved value; Nudge returns a copy with N+1 while the caller stays put. Run the checks — three tests, three green. If the suite cannot start because node is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Returning the new value from Reset — the contract reports the previous one, so the caller can log what was cleared.",
+        "Checking nil after dereferencing — the guard must come first; a read before the check is the panic you were avoiding.",
+        "Taking a pointer in Nudge to \"be safe\" — the value receiver is the requirement, and a pointer would move the caller."
+      ]
+    },
+    "go-pointers-review": {
+      "id": "go-pointers-review",
+      "title": "Review: Clone",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-pointers"
+      ],
+      "files": [
+        "clone.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/clone.test.mjs",
+      "checks": [
+        {
+          "id": "equal",
+          "label": "Clone equals the original",
+          "tests": [
+            "clone equals the original"
+          ],
+          "feedback": "Clone must hand back a new pointer holding the same N. Copy the value into fresh memory; returning the input pointer is an alias, and returning nil is giving up."
+        },
+        {
+          "id": "edge-independent",
+          "label": "Mutating the clone leaves the original",
+          "tests": [
+            "mutating the clone leaves the original"
+          ],
+          "feedback": "Write to the clone and read the original back: it must not have moved. If it did, the two pointers name the same memory. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Copying the pointer instead of the value — the clone must name new memory, or it is an alias wearing a copy's name.",
+        "A nil input needs a value — it needs nil back, decided before any dereference."
       ]
     },
     "go-embedding-learn": {
@@ -5512,18 +7279,14 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-embedding"
       ],
-      "hints": [
-        "Say the expected result out loud before you edit. Sum of Kernel{5} with a Bonus of 3 is 13, not 8.",
-        "A promoted method is already on the value. Call s.Twice(); do not write s.N * 2 again."
-      ],
-      "misconceptions": [
-        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
-        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
-      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Go has no classes to inherit from, so it composes. You put one type inside another without naming the field, and that is embedding. The inner type’s exported fields and methods are lifted up — promoted — so the outer value answers them as if they were its own."
+          "body": "Go has no classes to inherit from, so it composes. You put one type inside another without naming the field, and that is embedding. The inner type's exported fields and methods are lifted up — promoted — so the outer value answers them as if they were its own."
+        },
+        {
+          "kind": "prose",
+          "body": "Why it matters: Embedding is Go's primary way to build larger systems from smaller components. A service that embeds its dependencies can swap them out without touching the service code. Embedding without understanding promotion leads to hidden methods, shadowed implementations, and tests that fail when the embedded type changes. This phase teaches you the rules so embedding becomes a deliberate design choice, not a surprise."
         },
         {
           "kind": "example",
@@ -5532,21 +7295,29 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "s.N works because an embedded field takes the embedded type’s name as its own, and its fields show through. If Satellite defined its own Twice, that one would win — the outer method shadows the promoted one, and you can still reach the inner as s.Kernel.Twice(). That is composition, not a parent class."
+          "body": "s.N works because an embedded field takes the embedded type's name as its own, and its fields show through. If Satellite defined its own Twice, that one would win — the outer method shadows the promoted one, and you can still reach the inner as s.Kernel.Twice(). That is composition, not a parent class."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Embedding is a field with no name; its exported methods and fields are promoted onto the outer type.",
-            "The outer type answers a promoted method as its own — that is how it satisfies an interface for free.",
-            "A method on the outer type shadows a promoted one of the same name; reach the inner by its type name."
+            "Embedding is a field with no name; its methods promote to outer type.",
+            "The outer type answers promoted methods as its own, satisfying interfaces for free.",
+            "An outer method shadows a promoted one; reach the inner by type name."
           ]
         },
         {
           "kind": "task",
           "body": "In embed.go, Satellite embeds Kernel. Write Sum so it calls the promoted Twice and adds Bonus — do not recompute the doubling yourself."
         }
+      ],
+      "hints": [
+        "Write both numbers down before you finish the method: Sum of Kernel{5} with a Bonus of 3 is 13, not 8.",
+        "A promoted method is already on the value. Call s.Twice(); do not write s.N * 2 again."
+      ],
+      "misconceptions": [
+        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
+        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
       ]
     },
     "go-embedding-ask": {
@@ -5558,13 +7329,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-embedding"
       ],
-      "hints": [
-        "A method the type declares itself sits closer than one it only inherited."
-      ],
-      "misconceptions": [
-        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
-        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5572,13 +7336,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "8 — the embedded Kernel method is the one attached to the inner value.",
-        "12 — the outer type’s own Twice shadows the promoted one.",
         "A compile error — a type cannot declare a method with the same name as a promoted one.",
-        "16 — Go adds the outer and inner results together."
+        "16 — Go adds the outer and inner results together.",
+        "8 — the embedded Kernel method is the one attached to the inner value.",
+        "12 — the outer type's own Twice shadows the promoted one."
       ],
-      "answer": 1,
-      "explanation": "When the outer type declares a method with the same name as a promoted one, the outer method wins: embedding places the inner method set one level further out than the type’s own names, so the outer shadows rather than clashes. It is not a redefinition error. The promoted Twice still exists and is reachable as s.Kernel.Twice(), but a plain s.Twice() resolves to the outer one — 4 * 3 = 12."
+      "answer": 3,
+      "explanation": "When the outer type declares a method with the same name as a promoted one, the outer method wins: embedding places the inner method set one level further out than the type's own names, so the outer shadows rather than clashes. It is not a redefinition error. The promoted Twice still exists and is reachable as s.Kernel.Twice(), but a plain s.Twice() resolves to the outer one — 4 * 3 = 12.",
+      "hints": [
+        "A method the type declares itself sits closer than one it only inherited."
+      ],
+      "misconceptions": [
+        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
+        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
+      ]
     },
     "go-embedding-do": {
       "id": "go-embedding-do",
@@ -5588,17 +7359,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-embedding"
-      ],
-      "hints": [
-        "Satellite embeds Kernel, so Twice is already a method on the value.",
-        "Call s.Twice() to get the doubled count; do not recompute it from s.N.",
-        "Sum is the promoted Twice plus the Bonus field the Satellite carries itself.",
-        "A bonus of 0 still returns the doubled count; a negative bonus is subtracted.",
-        "return s.Twice() + s.Bonus. That is the whole body."
-      ],
-      "misconceptions": [
-        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
-        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
       ],
       "files": [
         "embed.go"
@@ -5630,6 +7390,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "Kernel{1} doubles to 2; a bonus of -5 makes Sum -3. The promoted method still runs, and the bonus is added exactly as signed.",
           "edge": true
         }
+      ],
+      "hints": [
+        "Open embed.go: it declares Satellite, embeds Kernel inside it, and holds the Sum method you are asked to finish. Twice is already a method on the value.",
+        "Call s.Twice() to get the doubled count; do not recompute it from s.N.",
+        "Sum is the promoted Twice plus the Bonus field the Satellite carries itself.",
+        "A bonus of 0 still returns the doubled count; a negative bonus is subtracted.",
+        "If the suite cannot start because node is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
+        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
       ]
     },
     "go-embedding-review": {
@@ -5640,11 +7411,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-embedding"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
-        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
       ],
       "files": [
         "promote.go"
@@ -5661,13 +7427,18 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "id": "edge-empty",
-          "label": "An empty label still prints the version",
+          "label": "An empty label still renders the version",
           "tests": [
             "an empty label still renders the version"
           ],
-          "feedback": "Version 0 with an empty label renders \"v0:\" — not the empty string. The promoted field is still read even when the label is blank.",
+          "feedback": "Version 0 with an empty label renders \"v0:\" — not the empty string. The promoted field is still read even when the label is blank. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
+        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
       ]
     },
     "go-errors-learn": {
@@ -5678,14 +7449,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-errors"
-      ],
-      "hints": [
-        "A map lookup hands you the value and an ok flag. When ok is false there is nothing to return — hand back the sentinel.",
-        "To keep a caller’s errors.Is true, wrap with fmt.Errorf and the %w verb, not %v."
-      ],
-      "misconceptions": [
-        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
-        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
       ],
       "lesson": [
         {
@@ -5699,21 +7462,52 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Comparing with == is fragile. Once an error is wrapped it is a different value, even though the same sentinel now sits inside it. errors.Is walks that chain and answers “is ErrMissing anywhere in here?”, which is almost always what you mean. %w is the wrap that keeps the sentinel reachable; %v would flatten it to text and drop the link."
+          "body": "Comparing with == is fragile. Once an error is wrapped it is a different value, even though the same sentinel now sits inside it. errors.Is walks that chain and answers \"is ErrMissing anywhere in here?\", which is almost always what you mean. %w is the wrap that keeps the sentinel reachable; %v would flatten it to text and drop the link."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "err := fmt.Errorf(\"ledger: %w\", ErrMissing). What does errors.Is(err, ErrMissing) return?",
+          "items": [
+            "true — %w kept the sentinel reachable inside the wrap.",
+            "false — a wrapped error is a new value, so nothing matches.",
+            "true, but only because both errors carry the same message.",
+            "false — %w formats the text, while %v is the wrapping verb."
+          ],
+          "answer": 0,
+          "explain": "errors.Is walks the chain of wraps, so it finds ErrMissing inside the error that %w produced. == would answer false because the wrap is a different value; the link %w records is what keeps the caller's check working."
+        },
+        {
+          "kind": "prose",
+          "body": "A check only works if it reads the error that failed. Inside an if or a loop, := declares a new variable, so an err you assign there is a different err from the one the function returns. The block can log a real failure and the caller still be handed nil."
+        },
+        {
+          "kind": "example",
+          "body": "The same name, two variables, one lost error:",
+          "code": "func Run(refine bool) (int, error) {\n    result, err := step1() // this err is the one returned\n    if refine {\n        v, err := step2(result) // a NEW err, scoped to this block\n        if err != nil {\n            log.Println(\"cannot refine:\", err)\n        }\n        result = v\n    }\n    return result, err // nil, even though step2 failed\n}"
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "Return (result, error); a nil error is what makes the result trustworthy.",
-            "errors.Is finds a sentinel through wrapping; == only matches the exact value on top.",
-            "fmt.Errorf with %w wraps and keeps errors.Is working; %v keeps only the message."
+            "errors.Is finds a sentinel through wrapping; == matches only the exact value.",
+            "fmt.Errorf with %w wraps and keeps errors.Is working; %v keeps only the message.",
+            ":= inside a block declares a new variable, not the outer one."
           ]
         },
         {
           "kind": "task",
           "body": "In errs.go, make Lookup return ErrMissing for an absent key and the cents with a nil error for a present one, then make Wrap add context with %w so errors.Is still finds the sentinel inside."
         }
+      ],
+      "hints": [
+        "A map lookup hands you the value and an ok flag. When ok is false there is nothing to return — hand back the sentinel.",
+        "To keep a caller's errors.Is true, wrap with fmt.Errorf and the %w verb, not %v."
+      ],
+      "misconceptions": [
+        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
+        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless.",
+        "Writing if err != nil inside a block and trusting the function still reports that failure — the name can point at a second variable the caller never sees."
       ]
     },
     "go-errors-ask": {
@@ -5725,13 +7519,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-errors"
       ],
-      "hints": [
-        "%w does more than format text — it records a link errors.Is can follow."
-      ],
-      "misconceptions": [
-        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
-        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5739,13 +7526,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "false — err is a different error value than ErrMissing.",
         "true — %w put ErrMissing inside err, and errors.Is unwraps to find it.",
         "false — errors.Is only works when ErrMissing is returned exactly, never wrapped.",
-        "true, but only because the two errors happen to share the same message text."
+        "true, but only because the two errors happen to share the same message text.",
+        "false — err is a different error value than ErrMissing."
       ],
-      "answer": 1,
-      "explanation": "fmt.Errorf with %w records the wrapped error and gives the new error an Unwrap method that points at it. errors.Is walks that chain of Unwrap calls looking for a value equal to its target, so it reports true even though err itself is not ErrMissing. That is exactly why you wrap with %w and not %v: %v keeps only the text and drops the link the walker needs to climb."
+      "answer": 0,
+      "explanation": "fmt.Errorf with %w records the wrapped error and gives the new error an Unwrap method that points at it. errors.Is walks that chain of Unwrap calls looking for a value equal to its target, so it reports true even though err itself is not ErrMissing. That is exactly why you wrap with %w and not %v: %v keeps only the text and drops the link the walker needs to climb.",
+      "hints": [
+        "%w does more than format text — it records a link errors.Is can follow."
+      ],
+      "misconceptions": [
+        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
+        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
+      ]
     },
     "go-errors-do": {
       "id": "go-errors-do",
@@ -5755,17 +7549,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-errors"
-      ],
-      "hints": [
-        "Lookup returns a value and an error. The book map tells you whether the key is there.",
-        "When the key is missing, return ErrMissing — the exact sentinel the tests compare against.",
-        "A present key returns its cents with a nil error.",
-        "Wrap must not return the error unchanged and must not flatten it to text. Use fmt.Errorf with %w.",
-        "if !ok { return 0, ErrMissing }, otherwise return v, nil. Wrap: fmt.Errorf(\"ledger: %w\", err)."
-      ],
-      "misconceptions": [
-        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
-        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
       ],
       "files": [
         "errs.go"
@@ -5797,6 +7580,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "Wrap(ErrMissing) must add context with %w so errors.Is(result, ErrMissing) is still true. Returning nil, or flattening with %v, both break the chain.",
           "edge": true
         }
+      ],
+      "hints": [
+        "Open errs.go: it owns the book map, Lookup and Wrap. Lookup hands back a value and an error, and the map tells you whether the key is there.",
+        "When the key is missing, return ErrMissing — the exact sentinel the tests compare against.",
+        "A present key returns its cents with a nil error.",
+        "Wrap must not return the error unchanged and must not flatten it to text. Use fmt.Errorf with %w.",
+        "Self-review: a missing key comes back as the sentinel the tests compare against, a present key comes back with no error at all, and a wrapped error still answers true when the suite asks whether the sentinel is inside it."
+      ],
+      "misconceptions": [
+        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
+        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
       ]
     },
     "go-errors-review": {
@@ -5807,11 +7601,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-errors"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
-        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
       ],
       "files": [
         "recover.go"
@@ -5832,9 +7621,183 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a zero divisor becomes an error"
           ],
-          "feedback": "Rate(10,0) would panic. A deferred recover turns that panic into a non-nil error and a 0 result, so the caller gets a value to check instead of a crash.",
+          "feedback": "Rate(10,0) would panic. A deferred recover turns that panic into a non-nil error and a 0 result, so the caller gets a value to check instead of a crash. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
+        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
+      ]
+    },
+    "go-lifecycle-learn": {
+      "id": "go-lifecycle-learn",
+      "title": "Learn: deferred until return",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-lifecycle"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Some work must happen no matter how a function leaves: unlocking a mutex, closing a file, canceling a context. defer schedules a call for the moment its function returns — normally, or through a panic. Deferred calls run last-in-first-out, so nested acquisitions unwind in the reverse order they were taken."
+        },
+        {
+          "kind": "example",
+          "body": "Two defers and a named return; trace n line by line:",
+          "code": "func F() (n int) {\n    defer func() { n += 1 }()\n    defer func() { n += 10 }()\n    return 5\n}\n// the +10 runs first (n is 15), then the +1: F returns 16"
+        },
+        {
+          "kind": "prose",
+          "body": "Panic is for programmer bugs, not bad luck: an index that cannot exist, a contract the caller broke. Expected failures travel as error values — the errors phase already taught that road. recover catches a panic, but only inside a deferred call, which makes the deferred boundary the one place a panic can be turned back into a value. Everything a boundary does not own, it re-panics: swallowing a stranger's panic hides the bug from whoever could fix it."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Deferred calls run at return, last-in-first-out, panic or not.",
+            "Panic is for bugs; expected failure is an error value.",
+            "Recover lives in a deferred call; re-panic what you do not own."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open lifecycle.go. Before you change anything, write in a comment how many times cleanup runs when fn panics, and what value escapes WithCleanup. Then implement it so both comments are true."
+        }
+      ],
+      "hints": [
+        "A deferred call with no arguments runs with the values it closed over, not with anything the return site knows.",
+        "recover() outside a deferred call returns nil and catches nothing — placement is the mechanism."
+      ],
+      "misconceptions": [
+        "Defers run first-in-first-out — they stack: the last deferred runs first, which is what makes nested cleanup unwind correctly.",
+        "panic as Go's exceptions — expected failures are error values; panic is reserved for what the programmer got wrong.",
+        "recover() anywhere catches anything — it only works inside the deferred call that bounds the panic."
+      ]
+    },
+    "go-lifecycle-ask": {
+      "id": "go-lifecycle-ask",
+      "title": "Reason: what the defers leave behind",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-lifecycle"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Read the lesson's function again. Two deferred additions and a bare return of 5 — decide what the caller receives before you run anything."
+        }
+      ],
+      "options": [
+        "5 — deferred calls read the return value but cannot change it.",
+        "6 — the defers run in order, so only the first addition lands.",
+        "15 — the defers run in order, so only the second addition lands.",
+        "16 — last-in-first-out: the +10 lands first, then the +1."
+      ],
+      "answer": 3,
+      "explanation": "Defers run last-in-first-out against the named return n. return 5 sets n to 5; then the later defer (+10) runs, making 15; then the earlier defer (+1) runs, making 16. The named return is what makes this observable — the closures capture the variable n, not the value 5, so each addition lands on the running total. With an unnamed return the additions would have nowhere to land and the caller would still see 5.",
+      "hints": [
+        "Run the stack backwards: which defer was registered last, and what does n hold when each one fires?"
+      ],
+      "misconceptions": [
+        "Deferred calls run in order — the stack unwinds last-in-first-out; order of registration is the reverse of order of execution.",
+        "return 5 freezes the answer — a named return stays writable until the function actually exits."
+      ]
+    },
+    "go-lifecycle-do": {
+      "id": "go-lifecycle-do",
+      "title": "Solve: WithCleanup",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-lifecycle"
+      ],
+      "files": [
+        "lifecycle.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/lifecycle.test.mjs",
+      "checks": [
+        {
+          "id": "both-run",
+          "label": "Cleanup runs exactly once around a calm function",
+          "tests": [
+            "cleanup runs exactly once around a calm function"
+          ],
+          "feedback": "Run fn, then run cleanup exactly once. A bare defer of cleanup before calling fn is the whole shape."
+        },
+        {
+          "id": "panic-keeps",
+          "label": "A panic still cleans up, then keeps panicking",
+          "tests": [
+            "a panic still cleans up, then keeps panicking"
+          ],
+          "feedback": "Deferred calls run through a panic, and an unrecovered panic keeps traveling after them. Do not recover here — run cleanup and let the panic continue."
+        },
+        {
+          "id": "edge-value",
+          "label": "The propagated value is the original, even an int",
+          "tests": [
+            "the propagated value is the original, even an int"
+          ],
+          "feedback": "Re-panicking means the same value, same type: 42 arrives as int 42, not a string about 42. Pass the panic through untouched. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open lifecycle.go. One defer does almost everything: schedule cleanup, then call fn.",
+        "A deferred cleanup runs on return and on panic alike. That is the entire first check.",
+        "Do not call recover in WithCleanup. Recovery belongs at a boundary that answers for the panic; this function only guarantees the cleanup.",
+        "Run go test and read the failing test name first: calm behavior, then the panic path, then the int-valued edge.",
+        "Solution review: defer cleanup(); fn(). The panic travels through the deferred call with its value intact, and cleanup ran exactly once either way. Run the checks — three tests, three green."
+      ],
+      "misconceptions": [
+        "Recovering inside WithCleanup — recovery converts the panic into a return; this contract propagates, so recovering here breaks it.",
+        "Running cleanup only on success — the panicking path is the one that needs cleanup most; defer covers both with one line.",
+        "Stringifying the panic value — the value travels as-is; formatting it changes its type and breaks typed recovery downstream."
+      ]
+    },
+    "go-lifecycle-review": {
+      "id": "go-lifecycle-review",
+      "title": "Review: RecoverValue",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-lifecycle"
+      ],
+      "files": [
+        "guard.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/guard.test.mjs",
+      "checks": [
+        {
+          "id": "catches",
+          "label": "A panic comes back as a value",
+          "tests": [
+            "a panic comes back as a value"
+          ],
+          "feedback": "Call recover inside a deferred closure and hand its result back. The boundary converts; nothing escapes."
+        },
+        {
+          "id": "edge-calm",
+          "label": "A calm run hands back nil, having run",
+          "tests": [
+            "a calm run hands back nil, having run"
+          ],
+          "feedback": "Without a panic, recover returns nil — but fn must still have run. Call it, then return whatever recover reported. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Returning a fixed nil on the panic path — the recovered value is the answer; discarding it reports nothing.",
+        "Skipping fn when a guard is present — the guard wraps the call, it never replaces it."
       ]
     },
     "go-generics-learn": {
@@ -5845,14 +7808,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-generics"
-      ],
-      "hints": [
-        "Read the signature first: Max[T cmp.Ordered](xs []T) T means the caller picks a type T, and the body works on values of that T.",
-        "cmp.Ordered already grants the < and > operators, so you can compare two values of T directly without any assertion."
-      ],
-      "misconceptions": [
-        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
-        "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
       ],
       "lesson": [
         {
@@ -5872,15 +7827,23 @@ export const IDE_TASK_MANAGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A type parameter is a placeholder type written in brackets; the constraint bounds which concrete types may fill it.",
-            "The constraint is not just a whitelist — it decides which operations (==, <, methods) the generic body is allowed to use.",
-            "Go usually infers the type argument from the call; you only write it out when inference cannot tell."
+            "A type parameter is a placeholder; the constraint bounds what fills it.",
+            "The constraint grants the body its operations, not just a type whitelist.",
+            "Go infers the argument from the call; write it only when inference fails."
           ]
         },
         {
           "kind": "task",
           "body": "In gen.go, implement Max so it returns the largest value in xs using the comparison cmp.Ordered already grants, and returns the zero value of T for an empty slice."
         }
+      ],
+      "hints": [
+        "Read the signature first: Max[T cmp.Ordered](xs []T) T means the caller picks a type T, and the body works on values of that T.",
+        "cmp.Ordered already grants the < and > operators, so you can compare two values of T directly without any assertion."
+      ],
+      "misconceptions": [
+        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
+        "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
       ]
     },
     "go-generics-ask": {
@@ -5892,13 +7855,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-generics"
       ],
-      "hints": [
-        "Ask what the constraint promised. any promises nothing; the < operator needs an ordered constraint."
-      ],
-      "misconceptions": [
-        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
-        "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5906,13 +7862,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Because T might be a type with no order; change the constraint to cmp.Ordered, the set of types that support < and >.",
-        "Because you must write xs[0].(int) before comparing any two elements.",
-        "Because generic code cannot index a slice; you have to use a range loop instead.",
-        "Because < is never allowed inside a generic function, ordered or not."
+        "Because < is never allowed inside a generic function, whether the type is ordered or not.",
+        "Because T might have no order; change the constraint to cmp.Ordered, the set that supports < and >.",
+        "Because you must write xs[0].(int) before comparing any two elements of the slice.",
+        "Because generic code cannot index a slice, so you have to use a range loop with an accumulator variable."
       ],
-      "answer": 0,
-      "explanation": "A type parameter is only as capable as its constraint. any (the empty interface) promises nothing, so the compiler cannot assume < exists for whatever T turns out to be. cmp.Ordered is a constraint that lists the ordered types and thereby grants the comparison operators to the body. Swapping any for cmp.Ordered is the minimal fix — not a type assertion, and indexing a slice is perfectly fine in generic code."
+      "answer": 1,
+      "explanation": "A type parameter is only as capable as its constraint. any (the empty interface) promises nothing, so the compiler cannot assume < exists for whatever T turns out to be. cmp.Ordered is a constraint that lists the ordered types and thereby grants the comparison operators to the body. Swapping any for cmp.Ordered is the minimal fix — not a type assertion, and indexing a slice is perfectly fine in generic code.",
+      "hints": [
+        "Ask what the constraint promised. any promises nothing; the < operator needs an ordered constraint."
+      ],
+      "misconceptions": [
+        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
+        "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
+      ]
     },
     "go-generics-do": {
       "id": "go-generics-do",
@@ -5922,17 +7885,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-generics"
-      ],
-      "hints": [
-        "Max[T cmp.Ordered](xs []T) T: the caller picks T, the body sees values of type T.",
-        "Start from var best T, the zero value, so the first element can overwrite it.",
-        "Loop with the index so the first value always wins: if i == 0 || v > best.",
-        "An empty slice never enters the loop, so the function returns the zero value unchanged.",
-        "The one body must serve both ints and strings — do not hardcode int anywhere."
-      ],
-      "misconceptions": [
-        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
-        "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
       ],
       "files": [
         "gen.go"
@@ -5964,6 +7916,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "With no elements the loop never runs and Max returns the zero value of T (0 for int). That is the honest answer for largest-of-nothing.",
           "edge": true
         }
+      ],
+      "hints": [
+        "Open gen.go: it declares the generic Max you are asked to finish — the caller picks the type, and the body sees values of that type.",
+        "Start from var best T, the zero value, so the first element can overwrite it.",
+        "Loop over positions rather than values, so the first element can start as the best so far and every later one has something to beat.",
+        "An empty slice never enters the loop, so the function returns the zero value of T unchanged.",
+        "The one body must serve both ints and strings — do not hardcode int anywhere."
+      ],
+      "misconceptions": [
+        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
+        "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
       ]
     },
     "go-generics-review": {
@@ -5974,11 +7937,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-generics"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Reaching for cmp.Ordered when you only need equality — deduping by map key needs comparable, which also allows types that are not ordered.",
-        "Thinking comparable lets you compare any two values with == — slices and maps are not comparable, only the listed scalar and simple struct types are."
       ],
       "files": [
         "uniqgen.go"
@@ -5999,9 +7957,14 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "no values produce no output"
           ],
-          "feedback": "Unique([]string{}) returns a slice of length 0. No element is ever marked seen, so the output stays empty.",
+          "feedback": "Unique([]string{}) returns a slice of length 0. No element is ever marked seen, so the output stays empty. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Reaching for cmp.Ordered when you only need equality — deduping by map key needs comparable, which also allows types that are not ordered.",
+        "Thinking comparable lets you compare any two values with == — slices and maps are not comparable, only the listed scalar and simple struct types are."
       ]
     },
     "go-modules-learn": {
@@ -6013,18 +7976,10 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-modules"
       ],
-      "hints": [
-        "Every directory with its own go.mod is a separate module; go test ./... in one module never walks into another.",
-        "A package import path is the module path from go.mod with the directory appended — example.com/moddemo/double, not a folder path."
-      ],
-      "misconceptions": [
-        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
-        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
-      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Go’s unit of versioning and download is the module, declared in a file named go.mod. Its first line — the module path — is the prefix every package inside it is imported by. The tool does not care which folder holds the code; it cares that a directory tree under one go.mod belongs to a single named module."
+          "body": "Go's unit of versioning and download is the module, declared in a file named go.mod. Its first line — the module path — is the prefix every package inside it is imported by. The tool does not care which folder holds the code; it cares that a directory tree under one go.mod belongs to a single named module."
         },
         {
           "kind": "example",
@@ -6039,15 +7994,23 @@ export const IDE_TASK_MANAGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "The module path in go.mod is the import prefix for every package in the module; the go directive sets the language version it targets.",
-            "A nested directory with its own go.mod is a separate module and is excluded from the parent’s ./... pattern.",
-            "You import packages by module-relative paths, never by file paths such as ./double or ../double."
+            "The module path in go.mod prefixes every package import in the module.",
+            "Its own go.mod makes a nested module, outside the parent ./... walk.",
+            "Import by module-relative paths, never file paths like ./double or ../double."
           ]
         },
         {
           "kind": "task",
           "body": "In the moddemo module, the app package imports example.com/moddemo/double. Make double.Double return twice n so that app.Use(4) is 8."
         }
+      ],
+      "hints": [
+        "Every directory with its own go.mod is a separate module; go test ./... in one module never walks into another.",
+        "A package import path is the module path from go.mod with the directory appended — example.com/moddemo/double, not a folder path."
+      ],
+      "misconceptions": [
+        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
+        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
       ]
     },
     "go-modules-ask": {
@@ -6059,13 +8022,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-modules"
       ],
-      "hints": [
-        "The import begins with the module’s own path — so it is not an external dependency at all."
-      ],
-      "misconceptions": [
-        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
-        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -6073,13 +8029,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Inside the same module: the path is the module prefix plus the directory, so double maps to moddemo/double on disk — no require, no network.",
-        "From the module proxy, which serves example.com/moddemo over HTTPS at build time.",
-        "From GOPATH, where example.com/moddemo must be checked out under src/.",
-        "Nowhere — you must add a require line naming example.com/moddemo/double before it compiles."
+        "From GOPATH, where example.com/moddemo must be checked out under src/ before it can build.",
+        "Nowhere — you must add a require line naming example.com/moddemo/double before it compiles at all.",
+        "Inside the module: the path is the module prefix plus the directory, so double maps to moddemo/double on disk.",
+        "From the module proxy, which serves example.com/moddemo over HTTPS at build time and caches what it returns for the next build."
       ],
-      "answer": 0,
-      "explanation": "Within one module a package path is simply the module path with the subdirectory appended, and the go command resolves it straight from local files — no require entry, no proxy, no network. A require line is only needed for packages living in a different module. example.com is the conventional placeholder domain for teaching and internal modules precisely because nothing is fetched for an in-module path."
+      "answer": 2,
+      "explanation": "Within one module a package path is simply the module path with the subdirectory appended, and the go command resolves it straight from local files — no require entry, no proxy, no download. A require line is only needed for packages living in a different module. example.com is the conventional placeholder domain for teaching and internal modules precisely because nothing is fetched for an in-module path.",
+      "hints": [
+        "The import begins with the module's own path — so it is not an external dependency at all."
+      ],
+      "misconceptions": [
+        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
+        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
+      ]
     },
     "go-modules-do": {
       "id": "go-modules-do",
@@ -6089,17 +8052,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-modules"
-      ],
-      "hints": [
-        "The file to change is moddemo/double/double.go; the app package already imports it and calls it.",
-        "The import path example.com/moddemo/double is the module path (example.com/moddemo) plus the directory (double).",
-        "Return n * 2 from Double; Use just forwards its argument, so Use(4) becomes Double(4).",
-        "Run the tests from inside moddemo — it is its own module, so go test ./... there, not at the ledger root.",
-        "Keep the package clause as package double; renaming it would break the import."
-      ],
-      "misconceptions": [
-        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
-        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
       ],
       "files": [
         "moddemo/double/double.go"
@@ -6131,6 +8083,17 @@ export const IDE_TASK_MANAGER: unknown = {
           ],
           "feedback": "Use(0) must be 0. This catches a Double that adds instead of multiplies."
         }
+      ],
+      "hints": [
+        "The file to change is moddemo/double/double.go; the app package already imports it and calls it.",
+        "The import path example.com/moddemo/double is the module path (example.com/moddemo) plus the directory (double).",
+        "Return n * 2 from Double; Use just forwards its argument, so Use(4) becomes Double(4).",
+        "Run the tests from inside moddemo — it is its own module, so go test ./... there, not at the ledger root.",
+        "Keep the package clause as package double; renaming it would break the import."
+      ],
+      "misconceptions": [
+        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
+        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
       ]
     },
     "go-modules-review": {
@@ -6141,11 +8104,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-modules"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Thinking a package is imported by its folder name alone — it is the module path plus the folder, so price is example.com/moddemo/price.",
-        "Expecting go test ./... at the ledger root to cover moddemo — moddemo is a separate module and is deliberately outside that pattern."
       ],
       "files": [
         "moddemo/price/price.go"
@@ -6166,9 +8124,14 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "zero tax returns the original cents"
           ],
-          "feedback": "ApplyCents(1000, 0) returns 1000. No basis points means the added term is zero, so the original amount stands.",
+          "feedback": "ApplyCents(1000, 0) returns 1000. No basis points means the added term is zero, so the original amount stands. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Thinking a package is imported by its folder name alone — it is the module path plus the folder, so price is example.com/moddemo/price.",
+        "Expecting go test ./... at the ledger root to cover moddemo — moddemo is a separate module and is deliberately outside that pattern."
       ]
     },
     "go-goroutines-learn": {
@@ -6179,14 +8142,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-goroutines"
-      ],
-      "hints": [
-        "FanSum must launch n goroutines with the go keyword, not add the numbers in the loop that starts them.",
-        "A send on an unbuffered channel blocks until someone receives, so a loop that reads n values needs no WaitGroup."
-      ],
-      "misconceptions": [
-        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
-        "Forgetting the loop variable: pass i into the goroutine as go func(v int){ ch <- v }(i) so each one sends its own index."
       ],
       "lesson": [
         {
@@ -6206,15 +8161,23 @@ export const IDE_TASK_MANAGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "go f() starts f on its own goroutine; the calling code keeps running immediately.",
-            "A channel sends and receives typed values; an unbuffered one blocks until the other side is ready, pairing the two up.",
-            "Read exactly the number of values you expect — counting receives is how you know the work is done."
+            "go f() starts f on its own goroutine; the caller keeps running.",
+            "A channel passes values; an unbuffered one blocks until its partner is ready.",
+            "Count the receives; reading exactly what you expect means the work is done."
           ]
         },
         {
           "kind": "task",
           "body": "In chan.go, make FanSum start n goroutines that each send their index on a channel, receive all n values, and return their sum."
         }
+      ],
+      "hints": [
+        "FanSum must launch n goroutines with the go keyword, not add the numbers in the loop that starts them.",
+        "A send on an unbuffered channel blocks until someone receives, so a loop that reads n values needs no WaitGroup."
+      ],
+      "misconceptions": [
+        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
+        "Believing a goroutine sends the value you meant — it reads the variable when it runs, so anything the loop changes after that is what arrives. Passing the index in as an argument pins it."
       ]
     },
     "go-goroutines-ask": {
@@ -6226,13 +8189,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-goroutines"
       ],
-      "hints": [
-        "Ask what a send waits for on an unbuffered channel — the answer is a receiver."
-      ],
-      "misconceptions": [
-        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
-        "Forgetting the loop variable: pass i into the goroutine as go func(v int){ ch <- v }(i) so each one sends its own index."
-      ],
       "lesson": [
         {
           "kind": "prose",
@@ -6240,13 +8196,20 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Each unbuffered send only completes when a receive takes the value, so five receives force five finished sends.",
-        "The goroutines finish so fast that they are always done before the loop reads.",
-        "Go schedules every goroutine to completion before main runs at all.",
-        "An unbuffered channel stores all five values the instant the goroutines start."
+        "The goroutines finish so fast that they are always done before the loop reads, so timing hides it.",
+        "Go schedules every goroutine to completion before main runs at all, so order cannot vary.",
+        "An unbuffered channel stores all five values the instant the goroutines start, so nothing is lost.",
+        "A send only completes when a receive takes the value, so five receives prove five sends."
       ],
-      "answer": 0,
-      "explanation": "An unbuffered channel is a rendezvous: a send blocks until a receiver is ready to take that exact value, and the sender only proceeds after the handoff. Five receives therefore cannot all complete unless five sends handed over a value, so reading the expected count is itself the wait — no WaitGroup or timer needed. A buffered channel is different: sends could finish into the buffer before anyone read, so a completed send would no longer prove a receive happened."
+      "answer": 3,
+      "explanation": "An unbuffered channel is a rendezvous: a send blocks until a receiver is ready to take that exact value, and the sender only proceeds after the handoff. Five receives therefore cannot all complete unless five sends handed over a value, so reading the expected count is itself the wait — no WaitGroup or timer needed. A buffered channel is different: sends could finish into the buffer before anyone read, so a completed send would no longer prove a receive happened.",
+      "hints": [
+        "Ask what a send waits for on an unbuffered channel — the answer is a receiver."
+      ],
+      "misconceptions": [
+        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
+        "Believing a goroutine sends the value you meant — it reads the variable when it runs, so anything the loop changes after that is what arrives."
+      ]
     },
     "go-goroutines-do": {
       "id": "go-goroutines-do",
@@ -6256,17 +8219,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-goroutines"
-      ],
-      "hints": [
-        "Launch each worker with go, passing its index in: go func(v int){ ch <- v }(i).",
-        "Use make(chan int), unbuffered, so a send blocks until you receive it.",
-        "After starting the goroutines, loop n times doing sum += <-ch.",
-        "The sum of 0 through n-1 is n*(n-1)/2, so FanSum(5) is 10 and FanSum(4) is 6.",
-        "FanSum(0) starts nothing and receives nothing, so it must return 0."
-      ],
-      "misconceptions": [
-        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
-        "Forgetting the loop variable: pass i into the goroutine as go func(v int){ ch <- v }(i) so each one sends its own index."
       ],
       "files": [
         "chan.go"
@@ -6298,6 +8250,17 @@ export const IDE_TASK_MANAGER: unknown = {
           "feedback": "FanSum(0) starts no goroutine and reads no value, so the sum stays 0. Receiving when nothing was sent would block forever, so the read loop must run zero times.",
           "edge": true
         }
+      ],
+      "hints": [
+        "The file to change is chan.go, which owns FanSum: launch each worker with go, passing its own index so every send carries a distinct value.",
+        "Use make(chan int), unbuffered, so a send blocks until you receive it.",
+        "After starting the goroutines, loop n times doing sum += <-ch.",
+        "The sum of 0 through n-1 is n*(n-1)/2, so FanSum(5) is 10 and FanSum(4) is 6.",
+        "FanSum(0) starts nothing and receives nothing, so it must return 0."
+      ],
+      "misconceptions": [
+        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
+        "Believing a goroutine sends the value you meant — it reads the variable when it runs, so anything the loop changes after that is what arrives."
       ]
     },
     "go-goroutines-review": {
@@ -6308,11 +8271,6 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 2,
       "competencyIds": [
         "go-goroutines"
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Reusing one goroutine for both slices — MergeSum needs two senders, one per half, each sending its own total.",
-        "Reading a fixed value instead of draining exactly two receives, so a missing sender would hang the read forever."
       ],
       "files": [
         "merge.go"
@@ -6333,9 +8291,14 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "empty inputs merge to zero"
           ],
-          "feedback": "MergeSum(nil,nil) is 0. Two goroutines each send a sum of 0, and adding them gives 0 — both sends still happen and both must be read.",
+          "feedback": "MergeSum(nil,nil) is 0. Two goroutines each send a sum of 0, and adding them gives 0 — both sends still happen and both must be read. If the suite cannot run because node is command not found, run the environment check first.",
           "edge": true
         }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Reusing one goroutine for both slices — MergeSum needs two senders, one per half, each sending its own total.",
+        "Reading a fixed value instead of draining exactly two receives, so a missing sender would hang the read forever."
       ]
     },
     "go-sync-learn": {
@@ -6349,11 +8312,12 @@ export const IDE_TASK_MANAGER: unknown = {
       ],
       "hints": [
         "Bump adds m to one shared count from n goroutines; without a lock two increments can read the same value and one is lost.",
-        "You must wait for all goroutines with a WaitGroup before reading the count, or you read it too early."
+        "You must wait for all goroutines with a WaitGroup before reading the count, or you read it too early. If the suite cannot run because `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Assuming += on a shared int is atomic — it is read-modify-write, so concurrent increments lose updates and the total comes in low.",
-        "Reading the result before the goroutines finish: starting work is not the same as waiting for it to complete."
+        "Reading the result before the goroutines finish: starting work is not the same as waiting for it to complete.",
+        "Writing defer wg.Done() in a loop and expecting Wait to move on — each Done is saved up until the enclosing function returns."
       ],
       "lesson": [
         {
@@ -6370,17 +8334,66 @@ export const IDE_TASK_MANAGER: unknown = {
           "body": "The mutex lets only one goroutine into the count++ at a time, so no bump is lost. The WaitGroup is the other half: the reader must not look at count until every writer has called Done, which is what Wait enforces. Miss either one and the final number is wrong even though the code looks fine."
         },
         {
+          "kind": "prose",
+          "body": "One more rule the snippet above leans on without saying it. A deferred call is queued, not run: it fires when its own function returns, last one first, with the arguments read at the defer line. So defer written inside a loop holds every resource until the whole function ends, and a Wait left standing in that same function waits forever."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Three goroutines are started in a loop, each with defer wg.Done() inside the loop body, then wg.Wait() runs. What happens?",
+          "items": [
+            "Wait never returns: each Done is queued until the function ends.",
+            "Wait returns as soon as the last goroutine has completed its work.",
+            "Wait returns once, because a looped defer runs on each iteration.",
+            "The program panics: a WaitGroup cannot be used inside a loop."
+          ],
+          "answer": 0,
+          "explain": "defer queues its call on the function that contains it, and queued calls run when that function returns, in reverse order. None of them has run while Wait is still inside the same function, so Wait blocks forever even though every goroutine finished."
+        },
+        {
+          "kind": "example",
+          "body": "Both of these hang, and neither looks wrong while you write it:",
+          "code": "for i := 0; i < 3; i++ {\n    wg.Add(1)\n    go worker(i)\n    defer wg.Done() // queued until THIS function returns\n}\nwg.Wait()             // never wakes: no Done has run yet\n\nvar mu sync.Mutex\nfor _, name := range names {\n    mu.Lock()\n    defer mu.Unlock() // the second Lock blocks on the first\n    fmt.Println(name)\n}"
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A Mutex makes the code between Lock and Unlock run for one goroutine at a time — the critical section.",
-            "A WaitGroup counts outstanding work: Add before starting, Done when finished, Wait before reading the result.",
-            "sync/atomic is the lighter tool for a single variable: it makes one add or load race-free without a full lock."
+            "A Mutex runs the code between Lock and Unlock one goroutine at once.",
+            "A WaitGroup counts work: Add before starting, Done when finished, Wait before reading.",
+            "sync/atomic guards one variable: an add or load, race-free, no full lock.",
+            "defer waits for its function to return; a loop queues them all."
           ]
         },
         {
           "kind": "task",
           "body": "In counter.go, make Bump run n goroutines that each add m to a shared count. Guard each update with a Mutex, wait with a WaitGroup, then return the total."
+        }
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "read with no Wait",
+            "lines": [
+              "3 writers started",
+              "count read now",
+              "0, 1, 2 or 3"
+            ]
+          },
+          "after": {
+            "title": "Wait, then read",
+            "lines": [
+              "wg.Wait() blocks",
+              "every Done has run",
+              "count is always 3"
+            ]
+          }
+        }
+      },
+      "resources": [
+        {
+          "label": "sync: Mutex, WaitGroup and the atomic package",
+          "url": "https://pkg.go.dev/sync"
         }
       ]
     },
@@ -6407,10 +8420,10 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Fewer than 400, because unlocked read-modify-write increments race and lose updates even though nothing crashes.",
-        "Exactly 400, because Go runs each goroutine to completion one at a time.",
-        "A panic, because two goroutines wrote the same variable without a lock.",
-        "Always 0, because the goroutines never get a chance to run before Wait returns."
+        "Fewer than 400, because unlocked read-modify-write races lose updates — nothing crashes.",
+        "Exactly 400, because Go runs each goroutine to completion one at a time, so no write is ever interleaved.",
+        "A panic, because two goroutines wrote the same variable without a mutex and the runtime detects it.",
+        "Always 0, because the goroutines never get a chance to run before Wait returns to the caller."
       ],
       "answer": 0,
       "explanation": "count++ is really a load, an add, and a store. With no lock two goroutines can both load the same old value and each store old+1, so one bump vanishes. Nothing crashes — the memory is valid — yet the total lands short and, worse, varies run to run. The WaitGroup only guarantees you read after everyone finished; it does not make the increments themselves safe. That is why the mutex, or an atomic add, is required on top of the wait."
@@ -6425,11 +8438,11 @@ export const IDE_TASK_MANAGER: unknown = {
         "go-sync"
       ],
       "hints": [
-        "Declare a sync.Mutex, a shared count, and a sync.WaitGroup inside Bump.",
+        "The file to change is counter.go, which owns Bump: declare a sync.Mutex, a shared count, and a sync.WaitGroup inside it.",
         "Before each go call wg.Add(1); inside the goroutine defer wg.Done().",
         "Wrap the increment: mu.Lock(); count++; mu.Unlock() — the mutex keeps every bump.",
         "Call wg.Wait() after starting all n goroutines and before you return count.",
-        "The total is always n*m, so Bump(4,100) is 400 and Bump(0,5) is 0."
+        "The total is always n*m, so Bump(4,100) is 400 and Bump(0,5) is 0. If the suite cannot run because `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Assuming += on a shared int is atomic — it is read-modify-write, so concurrent increments lose updates and the total comes in low.",
@@ -6500,10 +8513,2907 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "no numbers sum to zero"
           ],
-          "feedback": "ParallelAdd([]) is 0. Both chunks are empty, nothing is added, and the atomic total loads as its zero value.",
+          "feedback": "ParallelAdd([]) is 0. Both chunks are empty, nothing is added, and the atomic total loads as its zero value. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
       ]
+    },
+    "go-context-learn": {
+      "id": "go-context-learn",
+      "title": "Learn: giving work a way to stop",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-context"
+      ],
+      "resources": [
+        {
+          "label": "Go: context package",
+          "url": "https://pkg.go.dev/context"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A goroutine that nobody can stop is a leak waiting to happen. Go passes a context.Context as the first argument to functions that might block, so the caller can say enough. The context carries a Done channel that closes the moment the caller cancels or a deadline passes, plus the deadline itself and any request-scoped values."
+        },
+        {
+          "kind": "example",
+          "body": "Build a timeout, then select on its Done channel:",
+          "code": "ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)\ndefer cancel()\n\nselect {\ncase <-ctx.Done():\n    return ctx.Err()      // cancelled or too late\ncase <-time.After(work):\n    return nil            // finished in time\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "The select blocks until one branch is ready. When the deadline passes, ctx.Done closes first, WaitCtx returns ctx.Err, and the caller sees exactly why it stopped: context.Canceled for a manual cancel, context.DeadlineExceeded for a timeout. Because the work returns as soon as Done fires, a stalled goroutine cannot hang the program."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A context flows as the first parameter, saying when to stop.",
+            "Select on ctx.Done to abandon blocking work; check ctx.Err for the cause.",
+            "Defer cancel even with WithTimeout, so parent resources are freed when you finish."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In ctxwork.go, implement WaitCtx(ctx, d): return nil after waiting d, but if ctx is cancelled or its deadline passes first, return early with ctx.Err."
+        }
+      ],
+      "hints": [
+        "A cancelled or timed-out context closes its Done channel, so select on <-ctx.Done() against <-time.After(d).",
+        "Return ctx.Err() when Done wins and nil when the timer wins; the deadline case needs the real DeadlineExceeded error."
+      ],
+      "misconceptions": [
+        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+      ]
+    },
+    "go-context-ask": {
+      "id": "go-context-ask",
+      "title": "Reason: which branch wins",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-context"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "You call WaitCtx with a context whose deadline is 1 millisecond away, asking it to wait 50 milliseconds. The 1 ms deadline passes long before the wait would finish. What does WaitCtx return?"
+        }
+      ],
+      "options": [
+        "A panic, because you asked a function to wait longer than its own deadline allows.",
+        "context.DeadlineExceeded: ctx.Done closes when the deadline passes, and select takes that branch.",
+        "nil, because the function still runs the full 50 ms and then reports success to its caller.",
+        "context.Canceled, because a deadline is just another name for a manual cancel of the same context."
+      ],
+      "answer": 1,
+      "explanation": "WithTimeout derives a context that cancels itself when the deadline passes, and that cancellation closes Done. WaitCtx selects on Done against the 50 ms timer, so after 1 ms the Done branch is ready first and it returns ctx.Err, which reads context.DeadlineExceeded rather than context.Canceled. The wait is abandoned early instead of running to completion; returning nil would ignore the caller giving up, and nothing panics because a deadline is perfectly ordinary.",
+      "hints": [
+        "A deadline is a timer that cancels the context for you; ctx.Err then reads DeadlineExceeded, not Canceled."
+      ],
+      "misconceptions": [
+        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+      ]
+    },
+    "go-context-do": {
+      "id": "go-context-do",
+      "title": "Solve: a context-aware wait",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-context"
+      ],
+      "files": [
+        "ctxwork.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ctxwork.test.mjs",
+      "checks": [
+        {
+          "id": "ctx-cancel",
+          "label": "A cancelled context stops the wait early",
+          "tests": [
+            "a cancelled context stops the wait early"
+          ],
+          "feedback": "Pass an already-cancelled context and WaitCtx must return a non-nil error at once instead of sleeping the full 50 ms. Select on ctx.Done and return ctx.Err."
+        },
+        {
+          "id": "ctx-intime",
+          "label": "Work that finishes in time returns no error",
+          "tests": [
+            "work that finishes in time returns no error"
+          ],
+          "feedback": "WaitCtx(context.Background(), 5ms) returns nil: nothing cancels the context, so the timer branch wins and you report success."
+        },
+        {
+          "id": "ctx-deadline",
+          "label": "A deadline that passes first becomes an error",
+          "tests": [
+            "a deadline that passes first becomes an error"
+          ],
+          "feedback": "A 1 ms deadline against a 50 ms wait means Done fires first, so the returned error must be context.DeadlineExceeded. Return ctx.Err, not nil.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "The file to change is ctxwork.go, which owns WaitCtx: it needs one blocking choice between the caller giving up and its own timer running out.",
+        "When <-ctx.Done() is ready, return ctx.Err() so the caller can tell cancel from timeout.",
+        "When <-time.After(d) is ready, the wait finished on schedule: return nil.",
+        "A pre-cancelled context makes Done fire immediately, so WaitCtx returns an error without waiting the full 50 ms.",
+        "With a 1 ms deadline against a 50 ms wait, the Done branch wins and ctx.Err() is context.DeadlineExceeded. If the suite cannot run because node is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+      ]
+    },
+    "go-context-review": {
+      "id": "go-context-review",
+      "title": "Review: reading a deadline",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-context"
+      ],
+      "files": [
+        "ctxprop.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ctxprop.test.mjs",
+      "checks": [
+        {
+          "id": "ctx-nodeadline",
+          "label": "A bare context carries no deadline",
+          "tests": [
+            "a bare context carries no deadline"
+          ],
+          "feedback": "DeadlineMs(context.Background()) must return -1. ctx.Deadline returns ok false when no deadline is set, so return the -1 sentinel instead of a zero time.",
+          "edge": true
+        },
+        {
+          "id": "ctx-hasdeadline",
+          "label": "A deadline is readable from anywhere downstream",
+          "tests": [
+            "a deadline is readable from anywhere downstream"
+          ],
+          "feedback": "DeadlineMs on a context built with WithDeadline returns that deadline in unix milliseconds. Read it from ctx.Deadline and convert with UnixMilli."
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Assuming every context has a deadline — context.Background carries none, so ctx.Deadline reports ok as false.",
+        "Reading the deadline time without checking the ok flag first — when there is no deadline the time is the zero value, not a real bound."
+      ]
+    },
+    "go-concur-learn": {
+      "id": "go-concur-learn",
+      "title": "Learn: fanning out to many workers",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-concur"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "One producer and one consumer is the seed, but real pipelines fan out. A worker pool starts several goroutines that all read from one shared jobs channel; Go hands each send to one waiting reader, so no job is handled twice. When every job is queued, the sender closes jobs, each worker drains it and reports a partial result, and a final loop fans those results back in."
+        },
+        {
+          "kind": "example",
+          "body": "Share one jobs channel across workers, then collect:",
+          "code": "jobs := make(chan int)\nresults := make(chan int)\nfor w := 0; w < workers; w++ {\n    go func() {\n        part := 0\n        for v := range jobs { part += v }\n        results <- part\n    }()\n}\nfor _, v := range nums { jobs <- v }\nclose(jobs)   // no more jobs; workers will exit"
+        },
+        {
+          "kind": "prose",
+          "body": "The close is the signal that ends the range: each worker keeps pulling until jobs is closed and drained, then sends its partial and exits. A WaitGroup lets one last goroutine close results only after all workers are done, so the collector loops exactly over the real answers. Sum the parts and you get the same total however the scheduler interleaves the goroutines."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Who owns close(jobs), and why does closing the channel end the workers' range?",
+          "items": [
+            "The sender, after the last send — close ends every range.",
+            "Any worker, as soon as it finds the channel has gone quiet.",
+            "Nobody: each worker stops when the queue happens to run dry.",
+            "The collector, once it has read every partial result back."
+          ],
+          "answer": 0,
+          "explain": "Only the sender knows every value has been sent, so the sender closes jobs; a worker closing it would panic a concurrent send. A closed and drained channel ends the range, which is each worker's signal that no more work is coming."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Many workers ranging one channel fan out: each send reaches a single reader.",
+            "The sender closes, the receiver ranges until close; never close from the reader.",
+            "Fan results back through a second channel, closed only after every worker finishes."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In pool.go, implement SumPool(nums, workers): start workers goroutines reading a shared jobs channel, queue every element, close jobs, and sum the partial results back in to return the total."
+        }
+      ],
+      "hints": [
+        "Start workers goroutines that each range a jobs channel into a local partial, then send that partial on a results channel.",
+        "Send every element on jobs, close it, wait for all workers, close results, then sum results. If the suite cannot run because node is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Closing the jobs channel before every value is sent — the remaining sends then panic on a closed channel and workers stop early.",
+        "Summing into one shared total from every worker without a lock — that is a data race; send partials on a channel instead."
+      ]
+    },
+    "go-concur-ask": {
+      "id": "go-concur-ask",
+      "title": "Reason: why the total never moves",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-concur"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "SumPool runs 3 workers over a jobs channel to add 10 numbers. On one run worker A takes more jobs than B; on the next run B takes more than A. Yet the test always expects 55. Why is the result stable despite the shuffle?"
+        }
+      ],
+      "options": [
+        "Because the numbers are sorted before they are queued, which makes the sum independent of the order the workers finish in.",
+        "Because a channel adds the values itself as they pass through, so the workers cannot affect the total or double-count one.",
+        "Each worker sums what it received and sends that partial on, so every value is counted once however they split.",
+        "Because Go always hands the first job to the first goroutine it started, so the split never really changes between runs."
+      ],
+      "answer": 2,
+      "explanation": "The union of values across all workers is always the full input: every send goes to exactly one waiting reader, and the workers together drain the channel before it closes. Summing each partial reproduces the total, so the split changes only which worker holds which share, not the grand sum. This is why range-and-close is safe: it partitions without double-counting or dropping. The other options invent a fixed order or a magic inside the channel that does not exist.",
+      "hints": [
+        "Adding is associative, so the total does not care how the terms are grouped among workers."
+      ],
+      "misconceptions": [
+        "Closing the jobs channel before every value is sent — the remaining sends then panic on a closed channel and workers stop early.",
+        "Summing into one shared total from every worker without a lock — that is a data race; send partials on a channel instead."
+      ]
+    },
+    "go-concur-do": {
+      "id": "go-concur-do",
+      "title": "Solve: a summing worker pool",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-concur"
+      ],
+      "files": [
+        "pool.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/pool.test.mjs",
+      "checks": [
+        {
+          "id": "pool-sum",
+          "label": "A worker pool sums every element exactly once",
+          "tests": [
+            "a worker pool sums every element exactly once"
+          ],
+          "feedback": "SumPool([1..10], 3) must be 55. Fan the values through a shared jobs channel and add each worker partial; the total is fixed however the work splits."
+        },
+        {
+          "id": "pool-single",
+          "label": "One worker still drains the whole queue",
+          "tests": [
+            "one worker still drains the whole queue"
+          ],
+          "feedback": "SumPool([7], 1) is 7. A single worker ranges until jobs closes and sends one partial of 7; guard workers below 1 so you always start at least one."
+        },
+        {
+          "id": "pool-empty",
+          "label": "An empty job list sums to zero",
+          "tests": [
+            "an empty job list sums to zero"
+          ],
+          "feedback": "SumPool(nil, 4) returns 0. No values are queued, jobs closes empty, each worker sends a 0 partial, and the total of those parts is 0.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "The file to change is pool.go, which owns SumPool: one shared jobs channel fans out to the workers, and their partials fan back in for one total.",
+        "Every worker ranges over jobs, adding each value to its partial, and sends that partial on results once jobs closes.",
+        "Feed the jobs channel from nums, then close(jobs) so the workers finish their ranges.",
+        "Use a WaitGroup to know when all workers have sent, then close(results) from a goroutine that waits.",
+        "Range results and add the partials; an empty nums gives 0, and one worker with one job gives that job. If the suite cannot run because node is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Closing the jobs channel before every value is sent — the remaining sends then panic on a closed channel and workers stop early.",
+        "Summing into one shared total from every worker without a lock — that is a data race; send partials on a channel instead."
+      ]
+    },
+    "go-concur-review": {
+      "id": "go-concur-review",
+      "title": "Review: two producers, one total",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-concur"
+      ],
+      "files": [
+        "pipeline.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/pipeline.test.mjs",
+      "checks": [
+        {
+          "id": "range-two",
+          "label": "Two producers fan into one total",
+          "tests": [
+            "two producers fan into one total"
+          ],
+          "feedback": "RangeSum(3, 3) is 6: each producer sends 0, 1, 2 on the shared channel and the collector adds all six values."
+        },
+        {
+          "id": "range-uneven",
+          "label": "Uneven producers still total correctly",
+          "tests": [
+            "uneven producers still total correctly"
+          ],
+          "feedback": "RangeSum(4, 2) is 7 (0+1+2+3 plus 0+1). One WaitGroup covers both producers, so both must call Done before the channel closes."
+        },
+        {
+          "id": "range-empty",
+          "label": "No values from either producer total zero",
+          "tests": [
+            "no values from either producer total zero"
+          ],
+          "feedback": "RangeSum(0, 0) is 0. Both loops run zero times, the WaitGroup still closes the channel, and the range finishes immediately with nothing added. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Starting the producers but closing the channel before they finish — a producer sending on a closed channel panics, so wait for both, then close.",
+        "Ranging the shared channel forever because nobody closes it — without a close the collector blocks on the receive and never returns."
+      ]
+    },
+    "go-json-learn": {
+      "id": "go-json-learn",
+      "title": "Learn: the tag is the contract",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-json"
+      ],
+      "resources": [
+        {
+          "label": "Go blog: JSON and Go",
+          "url": "https://go.dev/blog/json"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Sooner or later this ledger talks to something that is not Go. The wire format is JSON, and the struct tag is what connects the two worlds: a small string beside each field naming the key it travels under. The Go name never leaves the program; only the tag does."
+        },
+        {
+          "kind": "example",
+          "body": "The same struct, two names for each field:",
+          "code": "type Task struct {\n    Title string `json:\"title\"`\n    Cents int    `json:\"cents\"`\n}\n\nMarshal(Task{Title: \"Milk\", Cents: 199})\n// {\"title\":\"Milk\",\"cents\":199}  — tags, not Go names"
+        },
+        {
+          "kind": "prose",
+          "body": "Three rules cover almost every bug. First, a misspelled tag is silent: `json:\"titel\"` marshals fine and produces the wrong key, and no compiler complains, because a tag is a string the compiler never reads. Second, `omitempty` drops empty values from the output — a missing note stays missing instead of traveling as an empty string. Third, decoding never trusts the bytes: unknown fields are ignored, and malformed input is an error, never a half-filled struct you go on to save."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "A field is tagged `json:\"titel\"` by mistake. What does Marshal write for it?",
+          "items": [
+            "The key titel, letter for letter, and nothing complains.",
+            "The Go field name, because the bad tag failed to validate.",
+            "The field is skipped, since encoding/json rejects bad tags.",
+            "A runtime error naming the misspelled tag, before any bytes."
+          ],
+          "answer": 0,
+          "explain": "A tag is a string the compiler never reads, and Marshal reproduces it letter for letter — so the wire key is titel while the other side looks up title and finds nothing. The typo is silent at build time and shows up as a missing field on the wire."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Tags name the wire keys; Go names stay in the program.",
+            "A tag typo is silent — wrong key, no error, no warning.",
+            "Decode either fills the struct or errors; there is no middle."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open codec.go. Before you change anything, write in a comment the exact bytes Encode(Task{Title: \"Milk\", Cents: 199}) must produce, then implement Encode and Decode so the comment is true."
+        }
+      ],
+      "hints": [
+        "Read a tag as a promise to the other side: whatever is in the quotes is the key, letter for letter.",
+        "encoding/json does the work; your functions decide the contract around it."
+      ],
+      "misconceptions": [
+        "The Go field name travels — only the tag does; without one the capitalized field name is the key, which is how silent renames leak.",
+        "Decoding fills what it can and skips the rest — a syntax error fails the whole decode; partial structs come only from valid JSON missing keys.",
+        "omitempty means optional input — it controls the output only; decoding an absent key leaves the zero value either way."
+      ]
+    },
+    "go-json-ask": {
+      "id": "go-json-ask",
+      "title": "Reason: whose names travel",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-json"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "One field is mistagged. Say exactly what crosses the wire — not what the author meant, what Marshal actually writes."
+        },
+        {
+          "kind": "example",
+          "body": "The tag on Price does not say what the author thinks:",
+          "code": "type Item struct {\n    Name  string `json:\"name\"`\n    Price int    `json:\"price_usd\"`\n}\n\njson.Marshal(Item{Name: \"Tea\", Price: 3})"
+        }
+      ],
+      "options": [
+        "{\"Name\":\"Tea\",\"Price\":3} — Marshal uses the Go names it can see.",
+        "{\"name\":\"Tea\",\"Price\":3} — tags win where present, Go names where absent.",
+        "{\"name\":\"Tea\",\"price_usd\":3} — each key is its tag, letter for letter.",
+        "{\"name\":\"Tea\"} — Price has no valid tag, so it is dropped."
+      ],
+      "answer": 2,
+      "explanation": "Both keys come from their tags, letter for letter: name and price_usd. Marshal never consults the Go names when tags are present, and it never validates them — price_usd could be a typo for price and the output would still say price_usd. That silence is the whole lesson: the compiler checks the struct, nobody checks the string. A field without any tag would fall back to its Go name, but every field here is tagged.",
+      "hints": [
+        "Cover the options that mix Go names with tag names; Marshal never mixes."
+      ],
+      "misconceptions": [
+        "Marshal prefers Go names — a present tag always wins, even a misspelled one.",
+        "A suspicious tag is an error — tags are strings; the compiler has no opinion about their contents."
+      ]
+    },
+    "go-json-do": {
+      "id": "go-json-do",
+      "title": "Solve: Encode and Decode",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-json"
+      ],
+      "files": [
+        "codec.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/codec.test.mjs",
+      "checks": [
+        {
+          "id": "keys",
+          "label": "Encode names the documented keys",
+          "tests": [
+            "encode names the documented keys"
+          ],
+          "feedback": "The output must carry \"title\" and \"cents\" exactly. Marshal the struct with encoding/json and return the bytes as a string."
+        },
+        {
+          "id": "round-trip",
+          "label": "Decode round-trips an encoded task",
+          "tests": [
+            "decode round-trips an encoded task"
+          ],
+          "feedback": "Decode(Encode(t)) must equal t, Note field included. Unmarshal into a Task value and return it with a nil error on success."
+        },
+        {
+          "id": "edge-malformed",
+          "label": "Malformed input is an error, never a half task",
+          "tests": [
+            "malformed input is an error, never a half task"
+          ],
+          "feedback": "On unmarshal failure return the zero Task alongside the error. Never hand back the partial struct the decoder left behind. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open codec.go. encoding/json already knows the shape; your job is the two one-line calls plus the contract around them.",
+        "Encode is Marshal-then-string. The tags on Task do the naming, so there is nothing to format by hand.",
+        "Decode is Unmarshal-into-a-Task. On error, return Task{} and the error together — that pairing is the whole contract.",
+        "Run go test and read the failing test name first: keys, then round trip, then the malformed edge.",
+        "Solution review: Encode returns string(Marshal(t)); Decode unmarshals and returns (Task{}, err) on failure, (t, nil) on success. Run the checks — three tests, three green. If the suite cannot start because `node` is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Building the JSON by hand — hand-built strings drift from the tags; Marshal reads them so you cannot disagree.",
+        "Returning the partial struct with the error — the caller asked for a task or a reason; a half task is a third answer that poisons everything downstream.",
+        "Ignoring the Marshal error — this shape cannot fail, but the blank identifier teaches callers that errors are decoration."
+      ]
+    },
+    "go-json-review": {
+      "id": "go-json-review",
+      "title": "Review: Memo codec",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-json"
+      ],
+      "files": [
+        "memo.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/memo.test.mjs",
+      "checks": [
+        {
+          "id": "round-trip",
+          "label": "A memo round-trips through its keys",
+          "tests": [
+            "a memo round-trips through its keys"
+          ],
+          "feedback": "EncodeMemo then DecodeMemo must hand back the same memo, Pinned flag included."
+        },
+        {
+          "id": "edge-unknown",
+          "label": "Unknown fields are ignored, not errors",
+          "tests": [
+            "unknown fields are ignored, not errors"
+          ],
+          "feedback": "A peer that sends one extra key is newer than you, not broken. Unmarshal already skips unknown fields; keep that behavior and never error on it. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Rejecting unknown fields for safety — strictness here breaks forward compatibility; the safe default ignores what it does not know.",
+        "A bool always travels — false is a real value; only omitempty (absent here) would drop it."
+      ]
+    },
+    "go-http-learn": {
+      "id": "go-http-learn",
+      "title": "Learn: a handler is a function with a contract",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-http"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "HTTP is a conversation with fixed roles. A client sends a request, a server sends a response back; the server never speaks first, and the exchange ends once the reply is delivered. A request is a few lines of text: a method naming the action, the path, headers describing the caller, and an optional body. A response mirrors that shape: a status, headers, and an optional body."
+        },
+        {
+          "kind": "example",
+          "body": "A single exchange is plain enough text to read by eye:",
+          "code": "GET /tasks HTTP/1.1\nHost: api.example.com\n\nHTTP/1.1 200 OK\nContent-Type: application/json\n\n[{\"title\":\"buy milk\"}]"
+        },
+        {
+          "kind": "prose",
+          "body": "Two properties make this shape worth internalising. HTTP is stateless, so each request must carry everything it needs or the server cannot act on it. The client chooses method, path, and body; you choose status, headers, and body. In Go a handler just makes that reply: net/http parses the request into an *http.Request and hands you an http.ResponseWriter, and anything with a ServeHTTP method is an http.Handler."
+        },
+        {
+          "kind": "example",
+          "body": "Register routes on a mux; the mux is itself a Handler you can serve:",
+          "code": "mux := http.NewServeMux()\nmux.HandleFunc(\"/tasks\", func(w http.ResponseWriter, r *http.Request) {\n    switch r.Method {\n    case http.MethodGet:\n        w.Header().Set(\"Content-Type\", \"application/json\")\n        w.WriteHeader(http.StatusOK)\n        json.NewEncoder(w).Encode(tasks)\n    default:\n        w.WriteHeader(http.StatusMethodNotAllowed)\n    }\n})\nhttp.ListenAndServe(\":8080\", mux)"
+        },
+        {
+          "kind": "prose",
+          "body": "Routing is by path, so one handler switches on r.Method to answer GET and POST at one URL. The status is a deliberate choice: 200 success, 201 on create, 400 bad input, 404 unknown path, 405 wrong verb. The first WriteHeader fixes the status, so set headers before writing the body. Middleware reuses the contract: a function that takes a Handler and returns a Handler."
+        },
+        {
+          "kind": "prose",
+          "body": "One body shape differs by nothing you can see. A slice nobody ever appended to is nil, and the encoder writes null where you meant an empty list, so the client reads that as a missing field rather than an empty one."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "tasks is a []Task that was never appended to. What does the encoder write?",
+          "items": [
+            "null — the client reads that as a missing field.",
+            "[] — an empty JSON array, exactly what an empty non-nil slice writes.",
+            "{} — an empty object, because the slice has no elements.",
+            "A compile error: a nil slice cannot be encoded at all."
+          ],
+          "answer": 0,
+          "explain": "A nil slice encodes as null, so the client assigns null to its list and the first map over it throws. An empty non-nil slice encodes as []; make the slice up front, or write [] when its length is zero."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "HTTP is stateless: each request carries its own data; the server keeps nothing.",
+            "Any type with ServeHTTP is an http.Handler; http.HandlerFunc adapts a function.",
+            "ServeMux routes by path; branch on r.Method; it answers 404 for unknown paths.",
+            "Set headers, then WriteHeader, then the body: the first WriteHeader wins.",
+            "A nil slice encodes as null; make it, and empty means []."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In httpapi.go, implement TaskHandler() http.Handler: serve GET /tasks as a non-empty JSON array with the right content type, accept POST /tasks with a non-empty \"title\" as 201 and refuse it as 400 otherwise, and let the mux return 404 for any other path."
+        }
+      ],
+      "hints": [
+        "A handler reads the request, decides the status, then writes headers and a body to the ResponseWriter — in that order.",
+        "Register each path on an http.ServeMux and return the mux from your handler function; the mux writes 404 for paths you never added."
+      ],
+      "misconceptions": [
+        "Thinking the server keeps your session or your last request in memory between calls — HTTP is stateless, so every request arrives as a stranger unless it carries its own identity and data.",
+        "Thinking the status code is implied by the body — it is not; you call WriteHeader, and the first call wins, with 200 assumed if you never call it.",
+        "Writing the body before the headers or status — once bytes are flushed the status and header set are already on the wire and cannot change.",
+        "Encoding an empty list is the same as encoding nothing — a nil slice goes out as null, and the client reads that as a missing field rather than an empty one."
+      ]
+    },
+    "go-http-ask": {
+      "id": "go-http-ask",
+      "title": "Reason: refuse before you store",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-http"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A POST /tasks arrives with a JSON body whose \"title\" is empty. One handler appends the task to its list first and only then notices the blank title and sends 400. Another decodes, checks, and returns 400 before it touches the list. Both reply 400, but what is the real difference between them?"
+        }
+      ],
+      "options": [
+        "There is no difference, because a 400 response tells the client the request was rejected either way it happened.",
+        "The first is faster, because appending before decoding avoids reading and parsing the whole request body.",
+        "The mux rejects an empty title on its own before any handler runs, so neither handler can store it.",
+        "The first already wrote the task, so it shows on every later GET; refusing before the write leaves no trace."
+      ],
+      "answer": 3,
+      "explanation": "A status code describes the response, not the side effects that happened before it. If the handler writes the store first, the invalid task is real and will come back on the next GET even though this call answered 400 — a silent corruption the status hides. Validating before mutating makes rejection atomic: nothing was stored, so nothing needs undoing. This is why \"check, then act\" is the default shape of a write endpoint, and why the router does not do it for you: only your handler knows what a valid task is.",
+      "hints": [
+        "A request that fails validation should leave no trace in the system it hit."
+      ],
+      "misconceptions": [
+        "Believing a 400 after the write is harmless because the response still says \"error\" — the bad record is already persisted and every later read now shows it.",
+        "Thinking the router will reject a malformed body for you — it routes, it does not know your domain rules about what counts as valid."
+      ]
+    },
+    "go-http-do": {
+      "id": "go-http-do",
+      "title": "Solve: the task API",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-http"
+      ],
+      "files": [
+        "httpapi.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/httpapi.test.mjs",
+      "checks": [
+        {
+          "id": "http-list-json",
+          "label": "The tasks list comes back as JSON",
+          "tests": [
+            "the tasks list comes back as JSON"
+          ],
+          "feedback": "GET /tasks must answer 200 with Content-Type application/json and a non-empty JSON array. Set the header, WriteHeader(200), then encode a slice with at least one task."
+        },
+        {
+          "id": "http-post-validation",
+          "label": "A task without a title is refused",
+          "tests": [
+            "a task without a title is refused"
+          ],
+          "feedback": "POST /tasks with a body that has no usable title returns 400 before anything is stored; a body with a non-empty title returns 201. Decode into a map, check the string, and choose the status.",
+          "edge": true
+        },
+        {
+          "id": "http-not-found",
+          "label": "An unknown path returns not found",
+          "tests": [
+            "an unknown path returns not found"
+          ],
+          "feedback": "GET /nope must be 404. Do not write the list for every request; let the ServeMux fall through to its built-in not-found for paths you never registered."
+        }
+      ],
+      "hints": [
+        "The file to change is httpapi.go, which owns TaskHandler: hand back a mux with the tasks route on it, and answer each request with the status it earns.",
+        "On GET /tasks set the Content-Type header to application/json, WriteHeader 200, then json.NewEncoder(w).Encode a non-empty slice of tasks.",
+        "On POST /tasks json-decode the body into a map and read the \"title\" key as a string.",
+        "If decoding fails or the title is empty, WriteHeader 400 and return before storing; otherwise WriteHeader 201.",
+        "You never handle the unknown path yourself: the mux answers 404 for any path you did not register, so /nope just works."
+      ],
+      "misconceptions": [
+        "Encoding the JSON body before calling WriteHeader, which sends 200 implicitly and makes a later 400 impossible to report.",
+        "Returning the raw handler for /tasks only, so the mux has no default and the whole API 404s including the list."
+      ]
+    },
+    "go-http-review": {
+      "id": "go-http-review",
+      "title": "Review: middleware that tags every response",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-http"
+      ],
+      "files": [
+        "middleware.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/middleware.test.mjs",
+      "checks": [
+        {
+          "id": "mw-header",
+          "label": "Wrapped responses carry the server header",
+          "tests": [
+            "wrapped responses carry the server header"
+          ],
+          "feedback": "ServerHeader(next) must return a Handler that sets \"X-Ledger-Server: go\" on the ResponseWriter before delegating, so the header is present on the response."
+        },
+        {
+          "id": "mw-passthrough",
+          "label": "The wrapper still runs the inner handler",
+          "tests": [
+            "the wrapper still runs the inner handler"
+          ],
+          "feedback": "The wrapper must still call next.ServeHTTP(w, r), so the inner handler's body reaches the client. Adding the header while discarding next is a wrapper that answers nothing. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Returning a brand-new handler that never calls next — the wrapper adds its header but drops the response the inner handler was supposed to write.",
+        "Calling next.ServeHTTP before setting the header, so the inner handler flushes the response and the wrapper header never lands on the wire."
+      ]
+    },
+    "go-routes-learn": {
+      "id": "go-routes-learn",
+      "resources": [
+        {
+          "label": "Go Blog: Routing Enhancements for Go 1.22",
+          "url": "https://go.dev/blog/routing-enhancements"
+        }
+      ],
+      "title": "Learn: a routing table, not one handler",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-routes"
+      ],
+      "hints": [
+        "Register method-and-path patterns like “GET /tasks/{id}” on one http.ServeMux and read the id with r.PathValue; the mux itself answers 405 for a verb you never registered.",
+        "Parse ?limit= with r.URL.Query().Get(“limit”) and strconv.Atoi, clamp it to len(tasks), and slice the list before you encode it."
+      ],
+      "misconceptions": [
+        "Believing a missing route and a wrong method are the same failure — 404 means no route matched the path, 405 means the path is a route but not for the verb you used.",
+        "Trusting a query parameter to already be a number — r.URL.Query().Get(“limit”) is a string, and parsing it with strconv.Atoi is what turns a malformed value into a safe default instead of a crash."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "One handler answers one path, but an API has many, so routing decides which code answers which request. Since Go 1.22 an http.ServeMux matches a method and a path pattern together: you register a GET /tasks/{id} pattern and the mux pulls the named id segment into r.PathValue. A path registered for GET but hit with DELETE is refused by the mux with 405 before your code sees it."
+        },
+        {
+          "kind": "example",
+          "body": "Register method-and-path patterns and read what the mux parsed out:",
+          "code": "mux := http.NewServeMux()\nmux.HandleFunc(\"GET /tasks\", listTasks)      // reads ?limit=\nmux.HandleFunc(\"POST /tasks\", createTask)\nmux.HandleFunc(\"GET /tasks/{id}\", func(w http.ResponseWriter, r *http.Request) {\n    id := r.PathValue(\"id\")\n    // DELETE /tasks matches the /tasks path but no method, so the mux answers 405\n})\nhttp.ListenAndServe(\":8080\", mux)"
+        },
+        {
+          "kind": "prose",
+          "body": "Pagination is a server decision: the client asks ?limit=2, the server parses it with strconv.Atoi, clamps it, and slices, so no client dictates how much leaves the machine. A router keeps three failures apart: 404 is no such path, 405 the wrong verb, 400 a malformed request. A rate limiter is middleware: it counts requests let through, and past the budget answers 429 and returns without calling next."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Go 1.22 routes on method-and-path patterns; r.PathValue reads a named segment.",
+            "Parse the query with strconv.Atoi and clamp on the server, not the client.",
+            "A rate limiter is middleware: past the budget it returns 429 before next."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In routes.go, implement Routes() http.Handler: GET /tasks/{id} returns the matching task as JSON or 404 when no task carries that id, GET /tasks honours a ?limit= by returning at most that many tasks, and let the ServeMux answer 405 for a method you never registered."
+        }
+      ]
+    },
+    "go-routes-ask": {
+      "id": "go-routes-ask",
+      "title": "Reason: the status that names the real mistake",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-routes"
+      ],
+      "hints": [
+        "A status code is a message to the caller, so the honest one names the actual problem rather than a nearby-sounding one."
+      ],
+      "misconceptions": [
+        "Thinking 400 and 405 are interchangeable because both mean “the client got it wrong” — they point at different mistakes and a client can only act on the right one.",
+        "Believing an unknown path and a known-path-wrong-method are the same case — one is 404 because no route matched, the other is 405 because a route matched but not for that verb."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A caller sends DELETE to /tasks. On server A, /tasks is registered for GET and POST only. On server B, one catch-all handler answers /tasks for every method and replies 400 whenever it does not recognise the verb. Both reject the DELETE, but they send different numbers, so which response is the more honest, and why?"
+        }
+      ],
+      "options": [
+        "Server A answers 405: /tasks is a known route, just not for DELETE — which names the real mistake, where B’s 400 claims a malformed request.",
+        "Both answer 404, because nowhere in either program is there a written route for DELETE /tasks, so the path itself is unknown.",
+        "Server B is more honest, because a single handler that always answers tells the caller something concrete instead of relying on the mux to decide.",
+        "The number cannot differ, because the status is decided by the body each handler writes, rather than by how the routes were declared."
+      ],
+      "answer": 0,
+      "explanation": "A status code is the server telling the caller what went wrong, so the truthful one names the actual fault. 405 Method Not Allowed says “I know this URL; it simply is not for that method,” and it even carries an Allow header listing the verbs that do work — information a client can act on. 400 Bad Request instead claims the request itself was broken, which is a lie here: the URL and the body were fine, only the verb was not. The Go 1.22 ServeMux gives you the honest answer for free once GET and POST own /tasks; folding the wrong verb into a 400 throws that signal away. Over on the other fork, 404 belongs to a path no route matched at all — a genuinely unknown URL, not a known one used badly."
+    },
+    "go-routes-do": {
+      "id": "go-routes-do",
+      "title": "Solve: the routing table",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-routes"
+      ],
+      "hints": [
+        "The file to change is routes.go, which owns Routes: one mux with a pattern per method and path, and the suite drives it with real requests.",
+        "In the /tasks/{id} handler read the segment with r.PathValue(“id”), find the task whose id matches and encode it as JSON, or WriteHeader 404 if none does.",
+        "For the list, read the query with r.URL.Query().Get(“limit”) and parse it with strconv.Atoi, treating a missing or unparsable value as “no limit”.",
+        "Clamp the limit so you never slice past len(tasks), then json-encode that trimmed slice with Content-Type application/json.",
+        "Do not handle DELETE yourself: once GET and POST own /tasks, the ServeMux returns 405 for any other method on that path on its own. If the suite cannot run because `node` is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Writing a single catch-all handler for /tasks and switching on the method, so the mux never learns the other verbs and cannot answer 405 for you.",
+        "Slicing tasks[:limit] straight from the parsed number, so a caller asking for ?limit=9999 or a negative value runs off the end of the slice."
+      ],
+      "files": [
+        "routes.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/routes.test.mjs",
+      "checks": [
+        {
+          "id": "routes-by-id",
+          "label": "A task is fetched by its id",
+          "tests": [
+            "a task is fetched by its id"
+          ],
+          "feedback": "GET /tasks/{id} must read r.PathValue(“id”), return the one task with that id as JSON with status 200, and answer 404 when no task carries that id."
+        },
+        {
+          "id": "routes-pagination",
+          "label": "A limit trims how many tasks come back",
+          "tests": [
+            "a limit trims how many tasks come back"
+          ],
+          "feedback": "GET /tasks?limit=2 must parse the query number and return at most that many tasks. Parse with strconv.Atoi, clamp to len(tasks), and slice the list before encoding it.",
+          "edge": true
+        },
+        {
+          "id": "routes-method",
+          "label": "A wrong method is refused",
+          "tests": [
+            "a wrong method is refused"
+          ],
+          "feedback": "A DELETE /tasks must come back 405. Do not write a catch-all: register GET and POST on /tasks and let the ServeMux refuse any other method on a path it already knows."
+        }
+      ]
+    },
+    "go-routes-review": {
+      "id": "go-routes-review",
+      "title": "Review: a rate limiter that refuses before running",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-routes"
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Calling next.ServeHTTP first and only then checking the budget, so the request the limiter was meant to refuse has already run the handler it was protecting.",
+        "Resetting the count on every request instead of letting it accumulate, so the limiter never actually refuses anything."
+      ],
+      "files": [
+        "ratelimit.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ratelimit.test.mjs",
+      "checks": [
+        {
+          "id": "rl-allow",
+          "label": "The limiter lets a small burst through",
+          "tests": [
+            "the limiter lets a small burst through"
+          ],
+          "feedback": "RateLimit(next) must pass the first three requests to next so each gets the inner handler’s 200. Count what you have allowed and delegate while the budget is left."
+        },
+        {
+          "id": "rl-block",
+          "label": "The limiter blocks once the burst is spent",
+          "tests": [
+            "the limiter blocks once the burst is spent"
+          ],
+          "feedback": "Once more than three requests have arrived, answer 429 Too Many Requests and return without calling next, so refused work never reaches the wrapped handler. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "edge": true
+        }
+      ]
+    },
+    "go-auth-learn": {
+      "id": "go-auth-learn",
+      "title": "Learn: hash once, sign everything",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-auth"
+      ],
+      "resources": [
+        {
+          "label": "x/crypto/bcrypt package docs",
+          "url": "https://pkg.go.dev/golang.org/x/crypto/bcrypt"
+        },
+        {
+          "label": "crypto/hmac package docs",
+          "url": "https://pkg.go.dev/crypto/hmac"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Every API the ledger serves so far answers anyone who asks — there is no who, only what. Authentication adds the who in two halves that must never be confused: passwords are hashed, never stored, and tokens are signed, never encrypted. A hash proves a password was known without keeping anything an attacker can reuse; a signature proves a token was issued by someone holding the secret without hiding its contents from anyone reading it."
+        },
+        {
+          "kind": "example",
+          "body": "The two halves, side by side:",
+          "code": "h, _ := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)\nbcrypt.CompareHashAndPassword([]byte(h), []byte(pw)) // nil: it matched\n// token: base64(header) + \".\" + base64(claims) + \".\" + base64(hmac(secret, firstTwo))"
+        },
+        {
+          "kind": "prose",
+          "body": "bcrypt's cost is the work factor: each step up doubles the hashing time, slowing attackers and logins alike, and the salt it generates per password means two identical passwords hash differently — so == on hashes is always false, even for the right password, and comparison goes through CompareHashAndPassword. The token's three segments are readable by design: header names the algorithm, claims carry the subject and the expiry, and the HMAC-SHA256 signature over the first two is the only part that must verify. Expiry is a claim, not enforcement: a stateless token cannot be un-issued without a revocation list somewhere checking it, so a short lifetime is the honest substitute. The module vendors golang.org/x/crypto v0.33.0 (go 1.22 floor, like the rest of the ledger) so every build below stays offline; the JWT shape is hand-rolled over stdlib hmac and base64, never a JWT library — the point is understanding the three segments, not the API."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Store hashes, never passwords; compare with CompareHashAndPassword, never ==.",
+            "Sign tokens with HMAC-SHA256 over header and claims; verify the signature before reading anything.",
+            "Expiry is a claim checked on every verify; revocation needs a list, so keep lifetimes short."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open auth.go. Before you change anything, write in a comment what Hash must return for a password and what it must never return, and what Verify must check before it reads the subject. Then implement it — deleting the underscore on the bcrypt import is the first edit."
+        }
+      ],
+      "hints": [
+        "GenerateFromPassword salts for you; the returned bytes are the whole stored secret.",
+        "A token is two readable segments plus a signature — build the signature last, check it first."
+      ],
+      "misconceptions": [
+        "Encrypting the token for secrecy — claims are readable by design; the signature is the security, not hiding.",
+        "Comparing hashes with == — the random salt makes == always false; comparison is a function call, not an operator.",
+        "Trusting the admin claim because it is signed — the signature proves who issued it, not that the issuer was careful."
+      ]
+    },
+    "go-auth-ask": {
+      "id": "go-auth-ask",
+      "title": "Reason: whose trust is misplaced",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-auth"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Four login handlers. Each one trusts something — exactly one of them trusts the wrong thing. Find it."
+        },
+        {
+          "kind": "example",
+          "body": "Read each handler as if it guards the ledger tonight:",
+          "code": "if req.Password == user.Password { login(req.User) } // A: stored plaintext, compared directly\nif bcryptHash(req.Password) == user.Hash { login(req.User) } // B: re-hashed, compared with ==\nsub, _ := Verify(tok, secret); login(sub) // C: error discarded, expiry unchecked\nif claims[\"admin\"] == true { grant(req.User) } // D: role taken from the claims"
+        }
+      ],
+      "options": [
+        "A — plaintext storage means the database is the password list.",
+        "B — the fresh salt makes == false for the right password, so nobody can log in.",
+        "C — the discarded error skips the expiry check, so old tokens live forever.",
+        "D — the admin claim is client-readable, so anyone can grant themselves the role."
+      ],
+      "answer": 2,
+      "explanation": "C discards the error Verify exists to return, and with it the expiry verdict: tampered and ancient tokens log in alike, because nothing reads the refusal. A is worse practice but visibly wrong — plaintext in the open. B is broken but fail-closed: nobody logs in, and the outage announces itself. D misreads the threat: claims are readable, not writable — the signature guards writing, so the role stands unless the secret leaks, which is a different failure. The lesson is the shape of silent failures: C is the only handler that looks working while authenticating nobody correctly, and error-discarding is how every expiry, revocation, and tamper check dies.",
+      "hints": [
+        "Ask of each handler: when it is wrong, does it fail loudly or log the attacker in quietly?"
+      ],
+      "misconceptions": [
+        "Readable claims mean writable claims — base64 is not encryption, but the signature still guards forgery.",
+        "A broken login is the worst outcome — B locks everyone out loudly; C lets the wrong someone in silently."
+      ]
+    },
+    "go-auth-do": {
+      "id": "go-auth-do",
+      "title": "Solve: Hash and Issue",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-auth"
+      ],
+      "files": [
+        "auth.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/auth.test.mjs",
+      "checks": [
+        {
+          "id": "hash-roundtrip",
+          "label": "A hash checks against the password it was made from",
+          "tests": [
+            "a hash checks against the password it was made from"
+          ],
+          "feedback": "Generate with bcrypt.GenerateFromPassword at DefaultCost and compare with CompareHashAndPassword. The stored value must be opaque: non-empty and never the password itself."
+        },
+        {
+          "id": "hash-rejects",
+          "label": "A hash rejects a different password",
+          "tests": [
+            "a hash rejects a different password"
+          ],
+          "feedback": "CompareHashAndPassword returns nil only for the matching password — return that verdict as the bool, and never reach for == on two hashes."
+        },
+        {
+          "id": "issue-verify",
+          "label": "A fresh token verifies back to its subject",
+          "tests": [
+            "a fresh token verifies back to its subject"
+          ],
+          "feedback": "Mint three segments — header naming HS256, claims with sub and exp, HMAC-SHA256 over the first two — and verify the signature before reading the subject back out."
+        },
+        {
+          "id": "edge-expired",
+          "label": "An expired token verifies as expired, never as valid",
+          "tests": [
+            "an expired token verifies as expired, never as valid"
+          ],
+          "feedback": "Compare the exp claim against now on every verify: past means ErrTokenExpired with an empty subject, never the subject with a warning. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        },
+        {
+          "id": "edge-tampered",
+          "label": "A tampered signature fails closed",
+          "tests": [
+            "a tampered signature fails closed"
+          ],
+          "feedback": "Recompute the HMAC over the presented first two segments and compare in constant time: any mismatch is ErrTokenInvalid with an empty subject. A token that fails verification never yields anything. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open auth.go. Hash is one GenerateFromPassword call; the question is only what cost honesty requires.",
+        "bcrypt.DefaultCost is the documented default — it is slow enough to hurt attackers, fast enough for tests.",
+        "Issue builds head.body.signature with RawURLEncoding; the header is {\"alg\":\"HS256\",\"typ\":\"JWT\"}.",
+        "Verify splits on dots, re-checks the HMAC first, then reads exp — a token that fails either check returns an empty subject.",
+        "Solution review: Hash generates salted and opaque, Check delegates to CompareHashAndPassword, Issue signs sub plus exp, Verify checks signature then expiry and refuses everything else closed. Run the checks — five tests, five green. If the suite cannot start because node is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Hashing twice to compare — the fresh salt guarantees a different hash; comparison is CompareHashAndPassword, not equality.",
+        "Reading claims before verifying — the signature is the only reason to believe a single byte; unverified claims are attacker input.",
+        "Returning the subject alongside the expiry error — a refusal with a subject is an authentication that failed open."
+      ]
+    },
+    "go-auth-review": {
+      "id": "go-auth-review",
+      "title": "Review: RequireAuth",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-auth"
+      ],
+      "files": [
+        "gate.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/gate.test.mjs",
+      "checks": [
+        {
+          "id": "carries-subject",
+          "label": "A valid token reaches the handler carrying its subject",
+          "tests": [
+            "a valid token reaches the handler carrying its subject"
+          ],
+          "feedback": "Verify the Bearer token, then carry the subject on the request context into next — Subject reads it back, and the handler must see exactly the issued name."
+        },
+        {
+          "id": "edge-refuses",
+          "label": "A missing or bad token is refused before the handler",
+          "tests": [
+            "a missing or bad token is refused before the handler"
+          ],
+          "feedback": "No header, a malformed token, and an expired one all earn 401, and the handler never runs for any of them — refusal happens before next, not inside it. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Checking auth inside the handler — the middleware exists so no route has to remember; remembered checks are forgotten.",
+        "Passing the subject in a response header — the subject travels server-side on the context, never where the client can rewrite it."
+      ]
+    },
+    "go-tests-learn": {
+      "id": "go-tests-learn",
+      "resources": [
+        {
+          "label": "Go Wiki: TableDrivenTests",
+          "url": "https://go.dev/wiki/TableDrivenTests"
+        }
+      ],
+      "title": "Learn: tests as data, not as special cases",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "testing-quality"
+      ],
+      "hints": [
+        "A table-driven test keeps its cases as a slice of {input, want} structs and runs them in one loop, so widening coverage means adding a row, not copy-pasting a function.",
+        "Wrap each row in t.Run with a name built from its input, and test an http.Handler through httptest.NewServer with t.Cleanup(srv.Close) rather than faking the transport."
+      ],
+      "misconceptions": [
+        "Believing a test that passes proves the code is correct — a suite only shows the cases it actually asserts, so a single green call can hide every boundary you never checked.",
+        "Treating a high coverage percentage as quality — coverage counts statements executed, not outcomes verified, and a test that runs the code without comparing its result scores full marks and guarantees nothing."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A Go test is an ordinary function the tool runs for you, named Test… and handed a *testing.T to report failures against. The idiom that keeps a suite honest is the table-driven test: instead of one function per case, you declare a slice of input-and-want cases and one loop runs them all. Adding a boundary case is adding a row, so coverage grows while the file stays flat."
+        },
+        {
+          "kind": "example",
+          "body": "One table, one loop, each row a named subtest:",
+          "code": "func TestGradeBands(t *testing.T) {\n    cases := []struct {\n        score int\n        want  string\n    }{{95, \"A\"}, {65, \"D\"}, {30, \"F\"}}\n    for _, c := range cases {\n        t.Run(fmt.Sprintf(\"score %d\", c.score), func(t *testing.T) {\n            got, _ := ledger.Grade(c.score)\n            if got != c.want {\n                t.Errorf(\"Grade(%d) = %q, want %q\", c.score, got, c.want)\n            }\n        })\n    }\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "Wrapping each row in t.Run makes it a named subtest, so a failure shows score_95 and you can re-run it alone. For HTTP code you do not fake the transport: httptest.NewServer runs the real handler on a loopback port, and t.Cleanup(srv.Close) frees the listener. Coverage counts statements a suite touched, so read it as a diagnostic: full coverage proves nothing if no assertion checked the result."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A table-driven test stores cases as a slice of data plus one loop.",
+            "Rows in t.Run become named subtests: failures point at the exact case.",
+            "httptest.NewServer plus t.Cleanup drives a real http.Handler over loopback.",
+            "Coverage measures what ran, not what you asserted; running without checking is comfort."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In grade.go, implement Grade(score int) (string, bool) so the hidden table-driven suite passes: 90-100 A, 80-89 B, 70-79 C, 60-69 D, 0-59 F, and any score below 0 or above 100 returned with ok == false."
+        }
+      ]
+    },
+    "go-tests-ask": {
+      "id": "go-tests-ask",
+      "title": "Reason: two green suites, one real difference",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "testing-quality"
+      ],
+      "hints": [
+        "A suite is judged by the wrong code it catches, not by whether it is green against the right code."
+      ],
+      "misconceptions": [
+        "Thinking two suites are equivalent because both pass a correct implementation — what separates them is the broken implementations each one turns red.",
+        "Assuming more assertions always means a slower or worse test; a table that pins every boundary is cheap to write and hard to fool."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Two developers test the same Grade function. One writes a single TestGrade that calls Grade(95), checks it equals “A”, and stops. The other writes one table-driven TestGrade with rows for 95, 89, 60, 59, -1, and 101, each run under t.Run. Both suites are green once Grade is correct; what can you actually say about the difference between them?"
+        }
+      ],
+      "options": [
+        "The table is worse, because t.Run subtests bury which row failed inside the parent test name, so a red line names the wrong thing.",
+        "The table pins the boundaries and the out-of-range guard, so it fails a Grade that special-cases 95; the single case passes it.",
+        "They are equivalent, because both call Grade and both pass once Grade is correct, so neither suite is more trustworthy than the other.",
+        "The single case is better, because fewer assertions mean a failure is easier for a human to read at a glance when CI goes red."
+      ],
+      "answer": 1,
+      "explanation": "A suite is only as good as the wrong code it catches. Both are green against a correct Grade, but the moment the implementation slips — 89 graded A, or -1 quietly mapped to F — only the table has rows asserting those outcomes, so only it turns red. The single-case test executed one path and compared one value; it would pass a function that returns “A” for everything. Subtests make the gap concrete: each row prints its own name and re-runs alone, so a failure tells you exactly which boundary broke rather than only that TestGrade did. And coverage would score both suites identically on a correct Grade, which is precisely why the percentage is a hint and never the verdict."
+    },
+    "go-tests-do": {
+      "id": "go-tests-do",
+      "title": "Solve: a grader the whole table trusts",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "testing-quality"
+      ],
+      "hints": [
+        "grade.go owns the one function under test, and its doc comment already spells out the bands and what an out-of-range score means. Guard the domain before you choose a letter, so a refused score never gets guessed into a band.",
+        "Return the ok bool alongside the letter rather than encoding “no grade” as an empty string with ok == true, so the bool is what the suite checks on its own.",
+        "Walk the bands top to bottom and let the first range score falls in win, so 90 is an A and 89 is a B with no special cases bolted on.",
+        "A boundary test checks both edges of every band, so trace 90 and 89, 80 and 79, 70 and 69, 60 and 59 across your logic before you trust a single middle value.",
+        "Returning early for the out-of-range case is what lets the guard be tested separately from the bands; keep the two concerns in different lines. If the suite cannot run because `node` is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Mapping an out-of-range score to the nearest band (101 becomes A) instead of refusing it, so the guard check and the band check disagree about what Grade promises.",
+        "Encoding “no grade” as an empty string with ok == true, so a caller that trusts the bool never learns the score was invalid."
+      ],
+      "files": [
+        "grade.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/grade.test.mjs",
+      "checks": [
+        {
+          "id": "tests-bands",
+          "label": "Each score band maps to its letter",
+          "tests": [
+            "each score band maps to its letter"
+          ],
+          "feedback": "Grade(95) is “A” and Grade(65) is “D” … map every band the way the table expects, and return ok == true for any score inside 0-100."
+        },
+        {
+          "id": "tests-boundaries",
+          "label": "The boundaries between bands are exact",
+          "tests": [
+            "the boundaries between bands are exact"
+          ],
+          "feedback": "The row sitting on the seam decides the band: 90 is A but 89 is B, 60 is D but 59 is F. Choose the comparisons so every boundary lands in exactly one band.",
+          "edge": true
+        },
+        {
+          "id": "tests-range",
+          "label": "A score outside zero to one hundred is rejected",
+          "tests": [
+            "a score outside zero to one hundred is rejected"
+          ],
+          "feedback": "For -1 or 101 return ok == false instead of a letter, so the guard is testable on its own apart from the bands."
+        }
+      ]
+    },
+    "go-tests-review": {
+      "id": "go-tests-review",
+      "title": "Review: a handler httptest can drive",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "testing-quality"
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Checking only the status code in a test and never the body, so a handler that answers 200 with the wrong payload sails through a suite that should have caught it.",
+        "Forgetting t.Cleanup(srv.Close) on an httptest server, so a loopback listener stays open across every subtest instead of being released when the test ends."
+      ],
+      "files": [
+        "probe.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/probe.test.mjs",
+      "checks": [
+        {
+          "id": "tests-ping",
+          "label": "Ping answers pong at status 200",
+          "tests": [
+            "ping answers pong at status 200"
+          ],
+          "feedback": "GET /ping must return status 200 and the body “pong”. The httptest suite checks both, so a correct status carrying the wrong payload still fails."
+        },
+        {
+          "id": "tests-reject",
+          "label": "A failing query is rejected with 400",
+          "tests": [
+            "a failing query is rejected with 400"
+          ],
+          "feedback": "When the query asks the handler to fail, answer 400 Bad Request and write no body — refuse the request instead of pretending it succeeded. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "edge": true
+        }
+      ]
+    },
+    "go-perf-learn": {
+      "id": "go-perf-learn",
+      "title": "Learn: correctness is not the whole cost",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "algo-complexity"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A junior and a senior can ship the same correct function, yet one has planted a landmine: it re-copied the whole result on every element, so it passes with ten rows and falls over with a million. The gap is cost, how much work a line does as the input grows. Go lets you see that cost, not guess it: go test -bench, testing.AllocsPerRun, and pprof."
+        },
+        {
+          "kind": "example",
+          "body": "The same join at three different costs:",
+          "code": "// O(n^2): each += copies everything gathered so far\ns := \"\"\nfor _, p := range parts {\n    s += p + \",\"\n}\n\n// O(n): one buffer, each byte written once\nvar b strings.Builder\nfor _, p := range parts {\n    b.WriteString(p)\n    b.WriteString(\",\")\n}\n\n// O(n), and it is a single call that handles the edges too\ns := strings.Join(parts, \",\")"
+        },
+        {
+          "kind": "prose",
+          "body": "Two habits turn junior loops into one senior line. First, reach for the standard library: strings.Join and strings.Builder already handle the separator and empty-input edges and build in one pass. Second, size what you know: make([]T, n) reserves one array to fill, while append into a nil slice copies the whole thing as it doubles. Both rest on measuring, so run the benchmark and let the number decide."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Correct hides O(n^2): string += in a loop recopies the result each turn.",
+            "Know the size? make([]T, n) allocates once instead of copying as it grows.",
+            "The standard library is a senior one-liner: strings.Join builds in one pass.",
+            "Measure, not guess: benchmarks, AllocsPerRun, and pprof turn a hunch into a number."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In join.go, make JoinWords return the parts glued with sep between them (no leading or trailing separator) so it passes the correctness table AND the allocation budget — build the result in a single pass instead of copying on every element."
+        }
+      ],
+      "hints": [
+        "A string built with += inside a loop copies the whole result every turn, so it does O(n^2) work; strings.Builder writes into one growing buffer and strings.Join is the one-line version that already handles it.",
+        "When you know the size of the answer up front, make([]T, n) allocates one backing array instead of letting append copy the slice several times as it doubles."
+      ],
+      "misconceptions": [
+        "Assuming a line must be fast because it is short — a one-call strings.Join beats a hand-rolled loop because of the work it avoids under the hood, not because it has fewer characters.",
+        "Treating performance as something you only look at after it breaks, when the O(n^2) copy was written on day one and the input was simply too small to reveal it yet."
+      ]
+    },
+    "go-perf-ask": {
+      "id": "go-perf-ask",
+      "title": "Reason: same answer, very different work",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "algo-complexity"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Two functions return the squares of 0 up to n-1 as a slice of length n. A starts with \"var out []int\" and does \"out = append(out, i*i)\" each round. B starts with \"out := make([]int, n)\" and fills \"out[i] = i*i\" by index. Both are correct for every n, so which one does less work, and why does the gap matter at n equal to a million?"
+        }
+      ],
+      "options": [
+        "They are the same, because both finish with a slice of exactly n elements, and the length of the result is the only cost.",
+        "B does, because indexing out[i] is always faster than append, no matter how the slice was sized or whether it had to grow.",
+        "B does: it reserves one array up front, while A allocates and re-copies the whole slice each time it hits capacity.",
+        "A does, because append is the idiomatic way to build a slice and the compiler turns the loop into a single allocation for you."
+      ],
+      "answer": 2,
+      "explanation": "The result is the same; the work is not. A begins with a nil slice and appends: each time it hits capacity, Go allocates a larger array and copies everything it had already stored, and it repeats that growth several times on the way to a million, so all those copies and allocations ride along behind the loop. B already knows the answer will be n long, so make([]int, n) reserves the array once and the loop simply writes into it — no growth, no re-copying. Option four points at the wrong cause: indexing is not magic, the saving comes from sizing up front, not from out[i] over append. That is the senior instinct in miniature — you attend to what each line costs even when every line is correct, because a version that is only correct, and slow at scale, is still a version you will have to rewrite.",
+      "hints": [
+        "Correctness is the same for both; the difference is how many allocations and copies each one makes along the way to that answer."
+      ],
+      "misconceptions": [
+        "Believing append into a nil slice is free because it reads cleanly, when every growth step copies the elements you already stored.",
+        "Thinking that because two functions return the identical value their cost must be identical too — the length of the result is not the only thing you pay for."
+      ]
+    },
+    "go-perf-do": {
+      "id": "go-perf-do",
+      "title": "Solve: a join that costs what it should",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "algo-complexity"
+      ],
+      "files": [
+        "join.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/join.test.mjs",
+      "checks": [
+        {
+          "id": "perf-join-correct",
+          "label": "The words join with the separator",
+          "tests": [
+            "the words join with the separator"
+          ],
+          "feedback": "JoinWords must glue the parts with sep *between* them and nothing at the ends: [a b c] with \"-\" is \"a-b-c\", an empty slice is \"\", and a lone element is itself. strings.Join already gets all of these right."
+        },
+        {
+          "id": "perf-join-economy",
+          "label": "A large join builds without copying per element",
+          "tests": [
+            "a large join builds without copying per element"
+          ],
+          "feedback": "Joining a thousand parts must not allocate a thousand times. A single pass with strings.Join or a strings.Builder builds the result in one buffer; out = out + ... on every element copies the whole thing each turn and blows the allocation budget.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "join.go owns JoinWords, and the body it ships with already joins the words — it is the obvious version, not the cheap one. Change that file only.",
+        "If you build it yourself, a strings.Builder writes into one growing buffer, so you copy each byte once instead of copying the whole result every time you add a piece.",
+        "Cost the line you were given before replacing it: every round builds a brand-new string and throws the old one away, so a thousand parts mean thousands of copies — that is what the allocation budget is measuring.",
+        "The separator belongs between items, not after them: three parts use two separators, and that off-by-one is exactly what a hand-rolled trailing-sep loop gets wrong.",
+        "When you truly must loop, decide the size first and write into it, so a single allocation covers the whole result instead of one per element."
+      ],
+      "misconceptions": [
+        "Believing the two implementations are equivalent because both return the right string — a correct result built with a copy per element is O(n^2) work and quietly falls over as the input grows.",
+        "Reaching for out += item to build a string in a loop, unaware that Go strings are immutable so each += allocates and copies everything gathered so far."
+      ]
+    },
+    "go-perf-review": {
+      "id": "go-perf-review",
+      "title": "Review: size what you already know",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "algo-complexity"
+      ],
+      "files": [
+        "squares.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/squares.test.mjs",
+      "checks": [
+        {
+          "id": "perf-squares-order",
+          "label": "The squares are the first n in order",
+          "tests": [
+            "the squares are the first n in order"
+          ],
+          "feedback": "Squares(n) must return exactly n elements, the squares of 0 through n-1, in order. Squares(4) is [0 1 4 9], not [0 1 4 9 16] — the loop bound decides whether you overshoot."
+        },
+        {
+          "id": "perf-squares-alloc",
+          "label": "The slice is allocated once",
+          "tests": [
+            "the slice is allocated once"
+          ],
+          "feedback": "You know the length before the loop starts, so make([]int, n) reserves it in one allocation and you fill it by index. Appending into an empty slice forces Go to grow and re-copy the backing array many times over a large n. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Only reaching for make with a size after a benchmark complains, when knowing the length up front is a choice you make while you type the allocation.",
+        "Treating make([]int, n) and make([]int, 0, n) as interchangeable: the first gives you n elements to assign by index, the second an empty slice you append into with room already reserved."
+      ]
+    },
+    "go-store-learn": {
+      "id": "go-store-learn",
+      "title": "Learn: the model is what the store refuses",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "data-modeling"
+      ],
+      "hints": [
+        "Every rule written in a handler protects only the requests that pass through that handler. The store is the seam every writer shares, so the store is where the ledger's rules live.",
+        "An error is a value in Go, and the useful part of that value is the name of the thing that was wrong. \"invalid input\" tells a caller nothing; \"entry is missing account\" tells them what to fix."
+      ],
+      "misconceptions": [
+        "Validating in the handler is enough, because that is where requests arrive — a migration, a seed script and an import job do not arrive through the handler, and they write through the same store.",
+        "A refusal should skip the bad record and keep going, because one bad line should not lose the good ones — a silently skipped line is a discrepancy somebody reconciles by hand months later, and the caller was never told.",
+        "Storing first and checking later is simpler — a check that happens after the append has already let the invalid state into the data every reader then has to defend against."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A struct in Go states the shape of a record, not which records are allowed. Entry says every entry has an id and an account, yet nothing stops you appending Entry{}, an entry that names nothing. The model that matters is the set of states the store will hold, and that set becomes real only at the seam every writer passes through."
+        },
+        {
+          "kind": "example",
+          "body": "The seam, with the rule and its report in one place:",
+          "code": "func (s *Store) Add(e Entry) error {\n    if e.ID == \"\" {\n        return fmt.Errorf(\"entry is missing id\")\n    }\n    if e.Account == \"\" {\n        return fmt.Errorf(\"entry is missing account\")\n    }\n    for _, old := range s.entries {\n        if old.ID == e.ID {\n            return fmt.Errorf(\"duplicate id %q\", e.ID)\n        }\n    }\n    s.entries = append(s.entries, e)\n    return nil\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "Three disciplines show in that shape, each costing something a shortcut avoids. The rules run before the append, so a refused entry never becomes state a reader must defend. The error names the field, since a caller cannot act on invalid alone. And the refusal is total: no partial append, so the store either holds the entry or has never heard of it."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "The model is the states the store holds, enforced at one shared seam.",
+            "A refusal is an error naming the field; the caller knows the fix.",
+            "Validation runs before the write; a refused record leaves the store untouched."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In store.go, make Add refuse what the ledger cannot hold: an entry with no id, an entry with no account, and a second entry under an id that is already stored. Each refusal is an error naming what was wrong, and none of them may change the store. Run node --test --test-reporter=tap test/store.test.mjs to see the three demands fail on the starter."
+        }
+      ],
+      "resources": [
+        {
+          "label": "Go docs: errors and the errors.Is predicate",
+          "url": "https://pkg.go.dev/errors"
+        }
+      ]
+    },
+    "go-store-ask": {
+      "id": "go-store-ask",
+      "title": "Reason: where the rule lives",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "data-modeling"
+      ],
+      "hints": [
+        "List every path that writes to the store — the HTTP handler, yes, but what else?"
+      ],
+      "misconceptions": [
+        "Application-level checks make a database constraint redundant 2014 the constraint is the last line of defence for the writers that do not share your application.",
+        "A nicer error message is worth duplicating the rule in two places — the message belongs to the seam; the handler may translate it, never re-implement it."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A teammate validates an entry in the HTTP handler before calling Store.Add, and argues the store should stay simple. The same store is also written by a nightly migration that backfills ids from a spreadsheet, and by a seed script a new developer runs on their first day. Where does the rule belong so that every path obeys it?"
+        }
+      ],
+      "options": [
+        "In both places, duplicated, so the handler can reject the request early and the store itself still stays honest at every single write.",
+        "In the database schema only, because a CHECK constraint makes an application-level check redundant and the schema is one place.",
+        "In the handler, and the other writers are a documentation problem rather than a code problem worth fixing here.",
+        "In the store's Add, because it is the one seam every writer shares; a rule in the handler guards only requests that pass through it."
+      ],
+      "answer": 3,
+      "explanation": "The handler is one writer among several; a migration and a seed script do not arrive through it, and a rule living there protects exactly the traffic that already follows the happy path. Duplicating the rule in both places is the tempting answer because the early rejection is genuinely nicer — but two copies of a rule is two places to update and a third writer still escapes both. The database-schema-only answer is real defence and worth having, but it is the last line, not the first: it fires after the write reaches the database, its errors are harder to act on, and the suite this phase runs cannot see it. The store is where the contract is stated once, where every writer meets it, and where the tests can judge it."
+    },
+    "go-store-do": {
+      "id": "go-store-do",
+      "title": "Solve: refuse what the ledger cannot hold",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "data-modeling"
+      ],
+      "hints": [
+        "store.go is the file you own, and Add on its Store is where every writer is checked. Start with the refusals before the append: every check that returns early is a state the store never reaches.",
+        "The two required fields are id and account, and the caller has only the error text to learn which one was wrong — so the refusal has to name that field, in the same shape whichever field it is.",
+        "The duplicate check is a pass over s.entries comparing IDs — the same loop Get already uses, asking the other question.",
+        "Every refusal has to be decided before anything is written, so a refused entry changes nothing. Ask which single action in Add must still not have happened when you refuse.",
+        "A complete answer refuses first and writes last: the missing id, the missing account and the duplicate id each return their own named error, and nothing has been appended by the time any of them fires. Read your Add back once and confirm that the only append in the function is the one that stored a valid entry."
+      ],
+      "misconceptions": [
+        "Returning nil after not storing the entry keeps the caller calm — nil means \"stored\", so the caller reports success for a line that will never exist.",
+        "Checking for the duplicate after appending is the same ordering, since the store ends in the same place — it ends with the duplicate inside it, which is the one place it must not be.",
+        "One error value for any refusal is enough for the caller to act on — the caller has to know which of the three things was wrong to fix any of them."
+      ],
+      "files": [
+        "store.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/store.test.mjs",
+      "checks": [
+        {
+          "id": "store-refuses-field",
+          "label": "An entry missing a required field is refused by name",
+          "tests": [
+            "an entry missing a required field is refused by name"
+          ],
+          "feedback": "Add returns nil for everything, so the store holds entries that name nothing. Guard the two required fields before the append and return an error whose message contains the field's name (\"account\" or \"id\") — the name is what lets the caller fix it, and it is all the log downstream ever needs."
+        },
+        {
+          "id": "store-refuses-duplicate",
+          "label": "A duplicate id is refused rather than stored twice",
+          "tests": [
+            "a duplicate id is refused rather than stored twice"
+          ],
+          "feedback": "The same id can be added twice, so the ledger later disagrees with itself about which entry won. Pass over s.entries comparing IDs before appending; refuse with an error naming the id, and leave the stored entry untouched."
+        },
+        {
+          "id": "store-refusal-atomic",
+          "label": "A refused entry leaves the store exactly as it was",
+          "tests": [
+            "a refused entry leaves the store exactly as it was"
+          ],
+          "feedback": "Something is being stored before the refusal happens. Every guard must return before the append line — the append is the only statement that may change the store, and a refusal that runs it half-stores an entry no reader asked for.",
+          "edge": true
+        }
+      ]
+    },
+    "go-store-review": {
+      "id": "go-store-review",
+      "title": "Review: a report is a model too",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "data-modeling"
+      ],
+      "hints": [],
+      "misconceptions": [
+        "out[account] = cents totals an account — assignment keeps the last line, while a total is the accumulation of every line that names the account.",
+        "Skipping an entry with no account keeps the report useful — the report then silently disagrees with the store, and nobody is told the two answers differ."
+      ],
+      "files": [
+        "report.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/report.test.mjs",
+      "checks": [
+        {
+          "id": "report-totals-exact",
+          "label": "Every account's total is the exact sum of its entries",
+          "tests": [
+            "every account's total is the exact sum of its entries"
+          ],
+          "feedback": "The report overwrites instead of accumulating: out[e.Account] = e.Cents keeps only the last line seen for that account. A total is every line added — out[e.Account] += e.Cents — so cash holding +100 and -40 reads 60, not -40."
+        },
+        {
+          "id": "report-refuses-accountless",
+          "label": "An entry with no account stops the report instead of being skipped",
+          "tests": [
+            "an entry with no account stops the report instead of being skipped"
+          ],
+          "feedback": "The report happily sums an entry nobody named under the empty-string key. The same rule the store enforces has to hold here: an entry with no account stops the report with an error naming the account, and the caller gets no numbers to act on — nil, not a map quietly missing a line.",
+          "edge": true
+        }
+      ]
+    },
+    "go-db-learn": {
+      "id": "go-db-learn",
+      "title": "Learn: the database is a file you query",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-db"
+      ],
+      "resources": [
+        {
+          "label": "database/sql package docs",
+          "url": "https://pkg.go.dev/database/sql"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "The ledger has lived in memory, which means every restart is amnesia. This phase moves it into SQLite, a real database in a single file — and it runs in a third project on your disk, Go Persist, because persistence deserves its own workspace. Two requirements before anything else: Go 1.26 or newer (check with go version; the SQLite driver needs it), and the driver import you will find already sitting in driver.go."
+        },
+        {
+          "kind": "prose",
+          "body": "database/sql is an interface, not a database. sql.Open names a driver and a file; the driver translates. Your code talks to *sql.DB and never to SQLite directly, which is why swapping the file for a server later changes one line. The driver line in driver.go is vendored with the project, so builds stay offline — application code never imports it again."
+        },
+        {
+          "kind": "example",
+          "body": "The whole vocabulary is four verbs plus one rule:",
+          "code": "db, _ := sql.Open(\"sqlite3\", path)   // handle, not connection\ndefer db.Close()                     // the caller owns it\ndb.Exec(`INSERT ... VALUES (?, ?)`, id, cents)   // ? marks values, never text\nrow := db.QueryRow(`SELECT ... WHERE id = ?`, id)\nrow.Scan(&cents)                     // missing row: sql.ErrNoRows"
+        },
+        {
+          "kind": "prose",
+          "body": "The question marks are the security model. Values travel separately from the statement, so a task id containing a quote is data, never syntax — string-concatenated SQL turns that same id into an injection. And rows are resources: every Query opens a cursor that Close releases, and a missing row is sql.ErrNoRows, an error you check with errors.Is, never a zero you mistake for data."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "An id arrives from a stranger. Why does db.Exec take it as a ? parameter?",
+          "items": [
+            "The value travels separately, so it can never be read as SQL.",
+            "The driver strips the quotes out of the value before concatenating it.",
+            "Parameters are faster, because the driver caches the parsed statement.",
+            "Readability only — the finished SQL text ends up the same either way."
+          ],
+          "answer": 0,
+          "explain": "String-concatenated SQL lets a value become syntax, which is how an id containing a quote turns into an injected statement. A ? keeps the value in a separate channel the driver binds after the statement is parsed, so the stranger stays data."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "database/sql is the interface; the driver is one import, vendored.",
+            "Values ride as parameters (?), never inside the statement text.",
+            "A missing row is sql.ErrNoRows — an error, not a zero."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open storedb.go and read driver.go beside it. Before you change anything, write in a comment what LoadTask must return for an id that was never saved — value and error both — then implement all three functions so the comment is true."
+        }
+      ],
+      "hints": [
+        "CREATE TABLE IF NOT EXISTS makes OpenDB safe to call on every boot, first or fiftieth.",
+        "INSERT with ON CONFLICT(id) DO UPDATE turns a second save into an overwrite instead of a duplicate-key error."
+      ],
+      "misconceptions": [
+        "Opening the database connects to it — Open validates arguments; the first query is what reaches the file.",
+        "A missing row reads as zero — Scan on no rows returns ErrNoRows; zero with a nil error means a row holding zero.",
+        "Concatenating values into SQL — parameters exist precisely so data can never become syntax."
+      ]
+    },
+    "go-db-ask": {
+      "id": "go-db-ask",
+      "title": "Reason: whose syntax is it",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-db"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A task arrives with an id chosen by a stranger. Two ways to save it; only one of them keeps the stranger outside your statement."
+        },
+        {
+          "kind": "example",
+          "body": "The id is `x\"; DROP TABLE tasks; --`:",
+          "code": "db.Exec(\"INSERT INTO tasks (id, cents) VALUES ('\" + id + \"', 199)\")\ndb.Exec(\"INSERT INTO tasks (id, cents) VALUES (?, ?)\", id, 199)"
+        }
+      ],
+      "options": [
+        "Both are fine — the driver escapes the id either way, so the quotes do not matter.",
+        "The first is fine: quotes delimit the value, so the id cannot escape the string.",
+        "Only the second is safe — the value travels separately and is never parsed as SQL.",
+        "Neither is safe — ids from strangers must be rejected before they reach the database."
+      ],
+      "answer": 2,
+      "explanation": "Only the parameterized form is safe. In the first, the id is text inside the statement before the driver ever sees it: the quote in x\" closes the value early and DROP TABLE becomes syntax. In the second, the statement is fixed with two placeholders and the id travels as a bound value the parser never reads — there is no quoting to escape because there is no textual substitution at all. Rejecting strange ids is a policy, not a fix: the next feature needs quotes in names, and parameters already allow them.",
+      "hints": [
+        "Ask when each version decides what is syntax and what is data — before sending, or while parsing."
+      ],
+      "misconceptions": [
+        "Quoting user input makes concatenation safe — every quoting scheme has an escape hatch; parameters remove the question.",
+        "Validation replaces parameters — validated-today input rots; the placeholder is safe for every input, forever."
+      ]
+    },
+    "go-db-do": {
+      "id": "go-db-do",
+      "title": "Solve: Save and Load",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-db"
+      ],
+      "files": [
+        "storedb.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/storedb.test.mjs",
+      "checks": [
+        {
+          "id": "round-trip",
+          "label": "A saved task reads back",
+          "tests": [
+            "a saved task reads back"
+          ],
+          "feedback": "Open the database at the given path, create the tasks table if needed, and write Save/Load against it with parameterized statements."
+        },
+        {
+          "id": "upsert",
+          "label": "A second save overwrites, leaving one row",
+          "tests": [
+            "a second save overwrites, leaving one row"
+          ],
+          "feedback": "Saving the same id twice must replace, not duplicate. Use an upsert (ON CONFLICT DO UPDATE), so the second write wins and exactly one row remains."
+        },
+        {
+          "id": "reopen",
+          "label": "Closing and reopening keeps the data",
+          "tests": [
+            "closing and reopening keeps the data"
+          ],
+          "feedback": "Persistence means surviving a close: open a file path, not :memory:, and let the file do the remembering."
+        },
+        {
+          "id": "edge-missing",
+          "label": "A missing id is ErrNoRows, never a zero",
+          "tests": [
+            "a missing id is ErrNoRows, never a zero"
+          ],
+          "feedback": "Scan on no rows returns sql.ErrNoRows — return it with errors.Is intact so callers can tell \"absent\" from \"zero\". If the suite cannot run because `node` is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open storedb.go. OpenDB opens sql.Open(\"sqlite3\", path) and runs CREATE TABLE IF NOT EXISTS; every other function assumes the table.",
+        "SaveTask is one Exec with two placeholders and an ON CONFLICT(id) DO UPDATE tail — that tail is the upsert.",
+        "LoadTask is QueryRow plus Scan. Do not special-case absence: Scan already returns ErrNoRows, and returning it untouched is the whole edge.",
+        "Run go test and read the failing test name first: round trip, then upsert, then reopen, then the missing edge.",
+        "Solution review: table created at open, parameterized upsert on save, Scan error returned as-is on load. Run the checks — four tests, four green. If the suite cannot start because `node` is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Opening with :memory: — memory forgets on close, and the reopen check exists to prove the file remembers.",
+        "Checking existence before insert — the upsert clause already decides; a select-first round trip races with itself.",
+        "Mapping ErrNoRows to a custom error — callers test with errors.Is against the standard value; a private error breaks that contract."
+      ]
+    },
+    "go-db-review": {
+      "id": "go-db-review",
+      "title": "Review: Report",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-db"
+      ],
+      "files": [
+        "reportdb.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/reportdb.test.mjs",
+      "checks": [
+        {
+          "id": "seeded",
+          "label": "A seeded report counts and sums",
+          "tests": [
+            "a seeded report counts and sums"
+          ],
+          "feedback": "COUNT(*) and SUM(cents) in one row read; SUM over no rows is NULL, so COALESCE it to 0."
+        },
+        {
+          "id": "edge-fresh",
+          "label": "A report is a read: fresh is zeros, then it follows writes",
+          "tests": [
+            "a report is a read: fresh is zeros, then it follows writes"
+          ],
+          "feedback": "An empty table reports (0, 0) with no error, and a later write shows up on the next read — no caching, no snapshot. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Erroring on an empty table — nothing saved yet is a state to report, not a failure.",
+        "Reading the report from memory — the database is the source; a cached copy is how reports go stale."
+      ]
+    },
+    "go-cache-learn": {
+      "id": "go-cache-learn",
+      "title": "Learn: the ledger, remembered",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-cache"
+      ],
+      "resources": [
+        {
+          "label": "sync package docs",
+          "url": "https://pkg.go.dev/sync"
+        },
+        {
+          "label": "Redis: cache-aside pattern",
+          "url": "https://redis.io/docs/latest/develop/use/cache-aside/"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "The database phase made every read real — and every read expensive. Cache-aside puts a memory between the reader and the source: the read checks the cache first, a hit answers there, a miss reads the source, fills the cache, and answers. The source never learns the cache exists; the cache alone decides when its copies stop being believed. That decision is the TTL — not a guess about correctness, but a promise about staleness: no entry older than this is ever served."
+        },
+        {
+          "kind": "example",
+          "body": "The flow, and the herd it invites:",
+          "code": "v, err := m.Get(\"task:a\")   // hit: memory. miss: loader, then memory.\nclock.Advance(ttl)           // the entry is now expired.\n// 8 readers find that expired key at once — without singleflight, 8 loads."
+        },
+        {
+          "kind": "prose",
+          "body": "Two failure shapes decide whether a cache is an asset or a lie. The stampede: when one key expires, every reader misses together and hits the source at once — the fix is singleflight, where the first miss starts the fetch and the late arrivals wait on that one result instead of starting their own. The stale read: a write lands in the source while the cache still holds the old value — the fix is invalidation, the write path dropping the key so the next read misses honestly. Expiry needs nobody to remember anything but bounds staleness only to the TTL; invalidation is immediate but only works if every write path remembers to call it — forget once and the entry lies until the TTL ends the argument. Redis is the production shape of exactly this pattern — cache-aside with TTLs and key invalidation at scale — but the pattern is what is judged here, so the fixture is in-memory with an injected clock: tests move time instead of sleeping, and no infrastructure is demanded to learn the shape."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Cache-aside: the reader checks memory first, a miss loads the source and fills it; the source never knows.",
+            "TTL is a promise about staleness measured from the fetch — refreshing it on read lets a hot stale key live forever.",
+            "Singleflight turns N simultaneous misses into one load; invalidation turns a write into an honest next read."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open cache.go. Before you change anything, write in a comment what a hit must never call, what Invalidate must drop, and where the second reader of an expired key should wait instead of fetching. Then implement it — NewMemo is three fields; the state you add is the design."
+        }
+      ],
+      "hints": [
+        "A loader error is not an answer — return it, never store it, so the next Get is free to try again.",
+        "The injected clock is the whole reason tests can prove a TTL without sleeping on one."
+      ],
+      "misconceptions": [
+        "Caching the loader's error — a failure is not a value; caching one freezes the outage that caused it.",
+        "A mutex alone stops the herd — it only lines readers up; each one still fetches in turn without a shared flight.",
+        "Invalidating on read — a read cannot know a write happened; the write path is the only place that knows."
+      ]
+    },
+    "go-cache-ask": {
+      "id": "go-cache-ask",
+      "title": "Reason: who let the stale entry live",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-cache"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A price service reads through a cache, computes, and writes back. Later, readers are still being served the old price. Four diagnoses. Exactly one names the thing that was missing."
+        },
+        {
+          "kind": "example",
+          "body": "Read the write path as if you are the one on call for it:",
+          "code": "p, _ := cache.Get(\"price:sku1\")     // served at 10:00, ttl 5m\nfinal := p + shipping               // computed from it\nrepo.Save(\"sku1\", final)            // written to the database\n// meanwhile another writer saved a new price at 10:01\n// readers at 10:02 still get 10:00's entry from memory"
+        }
+      ],
+      "options": [
+        "A — the TTL was too short; a longer one would have kept the entry consistent with the database it is meant to mirror.",
+        "B — the write path never invalidated the key, so the entry outlived the write that disproved it.",
+        "C — the loader returned an error once and the cache stored it as if it were the price.",
+        "D — the clock was not injected, so the entry could not tell that it had expired."
+      ],
+      "answer": 1,
+      "explanation": "B is the missing piece: every write must drop the keys it disproved, and here nobody did, so the entry served until its TTL ran out on schedule while being wrong the whole time. A has it backwards — a longer TTL guarantees more staleness, not less, because the entry was stale from the moment the other writer committed. C describes a different bug with a different symptom: a cached error fails every reader at once instead of serving an old price. D mistakes the test harness for the production concern — the injected clock makes the TTL provable in tests, but an uninjected clock in production just means time still passes. The lesson: staleness is a write-path responsibility, because only the writer knows something changed.",
+      "hints": [
+        "Ask of each diagnosis: does it explain why the OLD value kept being served, rather than a different failure?"
+      ],
+      "misconceptions": [
+        "A longer TTL as consistency — the TTL bounds how long you may be wrong; stretching it stretches the lie.",
+        "Blaming the read path for a write-path bug — readers only ever see what invalidation failed to remove."
+      ]
+    },
+    "go-cache-do": {
+      "id": "go-cache-do",
+      "title": "Solve: Memo",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-cache"
+      ],
+      "files": [
+        "cache.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/cache.test.mjs",
+      "checks": [
+        {
+          "id": "fresh-hit",
+          "label": "A fresh memo entry is served from memory, not the loader",
+          "tests": [
+            "a fresh memo entry is served from memory, not the loader"
+          ],
+          "feedback": "Store the loader's value with the time your injected now() reported, and on every Get check freshness (now().Sub(at) < ttl) BEFORE deciding to fetch — a hit returns the stored value and never calls the loader."
+        },
+        {
+          "id": "expiry",
+          "label": "An expired entry is fetched again",
+          "tests": [
+            "an expired entry is fetched again"
+          ],
+          "feedback": "Freshness is a comparison, not a flag: once now().Sub(at) >= ttl the entry is history, the loader runs again, and the new value replaces the old one with a new timestamp."
+        },
+        {
+          "id": "invalidate",
+          "label": "An invalidated key is fetched again",
+          "tests": [
+            "an invalidated key is fetched again"
+          ],
+          "feedback": "Invalidate deletes the key under the same mutex Get uses — no fetch of its own, no copy left behind — so the next Get misses and goes to the loader."
+        },
+        {
+          "id": "edge-stampede",
+          "label": "Concurrent readers of one expired key share a single fetch",
+          "tests": [
+            "concurrent readers of one expired key share a single fetch"
+          ],
+          "feedback": "Under the mutex, the first miss records an in-flight fetch for the key before releasing it; late arrivals find that flight and wait on its done channel instead of fetching. The winner publishes value and error, stores the entry only on success, deletes the flight, then closes the channel so every waiter wakes. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open cache.go. NewMemo is three fields — fetch, ttl, clock — and the state you add is yours to design: an entry map under a mutex is the floor.",
+        "An entry is a value plus the time it was stored; freshness is now().Sub(at) < ttl on the injected clock, which is why tests move time instead of sleeping.",
+        "Invalidate is a map delete under the same mutex — drop the key and let the next Get miss.",
+        "For the herd: keep a per-key flight (a done channel plus the result) that the first miss creates; later readers find it and wait instead of fetching."
+      ],
+      "misconceptions": [
+        "Storing the loader's error in the entry — return it and leave the key empty, or one timeout is served until the TTL expires.",
+        "Refreshing the timestamp on every hit — a hot stale key then never expires; the TTL is measured from the fetch, not from the last read.",
+        "Locking the whole Get including the load — correct but serialized; the flight exists so waiters wait once while one loader runs."
+      ]
+    },
+    "go-cache-review": {
+      "id": "go-cache-review",
+      "title": "Review: the cached report",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-cache"
+      ],
+      "files": [
+        "reportcache.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/reportcache.test.mjs",
+      "checks": [
+        {
+          "id": "fresh-report",
+          "label": "A fresh report is served from memory and expires back to the database",
+          "tests": [
+            "a fresh report is served from memory and expires back to the database"
+          ],
+          "feedback": "Store what Report returned with a timestamp; while now().Sub(at) < ttl, Get answers from memory — which is exactly why a row saved behind the cache's back does not show, and why advancing the clock past the TTL does."
+        },
+        {
+          "id": "edge-follows",
+          "label": "An invalidated report follows the writes",
+          "tests": [
+            "an invalidated report follows the writes"
+          ],
+          "feedback": "Invalidate drops the stored report under the mutex so the next Get re-reads the database — the write path sending its message before the TTL would have noticed on its own. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Re-reading the database on every Get — then nothing is cached and the TTL is decoration.",
+        "Invalidating from inside Get — only the write path knows a write happened; a read has nothing to notice."
+      ]
+    },
+    "go-ops-learn": {
+      "id": "go-ops-learn",
+      "title": "Learn: the machine reads the status, not the log",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "deployment-ops"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Once the code runs on a machine you are not standing at, two answers carry the operations burden. The readiness endpoint is polled by a load balancer, so a status code is a routing decision and the problems list is a note for the human after the pager. The exit code is read by a supervisor, which decides restart, alert, or leave it from that one number."
+        },
+        {
+          "kind": "example",
+          "body": "The readiness answer, with the discipline built in:",
+          "code": "func Health(probes []Probe) (int, HealthBody) {\n    body := HealthBody{OK: true}\n    for _, p := range probes {\n        if err := p.Check(); err != nil {\n            body.OK = false\n            body.Problems = append(body.Problems, p.Name) // the name, never err.Error()\n        }\n    }\n    if !body.OK {\n        return http.StatusServiceUnavailable, body\n    }\n    return http.StatusOK, body\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "Three habits make these answers honest. When nothing is wrong the problems list is empty, because a caller cannot tell a list of successes from a list of problems. A failing dependency is named and answered with 503, since 200-with-an-excuse keeps routing traffic to a broken service. The error text stays out, because a driver error begins with the DSN and err.Error() would leak the password."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A readiness status routes traffic: 503 removes the instance, 200 keeps it.",
+            "Nothing wrong means an empty problems list; a failing dependency is named.",
+            "Each failure class gets its own exit code; unlisted failures still exit nonzero."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In health.go, make Health answer honestly: 200 with an empty problems list when every probe passes, 503 naming each failing probe when one does not, and never the connection string. Run node --test --test-reporter=tap test/health.test.mjs to watch all three demands fail on the starter."
+        }
+      ],
+      "hints": [
+        "A load balancer routes on the status code and a supervisor acts on the exit code; neither of them reads your prose. Everything else in the response is for the human who arrives after the pager.",
+        "Driver and SDK error strings routinely embed the connection string they failed on, so err.Error() is the classic way a secret reaches a dashboard anybody can open."
+      ],
+      "misconceptions": [
+        "Answering 200 from a health endpoint keeps monitoring green while you investigate — the load balancer uses that same 200 to decide this instance can still take traffic, so the green dashboard is also a routing decision.",
+        "Including the full error text in the health body is more helpful, because the operator can act faster — the same text often carries the DSN, the password inside it, and a copy of it lands in every log aggregator and screenshot downstream.",
+        "Any nonzero exit code means failure, so the exact number does not matter — documented per-class codes are what let a supervisor decide restart vs. alert vs. give up without parsing a log line."
+      ]
+    },
+    "go-ops-ask": {
+      "id": "go-ops-ask",
+      "title": "Reason: what a helpful health endpoint actually routes",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "deployment-ops"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A teammate's /readyz answers 200 with {\"ok\": true, \"problems\": [\"checked: db\", \"checked: queue\"]} on every request, including the ones where the database is refusing connections, and argues the list is useful documentation. What actually happens at 3am?"
+        }
+      ],
+      "options": [
+        "The load balancer keeps routing to the instance, because readiness is the status code and it never changed; the list is read after the pager.",
+        "Nothing: modern load balancers parse the JSON body and route around whichever dependency the problems list names.",
+        "The probe fails response validation because \"checked: db\" is not a problem, so the platform restarts the container and the restart makes everything well again.",
+        "The problems list grows until the response exceeds the probe timeout, which is the actual failure mode at 3am."
+      ],
+      "answer": 0,
+      "explanation": "Routing components act on the status code — it is the only part of the answer guaranteed to be machine-readable and stable across vendors. A 200 with an excuse is indistinguishable from ready, so the instance keeps receiving traffic while it cannot serve it, and the \"documentation\" in the body is read by nobody until after the incident. Parsing bodies (option two) is not something a load balancer does. Option three imagines a validator that does not exist. And option four names a real phenomenon — unbounded health output can time out a probe, which is the actual failure mode at 3am, but it is not what happens here: the list is fixed at two entries, and the defect is the status code, not the size.",
+      "hints": [
+        "Ask who consumes the status code before anyone reads the body."
+      ],
+      "misconceptions": [
+        "A 200 with an explanatory body is as good as a 503, because the body says what is wrong — the routing component reads the code and never the prose.",
+        "The problems list is a chance to document what was checked — a list that is always full is a list nobody can read a failure out of."
+      ]
+    },
+    "go-ops-do": {
+      "id": "go-ops-do",
+      "title": "Solve: a readiness answer an operator can trust",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "deployment-ops"
+      ],
+      "files": [
+        "health.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/health.test.mjs",
+      "checks": [
+        {
+          "id": "ops-ready-clean",
+          "label": "A healthy service answers ready with no problems",
+          "tests": [
+            "a healthy service answers ready with no problems"
+          ],
+          "feedback": "The healthy path reports problems it does not have (\"checked: db\"), and a caller cannot tell a list of successes from a list of failures. Only failed probes append to Problems — when nothing is wrong the list is empty, and the status is 200."
+        },
+        {
+          "id": "ops-503-named",
+          "label": "A failing dependency answers 503 and is named",
+          "tests": [
+            "a failing dependency answers 503 and is named"
+          ],
+          "feedback": "The failing probe is listed but the status stayed 200, which is the load balancer's signal to keep sending traffic into the outage. When any probe fails, return 503 (http.StatusServiceUnavailable) with ok false, and keep the failing probe's name in Problems so the operator knows which dependency to look at."
+        },
+        {
+          "id": "ops-no-credential-leak",
+          "label": "The health body never contains a dependency's connection string",
+          "tests": [
+            "the health body never contains a dependency's connection string"
+          ],
+          "feedback": "The problem line repeats err.Error(), and driver errors begin with the DSN they failed to dial — so the health body now prints the password to every dashboard that scrapes it. Append p.Name, not the error text: the name is what an operator acts on, and it is the only part of the failure guaranteed to be safe to publish.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "health.go is the file you own, and Health in it is the answer the suite reads. Walk the probes once, remembering only two things: which ones failed, by name.",
+        "A failed probe appends its Name to body.Problems and flips body.OK to false. The error value tells you it failed; the caller is owed the name, not the text.",
+        "The status depends on the result: 200 when OK survived the loop, 503 the moment any probe failed. http.StatusServiceUnavailable is the constant.",
+        "Read back the line that appends to Problems and check what you are appending — p.Name belongs there and err.Error() does not, because driver errors begin with the DSN they failed to dial.",
+        "A complete answer walks the probes once, keeps only the names of the ones that failed, answers 200 while the body still reports OK and 503 the moment it does not, and never repeats a connection string anywhere in the body."
+      ],
+      "misconceptions": [
+        "Keeping 200 while listing the problems keeps monitoring calm — the 200 is the routing decision that sends traffic into the outage.",
+        "A partially healthy service is \"degraded but up\", so the status should stay 200 until everything fails — readiness is per-dependency: any required dependency down means this instance cannot do its job.",
+        "Including err.Error() costs nothing because the endpoint is internal — internal dashboards are scraped by log aggregators, and the health endpoint is exactly the request that fires during an incident."
+      ]
+    },
+    "go-ops-review": {
+      "id": "go-ops-review",
+      "title": "Review: the exit code is the whole verdict",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "deployment-ops"
+      ],
+      "files": [
+        "runbook.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/runbook.test.mjs",
+      "checks": [
+        {
+          "id": "ops-exit-per-class",
+          "label": "Success and each failure class report its own exit code",
+          "tests": [
+            "success and each failure class report its own exit code"
+          ],
+          "feedback": "The internal failure exits 0, so a dead run reads as a finished one. The runbook's three answers are: 0 for success, 2 for ErrInvalid so the caller knows to fix the input, 1 for ErrInternal so the supervisor knows the run died. errors.Is(err, ErrInternal) is the same check already used for ErrInvalid."
+        },
+        {
+          "id": "ops-exit-unknown",
+          "label": "An unrecognized failure stops the process nonzero",
+          "tests": [
+            "an unrecognized failure stops the process nonzero"
+          ],
+          "feedback": "A failure matching neither sentinel exits 0. The default at the end of the mapping must be nonzero — an error nobody enumerated is still an error, and 0 is the one value a supervisor will never recover a process from. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Every failure can exit 1, because nonzero is nonzero — documented per-class codes are how a supervisor distinguishes \"fix your input\" from \"restart me\" without parsing a log.",
+        "A failure nobody enumerated is close enough to success to exit 0 — the supervisor reads 0 as \"finished, nothing to restart\", so the process stays dead and the dashboard stays green."
+      ]
+    },
+    "go-logging-learn": {
+      "id": "go-logging-learn",
+      "title": "Learn: logs are for readers",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-logging"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Nobody watches a log stream for fun. Logs are read at 3am by someone paging through a failure, so every line answers three questions: when, at what level, and in which request. Go's log/slog writes structured lines — key=value pairs a machine can filter — instead of sentences a human must parse."
+        },
+        {
+          "kind": "example",
+          "body": "A request id, attached once, present everywhere:",
+          "code": "log := slog.New(slog.NewTextHandler(os.Stderr, nil))\nreq := log.With(\"request_id\", \"r-1\")\nreq.Info(\"done\")\n// time=... level=INFO msg=done request_id=r-1"
+        },
+        {
+          "kind": "prose",
+          "body": "With() derives a logger that carries attributes into every line it writes — the request id travels without being passed to every function. Levels decide what survives: Debug for development detail, Info for the normal path, Warn for wrong-but-handled, Error for failed. And one absolute rule, shared with the ops phase that refuses to print connection strings: secrets never reach the output. A token in a log is a token published."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "With() carries context into every line; pass the logger, not the id.",
+            "Levels filter noise: Debug, Info, Warn, Error — each with a job.",
+            "Secrets never reach output; scrub what you cannot prevent."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open logging.go. Before you change anything, write in a comment what a line written through RequestLog(base, \"r-1\") must contain, and what RequestLog(nil, \"r-1\") must do instead of crashing. Then implement it."
+        }
+      ],
+      "hints": [
+        "base.With returns a new logger; the base itself is unchanged and stays clean for other requests.",
+        "A nil *slog.Logger has no methods to call — decide the fallback before the first dot."
+      ],
+      "misconceptions": [
+        "Logging the request id by hand on every call — derive once with With and the id rides along.",
+        "fmt.Println debugging in production code — unstructured lines cannot be filtered when it matters.",
+        "A nil logger means quiet — calling methods on nil panics; quiet must be chosen, with a fallback or a discard handler."
+      ]
+    },
+    "go-logging-ask": {
+      "id": "go-logging-ask",
+      "title": "Reason: whose secret is it",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-logging"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Four log lines from a login handler. Exactly one of them publishes something an attacker can reuse — find it."
+        }
+      ],
+      "options": [
+        "The first — usernames identify accounts and must never be logged.",
+        "The second — the token is a reusable secret; the rest is metadata.",
+        "The third — failed attempts invite brute force, so counts leak.",
+        "The fourth — Debug lines ship internals like latency to production."
+      ],
+      "answer": 1,
+      "explanation": "The token is the only line carrying something an attacker can spend: it authenticates as the user until it expires, and logs are read by more people and kept longer than anyone plans. Usernames, attempt counts, and latencies are operational metadata — useful, attributable, and not reusable as credentials. The fix is Scrub-shaped: mask token values at the boundary so no call site has to remember, because call sites never remember.",
+      "hints": [
+        "Ask of each line: if an attacker reads exactly this, what can they do that they could not do before?"
+      ],
+      "misconceptions": [
+        "Usernames are secrets — they identify; tokens authenticate. Only the second reuses.",
+        "Debug level hides the leak — levels filter noise, they do not unpublish what they carry."
+      ]
+    },
+    "go-logging-do": {
+      "id": "go-logging-do",
+      "title": "Solve: RequestLog",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-logging"
+      ],
+      "files": [
+        "logging.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/logging.test.mjs",
+      "checks": [
+        {
+          "id": "carries-id",
+          "label": "Every line carries the request id",
+          "tests": [
+            "every line carries the request id"
+          ],
+          "feedback": "Derive with base.With(\"request_id\", requestID) and return the derived logger. The id must appear on lines the caller writes afterwards."
+        },
+        {
+          "id": "edge-nil",
+          "label": "A nil logger falls back instead of panicking",
+          "tests": [
+            "a nil logger falls back instead of panicking"
+          ],
+          "feedback": "A nil base must fall back — slog.Default() is the honest default — and still carry the request id. Decide before the first method call. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open logging.go. One With call does the carrying; the question is only what it is called on.",
+        "base.With(\"request_id\", requestID) returns the logger every later line needs.",
+        "A nil *slog.Logger cannot take a method call. Check for nil first and fall back to slog.Default().",
+        "Run go test and read the failing test name first: the id line, then the nil edge.",
+        "Solution review: nil falls back to the default, then With attaches the id either way. Run the checks — two tests, two green."
+      ],
+      "misconceptions": [
+        "Mutating the base logger — With derives; the shared base must stay clean for the next request.",
+        "Returning nil for nil — the caller was promised a logger; nil just moves the panic one frame over.",
+        "Putting the id in the message text — attributes filter; prose does not."
+      ]
+    },
+    "go-logging-review": {
+      "id": "go-logging-review",
+      "title": "Review: Scrub",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-logging"
+      ],
+      "files": [
+        "scrub.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/scrub.test.mjs",
+      "checks": [
+        {
+          "id": "masks",
+          "label": "A token value is masked, the rest untouched",
+          "tests": [
+            "a token value is masked, the rest untouched"
+          ],
+          "feedback": "Find token=, replace its value up to the next space with [redacted], and keep every surrounding character exactly."
+        },
+        {
+          "id": "edge-clean",
+          "label": "A clean line passes through exactly",
+          "tests": [
+            "a clean line passes through exactly"
+          ],
+          "feedback": "No token means no change: return the line byte-for-byte. A scrubber that rewrites clean lines cannot be trusted on dirty ones. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Masking the whole line — the context around the secret is the debugging value; only the value is the leak.",
+        "Dropping token lines entirely — a missing line at 3am reads as a missing event, worse than a masked one."
+      ]
+    },
+    "go-deps-learn": {
+      "id": "go-deps-learn",
+      "title": "Learn: module graph and go mod",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-deps"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A Go module is a collection of related files. The go.mod file at the root declares the module name and its dependencies. Direct dependencies are listed explicitly, while indirect dependencies are those your code imports but your dependencies also import. go.sum contains cryptographic checksums of module versions to ensure reproducible builds across different environments and over time."
+        },
+        {
+          "kind": "prose",
+          "body": "Why it matters: A well-maintained module graph is critical for team collaboration. When go.mod and go.sum are correct, every teammate can check out the project and build it identically. Without them, builds are non-reproducible and dependency conflicts surface later. Common pitfalls: editing go.mod by hand without running go mod tidy leaves go.sum out of sync, causing mysterious build failures, and deleting go.sum forces a full rebuild to regenerate checksums correctly."
+        },
+        {
+          "kind": "example",
+          "body": "A minimal go.mod:",
+          "code": "module example.com/myproject\n\ngo 1.21\n\nrequire (\n\tgithub.com/some/dependency v1.2.3\n)\n\nexclude github.com/another/incompatible v0.0.0-20240101"
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "go.mod declares the module name and dependency requirements.",
+            "go.sum records checksums for reproducibility.",
+            "go mod tidy ensures the module graph is consistent and up to date."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Run go mod tidy to ensure go.mod and go.sum are consistent with the project's source code."
+        }
+      ],
+      "hints": [
+        "If you add a new import, run go mod tidy to update go.mod and go.sum.",
+        "Use go list -m all to see all dependencies in the module graph."
+      ],
+      "misconceptions": [
+        "go.mod and go.sum are optional — without them, builds are not reproducible across environments.",
+        "Indirect dependencies don't matter - they can introduce version conflicts and security vulnerabilities."
+      ]
+    },
+    "go-deps-ask": {
+      "id": "go-deps-ask",
+      "title": "Reason: why does go mod tidy change versions?",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-deps"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A project has go.mod requiring github.com/foo/bar v1.0.0. That package in turn requires github.com/baz v2.0.0. After running go mod tidy, what versions appear in go.mod and go.sum?"
+        }
+      ],
+      "options": [
+        "go.mod keeps v1.0.0; go.sum adds checksums for both v1.0.0 and v2.0.0",
+        "go.mod updates to v2.0.0; go.sum only records v2.0.0",
+        "go.mod stays at v1.0.0; go.sum is unchanged",
+        "go.mod updates to v2.0.0; go.sum records checksums for both v1.0.0 and v2.0.0"
+      ],
+      "answer": 3,
+      "explanation": "go mod tidy resolves the full module graph. If github.com/foo/bar v1.0.0 requires github.com/baz v2.0.0, then go.mod updates its requirement to github.com/baz v2.0.0 (or the latest compatible version), and go.sum records checksums for both the direct dependency (foo/bar v1.0.0) and the transitive dependency (baz v2.0.0).",
+      "hints": [
+        "go mod tidy resolves the complete module graph including transitive dependencies"
+      ],
+      "misconceptions": [
+        "go mod tidy only adds checksums without changing versions",
+        "Indirect dependencies are ignored by go mod tidy"
+      ]
+    },
+    "go-deps-do": {
+      "id": "go-deps-do",
+      "title": "Solve: manage a dependency update",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-deps"
+      ],
+      "files": [
+        "go.mod",
+        "go.sum"
+      ],
+      "testCommand": "go build ./...",
+      "checks": [
+        {
+          "id": "build",
+          "label": "Project builds after dependency update",
+          "tests": [
+            "go build ./... succeeds"
+          ],
+          "feedback": "After updating dependencies and running go mod tidy, the project should compile without errors."
+        },
+        {
+          "id": "checksums",
+          "label": "go.sum checksums are valid",
+          "tests": [
+            "go.sum contains valid checksums for all dependencies"
+          ],
+          "feedback": "go mod tidy should produce correct checksums; if checksums are invalid, builds may fail unexpectedly."
+        }
+      ],
+      "hints": [
+        "Run go get <package>@<version> to update a specific dependency version.",
+        "After modifying go.mod, always run go mod tidy to update go.sum and reconcile the graph.",
+        "Use go build ./... to verify the project compiles after changes."
+      ],
+      "misconceptions": [
+        "go.mod can be edited by hand without running go mod tidy",
+        "go.sum is just a cache — it does not affect build success."
+      ]
+    },
+    "go-deps-review": {
+      "id": "go-deps-review",
+      "title": "Review: module best practices",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-deps"
+      ],
+      "files": [
+        "go.mod",
+        "go.sum"
+      ],
+      "testCommand": "go build ./...",
+      "checks": [
+        {
+          "id": "reproducibility",
+          "label": "go.mod and go.sum enable reproducibility",
+          "tests": [
+            "running go build on a fresh checkout produces identical output"
+          ],
+          "feedback": "If a teammate checks out the project and runs go build, the result should be the same. go.mod and go.sum are the keys to that reproducibility."
+        },
+        {
+          "id": "go-get-vs-edit",
+          "label": "Know when to use go get vs manual editing",
+          "tests": [
+            "can distinguish go get from manual go.mod editing"
+          ],
+          "feedback": "Use go get to add or update dependencies (it runs go mod tidy automatically). Only manually edit go.mod for advanced workflows and always follow with go mod tidy."
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "go.sum is automatically generated and never needs attention",
+        "It is safe to delete go.sum and rebuild — the checksums will be regenerated correctly every time."
+      ]
+    },
+    "go-resilience-learn": {
+      "id": "go-resilience-learn",
+      "title": "Learn: failing well is a design goal, not an afterthought",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "resilience"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Every call that leaves your process can fail in a way worth retrying: a reset, a timeout, a database mid-failover. A retry is the honest response: run the operation, and if it failed, run it again. But an unbounded loop against a down service is denial of service, not resilience. So cap the attempts, and on the last failure return its error, not a clean nil that lies."
+        },
+        {
+          "kind": "example",
+          "body": "A bounded retry that stops on the first success and reports the final error:",
+          "code": "func DoWithRetry(attempts int, op func() error) error {\n    var err error\n    for i := 0; i < attempts; i++ {\n        if err = op(); err == nil {\n            return nil // succeeded — stop calling it\n        }\n    }\n    return err // exhausted: hand back the last real failure\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "Read that shape: the loop is bounded by `attempts`, so a hard-down dependency cannot spin forever. The `return nil` inside it means you stop the moment a call succeeds, so no side effect gets duplicated. And the final `return err` keeps the identity of the last failure, so a caller can match it with `errors.Is`. It never sleeps, because waiting is its own decision, covered below."
+        },
+        {
+          "kind": "prose",
+          "body": "Backoff is the second half of the rule: wait before the next attempt, and make each wait longer than the last by doubling from a base delay and capping the growth. Jitter then scatters those waits, so a thousand callers that failed in the same second do not return as one synchronized wave."
+        },
+        {
+          "kind": "prose",
+          "body": "Not every failure earns a retry. A reset, a timeout, or a 503 may clear on its own; a 400, a missing key, or a malformed body will fail the same way on the tenth attempt. Retry only what is safe to repeat, and stop once the caller has no time left."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Cap the attempts: a ceiling separates recovery from amplification.",
+            "Stop the moment the operation succeeds; never retry after success.",
+            "On exhaustion, return the last error, never nil.",
+            "Add backoff between attempts; jitter stops clients returning in lockstep."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In retry.go, implement DoWithRetry(attempts int, op func() error) error: call op up to attempts times, return nil the moment op returns nil, and if op never succeeds return the error from the final call. It must call op at most attempts times. Run node --test --test-reporter=tap test/retry.test.mjs to watch the starter fail."
+        }
+      ],
+      "hints": [
+        "A retry is a bounded loop: call the operation, return the moment it succeeds, and give up after a fixed number of attempts instead of looping forever or once.",
+        "Two rules make a retry safe: cap the attempts so a hard-down dependency cannot be hammered forever, and grow the delay between them (backoff) so you stop adding load to something already failing."
+      ],
+      "misconceptions": [
+        "Believing more retries make you more reliable — an unbounded retry loop turns one slow dependency into a pile-up of your own callers, and a fleet of clients retrying in lockstep can knock a recovering service flat again the instant it comes back.",
+        "Throwing away the last error when every attempt fails — returning nil on exhaustion tells the caller the work succeeded, which is the single most expensive lie a resilient helper can tell."
+      ]
+    },
+    "go-resilience-ask": {
+      "id": "go-resilience-ask",
+      "title": "Reason: which retry helper do you actually trust",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "resilience"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Two engineers write a retry helper for a flaky call. Mine A loops with no bound until the operation succeeds, then returns nil. Mine B tries at most five times, returns nil on success, and the last error if all fail. Both look fine when it succeeds on try two; which do you trust behind an endpoint, and why does the difference only show when things go badly?"
+        }
+      ],
+      "options": [
+        "They are equivalent, because both return nil on success, and success is the only outcome an endpoint behind a flaky dependency really cares about.",
+        "Mine A — five attempts is an arbitrary ceiling that abandons a call which would have recovered on the sixth, so a helper that gives up early fails.",
+        "Mine B: it caps attempts, returns on success, and hands back the last error on exhaustion; Mine A loops until success, so it hangs with no failure path.",
+        "Mine A — retrying forever is strictly more resilient, because with enough attempts it eventually succeeds and the caller never writes a failure path at all."
+      ],
+      "answer": 2,
+      "explanation": "The two helpers are indistinguishable when the flaky call succeeds on try two, which is exactly why the screen recording proves nothing. They part company when the dependency is genuinely down. Mine A's unbounded loop never returns and never yields: against a service that will not recover, it is not a retry, it is a hung goroutine, and every caller of it piles up hammering the thing that is already failing — the amplification that turns one bad dependency into an outage of everything that depends on it. Mine B refuses that role: the cap on attempts bounds both the work and the pressure, the early return means it stops bothering the dependency the instant it answers, and returning the last error on exhaustion gives the caller something to log, alert on, or fall back from. That third property is the one people miss — a helper whose only exit is success has no way to lose, which means it cannot tell you it lost. A finite bound is not pessimism; five attempts is a deliberate choice, and the correct response to a call that would have recovered on six is to alert on the exhaustion rate, not to remove the ceiling.",
+      "hints": [
+        "A helper is only as good as the wrong outcomes it refuses — judge these by what each one does when the operation keeps failing, not when it works first time."
+      ],
+      "misconceptions": [
+        "Thinking a retry that runs forever is the most robust option — against a dependency that is hard down it is a loop that never yields and never reports, which is a hung request wearing the costume of resilience.",
+        "Believing that because an error is returned it will be handled — a helper that drops the last error on exhaustion hands the caller nothing to act on, so the failure becomes invisible."
+      ]
+    },
+    "go-resilience-do": {
+      "id": "go-resilience-do",
+      "title": "Solve: a retry that counts its calls and keeps its errors",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "resilience"
+      ],
+      "files": [
+        "retry.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/retry.test.mjs",
+      "checks": [
+        {
+          "id": "retry-stops-early",
+          "label": "A retry that succeeds first try stops there",
+          "tests": [
+            "a retry that succeeds first try stops there"
+          ],
+          "feedback": "When op returns nil on the very first call, DoWithRetry must return nil and stop — it may not call op again. A helper that loops a fixed number of times regardless of success calls op too many times."
+        },
+        {
+          "id": "retry-recovers",
+          "label": "A retry that recovers mid-way returns success",
+          "tests": [
+            "a retry that recovers mid-way returns success"
+          ],
+          "feedback": "If op fails twice and succeeds on the third call, DoWithRetry must return nil after exactly three calls. Keep trying while op returns an error, and return nil the moment one attempt clears it."
+        },
+        {
+          "id": "retry-exhausts",
+          "label": "An exhausted retry returns the last error",
+          "tests": [
+            "an exhausted retry returns the last error"
+          ],
+          "feedback": "When op fails on all attempts, DoWithRetry must call op exactly that many times and return the error from the final call — not nil. Return the stored last error after the loop so the failure survives.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "retry.go is the file you own, and DoWithRetry in it is what the suite calls. Keep the last error in a variable declared outside the loop, so that after the loop ends you still have the failure from the final attempt to return.",
+        "The loop runs at most as many times as the caller allowed, and the suite counts those calls: one more than that fails the count it keeps.",
+        "Inside the loop call op once, assign its result to your error variable, and if it is nil return nil immediately — do not call op again after it succeeded.",
+        "A suite calls op and counts the calls: success on try one must make exactly one call, and failure on all four of four attempts must make exactly four before you give up.",
+        "Solution review: defer cleanup(); fn(). The panic travels through the deferred call with its value intact, and cleanup ran exactly once either way. Run the checks — three tests, three green."
+      ],
+      "misconceptions": [
+        "Returning nil once attempts run out, so a caller that trusts the result thinks the flaky operation eventually succeeded when it never did.",
+        "Calling op a fixed number of times regardless of its result, so an operation that succeeded on the first try still gets retried — duplicating a side effect the caller expected to happen once."
+      ]
+    },
+    "go-resilience-review": {
+      "id": "go-resilience-review",
+      "title": "Review: backing off without burning wall-clock",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "resilience"
+      ],
+      "files": [
+        "backoff.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/backoff.test.mjs",
+      "checks": [
+        {
+          "id": "backoff-grows",
+          "label": "The delay grows exponentially",
+          "tests": [
+            "the delay grows exponentially"
+          ],
+          "feedback": "Backoff must double the wait each attempt: base at attempt 0, 2*base at attempt 1, 4*base at attempt 2. Compute it from the attempt count; a fixed or linear delay will not match."
+        },
+        {
+          "id": "backoff-capped",
+          "label": "The delay never exceeds the cap",
+          "tests": [
+            "the delay never exceeds the cap"
+          ],
+          "feedback": "However many doublings the attempt number implies, Backoff must return no more than limit. Clamp the grown value to the ceiling so a late attempt cannot produce an absurd wait. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Letting the delay grow without an upper bound — after enough doublings the computed wait becomes absurd (days between retries), so a healthy cap keeps the backoff sane no matter how many attempts it has climbed through.",
+        "Thinking exponential backoff needs a real sleep to be worth anything — the delay is a pure function of the attempt number, so you can compute and test it instantly without ever waiting it out."
+      ]
+    },
+    "go-ship-learn": {
+      "id": "go-ship-learn",
+      "title": "Learn: the build that travels",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "deployment-ops"
+      ],
+      "resources": [
+        {
+          "label": "Docker: multi-stage builds",
+          "url": "https://docs.docker.com/build/building/multi-stage/"
+        },
+        {
+          "label": "GitHub Actions: building and testing Go",
+          "url": "https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-go"
+        }
+      ],
+      "hints": [
+        "A container is not a slim VM — it is a file that names a base image, a toolchain version, and the exact commands, so the next machine that builds your service is the machine you tested on.",
+        "Two FROM lines are the whole idea: the first stage owns the toolchain and the compile, the last stage owns only what runs."
+      ],
+      "misconceptions": [
+        "Believing one carefully slimmed stage is as good as two — no amount of deleting from the golang image removes what the runtime must not carry: the compiler, the module cache, and the source. Two stages separate the roles instead of negotiating with one image.",
+        "Copying the whole tree with COPY . . as the first instruction and expecting the build to stay fast — that layer, and every layer after it, re-runs on every edit. The module files get their own layer precisely because they change least."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Your service builds on your machine because that machine holds a toolchain you installed, modules you already downloaded, and an operating system you configured by hand. None of that travels. A colleague clones the repository and spends a day discovering your machine. A container closes that gap the way production expects: the Dockerfile names the base image, the exact toolchain version, and the exact commands, so the next build — yours, a teammate’s, or a runner nobody has ever seen — is the same build."
+        },
+        {
+          "kind": "example",
+          "body": "A multi-stage Dockerfile for a Go service — the shape every check in this lab is looking for:",
+          "code": "FROM golang:1.26 AS builder\nWORKDIR /src\nCOPY go.mod go.sum ./\nRUN go mod download\nCOPY . .\nRUN CGO_ENABLED=0 go build -o /out/ledger ./cmd/ledger\n\nFROM gcr.io/distroless/static:nonroot\nCOPY --from=builder /out/ledger /usr/local/bin/ledger\nUSER nonroot\nENTRYPOINT [\"/usr/local/bin/ledger\"]"
+        },
+        {
+          "kind": "prose",
+          "body": "Read that file as two images. The builder owns the toolchain and the compile: go.mod and go.sum are copied first so the module download gets a layer of its own, and only a source edit invalidates it — a changed .go file never re-downloads the dependency tree. The last FROM opens the runtime stage, and it owns nothing but the artifact: a static binary (CGO_ENABLED=0, so it carries no C-library dependency and runs on a base image that has none) copied out of the builder with COPY --from, started as a user that is not root. The toolchain never reaches production, and neither does the source — what ships is exactly what was proved."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Two stages: the builder holds the toolchain, the runtime ships the artifact alone.",
+            "Copy go.mod and go.sum first, then go mod download, so the module layer survives every source edit.",
+            "Build static with CGO_ENABLED=0: the binary runs where no C library exists.",
+            "A pipeline re-runs your exact commands in a clean room on every push — the proof a local run can never give."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "In Dockerfile, replace the single stage with a multi-stage build: a NAMED builder stage (FROM golang:1.26 AS builder) that copies go.mod and go.sum first, downloads modules, copies the source, and builds a static binary; then a runtime stage on a minimal base that copies only that binary and runs it as a non-root user. In workflow.yml, give the workflow a push trigger and a go test ./... step behind actions/checkout and actions/setup-go. Run node --test --test-reporter=tap test/ship.test.mjs to watch the starter fail."
+        }
+      ]
+    },
+    "go-ship-ask": {
+      "id": "go-ship-ask",
+      "title": "Reason: an image that builds is not an image that ships",
+      "kind": "question",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "deployment-ops"
+      ],
+      "hints": [
+        "Judge the file by what it puts in the image a customer’s cluster pulls, not by whether the build exits zero."
+      ],
+      "misconceptions": [
+        "Thinking a working Dockerfile is a shippable one — the build succeeding proves the commands ran, not that production should receive a compiler, a module cache, and the whole source tree.",
+        "Assuming the toolchain in the runtime image is harmless because it is only used for debugging — every tool in the shipped layers is a tool an attacker finds without installing anything."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A teammate ships this Dockerfile for the ledger service: one FROM golang line, COPY . ., go build, and the same golang image left as the runtime, so that debugging in production stays possible. It builds. The reviewer rejects it anyway. What is actually wrong with it, and what does the fix look like?"
+        }
+      ],
+      "options": [
+        "Nothing — keeping the toolchain in production lets you inspect a live process, and disk is cheap enough that size no longer matters.",
+        "The COPY order — go.sum belongs before go.mod, so the layer cache never hits. That is the only defect in an otherwise sound file.",
+        "It ships the toolchain and source as runtime — surface that cannot help. Fix: build in one stage, ship the static binary, non-root.",
+        "The base is wrong — Go services belong on Alpine, not the Debian-based golang image, so production runs an unsupported distribution."
+      ],
+      "answer": 2,
+      "explanation": "The image builds, and that is exactly why the mistake survives review: a working Dockerfile and a shippable one are different claims. The single golang stage carries the compiler, the module cache, and the entire source tree into production — each layer is bandwidth on every deploy and surface area in every cluster, and none of them can help the process at runtime. The two-stage fix separates the roles instead of negotiating with one image: the builder owns the toolchain and the compile, and the runtime receives exactly one artifact — the static binary, built with CGO_ENABLED=0 so it runs on a base with no C library — and starts it as a non-root user, so even a compromised process begins with nothing to escalate from. The COPY-order distractor is the one worth respecting: layer caching is real, and go.mod before source before build is the pattern — but it is a performance detail, not the reason this image was rejected."
+    },
+    "go-ship-do": {
+      "id": "go-ship-do",
+      "title": "Solve: a Dockerfile that ships the artifact, and a pipeline that proves it",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "deployment-ops"
+      ],
+      "hints": [
+        "Start from the bottom of the file you want, not the top of the file you have: a second FROM line is what turns one image into two — everything before the last FROM is the builder, everything after it is what ships.",
+        "Copy go.mod and go.sum on their own line before anything else, then run go mod download: that gives the module cache a layer of its own, so editing a .go file never re-downloads your dependencies.",
+        "The runtime stage must not mention go at all. Copy the binary out of the builder with COPY --from=builder, point the final FROM at a minimal base, and build with CGO_ENABLED=0 so the binary needs no C library to run there.",
+        "Two checks look at who the process runs as: a USER line in the final stage naming someone who is not root. And the workflow needs a push trigger with actions/setup-go and a go test step — the same commands this machine runs.",
+        "If the suite cannot run because node is command not found, run the environment check first. With a Docker daemon present the container check builds your image and runs the suite inside the builder; without one it reports itself not-run — every file check above still judges what you wrote."
+      ],
+      "misconceptions": [
+        "Leaving the golang image as the runtime so you can debug in production — the artifact should be debuggable before it ships, and every tool such a runtime would offer production is a tool an attacker would find there too.",
+        "Running the container as root because a container is \"just a container\" — the runtime image is a deliverable, not a workspace, and the USER line is where you decide what a compromised process starts as."
+      ],
+      "files": [
+        "Dockerfile",
+        "workflow.yml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ship.test.mjs",
+      "checks": [
+        {
+          "id": "ship-multi-stage",
+          "label": "The image is built in stages",
+          "tests": [
+            "the image is built in stages"
+          ],
+          "feedback": "A Dockerfile that ends where it began ships the toolchain. Give the build a builder stage and the runtime its own FROM line, so the two roles live in two images and only the second one leaves your machine."
+        },
+        {
+          "id": "ship-cacheable-layers",
+          "label": "The module download layer survives a source edit",
+          "tests": [
+            "the module download layer is cacheable"
+          ],
+          "feedback": "The builder’s first COPY must carry only go.mod and go.sum, followed by go mod download, followed by the source. That order is what lets a .go edit skip the download layer; a COPY . . first invalidates the cache on every save."
+        },
+        {
+          "id": "ship-runtime-lean",
+          "label": "The runtime stage ships the binary, not the toolchain",
+          "tests": [
+            "the runtime stage ships the binary, not the toolchain"
+          ],
+          "feedback": "The final FROM must not be a golang image, must not compile anything, and must COPY --from= the builder: production receives the artifact, never the tools that made it or the source it was made from."
+        },
+        {
+          "id": "ship-non-root",
+          "label": "The runtime process does not run as root",
+          "tests": [
+            "the runtime process does not run as root"
+          ],
+          "feedback": "Add a USER line to the final stage naming a non-root user — distroless images ship a nonroot user for exactly this. A container that starts as root hands a compromised process the whole namespace.",
+          "edge": true
+        },
+        {
+          "id": "ship-pipeline-runs-suite",
+          "label": "The pipeline runs the suite on every push",
+          "tests": [
+            "the pipeline runs the suite on every push"
+          ],
+          "feedback": "The workflow needs a push trigger, actions/checkout, a pinned toolchain behind actions/setup-go, and a go test step: the same commands this machine runs, in a clean room, on every push — not only on the machine that wrote the change."
+        },
+        {
+          "id": "ship-container-suite",
+          "label": "The image builds and the suite passes inside it",
+          "tests": [
+            "the suite passes inside the container"
+          ],
+          "feedback": "With a Docker daemon available this check builds your image and runs go test ./... inside the builder it came from, and a failure shows Docker’s own output. Without a daemon it reports itself not-run with that reason — missing infrastructure never fails a check here."
+        }
+      ]
+    },
+    "lab-journal-loss": {
+      "id": "lab-journal-loss",
+      "title": "Investigate: the journal that loses the last entry",
+      "kind": "incident",
+      "mode": "solve",
+      "guidance": 3,
+      "competencyIds": [
+        "debug-failure-lab"
+      ],
+      "incidentId": "incident-journal-loss",
+      "files": [
+        "journal/journal.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/journal-incident.test.mjs",
+      "checks": [
+        {
+          "id": "journal-every-entry-survives",
+          "label": "Every pending entry survives a flush and a reopen",
+          "tests": [
+            "every pending entry survives a flush and a reopen"
+          ],
+          "feedback": "The restart read back fewer entries than were flushed. The buffer held the batch; after Flush returns, the caller is told it is durable. What did the write loop actually cover?"
+        },
+        {
+          "id": "journal-flush-count-honest",
+          "label": "The flush reports every entry it was given as persisted",
+          "tests": [
+            "the flush reports every entry it was given as persisted"
+          ],
+          "feedback": "Flush returned a count smaller than the batch it was handed, and the caller acknowledged on that count. Find where the number is produced and what bound the loop believes it has."
+        },
+        {
+          "id": "journal-earlier-entries-intact",
+          "label": "Entries before the last stay intact and in order",
+          "tests": [
+            "entries before the last stay intact and in order"
+          ],
+          "feedback": "This check was green when you arrived and must stay green: the entries ahead of the last one are not allowed to change meaning while you fix the last one’s fate."
+        }
+      ],
+      "hints": [],
+      "misconceptions": []
     }
   }
 };

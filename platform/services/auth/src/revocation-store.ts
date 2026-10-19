@@ -56,6 +56,28 @@ export async function revokeAccountBefore(pool: Pool, userId: string, at: Date):
 }
 
 /**
+ * The same cut-off, in the table that survives the account.
+ *
+ * Deleting an account cascades `user_revocations` away with it, and the access
+ * token in a learner's hands is verified by signature alone — so without this, an
+ * erasure would leave a working credential behind for the rest of its TTL. That
+ * is a privacy failure (a session outliving the account that authorised it) and
+ * the kind that is invisible in a test: the row is gone, the account is gone, and
+ * the token still opens the door.
+ *
+ * Written *before* the `users` row is deleted, in the same transaction, so there
+ * is no window in which the account is gone and the credential is not yet cut
+ * off.
+ */
+export async function revokeDeletedSubject(pool: Pool, userId: string, at: Date): Promise<void> {
+  await pool.query(
+    "INSERT INTO deleted_subject_revocations (user_id, revoked_before) VALUES ($1, $2) " +
+      "ON CONFLICT (user_id) DO UPDATE SET revoked_before = GREATEST(deleted_subject_revocations.revoked_before, EXCLUDED.revoked_before)",
+    [userId, at]
+  );
+}
+
+/**
  * Delete denylist rows whose token would have expired anyway, and say how many.
  *
  * Run on a timer (see index.ts) rather than on the read path: the check is in the
@@ -65,6 +87,23 @@ export async function revokeAccountBefore(pool: Pool, userId: string, at: Date):
  */
 export async function pruneRevokedTokens(pool: Pool): Promise<number> {
   const { rowCount } = await pool.query("DELETE FROM revoked_tokens WHERE expires_at < now()");
+  return rowCount ?? 0;
+}
+
+/**
+ * Drop deletion cut-offs that can no longer refuse anything.
+ *
+ * A cut-off only ever refuses tokens issued before it, and no access token this
+ * service mints outlives the TTL ceiling (`ACCESS_TOKEN_TTL_SECONDS`, at most
+ * fifteen minutes). Twelve hours is therefore two orders of magnitude past the
+ * point where the row can matter — slack for clock skew and for a deployment
+ * whose ceiling was raised — and keeping it that long costs nothing while a
+ * too-eager prune would silently re-open a deleted account's token.
+ */
+export async function pruneDeletedSubjectRevocations(pool: Pool): Promise<number> {
+  const { rowCount } = await pool.query(
+    "DELETE FROM deleted_subject_revocations WHERE created_at < now() - interval '12 hours'"
+  );
   return rowCount ?? 0;
 }
 
@@ -99,6 +138,27 @@ export async function credentialStatus(
     if (before !== null && Number.isFinite(before) && check.issuedAtMs + 1000 <= before) {
       return { revoked: true, reason: "account" };
     }
+    /* The cut-off an erasure left behind, and why it is judged differently from
+     * the one above.
+     *
+     * A "sign out everywhere" cut-off has to spare a token issued *after* it — the
+     * learner asked for that session by signing back in, and revoking it would sign
+     * them straight back out. A deleted account has no "after": the subject does
+     * not exist, no new token can be minting, and the only correct answer for any
+     * credential presented for it is refusal. So the row's existence decides, and
+     * its timestamp is kept for the record and for pruning rather than for
+     * comparison.
+     *
+     * This is the difference the +1000-second tolerance above must not be copied
+     * into: with whole-second `iat`, a token minted in the same second as a
+     * full-precision deletion would compare as "issued before" only by luck. Being
+     * wrong in that direction here means a deleted account's credential keeps
+     * working — which is the failure that looks like success.
+     */
+    const deleted = await pool.query("SELECT revoked_before FROM deleted_subject_revocations WHERE user_id = $1", [
+      check.userId,
+    ]);
+    if (deleted.rows[0]) return { revoked: true, reason: "account" };
   }
   return { revoked: false, reason: null };
 }

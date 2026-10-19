@@ -2,7 +2,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPool, createService, migrate, start } from "@nexora/service-kit";
 import { registerAuthRoutes } from "./routes.js";
-import { pruneRevokedTokens } from "./revocation-store.js";
+import { pruneDeletedSubjectRevocations, pruneRevokedTokens } from "./revocation-store.js";
+import { pruneRetention } from "./rights.js";
 
 const port = Number(process.env.PORT ?? "8101");
 const pool = createPool();
@@ -40,14 +41,33 @@ registerAuthRoutes(app, pool);
  */
 const PRUNE_INTERVAL_MS = Number(process.env.REVOCATION_PRUNE_INTERVAL_MS ?? 15 * 60_000);
 
+/* Housekeeping, in one pass: the denylist, the deletion cut-offs, and the
+ * retention schedule itself.
+ *
+ * They share a timer because they are one idea — data this service no longer has
+ * a reason to hold — and because a second interval would be a second thing to
+ * notice when it stops running. The retention half is the one that answers the
+ * audit's F-06 ("no retention schedule and no retention or deletion of
+ * anything"): before it existed, the honest description of this deployment was
+ * that rows were written and never removed, whatever a document promised.
+ *
+ * A failure is logged and swallowed, exactly as before: an unpruned row is
+ * untidier than it should be, and it is never a reason to take the identity
+ * service down. */
 async function pruneRevocations(): Promise<void> {
   try {
     const removed = await pruneRevokedTokens(pool);
+    const cutoffs = await pruneDeletedSubjectRevocations(pool);
+    const retention = await pruneRetention(pool);
+    const total =
+      removed + cutoffs + Object.values(retention).reduce((sum, n) => sum + n, 0);
     // Only when there was something to do: a line every interval saying "0 rows"
     // is how a log stops being read.
-    if (removed > 0) app.log.info({ removed }, "pruned expired revoked-token rows");
+    if (total > 0) {
+      app.log.info({ removed, cutoffs, retention }, "retention sweep: expired rows removed");
+    }
   } catch (err) {
-    app.log.warn({ err }, "revocation prune failed; expired rows will be retried next interval");
+    app.log.warn({ err }, "retention sweep failed; expired rows will be retried next interval");
   }
 }
 

@@ -3148,6 +3148,43 @@ describe("attestation judging mirrors the IDE", async () => {
     assert.match(missing.reason, /No run on record/);
   });
 
+  it("honors the suite's own not-run the way the extension does", () => {
+    // The go-ship container check on a machine with no Docker daemon: TAP's
+    // `# SKIP` directive is the only not-run the wire format has, and both
+    // tiers must read it as present-but-not-run — never as a missing test,
+    // never as a failure the learner owns. This sandbox has no daemon either,
+    // so the re-run produces the same directive and the same green-with-
+    // reason verdict as the IDE did.
+    const wall = [
+      "ok 1 - the image is built in stages",
+      "ok 2 - the suite passes inside the container # SKIP the Docker daemon is not available on this machine",
+    ].join("\n");
+    const results = attest.parseTap(wall);
+    assert.deepEqual(results[1], {
+      name: "the suite passes inside the container",
+      passed: true,
+      skipped: true,
+      skipReason: "the Docker daemon is not available on this machine",
+    });
+    const [ran, skipped] = attest.judgeAttestChecks(
+      [
+        { id: "structural", tests: ["the image is built in stages"] },
+        { id: "container", tests: ["the suite passes inside the container"] },
+      ],
+      results
+    );
+    assert.equal(ran.passed, true);
+    assert.equal(skipped.passed, true, "missing infrastructure is never a red verdict on this tier either");
+    assert.match(skipped.reason, /Not run here either/);
+    assert.match(skipped.reason, /Docker daemon is not available on this machine/);
+    // A failure does not get to declare itself not-run after the fact.
+    const [failed] = attest.judgeAttestChecks(
+      [{ id: "container", tests: ["the suite passes inside the container"] }],
+      attest.parseTap("not ok 1 - the suite passes inside the container # SKIP wishful\n")
+    );
+    assert.equal(failed.passed, false);
+  });
+
   it("allowlists node --test over relative suites, nothing else", () => {
     assert.deepEqual(attest.resolveAttestArgv("node --test --test-reporter=tap test/cart.test.mjs"), [
       "--test",
@@ -4287,7 +4324,7 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     assert.equal(
       ideHashOf([
         ["task-manager.json", ideTm.IDE_TASK_MANAGER],
-        ["shipped/manifest.json", ideMf.IDE_MANIFEST],
+        ["shipped/task-manager.manifest.json", ideMf.IDE_MANIFEST],
       ]),
       ideVer.IDE_CONTENT_VERSION,
       "the IDE snapshot hashes to its own version stamp (a hand-edit must re-sync)"
@@ -4308,7 +4345,7 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     const ideSrc = join(root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum");
     const sources = [
       { rel: "task-manager.json", out: "ide-task-manager.ts", symbol: "IDE_TASK_MANAGER" },
-      { rel: join("shipped", "manifest.json"), out: "ide-manifest.ts", symbol: "IDE_MANIFEST" },
+      { rel: join("shipped", "task-manager.manifest.json"), out: "ide-manifest.ts", symbol: "IDE_MANIFEST" },
     ];
     if (!sources.every((s) => existsSync(join(ideSrc, s.rel)))) {
       process.stdout.write(
@@ -4455,11 +4492,31 @@ function fakeAuthPool() {
   const tokens = new Map(); // token_hash -> row
   const revoked = new Map(); // jti -> row
   const cutoffs = new Map(); // user_id -> revoked_before (Date)
+  /* Added with the rights work (007_rights.sql), and here for the same reason the
+     rest of this fake exists: the rights surface is mostly *SQL*, so the only way
+     to assert that an erasure really cascades, that a cut-off outlives the
+     account, or that the retention sweep leaves open work alone is to answer those
+     statements faithfully. A missing handler falls through to "no rows", which
+     makes a route that queries something new fail visibly rather than pass. */
+  const consents = new Map(); // `${user_id}|${document}` -> row
+  const erasures = new Map(); // subject_ref -> receipt row
+  const handoffs = new Map(); // id -> processor_deletion row
+  const requests = new Map(); // id -> rights_request row
+  const proofs = new Map(); // `${user_id}|${competency_id}` -> row
+  const deviceCodes = new Map(); // id -> device_code row
+  const deletedCutoffs = new Map(); // user_id -> revoked_before (Date)
   return {
     users,
     tokens,
     revoked,
     cutoffs,
+    consents,
+    erasures,
+    handoffs,
+    requests,
+    proofs,
+    deviceCodes,
+    deletedCutoffs,
     query: async (sql, params) => {
       // The prune is a real delete here, not a stub: how many rows it removes is
       // the behaviour under test, so the fake has to age rows like Postgres does.
@@ -4564,6 +4621,264 @@ function fakeAuthPool() {
         for (const row of tokens.values()) {
           if (row.user_id === params[0] && !row.revoked_at) {
             row.revoked_at = new Date();
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      /* ---- the rights surface (007_rights.sql) ---- */
+
+      // The signup statement, with or without declarations. The CTE shape is
+      // answered by inserting the user AND the three consent rows, so a test can
+      // assert what was recorded rather than only that a 201 came back.
+      if (sql.startsWith("WITH u AS (INSERT INTO users")) {
+        const u = {
+          id: params[0],
+          email: params[1],
+          name: params[2],
+          password_hash: params[3],
+          created_at: new Date("2026-01-01T00:00:00Z"),
+        };
+        users.set(u.id, u);
+        const [docs, versions, purposes, bases] = [params[4], params[5], params[6], params[7]];
+        (docs ?? []).forEach((document, i) => {
+          consents.set(`${u.id}|${document}`, {
+            user_id: u.id,
+            document,
+            version: versions[i],
+            purpose: purposes[i],
+            basis: bases[i],
+            accepted_at: new Date(),
+            withdrawn_at: null,
+          });
+        });
+        return { rows: [u], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT document, version, purpose, basis")) {
+        const rows = [...consents.values()].filter((c) => c.user_id === params[0]);
+        return { rows, rowCount: rows.length };
+      }
+      if (sql.startsWith("UPDATE consents SET withdrawn_at")) {
+        const row = consents.get(`${params[0]}|${params[1]}`);
+        if (!row || row.withdrawn_at) return { rows: [], rowCount: 0 };
+        row.withdrawn_at = new Date();
+        return { rows: [{ document: row.document }], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT id, email, name, created_at, provider FROM users")) {
+        const u = users.get(params[0]);
+        return u ? { rows: [{ ...u, provider: u.provider ?? "local" }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("SELECT id, email, name, created_at FROM users WHERE id")) {
+        const u = users.get(params[0]);
+        return u ? { rows: [u], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      /* The erasure, as one statement.
+       *
+       * Answered faithfully rather than stubbed, because the interesting
+       * properties ARE the SQL: that the tally is counted before the delete, that
+       * an account that does not exist writes no receipt, that the cut-off and the
+       * receipt and the handoffs all land with the deletion or not at all, and that
+       * the rights ledger keeps its pseudonymous subject when `user_id` goes NULL.
+       * A stub that answered 200 would make every one of those assertions vacuous. */
+      if (sql.startsWith("WITH counts AS (SELECT")) {
+        const uid = params[0];
+        const [, at, receiptId, ref, retainedJson, reason, handoffIds, providers, notes] = params;
+        const count = (map, pred) => [...map.values()].filter(pred).length;
+        const counts = {
+          account: users.has(uid) ? 1 : 0,
+          email: users.get(uid)?.email ?? null,
+          sessions: count(tokens, (r) => r.user_id === uid),
+          revokedCredentials: count(revoked, (r) => r.user_id === uid),
+          sessionCutoffs: cutoffs.has(uid) ? 1 : 0,
+          deviceCodes: count(deviceCodes, (r) => r.approved_user_id === uid),
+          verifiedProofs: count(proofs, (r) => r.user_id === uid),
+          consentRecords: count(consents, (r) => r.user_id === uid),
+        };
+        if (counts.account === 0) return { rows: [{ counts, deleted: 0 }], rowCount: 1 };
+        deletedCutoffs.set(uid, new Date(at));
+        erasures.set(ref, {
+          id: receiptId,
+          subject_ref: ref,
+          requested_at: new Date(at),
+          completed_at: new Date(at),
+          deleted: { ...counts, email: undefined },
+          retained: JSON.parse(retainedJson),
+          reason: reason ?? null,
+        });
+        (providers ?? []).forEach((provider, i) => {
+          handoffs.set(handoffIds[i], {
+            id: handoffIds[i],
+            provider,
+            subject_ref: ref,
+            user_email: counts.email,
+            note: notes[i],
+            queued_at: new Date(),
+            completed_at: null,
+          });
+        });
+        users.delete(uid);
+        for (const [k, r] of tokens) if (r.user_id === uid) tokens.delete(k);
+        for (const [k, r] of revoked) if (r.user_id === uid) revoked.delete(k);
+        for (const [k, r] of consents) if (r.user_id === uid) consents.delete(k);
+        for (const [k, r] of proofs) if (r.user_id === uid) proofs.delete(k);
+        for (const [k, r] of deviceCodes) if (r.approved_user_id === uid) deviceCodes.delete(k);
+        cutoffs.delete(uid);
+        // ON DELETE SET NULL: the request ledger survives, its subject becomes a
+        // pseudonym, and the row stops naming a live account.
+        for (const row of requests.values()) if (row.user_id === uid) row.user_id = null;
+        return { rows: [{ counts, deleted: 1 }], rowCount: 1 };
+      }
+      if (sql.startsWith("INSERT INTO deleted_subject_revocations")) {
+        const previous = deletedCutoffs.get(params[0]);
+        const at = new Date(params[1]);
+        deletedCutoffs.set(params[0], previous && previous > at ? previous : at);
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT revoked_before FROM deleted_subject_revocations")) {
+        const at = deletedCutoffs.get(params[0]);
+        return at ? { rows: [{ revoked_before: at }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("DELETE FROM deleted_subject_revocations")) {
+        let n = 0;
+        for (const [uid, at] of deletedCutoffs) {
+          if (Date.now() - new Date(at).getTime() > 12 * 3600_000) {
+            deletedCutoffs.delete(uid);
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("INSERT INTO erasures")) {
+        erasures.set(params[1], {
+          id: params[0],
+          subject_ref: params[1],
+          requested_at: params[2],
+          completed_at: params[2],
+          deleted: JSON.parse(params[3]),
+          retained: JSON.parse(params[4]),
+          reason: params[5],
+        });
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT id, completed_at FROM erasures")) {
+        const row = erasures.get(params[0]);
+        return row ? { rows: [row], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("DELETE FROM erasures")) {
+        let n = 0;
+        for (const [ref, row] of erasures) {
+          if (Date.now() - new Date(row.completed_at).getTime() > 24 * 30 * 24 * 3600_000) {
+            erasures.delete(ref);
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("INSERT INTO processor_deletions")) {
+        handoffs.set(params[0], {
+          id: params[0],
+          provider: params[1],
+          subject_ref: params[2],
+          user_email: params[3],
+          note: params[4],
+          queued_at: new Date(),
+          completed_at: null,
+        });
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("UPDATE processor_deletions SET completed_at")) {
+        let n = 0;
+        for (const row of handoffs.values()) {
+          if (row.subject_ref === params[0] && row.provider.startsWith("NEXORA") && !row.completed_at) {
+            row.completed_at = new Date();
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("DELETE FROM processor_deletions")) {
+        let n = 0;
+        for (const [id, row] of handoffs) {
+          if (row.completed_at && Date.now() - new Date(row.completed_at).getTime() > 24 * 30 * 24 * 3600_000) {
+            handoffs.delete(id);
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("INSERT INTO rights_requests")) {
+        const row = {
+          id: params[0],
+          user_id: params[1],
+          subject_ref: params[2],
+          kind: params[3],
+          detail: params[4],
+          nominee: params[5],
+          status: "received",
+          created_at: new Date(),
+          due_at: new Date(params[6]),
+          resolved_at: null,
+          resolution: null,
+        };
+        requests.set(row.id, row);
+        return { rows: [row], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT id, kind, status, detail")) {
+        const rows = [...requests.values()].filter((r) => r.user_id === params[0]);
+        return { rows, rowCount: rows.length };
+      }
+      if (sql.startsWith("UPDATE rights_requests SET subject_ref")) {
+        let n = 0;
+        for (const row of requests.values()) {
+          if (row.user_id === params[0] || row.user_id === params[1]) {
+            row.subject_ref = row.subject_ref ?? params[1];
+            if (row.user_id === params[0]) row.user_id = null;
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("DELETE FROM rights_requests")) {
+        let n = 0;
+        for (const [id, row] of requests) {
+          if (row.resolved_at && Date.now() - new Date(row.resolved_at).getTime() > 24 * 30 * 24 * 3600_000) {
+            requests.delete(id);
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("DELETE FROM users WHERE id")) {
+        const uid = params[0];
+        if (!users.has(uid)) return { rows: [], rowCount: 0 };
+        users.delete(uid);
+        // The cascades the schema declares, in the fake: a deletion that stopped
+        // at the account row would leave sessions and proofs behind, which is the
+        // exact failure mode this suite exists to catch.
+        for (const [k, r] of tokens) if (r.user_id === uid) tokens.delete(k);
+        for (const [k, r] of revoked) if (r.user_id === uid) revoked.delete(k);
+        for (const [k, r] of consents) if (r.user_id === uid) consents.delete(k);
+        for (const [k, r] of proofs) if (r.user_id === uid) proofs.delete(k);
+        for (const [k, r] of deviceCodes) if (r.approved_user_id === uid) deviceCodes.delete(k);
+        cutoffs.delete(uid);
+        for (const row of requests.values()) if (row.user_id === uid) row.user_id = null;
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("DELETE FROM refresh_tokens WHERE expires_at")) {
+        let n = 0;
+        for (const [k, r] of tokens) {
+          if (new Date(r.expires_at).getTime() < Date.now()) {
+            tokens.delete(k);
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("DELETE FROM device_codes WHERE expires_at")) {
+        let n = 0;
+        for (const [k, r] of deviceCodes) {
+          if (new Date(r.expires_at).getTime() < Date.now() - 24 * 3600_000) {
+            deviceCodes.delete(k);
             n += 1;
           }
         }
@@ -5428,5 +5743,356 @@ describe("immediate revocation, end to end (real gateway → real auth service)"
       body: JSON.stringify({ jti: "anything" }),
     });
     assert.equal(wrong.status, 403);
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * Lawful basis, erasure and the rights ledger (007_rights.sql)
+ *
+ * The audit this answers (company/LEGAL-COMPLIANCE-AUDIT.md, F-04, F-05, F-06,
+ * F-13) found a product collecting identities, payments and learner code with no
+ * way to give any of it back, no record of what was agreed to, and nothing that
+ * ever deleted anything. Each assertion below is one of those gaps, and each one
+ * is written so it fails if the mechanism is removed rather than merely
+ * rearranged. The two that matter most are the ones a screenshot cannot show:
+ *
+ *   - an account cannot exist without its record of what was shown (the CTE);
+ *   - the credential a learner is holding dies when the account does (the
+ *     deleted-subject cut-off), because a deleted account whose token still
+ *     works is the failure that looks like success.
+ * ------------------------------------------------------------------ */
+describe("lawful basis, erasure and the rights ledger (in-process, fake pg)", () => {
+  let app;
+  let fakePool;
+  let rights;
+  let billing;
+  const saved = {};
+  const PASSWORD = "0123456789abcdef";
+  /** A fresh address per attempt: the fake enforces the unique index, so a shared
+   * one would make the second test fail for a reason the test is not about. */
+  let seq = 0;
+
+  /** Every call carries the mesh key, as the gateway's forwarded requests do once
+   * a key is configured — which this block deliberately does, so the erasure's
+   * cross-service hop is proven with the credential production uses. */
+  const mesh = (extra = {}) => ({ "x-internal-key": MESH, ...extra });
+
+  const register = (extra = {}) =>
+    app.inject({
+      method: "POST",
+      url: "/register",
+      headers: mesh({ "content-type": "application/json", "x-client-ip": "203.0.113.99" }),
+      payload: { email: `rights-${(seq += 1)}@test.dev`, password: PASSWORD, ...extra },
+    });
+
+  const claimsOf = (token) =>
+    JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8"));
+
+  before(async () => {
+    for (const k of ["AUTH_JWT_SECRET", "NEXORA_REQUIRE_CONSENT", "BILLING_URL", "INTERNAL_API_KEY"])
+      saved[k] = process.env[k];
+    process.env.AUTH_JWT_SECRET = SECRET;
+    // Production has a mesh key, so this run does too: the cross-service erasure
+    // has to be asserted *with* the credential it uses in production, or the test
+    // would prove only that an open route happens to work.
+    process.env.INTERNAL_API_KEY = MESH;
+    delete process.env.NEXORA_REQUIRE_CONSENT;
+    // A stand-in for the billing service, so the cross-service half of an erasure
+    // is exercised rather than skipped: it records what it was asked and answers
+    // the way the real route does.
+    billing = { calls: [], server: null };
+    billing.server = http.createServer((req, res) => {
+      let body = "";
+      req.on("data", (c) => (body += c));
+      req.on("end", () => {
+        billing.calls.push({ url: req.url, key: req.headers["x-internal-key"], body: JSON.parse(body || "{}") });
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ anonymised: true, retained: [] }));
+      });
+    });
+    await new Promise((resolve) => billing.server.listen(0, "127.0.0.1", resolve));
+    process.env.BILLING_URL = `http://127.0.0.1:${billing.server.address().port}`;
+
+    const kitMod = await import("../packages/service-kit/dist/index.js");
+    const routes = await import("../services/auth/dist/routes.js");
+    rights = await import("../services/auth/dist/rights.js");
+    fakePool = fakeAuthPool();
+    app = await kitMod.createService("test-auth-rights");
+    routes.registerAuthRoutes(app, fakePool);
+    await app.ready();
+  });
+
+  after(async () => {
+    await billing.server?.close();
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  });
+
+  it("a production deployment refuses an account with no recorded notice", async () => {
+    process.env.NEXORA_REQUIRE_CONSENT = "1";
+    try {
+      const bare = await register();
+      assert.equal(bare.statusCode, 400, bare.body);
+      assert.equal(bare.json().error.code, "notice_required");
+      assert.equal(fakePool.users.size, 0, "nothing is created when the notice was not given");
+
+      const partial = await register({ acceptTerms: true, acceptPrivacy: true });
+      assert.equal(partial.statusCode, 400, "an unaffirmed age is still a refusal");
+      assert.match(partial.json().error.message, /age affirmation/);
+
+      const stale = await register({
+        acceptTerms: true,
+        acceptPrivacy: true,
+        ageAffirmed: true,
+        documentVersions: { terms: "2020-01-01", privacy: "2020-01-01" },
+      });
+      assert.equal(stale.statusCode, 409, stale.body);
+      assert.equal(stale.json().error.code, "document_version_mismatch");
+      assert.equal(fakePool.users.size, 0, "a stale document version creates nothing");
+
+      const ok = await register({
+        acceptTerms: true,
+        acceptPrivacy: true,
+        ageAffirmed: true,
+        documentVersions: { ...contracts.CURRENT_DOCUMENT_VERSIONS },
+      });
+      assert.equal(ok.statusCode, 201, ok.body);
+      // The account and its declarations landed together, and the version on each
+      // row is the service's own — not the client's word for it.
+      const rows = [...fakePool.consents.values()].filter((c) => c.user_id === ok.json().user.id);
+      assert.equal(rows.length, 3, "terms, privacy and the age affirmation are each recorded");
+      assert.deepEqual(
+        rows.map((r) => r.document).sort(),
+        ["age-affirmation", "privacy", "terms"],
+        "the three declarations are the ones the notice promised"
+      );
+      for (const r of rows) {
+        assert.equal(r.version, contracts.CURRENT_DOCUMENT_VERSIONS.privacy, "the served version, not the claimed one");
+        assert.ok(r.purpose.length > 10 && r.basis.length > 3, "each row states its purpose and its basis");
+      }
+    } finally {
+      delete process.env.NEXORA_REQUIRE_CONSENT;
+    }
+  });
+
+  it("the export is the learner's own record, and names what it does not hold", async () => {
+    const reg = await register({ acceptTerms: true, acceptPrivacy: true, ageAffirmed: true });
+    assert.equal(reg.statusCode, 201, reg.body);
+    const id = reg.json().user.id;
+
+    const res = await app.inject({
+      method: "GET",
+      url: "/account/export",
+      headers: mesh({ "x-user-id": id }),
+    });
+    assert.equal(res.statusCode, 200, res.body);
+    const out = res.json();
+    assert.equal(out.format, "nexora-account-export");
+    assert.equal(out.service, "auth", "the half is labelled, because billing exports the other one");
+    assert.equal(out.subject.email, reg.json().user.email);
+    assert.equal(out.consents.length, 3);
+    assert.ok(Array.isArray(out.rightsRequests) && Array.isArray(out.proofs));
+    // The omission is stated rather than discovered: an export that quietly
+    // dropped the payment history would not be the artifact Art. 15 describes.
+    assert.ok(
+      out.notIncluded.some((n) => /Payment and subscription/.test(n.category)),
+      "the export names the records this service does not hold"
+    );
+    // A credential must never travel in an export file.
+    assert.ok(!res.body.includes("token_hash"), "no session credential is in the export");
+    assert.deepEqual(Object.keys(out.sessions).sort(), ["active", "deviceCodes", "revoked"]);
+  });
+
+  it("a rights request is recorded with its statutory clock, not a promise", async () => {
+    const reg = await register({ acceptTerms: true, acceptPrivacy: true, ageAffirmed: true });
+    const id = reg.json().user.id;
+    const res = await app.inject({
+      method: "POST",
+      url: "/rights",
+      headers: mesh({ "content-type": "application/json", "x-user-id": id }),
+      payload: { kind: "rectification", detail: "My display name is misspelled." },
+    });
+    assert.equal(res.statusCode, 201, res.body);
+    const body = res.json();
+    assert.equal(body.request.kind, "rectification");
+    assert.equal(body.responseDays, contracts.RIGHTS_RESPONSE_DAYS);
+    const due = new Date(body.request.dueAt).getTime();
+    const created = new Date(body.request.createdAt).getTime();
+    const days = Math.round((due - created) / 86400000);
+    assert.equal(days, 30, "one month, the strictest of GDPR 30 / CCPA 45 / DPDP 90");
+    assert.equal(body.request.status, "received");
+
+    // And the learner can read the clock back on their own request.
+    const list = await app.inject({ method: "GET", url: "/rights", headers: mesh({ "x-user-id": id }) });
+    assert.equal(list.json().requests.length, 1);
+
+    // An unknown kind is a 400, not a silently-ignored row.
+    const bad = await app.inject({
+      method: "POST",
+      url: "/rights",
+      headers: mesh({ "content-type": "application/json", "x-user-id": id }),
+      payload: { kind: "free-money", detail: "x" },
+    });
+    assert.equal(bad.statusCode, 400);
+  });
+
+  it("withdrawal is a control, and it says what it changed", async () => {
+    const reg = await register({ acceptTerms: true, acceptPrivacy: true, ageAffirmed: true });
+    const id = reg.json().user.id;
+    const w = await app.inject({
+      method: "POST",
+      url: "/consents/withdraw",
+      headers: mesh({ "content-type": "application/json", "x-user-id": id }),
+      payload: { document: "terms" },
+    });
+    assert.equal(w.statusCode, 200, w.body);
+    assert.equal(w.json().withdrawn, true);
+    // The honest answer differs by basis: consent stops the processing, a contract
+    // basis means the account cannot continue on it and erasure is the alternative.
+    assert.match(w.json().effect, /cannot continue on this basis/);
+    assert.ok(fakePool.consents.get(`${id}|terms`).withdrawn_at instanceof Date);
+
+    const again = await app.inject({
+      method: "POST",
+      url: "/consents/withdraw",
+      headers: mesh({ "content-type": "application/json", "x-user-id": id }),
+      payload: { document: "terms" },
+    });
+    assert.equal(again.statusCode, 200, "withdrawing twice is not an error");
+    assert.equal(again.json().effect, null, "and it does not claim a second change");
+  });
+
+  it("erasure deletes the account, cuts off the credential it left behind, and names what it kept", async () => {
+    const reg = await register({ acceptTerms: true, acceptPrivacy: true, ageAffirmed: true });
+    assert.equal(reg.statusCode, 201, reg.body);
+    const user = reg.json().user;
+    const token = reg.json().tokens.accessToken;
+    const claims = claimsOf(token);
+    assert.ok(claims.jti, "the access token names itself, which is what a cut-off is checked against");
+
+    // Before: the credential is live.
+    const before = await app.inject({
+      method: "POST",
+      url: "/internal/revocations/check",
+      headers: mesh({ "content-type": "application/json" }),
+      payload: { jti: claims.jti, userId: user.id, issuedAtMs: claims.iat * 1000 },
+    });
+    assert.equal(before.json().revoked, false);
+
+    // A typo must not be able to destroy an account: the confirmation is a word.
+    const wrong = await app.inject({
+      method: "POST",
+      url: "/account/delete",
+      headers: mesh({ "content-type": "application/json", "x-user-id": user.id }),
+      payload: { confirm: "delete" },
+    });
+    assert.equal(wrong.statusCode, 400);
+    assert.ok(fakePool.users.has(user.id), "the account survives a rejected confirmation");
+    const usersBefore = fakePool.users.size;
+
+    const del = await app.inject({
+      method: "POST",
+      url: "/account/delete",
+      headers: mesh({ "content-type": "application/json", "x-user-id": user.id }),
+      payload: { confirm: "DELETE" },
+    });
+    assert.equal(del.statusCode, 200, del.body);
+    const out = del.json();
+    assert.equal(out.deleted.account, 1);
+    assert.equal(out.deleted.consentRecords, 3, "the acceptance record goes with the account");
+    assert.equal(out.deleted.sessions, 1, "every refresh family went with it");
+    assert.ok(out.receiptId, "an erasure leaves a receipt");
+    // The honest half: what could not be deleted, and the basis for keeping it.
+    assert.ok(out.retained.length >= 3);
+    assert.ok(
+      out.retained.some((r) => r.basis === "legal-obligation" && /tax/i.test(r.reason)),
+      "the retention exception is stated with its legal basis, not hidden"
+    );
+    assert.ok(
+      out.processorsQueued.some((p) => /Clerk/.test(p)) && out.processorsQueued.some((p) => /Dodo/.test(p)),
+      "the processors holding their own copy are named as outstanding work"
+    );
+
+    // The account is gone: no rows of its own left anywhere, and no export to be
+    // had. Scoped to this learner's rows — the fake holds accounts from the other
+    // tests in this block, and an assertion on the whole table would pass or fail
+    // for reasons that have nothing to do with the deletion under test.
+    assert.equal(fakePool.users.has(user.id), false, "the account row is deleted");
+    assert.equal(fakePool.users.size, usersBefore - 1, "and nothing else was deleted with it");
+    const mine = (map) => [...map.values()].filter((r) => r.user_id === user.id);
+    assert.equal(mine(fakePool.consents).length, 0, "its declarations cascaded");
+    assert.equal(mine(fakePool.tokens).length, 0, "and its sessions");
+    assert.equal(mine(fakePool.revoked).length, 0, "and its revoked-credential rows");
+    const gone = await app.inject({ method: "GET", url: "/account/export", headers: mesh({ "x-user-id": user.id }) });
+    assert.equal(gone.statusCode, 404);
+
+    // The credential in the learner's hands stops working. This is the assertion
+    // that a deleted account is not a still-usable one.
+    const after = await app.inject({
+      method: "POST",
+      url: "/internal/revocations/check",
+      headers: mesh({ "content-type": "application/json" }),
+      payload: { jti: claims.jti, userId: user.id, issuedAtMs: claims.iat * 1000 },
+    });
+    assert.equal(after.json().revoked, true, "a token issued before the erasure is refused after it");
+    assert.equal(after.json().reason, "account");
+
+    // The receipt, the ledger and the cut-off all outlived the account — that is
+    // what makes them evidence. The request ledger keeps the subject as a
+    // pseudonym so a 24-month record of the request survives the deletion.
+    assert.equal(fakePool.erasures.size, 1);
+    assert.equal(fakePool.deletedCutoffs.size, 1);
+
+    // Billing was asked, over the mesh, with the identity it keys its rows on.
+    assert.equal(billing.calls.length, 1, "the erasure reached the billing service");
+    assert.equal(billing.calls[0].url, "/internal/erase");
+    assert.equal(billing.calls[0].key, MESH, "and it went out with the mesh key, not as an open route");
+    assert.deepEqual(billing.calls[0].body, { userId: user.id });
+    assert.ok(
+      [...fakePool.handoffs.values()].some((h) => h.provider.startsWith("NEXORA") && h.completed_at),
+      "the completed handoff is marked done rather than left open"
+    );
+    assert.ok(
+      [...fakePool.handoffs.values()].filter((h) => h.provider.startsWith("Clerk")).every((h) => !h.completed_at),
+      "a processor this service cannot reach stays open work"
+    );
+  });
+
+  it("the retention sweep deletes expired rows and never touches open work", async () => {
+    fakePool = fakeAuthPool();
+    const settled = new Date(Date.now() - 900 * 24 * 3600_000); // past 24 months
+    const recent = new Date(Date.now() - 40 * 24 * 3600_000); // well inside it
+    // Expired: a refresh token past its life, a device code with a day of slack
+    // used up, and a settled request past 24 months.
+    fakePool.tokens.set("hash", { id: "t1", user_id: "u1", token_hash: "hash", expires_at: recent, revoked_at: null });
+    fakePool.deviceCodes.set("d1", { id: "d1", approved_user_id: "u1", expires_at: settled });
+    fakePool.requests.set("r1", { id: "r1", user_id: "u1", subject_ref: "x", resolved_at: settled, due_at: settled });
+    // Open or recent: must survive, because deleting the evidence that work is
+    // outstanding is how an obligation disappears instead of being met.
+    fakePool.requests.set("r2", { id: "r2", user_id: "u1", subject_ref: "x", resolved_at: null, due_at: new Date() });
+    fakePool.handoffs.set("h1", { id: "h1", provider: "Clerk (identity)", subject_ref: "x", completed_at: null });
+
+    const removed = await rights.pruneRetention(fakePool);
+    assert.equal(removed.refreshTokens, 1);
+    assert.equal(removed.deviceCodes, 1);
+    assert.equal(removed.rightsRequests, 1);
+    assert.equal(fakePool.requests.has("r2"), true, "an unanswered request is never pruned");
+    assert.equal(fakePool.handoffs.has("h1"), true, "an unactioned processor handoff is never pruned");
+  });
+
+  it("the production gate is a switch, not a hardcoded refusal", () => {
+    // Both directions, because a gate that cannot be turned off is as useless as
+    // one that cannot be turned on — and the default has to be the safe one.
+    const withFlag = rights.consentRequired({ NEXORA_REQUIRE_CONSENT: "1" });
+    assert.equal(withFlag, true);
+    assert.equal(rights.consentRequired({ NODE_ENV: "production" }), true, "production requires the notice by default");
+    assert.equal(rights.consentRequired({ NODE_ENV: "development" }), false);
+    assert.equal(
+      rights.consentRequired({ NODE_ENV: "production", NEXORA_REQUIRE_CONSENT: "0" }),
+      false,
+      "and an operator can turn it off deliberately, in writing"
+    );
   });
 });
