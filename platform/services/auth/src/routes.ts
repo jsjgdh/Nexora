@@ -5,6 +5,8 @@ import {
   devicePollSchema,
   designReceiptPayload,
   designReceiptSchema,
+  incidentReceiptPayload,
+  incidentReceiptSchema,
   loginSchema,
   linkSchema,
   logoutAllSchema,
@@ -592,13 +594,20 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
   app.post("/proofs", async (req, reply) => {
     const userId = requireUserId(req);
     const body = parseOr400(proofSubmitSchema, req.body);
+    /* Three receipt kinds share this surface: a code run, a design verdict and
+     * a debugging-lab verdict. The payload each one is signed over is built by
+     * its own kind, so the bytes verified here are exactly the bytes that were
+     * signed — a receipt of one kind can never be re-typed as another. */
     const design = designReceiptSchema.safeParse(body.receipt);
+    const incident = incidentReceiptSchema.safeParse(body.receipt);
     const payload = design.success
       ? designReceiptPayload(design.data.facts, design.data.issuedAt)
-      : runReceiptPayload(
-          (body.receipt as { facts: Parameters<typeof runReceiptPayload>[0]; issuedAt: string }).facts,
-          body.receipt.issuedAt
-        );
+      : incident.success
+        ? incidentReceiptPayload(incident.data.facts, incident.data.issuedAt)
+        : runReceiptPayload(
+            (body.receipt as { facts: Parameters<typeof runReceiptPayload>[0]; issuedAt: string }).facts,
+            body.receipt.issuedAt
+          );
     let verified: "hmac" | "ed25519" | null = null;
     if (body.receipt.sigEd) {
       try {
@@ -647,7 +656,7 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
   app.get("/proofs", async (req) => {
     const userId = requireUserId(req);
     const { rows } = await pool.query(
-      "SELECT competency_id, level, CASE WHEN receipt->'facts'->>'kind' = 'design' THEN 'design' ELSE 'run' END AS kind, issued_at FROM proofs WHERE user_id = $1 ORDER BY issued_at DESC",
+      "SELECT competency_id, level, CASE WHEN receipt->'facts'->>'kind' = 'design' THEN 'design' WHEN receipt->'facts'->>'kind' = 'incident' THEN 'incident' ELSE 'run' END AS kind, issued_at FROM proofs WHERE user_id = $1 ORDER BY issued_at DESC",
       [userId]
     );
     return {

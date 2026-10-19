@@ -5,8 +5,10 @@ import { JobQueue } from "./queue.js";
 import { Quotas } from "./quotas.js";
 import { dockerAvailable } from "./runners/docker.js";
 import { SYNCED_DESIGN_CHALLENGES } from "./data/design-challenges.js";
+import { SYNCED_INCIDENTS } from "./data/incidents.js";
 import { SYNCED_ATTEST_FIXTURES } from "./data/attest-fixtures.js";
 import type { StructuralCheck } from "./designAttest.js";
+import type { CanonicalIncident } from "./incidentAttest.js";
 
 /* The execution service: learner code, run on the platform's own runner.
  *
@@ -125,6 +127,43 @@ for (const entry of SYNCED_ATTEST_FIXTURES) {
 }
 app.log.info({ attestFixtures: attestFixtures.size }, "code attestation registry ready");
 
-registerExecutionRoutes(app, { queue, quotas, runner, attestChallenges, attestFixtures });
+/* The debugging labs the platform may judge: the synced answer key (the cause
+ * each lab is built around, and the cause each candidate fix addresses) from
+ * `npm run sync:incidents`. The IDE ships the lab without that key, so this
+ * copy is the only one that can say which fix resolves an incident \u2014 which is
+ * why the key lives here and not in the artefact. An entry that fails shape
+ * validation is skipped with a warning \u2014 never judged \u2014 so a bad sync degrades
+ * to 503 `attestation_unavailable`, the same answer as no sync. */
+const attestIncidents = new Map<string, CanonicalIncident>();
+for (const entry of SYNCED_INCIDENTS) {
+  const usable =
+    typeof entry?.id === "string" &&
+    entry.id.length > 0 &&
+    Number.isInteger(entry?.version) &&
+    (entry as { version: number }).version >= 1 &&
+    typeof entry?.rootCause === "string" &&
+    entry.rootCause.trim().length > 0 &&
+    Array.isArray(entry?.candidateFixes) &&
+    entry.candidateFixes.length > 0 &&
+    Array.isArray(entry?.requiredEvidence) &&
+    entry.requiredEvidence.length > 0;
+  if (!usable) {
+    app.log.warn({ entry: (entry as { id?: unknown })?.id ?? null }, "skipping malformed synced debugging lab \u2014 it will answer 503, never judge");
+    continue;
+  }
+  attestIncidents.set(entry.id, {
+    id: entry.id,
+    version: entry.version,
+    rootCause: entry.rootCause,
+    candidateFixes: entry.candidateFixes,
+    requiredEvidence: entry.requiredEvidence,
+  });
+}
+app.log.info(
+  { debuggingLabs: [...attestIncidents].map(([id, i]) => `${id} v${i.version}`) },
+  "debugging-lab attestation registry ready"
+);
+
+registerExecutionRoutes(app, { queue, quotas, runner, attestChallenges, attestIncidents, attestFixtures });
 
 await start(app, port);

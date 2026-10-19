@@ -1,9 +1,12 @@
 import {
   designReceiptPayload,
+  incidentReceiptPayload,
   runReceiptPayload,
   type DesignFacts,
   type DesignReceipt,
   type ExecuteResponse,
+  type IncidentFacts,
+  type IncidentReceipt,
   type RunFacts,
   type RunReceipt,
 } from "@nexora/contracts";
@@ -125,6 +128,44 @@ export function mintDesignReceipt(
   const issuedAt = now.toISOString();
   const payload = designReceiptPayload(facts, issuedAt);
   const receipt: DesignReceipt = { v: 1, issuedAt, facts, sig: signReceipt(payload, meshKey) };
+  const edKey = receiptEdKey();
+  if (edKey) {
+    receipt.sigEd = signReceiptEd(payload, edKey);
+    receipt.keyId = receiptKeyId();
+  }
+  return receipt;
+}
+
+/**
+ * Sign one debugging-lab verdict.
+ *
+ * `attemptSha256` binds the receipt to the exact attempt that was judged, so it
+ * cannot be replayed against a different one. `checks` are the facts the platform
+ * re-derived from its own copy of the lab: which fix resolves the cause, whether
+ * it regresses, whether the evidence was cited, and whether a hypothesis came
+ * first. `sigEd`/`keyId` ride along only when a receipt key is configured;
+ * absent, the receipt is HMAC-only — offline verification is unavailable, not
+ * faked, exactly as `mintReceipt`.
+ */
+export function mintIncidentReceipt(
+  incidentId: string,
+  attemptSha256: string,
+  checks: IncidentFacts["checks"],
+  meshKey: string,
+  now: Date = new Date(),
+  userId?: string
+): IncidentReceipt {
+  const facts: IncidentFacts = {
+    kind: "incident",
+    incidentId,
+    attemptSha256,
+    checks,
+    runner: "platform",
+    ...(userId === undefined ? {} : { userId }),
+  };
+  const issuedAt = now.toISOString();
+  const payload = incidentReceiptPayload(facts, issuedAt);
+  const receipt: IncidentReceipt = { v: 1, issuedAt, facts, sig: signReceipt(payload, meshKey) };
   const edKey = receiptEdKey();
   if (edKey) {
     receipt.sigEd = signReceiptEd(payload, edKey);

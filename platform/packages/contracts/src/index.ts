@@ -708,6 +708,146 @@ export const designAttestVerdictSchema = z.object({
 });
 export type DesignAttestVerdict = z.infer<typeof designAttestVerdictSchema>;
 
+/* ---------- incident attestation (debugging labs) ---------- */
+
+/*
+ * A debugging lab is judged by the platform, never by the machine the learner
+ * works on. The IDE ships the lab — the symptom, the log, the failing tests,
+ * the candidate fixes as OPTIONS — and not the answer: the cause the incident is
+ * built around, and which option addresses it. So what crosses here is the
+ * learner's attempt and nothing else, and the platform judges that attempt
+ * against its OWN canonical copy of the labs, exactly as it re-judges a design
+ * against its own canonical checks.
+ *
+ * The same honesty rules as the code and design paths: no model, no rubric
+ * weight, no score — only facts a machine can re-derive, and a refusal rather
+ * than a guess when the lab is not registered.
+ */
+
+/** One step of the learner's own investigation. The order is the order it happened in. */
+export const incidentEventSchema = z.object({
+  seq: z.number().int().min(0).max(100000),
+  kind: z.enum(["hypothesis", "choose-fix", "verify", "defend"]),
+  /** For a hypothesis: the learner's own words. Read for presence, never for quality. */
+  text: z.string().max(2000).optional(),
+  /** For a choose-fix: which candidate the learner picked. */
+  fixId: z.string().min(1).max(80).optional(),
+  /** For a verify: the host's own note about a run. Never read as a verdict. */
+  passed: z.boolean().optional(),
+});
+export type IncidentEventWire = z.infer<typeof incidentEventSchema>;
+
+/**
+ * The attempt: what the learner did, and nothing about whether it was right.
+ *
+ * The fix they stand behind is not a field: it is the LAST choose-fix event in
+ * the log, because the moment they chose it is part of what is judged and a
+ * field cannot carry a moment. The platform reads the same log the IDE shows.
+ */
+export const incidentAttemptSchema = z.object({
+  events: z.array(incidentEventSchema).min(1).max(256),
+  citedEvidence: z.array(z.string().min(1).max(120)).max(32),
+});
+export type IncidentAttemptWire = z.infer<typeof incidentAttemptSchema>;
+
+/** A debugging-lab submission names a registered lab and the attempt to judge. */
+export const incidentAttestSubmissionSchema = z.object({
+  incidentId: z.string().min(1).max(120),
+  /** The authored revision of the lab document the learner's IDE holds. Optional so
+   *  older IDEs keep working; when present and stale the route refuses rather than
+   *  misjudges — the same rule the design route follows. */
+  incidentVersion: z.number().int().min(1).max(1000000).optional(),
+  attempt: incidentAttemptSchema,
+});
+export type IncidentAttestSubmission = z.infer<typeof incidentAttestSubmissionSchema>;
+
+/** One re-derived fact about the attempt: which check, whether it held, why. */
+export const incidentCheckResultSchema = z.object({
+  checkId: z.string().min(1).max(80),
+  passed: z.boolean(),
+  reason: z.string().min(1).max(1000),
+});
+export type IncidentCheckResult = z.infer<typeof incidentCheckResultSchema>;
+
+/**
+ * What an incident receipt signs. `kind: "incident"` is the discriminator
+ * `/verify` branches on, and it carries no code, no stdout and no rubric: an
+ * incident verdict is pure computation over the submitted attempt, judged against
+ * the platform's own copy of the lab.
+ *
+ * The attempt's own process claims (that a hypothesis was recorded before the
+ * fix) travel inside the attempt and are covered by `attemptSha256`. They are
+ * the learner's own account of their own work, exactly as a design graph is; what
+ * this receipt adds is the platform's re-derivation of WHICH FIX resolves the
+ * incident, which no learner-owned document can decide.
+ */
+export interface IncidentFacts {
+  kind: "incident";
+  incidentId: string;
+  attemptSha256: string;
+  checks: IncidentCheckResult[];
+  runner: string;
+  /** The learner this verdict is bound to. Absent on receipts minted before the binding landed. */
+  userId?: string;
+}
+
+export const incidentFactsSchema = z.object({
+  kind: z.literal("incident"),
+  incidentId: z.string().min(1).max(120),
+  attemptSha256: z.string().regex(/^[0-9a-f]{64}$/),
+  checks: z.array(incidentCheckResultSchema).min(1).max(16),
+  runner: z.string().max(40),
+  userId: z.string().min(1).max(120).optional(),
+});
+
+/** An incident receipt: same two-signature shape as a run receipt, over the judged attempt. */
+export interface IncidentReceipt {
+  v: 1;
+  issuedAt: string;
+  facts: IncidentFacts;
+  /** hex HMAC-SHA256 of `incidentReceiptPayload(facts, issuedAt)`. */
+  sig: string;
+  /** base64 Ed25519 over the same payload bytes. Absent before the migration. */
+  sigEd?: string;
+  keyId?: string;
+}
+
+export const incidentReceiptSchema = z.object({
+  v: z.literal(1),
+  issuedAt: z.string().min(20).max(40),
+  facts: incidentFactsSchema,
+  sig: z.string().regex(/^[0-9a-f]{64}$/),
+  sigEd: z.string().min(86).max(90).optional(),
+  keyId: z.string().min(1).max(64).optional(),
+});
+
+/**
+ * Deterministic serialization of the signed incident facts, hand-built exactly
+ * like `designReceiptPayload` so a signed string never depends on key insertion
+ * order and both sides agree on the bytes by construction.
+ */
+export function incidentReceiptPayload(facts: IncidentFacts, issuedAt: string): string {
+  return JSON.stringify({
+    v: 1,
+    ...(facts.userId === undefined ? {} : { userId: facts.userId }),
+    kind: "incident",
+    issuedAt,
+    incidentId: facts.incidentId,
+    attemptSha256: facts.attemptSha256,
+    checks: facts.checks.map((c) => [c.checkId, c.passed, c.reason]),
+    runner: facts.runner,
+  });
+}
+
+export const incidentAttestVerdictSchema = z.object({
+  provenance: z.literal("attested"),
+  outcome: z.string().min(1).max(500),
+  checks: z.array(incidentCheckResultSchema).min(1).max(16),
+  /** The incident receipt — the handoff object — when this deployment holds a signing key. */
+  receipt: incidentReceiptSchema.optional(),
+});
+export type IncidentAttestVerdict = z.infer<typeof incidentAttestVerdictSchema>;
+
 /* ---------- proofs (verified ledger) ---------- */
 
 /* One synced attested record: which competency, at what level, and the receipt
@@ -715,7 +855,7 @@ export type DesignAttestVerdict = z.infer<typeof designAttestVerdictSchema>;
  * facts and re-derives that kind's payload before anything is stored. `level`
  * is the IDE's proficiency word, echoed for display; it confers nothing, and
  * the route never upgrades, judges, or re-levels from it. */
-export const proofReceiptSchema = z.union([runReceiptSchema, designReceiptSchema]);
+export const proofReceiptSchema = z.union([runReceiptSchema, designReceiptSchema, incidentReceiptSchema]);
 export type ProofReceipt = z.infer<typeof proofReceiptSchema>;
 
 export const proofSubmitSchema = z.object({
@@ -730,7 +870,7 @@ export type ProofSubmit = z.infer<typeof proofSubmitSchema>;
 export const proofRecordSchema = z.object({
   competencyId: z.string().min(1).max(120),
   level: z.enum(["introduced", "practiced", "demonstrated", "retained"]),
-  kind: z.enum(["run", "design"]),
+  kind: z.enum(["run", "design", "incident"]),
   issuedAt: z.string().min(20).max(40),
 });
 export type ProofRecord = z.infer<typeof proofRecordSchema>;

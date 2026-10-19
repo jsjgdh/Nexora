@@ -4059,6 +4059,283 @@ describe("the synced design registry is generated, minimal, and judgable", () =>
   });
 });
 
+/* Debugging-lab attestation is the third kind of verdict, and the one that
+   cannot be done on the learner's machine: a modelled lab is judged by
+   comparing the chosen fix with the cause the lab is built around, and that
+   cause IS the answer, so the IDE ships the lab without it and this service
+   holds the key. The fixtures below are the shared yardstick — one lab's key
+   and a set of attempts that each fail exactly one fact — and the two engines
+   (the IDE's incident.ts and this one) are pinned against the same attempts,
+   so a client and a server cannot disagree about what an attempt decided. */
+const RACE_KEY = {
+  id: "incident-race-hang",
+  version: 1,
+  rootCause: "unsynchronized-write",
+  candidateFixes: [
+    { id: "serialize-counter-write", addresses: "unsynchronized-write" },
+    { id: "retry-on-stale", addresses: "transient-failure" },
+    { id: "hold-lock-across-await", addresses: "unsynchronized-write", regression: true },
+  ],
+  requiredEvidence: ["log-interleave-lost-update", "test-two-writers-one-increment"],
+};
+
+const LAB_HYPOTHESIS =
+  "Both workers read the same counter value before either writes, so the second write clobbers the first — a lost update, not a bad number.";
+
+const attemptWith = (events, cited = RACE_KEY.requiredEvidence) => ({ events, citedEvidence: cited });
+const labHypo = (seq) => ({ seq, kind: "hypothesis", text: LAB_HYPOTHESIS });
+const labPick = (seq, fixId) => ({ seq, kind: "choose-fix", fixId });
+
+const GOOD_ATTEMPT = attemptWith([labHypo(0), labPick(1, "serialize-counter-write")]);
+
+describe("debugging-lab judging mirrors the IDE engine, and never grades prose", async () => {
+  const incident = await import("../services/execution/dist/incidentAttest.js");
+
+  it("credits the fix that resolves the cause, with the evidence and the hypothesis in place", () => {
+    const checks = incident.judgeIncident(RACE_KEY, GOOD_ATTEMPT);
+    assert.deepEqual(checks.filter((c) => !c.passed).map((c) => c.checkId), []);
+    assert.deepEqual(
+      checks.map((c) => c.checkId),
+      ["fix-resolves-root-cause", "no-regression", "evidence-cited", "hypothesis-precedes-fix"]
+    );
+    assert.ok(checks.every((c) => typeof c.reason === "string" && c.reason.length > 0), "every check says why");
+  });
+
+  it("fails the wrong-cause fix on exactly one fact", () => {
+    const checks = incident.judgeIncident(RACE_KEY, attemptWith([labHypo(0), labPick(1, "retry-on-stale")]));
+    assert.deepEqual(checks.filter((c) => !c.passed).map((c) => c.checkId), ["fix-resolves-root-cause"]);
+  });
+
+  it("fails the regression fix on exactly one fact", () => {
+    const checks = incident.judgeIncident(RACE_KEY, attemptWith([labHypo(0), labPick(1, "hold-lock-across-await")]));
+    assert.deepEqual(checks.filter((c) => !c.passed).map((c) => c.checkId), ["no-regression"]);
+  });
+
+  it("fails partial evidence on exactly one fact", () => {
+    const checks = incident.judgeIncident(
+      RACE_KEY,
+      attemptWith([labHypo(0), labPick(1, "serialize-counter-write")], [RACE_KEY.requiredEvidence[0]])
+    );
+    assert.deepEqual(checks.filter((c) => !c.passed).map((c) => c.checkId), ["evidence-cited"]);
+  });
+
+  it("calls a fix chosen before the hypothesis trial and error", () => {
+    const checks = incident.judgeIncident(RACE_KEY, attemptWith([labPick(0, "serialize-counter-write"), labHypo(1)]));
+    assert.deepEqual(checks.filter((c) => !c.passed).map((c) => c.checkId), ["hypothesis-precedes-fix"]);
+  });
+
+  it("credits the fix the learner stands behind, not the first one they clicked", () => {
+    const checks = incident.judgeIncident(
+      RACE_KEY,
+      attemptWith([labPick(0, "retry-on-stale"), labHypo(1), labPick(2, "serialize-counter-write")])
+    );
+    assert.deepEqual(checks.filter((c) => !c.passed).map((c) => c.checkId), []);
+  });
+
+  it("gives an attempt with no recorded choice nothing to stand on", () => {
+    const checks = incident.judgeIncident(RACE_KEY, attemptWith([labHypo(0)]));
+    assert.ok(checks.some((c) => !c.passed), "a guess with no recorded fix earns nothing");
+  });
+
+  it("a hypothesis shorter than a sentence is not a hypothesis", () => {
+    const checks = incident.judgeIncident(
+      RACE_KEY,
+      attemptWith([{ seq: 0, kind: "hypothesis", text: "idk" }, labPick(1, "serialize-counter-write")])
+    );
+    assert.deepEqual(checks.filter((c) => !c.passed).map((c) => c.checkId), ["hypothesis-precedes-fix"]);
+  });
+
+  it("judges nothing but the attempt and the key", () => {
+    // judgeIncident takes no client verdict at all: the only way a submission
+    // can be credited is for the platform to re-derive it here.
+    const judged = incident.judgeIncident(RACE_KEY, attemptWith([labHypo(0), labPick(1, "retry-on-stale")]));
+    assert.ok(judged.some((c) => !c.passed), "a wrong-cause fix cannot come back all-pass");
+  });
+
+  it("the compiled IDE engine and this platform agree, check for check, on the same attempt", async (t) => {
+    // The twin of the design check: both engines over the same fixtures, so a
+    // learner cannot be told one thing by the IDE and another by the platform.
+    let ide;
+    try {
+      ide = await import(pathToFileURL(join(root, "..", "..", "nexora-ide", "extensions", "nexora", "out", "incident.js")).href);
+    } catch {
+      t.skip("no compiled incident.js on this host; the platform engine is pinned above");
+      return;
+    }
+    const ideLab = {
+      id: RACE_KEY.id,
+      title: "The counter that lost a writer",
+      goal: "Explain the interleaving before you change anything.",
+      mode: "modelled",
+      symptom: "Every so often a batch finishes one increment short, and the second worker stops logging.",
+      log: ["worker-A read counter=41"],
+      failingTests: ["two concurrent increments raise the counter by two"],
+      evidence: RACE_KEY.requiredEvidence,
+      rootCause: RACE_KEY.rootCause,
+      candidateFixes: RACE_KEY.candidateFixes,
+      requiredEvidence: RACE_KEY.requiredEvidence,
+      hints: ["Look at the order the two workers wrote in."],
+    };
+    const attempts = [
+      GOOD_ATTEMPT,
+      attemptWith([labHypo(0), labPick(1, "retry-on-stale")]),
+      attemptWith([labHypo(0), labPick(1, "hold-lock-across-await")]),
+      attemptWith([labHypo(0), labPick(1, "serialize-counter-write")], [RACE_KEY.requiredEvidence[0]]),
+      attemptWith([labPick(0, "serialize-counter-write"), labHypo(1)]),
+      attemptWith([labPick(0, "retry-on-stale"), labHypo(1), labPick(2, "serialize-counter-write")]),
+      attemptWith([labHypo(0)]),
+    ];
+    for (const attempt of attempts) {
+      const plat = incident.judgeIncident(RACE_KEY, attempt).map((r) => [r.checkId, r.passed]);
+      const ideRes = ide.evaluateIncident(ideLab, attempt).checks.map((c) => [c.id, c.passed]);
+      assert.deepEqual(plat.map(([k]) => k), ideRes.map(([k]) => k), "same checks in the same order");
+      assert.deepEqual(new Map(plat), new Map(ideRes), "platform and IDE disagreed about an attempt");
+    }
+  });
+
+  it("contracts accept the attempt and the verdict, and refuse a local provenance", () => {
+    const sub = { incidentId: "incident-race-hang", attempt: GOOD_ATTEMPT };
+    assert.ok(contracts.incidentAttestSubmissionSchema.safeParse(sub).success);
+    assert.ok(contracts.incidentAttestSubmissionSchema.safeParse({ ...sub, incidentVersion: 1 }).success, "a named revision parses");
+    assert.ok(!contracts.incidentAttestSubmissionSchema.safeParse({ ...sub, incidentVersion: 0 }).success, "revision 0 is not a revision");
+    assert.ok(!contracts.incidentAttestSubmissionSchema.safeParse({ attempt: GOOD_ATTEMPT }).success, "no lab id");
+    assert.ok(
+      !contracts.incidentAttestSubmissionSchema.safeParse({ incidentId: "x", attempt: { events: [], citedEvidence: [] } }).success,
+      "an empty log is not an attempt"
+    );
+    const verdict = {
+      provenance: "attested",
+      outcome: "re-derived server-side",
+      checks: [{ checkId: "fix-resolves-root-cause", passed: true, reason: "Verified." }],
+    };
+    assert.ok(contracts.incidentAttestVerdictSchema.safeParse(verdict).success);
+    assert.ok(
+      !contracts.incidentAttestVerdictSchema.safeParse({ ...verdict, provenance: "local" }).success,
+      "a local investigation must never parse as an attested verdict"
+    );
+  });
+});
+
+describe("debugging-lab attestation re-judges against the platform's own key", () => {
+  let app;
+  const KEY = "test-incident-attest-key";
+  const saved = process.env.INTERNAL_API_KEY;
+
+  before(async () => {
+    process.env.INTERNAL_API_KEY = KEY;
+    const routes = await import("../services/execution/dist/routes.js");
+    app = await kit.createService("test-incident-attestation");
+    routes.registerExecutionRoutes(app, {
+      queue: new execQueue.JobQueue(1),
+      quotas: new execQuotas.Quotas(50, 2),
+      runner: "subprocess",
+      attestIncidents: new Map([[RACE_KEY.id, RACE_KEY]]),
+    });
+    await app.ready();
+  });
+  after(() => {
+    if (saved === undefined) delete process.env.INTERNAL_API_KEY;
+    else process.env.INTERNAL_API_KEY = saved;
+  });
+
+  const submit = (incidentId, attempt, incidentVersion = 1) =>
+    app.inject({
+      method: "POST",
+      url: "/attest/incident",
+      headers: { "x-user-id": "u-incident", "x-internal-key": KEY, "content-type": "application/json" },
+      payload: { incidentId, incidentVersion, attempt },
+    });
+
+  it("judges an attempt against the key the platform holds", async () => {
+    const r = await submit(RACE_KEY.id, GOOD_ATTEMPT);
+    assert.equal(r.statusCode, 200, r.body);
+    const body = r.json();
+    assert.ok(contracts.incidentAttestVerdictSchema.safeParse(body), r.body);
+    assert.equal(body.provenance, "attested");
+    assert.deepEqual(body.checks.filter((c) => !c.passed), [], "every check held");
+  });
+
+  it("refuses a lab it does not hold, and never a pass or a fail", async () => {
+    const r = await submit("incident-not-registered", GOOD_ATTEMPT);
+    assert.equal(r.statusCode, 503, r.body);
+    assert.equal(r.json().error.code, "attestation_unavailable");
+  });
+
+  it("refuses a revision it no longer holds, with the mismatch stated", async () => {
+    const r = await submit(RACE_KEY.id, GOOD_ATTEMPT, 99);
+    assert.equal(r.statusCode, 409, r.body);
+    assert.equal(r.json().error.code, "version_mismatch");
+    assert.match(r.json().error.message, /revision/);
+  });
+
+  it("the receipt is bound to the attempt, and /verify re-derives it", async () => {
+    const r = await submit(RACE_KEY.id, GOOD_ATTEMPT);
+    const receipt = r.json().receipt;
+    assert.ok(receipt, "an attested investigation hands over proof, not just a claim");
+    assert.equal(receipt.facts.kind, "incident");
+    const v = await app.inject({
+      method: "POST",
+      url: "/verify",
+      headers: { "content-type": "application/json", "x-internal-key": KEY },
+      payload: { receipt },
+    });
+    assert.equal(v.statusCode, 200, v.body);
+    assert.equal(v.json().valid, true, v.body);
+    assert.equal(v.json().kind, "incident");
+    assert.equal(v.json().incidentId, RACE_KEY.id);
+    assert.ok(Array.isArray(v.json().checks) && v.json().checks.length === 4);
+    assert.ok(v.json().checks.every((c) => c.passed), "a verified investigation reports the checks that held");
+  });
+
+  it("a receipt re-pointed at another attempt verifies as nothing", async () => {
+    const r = await submit(RACE_KEY.id, GOOD_ATTEMPT);
+    const receipt = r.json().receipt;
+    const tampered = JSON.parse(JSON.stringify(receipt));
+    tampered.facts.attemptSha256 = "0".repeat(64);
+    const v = await app.inject({
+      method: "POST",
+      url: "/verify",
+      headers: { "content-type": "application/json", "x-internal-key": KEY },
+      payload: { receipt: tampered },
+    });
+    assert.equal(v.statusCode, 200, v.body);
+    assert.equal(v.json().valid, false, "a receipt re-pointed at another attempt verifies as nothing");
+  });
+});
+
+describe("the synced debugging-lab registry is generated, minimal, and judgable", () => {
+  it("the sync is fresh: the committed registry equals what the IDE source emits", () => {
+    const dataFile = join(root, "services", "execution", "src", "data", "incidents.ts");
+    let out;
+    try {
+      out = execSync("node scripts/sync-incidents.mjs --check", { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    } catch (err) {
+      throw new Error(`debugging-lab sync drifted — run npm run sync:incidents and commit the result:\n${err.stdout ?? ""}${err.stderr ?? ""}`);
+    }
+    assert.ok(out.includes("sync clean"), out);
+    assert.ok(existsSync(dataFile));
+  });
+
+  it("the registry holds the key and nothing a learner could read", async () => {
+    const mod = await import("../services/execution/dist/data/incidents.js");
+    assert.ok(Array.isArray(mod.SYNCED_INCIDENTS) && mod.SYNCED_INCIDENTS.length > 0, "the registry is empty");
+    for (const entry of mod.SYNCED_INCIDENTS) {
+      assert.equal(typeof entry.id, "string");
+      assert.equal(typeof entry.rootCause, "string");
+      assert.ok(entry.rootCause.length > 0);
+      assert.ok(entry.candidateFixes.length > 0);
+      assert.ok(entry.requiredEvidence.length > 0);
+      const text = JSON.stringify(entry);
+      assert.ok(!text.includes("symptom"), "the registry must hold no symptom");
+      assert.ok(!text.includes("hints"), "the registry must hold no hints");
+      assert.ok(!text.includes("action"), "the registry must hold no fix prose");
+      // The run-mode lab is judged by the learner's own suite, so it has no key
+      // to hold and is not in the registry.
+      assert.notEqual(entry.id, "incident-journal-loss");
+    }
+  });
+});
+
 /* Execution proves someone can write and run a program, and IDE runs happen
    on the learner's own device — so a client could claim a pass it never
    earned. These two suites are the other half of that story: the execution
@@ -6267,5 +6544,92 @@ describe("execution compile-time abuse bounds (P0)", () => {
     });
     assert.equal(node.timeoutMs, execValidate.MAX_TIMEOUT_MS);
     assert.ok(node.timeoutMs > execValidate.MAX_COMPILE_MS, "node keeps the larger generic ceiling");
+  });
+});
+
+/* The global breaker is the last line of defence against a flood: a per-IP
+   ceiling that sits in front of every route, so a burst that outruns the
+   per-route anon caps is still caught. Asserted live, because "the limiter is
+   single-instance and keyed on req.ip" is a production posture (D-006) whose
+   only proof is that the breaker actually fires. The gateway is spawned on its
+   own port with a tiny GATEWAY_GLOBAL_LIMIT so the test trips in a handful of
+   requests and never touches the shared 18080 instance the other suites drive.
+   The route's own cap (auth: 120/min) is far above the test's global ceiling,
+   so a 429 here can only be the global breaker — that differential is the proof. */
+describe("gateway global breaker (P0)", () => {
+  const GW_PORT = 18090;
+  const LIMIT = 5; // the global ceiling for this instance, under the route's 120/min
+  let proc = null;
+  let stub = null;
+  let stubHits = 0;
+
+  before(async () => {
+    stub = http.createServer((_req, res) => {
+      stubHits++;
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ ok: true }));
+    });
+    await new Promise((r) => stub.listen(18082, "127.0.0.1", r));
+    // AUTH_URL/CURRICULUM_URL/EXECUTION_URL/BILLING_URL all point at the stub so
+    // no real upstream is needed: this test is only about the edge limiter.
+    proc = spawn("node", ["services/gateway/dist/index.js"], {
+      cwd: root,
+      env: {
+        ...process.env,
+        NODE_ENV: "development",
+        PORT: String(GW_PORT),
+        FRONTEND_URL: "http://localhost:3000",
+        AUTH_JWT_SECRET: SECRET,
+        INTERNAL_API_KEY: "mesh-global-breaker-test-key-0123456789abcdef",
+        AUTH_URL: "http://127.0.0.1:18082",
+        CURRICULUM_URL: "http://127.0.0.1:18082",
+        EXECUTION_URL: "http://127.0.0.1:18082",
+        BILLING_URL: "http://127.0.0.1:18082",
+        // The whole point: a ceiling low enough to trip in a few requests.
+        GATEWAY_GLOBAL_LIMIT: String(LIMIT),
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    // wait for readiness on /health/live (never limited).
+    for (let i = 0; i < 100; i++) {
+      try {
+        const r = await fetch(`http://127.0.0.1:${GW_PORT}/health/live`);
+        if (r.ok) break;
+      } catch {}
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  });
+
+  after(async () => {
+    if (proc) proc.kill();
+    if (stub) await new Promise((r) => stub.close(r));
+  });
+
+  it("the global breaker trips after GATEWAY_GLOBAL_LIMIT and refuses with 429", async () => {
+    stubHits = 0;
+    // /api/auth/me is an optional-auth route: a bare request needs no token and
+    // still proxies (proven above), so the only budget it spends is the global
+    // one. With TRUST_PROXY=0 (default) req.ip is the socket address, so every
+    // fetch here shares one key — which is exactly what makes the trip
+    // deterministic. The route's 120/min cap is far above this test's ceiling,
+    // so any 429 below is the global breaker, not the route limiter.
+    const statuses = [];
+    for (let i = 0; i < LIMIT + 2; i++) {
+      const r = await fetch(`http://127.0.0.1:${GW_PORT}/api/auth/me`);
+      statuses.push(r.status);
+      if (r.status === 429) {
+        const body = await r.json();
+        assert.equal(body.error.code, "rate_limited");
+      }
+    }
+    // The first LIMIT requests pass; the two past it are refused. This proves the
+    // ceiling is exactly GATEWAY_GLOBAL_LIMIT. The route's own cap is 120/min, so
+    // a refusal after only LIMIT+2 requests CANNOT be the route limiter — it is
+    // the global breaker, which is checked first and sits below the route's ceiling.
+    assert.deepEqual(statuses.slice(0, LIMIT), Array(LIMIT).fill(200), "requests under the ceiling are proxied");
+    assert.deepEqual(statuses.slice(LIMIT), [429, 429], "requests past the ceiling are refused");
+    // The breaker is checked BEFORE the route is forwarded: upstream saw only the
+    // allowed requests, so a refused flood never reaches a service.
+    assert.equal(stubHits, LIMIT, "only the allowed requests were proxied upstream");
   });
 });

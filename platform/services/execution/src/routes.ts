@@ -6,10 +6,14 @@ import {
   designReceiptPayload,
   designReceiptSchema,
   executeSchema,
+  incidentAttestSubmissionSchema,
+  incidentReceiptPayload,
+  incidentReceiptSchema,
   runReceiptPayload,
   runReceiptSchema,
   type AttestVerdict,
   type DesignAttestVerdict,
+  type IncidentAttestVerdict,
 } from "@nexora/contracts";
 import type { ExecuteResponse } from "@nexora/contracts";
 import {
@@ -29,12 +33,17 @@ import {
   type DesignGraph,
   type StructuralCheck,
 } from "./designAttest.js";
+import {
+  canonicalAttemptHash,
+  judgeIncident,
+  type CanonicalIncident,
+} from "./incidentAttest.js";
 import { runSubprocess } from "./runners/subprocess.js";
 import { EXEC_IMAGES, dockerAvailable, runDocker } from "./runners/docker.js";
 import { JobQueue, QueueSaturated } from "./queue.js";
 import { Quotas } from "./quotas.js";
 import { goPhase, parseGoDiagnostics, trimGoStderr } from "./go-diagnostics.js";
-import { mintDesignReceipt, mintReceipt, receiptPublicKey, receiptSigningKey } from "./receipt.js";
+import { mintDesignReceipt, mintIncidentReceipt, mintReceipt, receiptPublicKey, receiptSigningKey } from "./receipt.js";
 
 export interface ExecutionDeps {
   queue: JobQueue;
@@ -69,6 +78,22 @@ export interface ExecutionDeps {
    * structural checks only.
    */
   attestChallenges?: ReadonlyMap<string, { version: number; checks: StructuralCheck[] }>;
+  /**
+   * Canonical debugging labs by id (`incident-race-hang` → the cause the lab is
+   * built around, and the cause each candidate fix addresses). The learner
+   * submits an attempt; only the platform's own copy of the key may decide which
+   * fix resolves the incident — a client-sent cause is a claim, not proof, and the
+   * IDE cannot ship the key at all without handing the learner the answer. Empty
+   * when the debugging-lab sync has not run: with nothing registered every
+   * incident attestation answers 503 `attestation_unavailable`, never a pass and
+   * never a fail. In production the registry loads from the synced module
+   * (`src/data/incidents.ts`, via `npm run sync:incidents`); absent or malformed
+   * entries degrade to that same 503. A submission naming a revision the registry
+   * no longer holds answers 409 `version_mismatch`, for the same reason a design
+   * does: an attempt made against a key this platform no longer judges must not
+   * earn a verdict from a different one.
+   */
+  attestIncidents?: ReadonlyMap<string, CanonicalIncident>;
   /**
    * How this deployment isolates a run it is asked to perform: a subprocess on
    * this host (single-tenant, the toolchain is baked into this image) or a
@@ -146,6 +171,46 @@ export function registerExecutionRoutes(app: FastifyInstance, deps: ExecutionDep
             ? "A design verdict issued by this platform and re-derivable offline against the published key."
             : "A design verdict issued by this platform and within the 30-minute freshness window."
           : "A design verdict issued by this platform but older than 30 minutes — ask for a fresh judgment.",
+      };
+    }
+    /* The debugging-lab verdict is the third kind on this surface: the same two
+     * signatures over the same bytes, discriminated on facts.kind, and it carries
+     * which fix resolved the incident rather than a graph. */
+    const incident = incidentReceiptSchema.safeParse(raw);
+    if (incident.success) {
+      const iPayload = incidentReceiptPayload(incident.data.facts, incident.data.issuedAt);
+      let iVerified: "hmac" | "ed25519" | null = null;
+      if (incident.data.sigEd) {
+        try {
+          const { publicKey } = receiptPublicKey();
+          if (verifyReceiptEd(iPayload, incident.data.sigEd, publicKey)) iVerified = "ed25519";
+        } catch {
+          // No receipt key configured: the Ed25519 half cannot verify here,
+          // and the HMAC below still gets its chance.
+        }
+      }
+      const iKey = receiptSigningKey();
+      if (!iVerified && iKey && verifyReceiptSignature(iPayload, incident.data.sig, iKey)) iVerified = "hmac";
+      if (!iVerified) {
+        return { valid: false, fresh: false, kind: "incident", reason: "This receipt was not issued by this platform." };
+      }
+      const iFresh = receiptFresh(incident.data.issuedAt);
+      return {
+        valid: true,
+        fresh: iFresh,
+        kind: "incident",
+        verifiedBy: iVerified,
+        offlineVerifiable: iVerified === "ed25519",
+        issuedAt: incident.data.issuedAt,
+        incidentId: incident.data.facts.incidentId,
+        attemptSha256: incident.data.facts.attemptSha256,
+        checks: incident.data.facts.checks,
+        runner: incident.data.facts.runner,
+        reason: iFresh
+          ? iVerified === "ed25519"
+            ? "A debugging-lab verdict issued by this platform and re-derivable offline against the published key."
+            : "A debugging-lab verdict issued by this platform and within the 30-minute freshness window."
+          : "A debugging-lab verdict issued by this platform but older than 30 minutes — ask for a fresh judgment.",
       };
     }
     const body = parseOr400(runReceiptSchema, raw);
@@ -402,6 +467,83 @@ export function registerExecutionRoutes(app: FastifyInstance, deps: ExecutionDep
       const receiptKey = receiptSigningKey();
       if (receiptKey) {
         out.receipt = mintDesignReceipt(body.challengeId, canonicalGraphHash(graph), checks, receiptKey, new Date(), userId);
+      }
+      return reply.code(200).send(out);
+    } finally {
+      release();
+    }
+  });
+
+  /* IDE debugging-lab attestation: re-derive the verdict over the learner's
+   * attempt (B-24, incident half).
+   *
+   * A modelled debugging lab is judged by comparing the chosen fix with the cause
+   * the incident is built around — and that cause is the answer, so the IDE ships
+   * the lab without it and this service holds the key. The learner submits their
+   * attempt (the ordered log and the evidence they cited); the platform judges it
+   * against its OWN canonical copy of the lab — the client sends no cause that is
+   * trusted here — and answers with a verdict it computed itself. This is the only
+   * route by which a debugging lab's provenance may leave `local`.
+   *
+   * Fail-closed, mirroring `/attest` and `/attest/design`:
+   * - an unregistered lab is 503 `attestation_unavailable`, never a pass and
+   *   never a fail;
+   * - a revision the registry no longer holds is 409 `version_mismatch`, with the
+   *   mismatch stated;
+   * - only the four deterministic facts are judged — never a model, never a rubric,
+   *   never a score, which is the whole of D-025's "explicitly not in v2".
+   * Authed (a bearer the gateway verified), quota-gated like `/attest`. */
+  app.post("/attest/incident", async (req, reply) => {
+    const userId = requireUserId(req);
+    const denied = deps.quotas.check(userId);
+    if (denied) throw new ApiError(429, "quota_reached", denied);
+    const body = parseOr400(incidentAttestSubmissionSchema, req.body);
+    const registry = deps.attestIncidents ?? new Map<string, CanonicalIncident>();
+    const canonical = registry.get(body.incidentId);
+    if (!canonical) {
+      throw new ApiError(
+        503,
+        "attestation_unavailable",
+        `No canonical copy of ${body.incidentId} is registered here, so this debugging lab cannot be independently judged. It still counts — as practiced.`
+      );
+    }
+    // The revision the learner's IDE holds must be the revision judged here. An
+    // attempt made against a key this platform no longer judges must not be
+    // failed by a key the learner never saw — so the platform refuses with the
+    // mismatch stated, and the work keeps counting as practiced. An IDE too old
+    // to name a revision is still judged: nothing is refused for a field it never
+    // sent.
+    if (body.incidentVersion !== undefined && body.incidentVersion !== canonical.version) {
+      throw new ApiError(
+        409,
+        "version_mismatch",
+        `This attempt names revision ${body.incidentVersion} of ${body.incidentId}, but this platform judges revision ${canonical.version}. Update the IDE and re-submit — it still counts as practiced.`
+      );
+    }
+    // Reserve a daily run up front so concurrent requests cannot collectively
+    // overspend the allowance, exactly as `/attest`; release in the finally. An
+    // incident verdict holds the slot only as long as the pure judge runs — no
+    // queue, because nothing executes.
+    const release = deps.quotas.acquire(userId);
+    try {
+      const checks = judgeIncident(canonical, body.attempt);
+      const passed = checks.filter((c) => c.passed).length;
+      const out: IncidentAttestVerdict = {
+        provenance: "attested",
+        outcome:
+          passed === checks.length
+            ? "Every check the platform holds for this debugging lab was re-derived over your attempt and passed."
+            : `Re-derived server-side: ${passed} of ${checks.length} checks passed.`,
+        checks,
+      };
+      // The handoff object: a receipt over the re-derived verdict, bound to the
+      // canonical hash of the attempt, so a stranger can re-open it without a live
+      // platform. Absent when this deployment holds no signing key — the verdict is
+      // still attested (its authority is the re-judging), but there is nothing to
+      // hand over, and none is faked.
+      const receiptKey = receiptSigningKey();
+      if (receiptKey) {
+        out.receipt = mintIncidentReceipt(body.incidentId, canonicalAttemptHash(body.attempt), checks, receiptKey, new Date(), userId);
       }
       return reply.code(200).send(out);
     } finally {
