@@ -1034,6 +1034,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "project-setup"
       ],
+      "objectives": [
+        "Name the sidebar, the editor and the terminal, and say what each region is for.",
+        "Use the Explorer, a file tab and Ctrl+` to open a file and show and hide the terminal.",
+        "Explain why closing a tab leaves the file on disk, and what a red squiggle is telling you."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -1104,6 +1109,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "project-setup"
+      ],
+      "objectives": [
+        "Explain which two programs this project needs before any code runs, and why each is there.",
+        "Choose the LTS install for your operating system and prove it with node -v in a new terminal.",
+        "Diagnose command-not-found as a terminal that started before the install, not a failed install."
       ],
       "lesson": [
         {
@@ -1194,6 +1204,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "project-setup"
+      ],
+      "objectives": [
+        "Use the Command Palette and Quick Open to reach any command or file by name.",
+        "Apply Ctrl+D, F12 and F2 to edit repeated words, jump to a definition, and rename a symbol.",
+        "Explain why a per-pane shortcut does nothing when the focus is in another pane."
       ],
       "lesson": [
         {
@@ -1345,6 +1360,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "project-setup"
       ],
+      "objectives": [
+        "Read package.json and name the scripts the project declares, including the one this phase adds.",
+        "Explain what a script entry is and when the package manager reads it.",
+        "Identify the project root that holds package.json, and say why commands run from there."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -1484,6 +1504,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "programming-fundamentals"
       ],
+      "objectives": [
+        "Explain what a value, a variable, a function, a list and a loop are, in your own words.",
+        "Trace a short loop by hand and predict what its running total holds after each pass.",
+        "Distinguish printing a value from returning it, and say what a caller receives when a function only prints."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -1617,6 +1642,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "programming-fundamentals"
+      ],
+      "objectives": [
+        "Read a chain of map, filter and reduce and predict the value it hands back.",
+        "Choose map, filter, find or reduce for a question about a list, and say why.",
+        "Explain why sort with no compare function orders numbers as text and reorders the list it was given."
       ],
       "lesson": [
         {
@@ -1863,6 +1893,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "web-http-json"
       ],
+      "objectives": [
+        "Name the parts of an HTTP exchange: a method, an endpoint, a status code and a body.",
+        "Predict whether a 2xx, 3xx, 4xx or 5xx answer blames the caller or the server.",
+        "Explain the difference between JSON text and the data it becomes after parsing."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -1965,6 +2000,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "web-http-json"
+      ],
+      "objectives": [
+        "Explain what JSON.parse does when the text is not JSON, and where the thrown value travels.",
+        "Trace a failure from the line that throws to the catch that answers, and say what the caller receives.",
+        "Write a try/catch that turns malformed text into an empty list instead of a stopped program."
       ],
       "lesson": [
         {
@@ -2169,6 +2209,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "data-crud"
+      ],
+      "objectives": [
+        "Name the four CRUD operations and the HTTP verb that carries each one.",
+        "Trace create, read, update and delete on a task list and say how the list changes after each.",
+        "Explain why each operation names a record by id rather than by its position in the list."
       ],
       "lesson": [
         {
@@ -2401,6 +2446,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "regex-basics"
+      ],
+      "objectives": [
+        "Read a pattern left to right and say which strings it accepts and which it refuses.",
+        "Explain what an anchor, a character class and a quantifier each claim about a string.",
+        "Predict why an unanchored digit run accepts 555-1234 while an anchored one rejects it."
       ],
       "lesson": [
         {
@@ -2646,6 +2696,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "web-behavior"
       ],
+      "objectives": [
+        "Explain the event, handler, state, render chain and name the link that broke when a screen does not change.",
+        "Trace one delete from the row's click handler to the smaller array the parent renders.",
+        "Describe what a closure keeps alive, using the row's onDelete(task.id) as the example.",
+        "Distinguish an arrow function's this from a plain function's this when a handler is attached."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -2864,6 +2920,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "data-state"
       ],
+      "objectives": [
+        "Distinguish state held in memory from the copy written to storage, and say which one survives a reload.",
+        "Trace a change from the state array to the saved copy and back again on the next load.",
+        "Read a stored value through try and catch, and explain what the caller gets when the parse fails."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -3073,6 +3134,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "ui-components"
       ],
+      "objectives": [
+        "Explain what a component receives through props and what it returns to its caller.",
+        "Read src/App.jsx and src/components/TaskItem.jsx and say which file owns the list and which owns one row.",
+        "Choose where a piece of data should enter a component tree instead of threading it through every level."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -3142,6 +3208,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "ui-components"
+      ],
+      "objectives": [
+        "Distinguish the markup string a component returns from the elements a page builds out of it.",
+        "Trace one TaskItem call to the exact <li> markup it produces for a given task.",
+        "Predict how many elements a row function produces when it is called once per task."
       ],
       "lesson": [
         {
@@ -3326,6 +3397,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 3,
       "competencyIds": [
         "independent-delivery"
+      ],
+      "objectives": [
+        "Distinguish a brief that states behaviour from a tutorial that decides the implementation for you.",
+        "Identify the questions a brief leaves implicit, including empty input, missing fields and scale, before writing code.",
+        "Write a one-sentence contract for a function, in plain language, before choosing names or syntax."
       ],
       "lesson": [
         {
@@ -3541,6 +3617,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 3,
       "competencyIds": [
         "test-authoring"
+      ],
+      "objectives": [
+        "Explain why a suite is worth what it can catch, not how many assertions it contains.",
+        "Distinguish an assertion that states the contract from one that would pass against a broken implementation.",
+        "Choose inputs on the boundary a specification names, and predict which seeded breakage each one catches."
       ],
       "lesson": [
         {
@@ -3780,6 +3861,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "codebase-navigation"
       ],
+      "objectives": [
+        "Read a codebase's structure from its imports and file names before searching for one symbol.",
+        "Distinguish a definition from a call site, and say which one a search result actually is.",
+        "Choose between text search, symbol search, and go-to-definition for a question about unfamiliar code.",
+        "Explain why a search that stops at the first match can return a plausible wrong answer."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -3968,6 +4055,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 3,
       "competencyIds": [
         "debug-failure-lab"
+      ],
+      "objectives": [
+        "Read a failing test's name and message before the code, and say what it expected versus what it observed.",
+        "Reproduce a failure by running the suite, then change one thing and run it again.",
+        "Choose one hypothesis that explains every failing name before editing any file.",
+        "Explain why rewriting an assertion to match current behaviour destroys the evidence."
       ],
       "lesson": [
         {
@@ -4245,6 +4338,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "git-recovery"
       ],
+      "objectives": [
+        "Read a commit graph and name the commit, its parents, and the branch labels it shows.",
+        "Explain why a merge commit has two parents and what that means for the history underneath.",
+        "Read conflict markers as two intents in one file, and decide which text satisfies both.",
+        "Choose the recovery that is safe on shared history and say what rewriting would cost a teammate."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -4494,6 +4593,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "api-integration"
       ],
+      "objectives": [
+        "Explain what pending, fulfilled, and rejected mean, and why a settled promise never changes again.",
+        "Predict the order in which a console.log, a then callback, and the following line run.",
+        "Read an await inside a try and say which promise ending lands in the catch."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -4568,6 +4672,12 @@ export const IDE_TASK_MANAGER: unknown = {
       ],
       "hints": [
         "Name the state you are looking at before you render: nothing asked yet, asked and waiting, arrived, failed. An empty list while the request is still in flight is the waiting state, not a bug."
+      ],
+      "objectives": [
+        "Explain why fetch resolves for an HTTP error status and rejects only when no answer arrives.",
+        "Name the four states of a request and set the loading state before the first await.",
+        "Trace a failed load through the module's error path and say what the screen shows in each state.",
+        "Choose where a try and catch belong so a caller cannot forget to handle a failure."
       ],
       "lesson": [
         {
@@ -4782,6 +4892,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "api-design"
+      ],
+      "objectives": [
+        "Explain a server as a function from a request to an answer, and name the three decisions every API makes.",
+        "Trace one request through routing, validation and status choice, and predict the answer each step earns.",
+        "Evaluate a handler that writes before it validates, and say what the caller is left holding when it refuses."
       ],
       "lesson": [
         {
@@ -5016,6 +5131,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "release-readiness"
       ],
+      "objectives": [
+        "Explain why a green test run and a year in development are both evidence about a single environment.",
+        "Read a configuration module and write findings as assumptions, what breaks when each is false, and what to require before shipping.",
+        "Apply the rule that a required value must refuse rather than default, and that an error may name a secret but never quote it."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5222,6 +5342,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "code-review-collaboration"
       ],
+      "objectives": [
+        "Explain why a pull request review protects contracts callers already depend on, rather than personal code style.",
+        "Trace one review comment to the return shape and the caller-owned data it is defending.",
+        "Choose between rejecting an invalid item and inventing a default, and say what each hides from the user."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5412,6 +5537,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 3,
       "competencyIds": [
         "ai-output-audit"
+      ],
+      "objectives": [
+        "Explain why a fluent summary of generated code is a claim to test rather than evidence of correctness.",
+        "Read a generated diff and turn each numbered summary claim into an input that would falsify it.",
+        "Identify the three failure shapes to inspect first: success reported on an error path, an unescaped URL value, and a shared fallback reference."
       ],
       "lesson": [
         {
@@ -5620,6 +5750,11 @@ export const IDE_TASK_MANAGER: unknown = {
         "Reading 0 as \"the caller forgot\" — 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
         "Formatting money with a float — the integer of cents is the value; the string is only how it is shown."
       ],
+      "objectives": [
+        "Explain why a declared int starts at 0 and a declared string starts empty, and why 0 is a value rather than a blank.",
+        "Trace what a program stores when a request arrives with no amount field, and say why that 0 is a decision.",
+        "Predict what FormatCents(0) and FormatCents(-5) must print, then implement them so both are true."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -5813,6 +5948,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-control-flow"
+      ],
+      "objectives": [
+        "Explain when a Go program needs if, for, or switch, and why each shape has one job.",
+        "Trace a switch that receives an unlisted status code and name the branch that answers it.",
+        "Read a loop and identify the condition that changes, so the repetition actually ends.",
+        "Predict whether an unlisted code falls through a case, then check the prediction against the code."
       ],
       "lesson": [
         {
@@ -6010,6 +6151,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-functions"
       ],
+      "objectives": [
+        "Explain why a Go function returns the result and the error together instead of throwing the failure.",
+        "Distinguish the number that is an answer from the placeholder beside a non-nil error.",
+        "Trace a caller that discards an error with the blank identifier and say what gets stored.",
+        "Predict the two result pairs ParseQty returns for an empty string and for a decimal, then make both true."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -6203,6 +6350,11 @@ export const IDE_TASK_MANAGER: unknown = {
         "Panicking on a nil slice — nil means no elements, and a total of no elements is 0.",
         "Passing the ID and the cents as two arguments that can get swapped — the struct is what keeps them one fact."
       ],
+      "objectives": [
+        "Explain why an order is one struct with named fields rather than an ID and a number passed side by side.",
+        "Trace Total over a nil slice and say why the sum stays at zero instead of panicking.",
+        "Apply the rule that a nil slice and an empty slice are the same situation for a total."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -6383,6 +6535,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-methods"
+      ],
+      "objectives": [
+        "Distinguish a value receiver from a pointer receiver by what each one is allowed to change.",
+        "Trace a Deposit written on a value receiver and explain why the caller’s balance never moves.",
+        "Apply the method name as a contract: refuse a deposit of zero or less and leave the balance alone."
       ],
       "lesson": [
         {
@@ -6590,6 +6747,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-interfaces"
       ],
+      "objectives": [
+        "Explain how a type satisfies an interface through its method set, with no implements clause to write.",
+        "Apply the seam: write a function against the behaviour and name no concrete struct in it.",
+        "Predict what a method call on a nil interface does, and why ranging an empty slice is safe."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -6775,6 +6937,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-packages"
       ],
+      "objectives": [
+        "Explain what makes a name visible across a package boundary, and why the compiler is the gate.",
+        "Trace how Checkout reaches money.Cents through an import instead of formatting the value itself.",
+        "Apply the boundary: put one formatting rule in its own package and call it from the other."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -6947,6 +7114,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-collections"
+      ],
+      "objectives": [
+        "Distinguish when a slice is the right shape and when a map is, by what each one preserves.",
+        "Explain what a lookup returns for a missing key and how the two-result form separates absent from zero.",
+        "Trace an append that reuses the array behind its argument and predict which elements the older slice sees.",
+        "Read a loop over a map and explain why it cannot produce a stable order between two runs."
       ],
       "lesson": [
         {
@@ -7166,6 +7339,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-pointers"
       ],
+      "objectives": [
+        "Explain what & and * each do to a value, and why a pointer names one value rather than a neighborhood.",
+        "Distinguish what a nil map, a nil slice, and a nil pointer each allow you to do.",
+        "Trace how a value argument copies the caller and a pointer argument shares the caller variable.",
+        "Apply the rule that reading takes a value and changing the caller takes a pointer."
+      ],
       "resources": [
         {
           "label": "Go Tour: pointers",
@@ -7362,6 +7541,11 @@ export const IDE_TASK_MANAGER: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-embedding"
+      ],
+      "objectives": [
+        "Explain what embedding promotes from an inner type into an outer one, and why it is composition rather than inheritance.",
+        "Trace a call to a promoted method and say which value answers it.",
+        "Apply the shadowing rule to predict which method runs when the outer and inner types both define it."
       ],
       "lesson": [
         {
@@ -7566,6 +7750,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-errors"
       ],
+      "objectives": [
+        "Explain why a Go failure travels as a returned value rather than as a thrown exception.",
+        "Distinguish == from errors.Is when the error has been wrapped with new context.",
+        "Trace a shadowed err inside an if block and say what the function actually returns.",
+        "Apply %w when adding context so a caller’s errors.Is check still finds the sentinel."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -7762,6 +7952,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-lifecycle"
       ],
+      "objectives": [
+        "Explain when a deferred call runs, and why deferred calls unwind last-in-first-out.",
+        "Predict the value a named return holds after two defers have each changed it.",
+        "Distinguish a programmer panic from an expected failure that belongs in an error value.",
+        "Apply recover at one deferred boundary, re-panicking anything the boundary does not own."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -7937,6 +8133,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-generics"
       ],
+      "objectives": [
+        "Explain what a type parameter stands for and what its constraint allows the body to do.",
+        "Trace one generic function called with ints and with strings, and say why one body serves both.",
+        "Apply cmp.Ordered to a function that compares values, and explain why any would refuse the comparison.",
+        "Predict what a generic Max returns for an empty slice, and why that is the zero value."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -8110,6 +8312,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "go-modules"
       ],
+      "objectives": [
+        "Explain what the module path in go.mod decides about every import written inside the module.",
+        "Trace how example.com/moddemo/double resolves to a directory on disk with no download.",
+        "Distinguish a module from a package and say which walk go test ./... actually performs.",
+        "Apply the boundary: add a sibling package and reach it by module path, never by a relative file path."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -8277,6 +8485,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-goroutines-learn": {
       "id": "go-goroutines-learn",
       "title": "Learn: start one, pass a value",
+      "objectives": [
+        "Explain what the go keyword starts and why the caller keeps running alongside it.",
+        "Trace an unbuffered send and receive and say which side waits until the other is ready.",
+        "Implement FanSum with n goroutines and exactly n receives, and explain why the count is the wait."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -8488,6 +8701,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-sync-learn": {
       "id": "go-sync-learn",
       "title": "Learn: when memory really is shared",
+      "objectives": [
+        "Explain how a Mutex turns a read-modify-write increment into one safe critical section.",
+        "Trace what a WaitGroup counts and why Wait must run before the total is read.",
+        "Diagnose why defer wg.Done() inside a loop hangs Wait, and place it so it fires per goroutine."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -8705,6 +8923,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-context-learn": {
       "id": "go-context-learn",
       "title": "Learn: giving work a way to stop",
+      "objectives": [
+        "Explain what a context carries and why it is passed as the first parameter.",
+        "Trace a select between ctx.Done and a timer and say which branch wins when a deadline passes.",
+        "Apply defer cancel even with WithTimeout, and name the error each stop reason leaves in ctx.Err."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -8878,6 +9101,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-concur-learn": {
       "id": "go-concur-learn",
       "title": "Learn: fanning out to many workers",
+      "objectives": [
+        "Explain how several workers range one jobs channel without any job being handled twice.",
+        "Trace why the sender owns close and how a closed channel ends every worker's range.",
+        "Implement a fan-out and fan-in with a results channel closed only after every worker finishes."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -9125,6 +9353,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-json-learn": {
       "id": "go-json-learn",
       "title": "Learn: the tag is the contract",
+      "objectives": [
+        "Explain how a struct tag names the JSON key and why the Go field name never travels.",
+        "Predict the bytes Marshal writes when one tag is misspelled, and say why no compiler complains.",
+        "Apply omitempty deliberately and turn malformed input into an error, never a half-filled struct."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -9317,6 +9550,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-http-learn": {
       "id": "go-http-learn",
       "title": "Learn: a handler is a function with a contract",
+      "objectives": [
+        "Explain what a handler receives and what it must write back, and why HTTP is stateless.",
+        "Trace the order of headers, WriteHeader and body, and say which call fixes the status.",
+        "Implement a mux-backed handler that answers GET and POST at one path and lets the mux return 404."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -9548,6 +9786,11 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "title": "Learn: a routing table, not one handler",
+      "objectives": [
+        "Explain how a Go 1.22 ServeMux matches method and path together and reads a named segment.",
+        "Trace three failures to their statuses: unknown path 404, wrong verb 405, malformed request 400.",
+        "Implement server-side pagination that parses ?limit=, clamps it, and slices the list before encoding."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -9715,6 +9958,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-auth-learn": {
       "id": "go-auth-learn",
       "title": "Learn: hash once, sign everything",
+      "objectives": [
+        "Explain why passwords are hashed with a per-password salt and tokens are signed, not encrypted.",
+        "Trace the three token segments and say which one must verify before any claim is read.",
+        "Apply CompareHashAndPassword and an expiry check so a refused token never yields a subject."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -9922,6 +10170,12 @@ export const IDE_TASK_MANAGER: unknown = {
         }
       ],
       "title": "Learn: tests as data, not as special cases",
+      "objectives": [
+        "Explain what makes a test table-driven and why a new case is a row, not a copied function.",
+        "Write a table-driven test whose rows run as named t.Run subtests, so a failure names the input.",
+        "Test an HTTP handler over httptest.NewServer and release its listener with t.Cleanup.",
+        "Explain why coverage records what ran, never what the suite actually asserted."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -10090,6 +10344,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-perf-learn": {
       "id": "go-perf-learn",
       "title": "Learn: correctness is not the whole cost",
+      "objectives": [
+        "Explain why += in a loop is O(n^2) work while strings.Builder or strings.Join builds in one pass.",
+        "Predict which of two correct implementations allocates more as the input grows, and say why.",
+        "Measure the difference with a benchmark or AllocsPerRun instead of trusting a hunch."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -10256,6 +10515,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-store-learn": {
       "id": "go-store-learn",
       "title": "Learn: the model is what the store refuses",
+      "objectives": [
+        "Explain why the store, not the HTTP handler, is where the ledger's rules are enforced.",
+        "Trace each refusal — missing id, missing account, duplicate id — to the state the store must not reach.",
+        "Implement Add so every guard runs before the append and a refused entry changes nothing."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -10431,6 +10695,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-db-learn": {
       "id": "go-db-learn",
       "title": "Learn: the database is a file you query",
+      "objectives": [
+        "Explain how database/sql keeps a statement separate from its values, and why that stops injection.",
+        "Trace a missing row to sql.ErrNoRows, and say why a zero value with a nil error is a different fact.",
+        "Apply parameterized Exec and QueryRow, close the handle, and check absence with errors.Is."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -10635,6 +10904,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-cache-learn": {
       "id": "go-cache-learn",
       "title": "Learn: the ledger, remembered",
+      "objectives": [
+        "Explain the cache-aside read path and what a TTL actually promises about staleness.",
+        "Trace a stampede to one shared fetch, and an invalidation to the next honest read.",
+        "Design Memo's state so one expired key has a single in-flight fetch and a failed load is never stored."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -10827,6 +11101,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-ops-learn": {
       "id": "go-ops-learn",
       "title": "Learn: the machine reads the status, not the log",
+      "objectives": [
+        "Explain what a readiness status code routes and what the problems list is actually for.",
+        "Trace a failing probe to a 503 naming it, and say why err.Error() must not appear in the body.",
+        "Design exit codes so each failure class is distinct and an unlisted failure still exits nonzero."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -11002,6 +11281,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-logging-learn": {
       "id": "go-logging-learn",
       "title": "Learn: logs are for readers",
+      "objectives": [
+        "Explain what a structured log line answers and why key=value pairs beat a sentence.",
+        "Trace how With() carries a request id into every later line without passing it around.",
+        "Design a request logger that falls back on nil and never publishes a token."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -11169,6 +11453,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-deps-learn": {
       "id": "go-deps-learn",
       "title": "Learn: the pair that pins every dependency",
+      "objectives": [
+        "Explain what go.mod declares and what go.sum proves about the same versions.",
+        "Trace a missed go mod tidy to the build failure it leaves on another machine.",
+        "Read the pair and name the requirement and checksum lines a new import needs."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -11354,6 +11643,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-resilience-learn": {
       "id": "go-resilience-learn",
       "title": "Learn: failing well is a design goal, not an afterthought",
+      "objectives": [
+        "Explain why a retry must be bounded and what the error from the final attempt preserves.",
+        "Trace an operation that succeeds on its third attempt and say exactly how many calls it earns.",
+        "Apply backoff with jitter so a fleet does not retry in lockstep against a failing dependency."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -11536,6 +11830,11 @@ export const IDE_TASK_MANAGER: unknown = {
     "go-ship-learn": {
       "id": "go-ship-learn",
       "title": "Learn: the build that travels",
+      "objectives": [
+        "Explain why a multi-stage build separates the toolchain from the artifact that ships.",
+        "Trace which layer a source edit invalidates, and why go.mod and go.sum are copied first.",
+        "Read a Dockerfile and say what the runtime stage must not carry, and which line fixes its user."
+      ],
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,

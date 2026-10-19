@@ -25,7 +25,7 @@
   const available = downloadUrl.length > 0;
 
   const STEPS = [
-    { n: "01", text: "Download the IDE. The base course ships inside it." },
+    { n: "01", text: "Download the IDE. The nine phases ship inside it." },
     { n: "02", text: "Sign in when you want more: the IDE opens this site, you log in here." },
     { n: "03", text: "Your tier decides which courses appear inside the IDE." },
   ];
@@ -33,7 +33,7 @@
 
 <PageHead
   title={pageTitle("Download")}
-  description="Download the NEXORA IDE, the only way to learn. The base course ships inside it and works offline with no account."
+  description="Download the NEXORA IDE, the only way to learn. The nine free phases ship inside it and work offline with no account."
   path="/download"
 />
 
@@ -44,7 +44,7 @@
     class="max-w-[18ch] text-[clamp(2.2rem,6.5vw,5rem)] text-ink"
   />
   <p class="mt-7 max-w-[52ch] font-serif text-[clamp(1.05rem,2vw,1.5rem)] leading-snug text-muted">
-    A desktop editor with the base course inside it. Install it, open it, and the first judged
+    A desktop editor with nine phases of the course inside it. Install it, open it, and the first judged
     verdict is minutes away: no account, no browser tab, no second surface to choose between.
   </p>
 </div>
@@ -56,7 +56,7 @@
 
       {#if available}
         <p class="mt-4 max-w-[46ch] text-[14.5px] leading-relaxed text-muted">
-          One installer, the base course bundled. Pick the build for your operating system on the
+          One installer, the nine free phases bundled. Pick the build for your operating system on the
           download page. The download is free and needs no account.
         </p>
         <div class="mt-7">

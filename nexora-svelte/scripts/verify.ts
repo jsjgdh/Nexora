@@ -97,8 +97,8 @@ console.log("== the front door describes the real product ==");
       landing.split("href={downloadHref}").length - 1 >= 3
   );
   ok(
-    "the page states the base course ships inside the download",
-    copy.includes("Base course included") && copy.includes("bundled")
+    "the page states that the free phases ship inside the download",
+    copy.includes("Nine phases ship inside the installer") && copy.includes("bundled")
   );
   ok(
     "the page explains the browser sign-in: the IDE opens this site",
@@ -649,10 +649,17 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
 
   const pricingSrc = readFileSync(new URL("../src/routes/pricing/+page.svelte", import.meta.url), "utf8");
   ok(
-    "pricing renders the API's plans, names the empty feed, and never invents a price",
+    "pricing renders the API's plans and prints the one decided price from the copy module",
     pricingSrc.includes("session.plans()") &&
-      pricingSrc.includes("No paid plans published yet") &&
-      // $0 is the stated free tier, not a price — any other amount would be invented.
+      pricingSrc.includes("PRICING") &&
+      pricingSrc.includes("The plan is priced and it is not on sale yet") &&
+      // One price, one source: the number on the page is the number in the
+      // copy module, so the page cannot drift from the decision.
+      pricingSrc.includes("${PRICING.monthly}") &&
+      COPY.PRICING.monthly > 0 &&
+      Number.isInteger(COPY.PRICING.monthly) &&
+      // And it is not written into the page as a literal, where it would be a
+      // second copy of the same number.
       !/\$[1-9]/.test(pricingSrc)
   );
   ok(
@@ -695,8 +702,8 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   // IDE, every check free, further courses per tier. Asserted on the page
   // because that is where the promise is made to a learner.
   ok(
-    "the free tier still promises the bundled base course, free checks, and tier-unlocked courses",
-    copyFlat.includes("Base course bundled with the IDE") &&
+    "the free tier still promises the bundled free phases, free checks, and tier-unlocked courses",
+    copyFlat.includes("Nine phases bundled with the IDE") &&
       copyFlat.includes("Every check and verdict, free forever") &&
       copyFlat.includes("Further courses per your tier") &&
       pricingSrc.includes("FREE_TIER_POINTS")
@@ -869,11 +876,8 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     // updating the headline fails here, not in a learner's screenshot.
     const words = numberWords(manifestIds.length);
     ok(
-      "the headline count matches the shipped total",
-      words !== null &&
-        readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8")
-          .toLowerCase()
-          .includes(`${words} phases`)
+      "the count the page states matches the shipped total",
+      words !== null && copyFlat.toLowerCase().includes(`${words} phases`)
     );
 
     // The readings on the bench carry the counts too, and they drift the same
@@ -888,9 +892,12 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       freeFact !== undefined && freeFact.value === String(freeCount)
     );
     ok(
-      "the masthead's status matches the shipped counts",
-      COPY.MASTHEAD.status.includes(`${manifestCourses.length} courses`) &&
-        COPY.MASTHEAD.status.includes(`${manifestIds.length} phases`)
+      "the masthead's status states the shipped counts, and does not count the courses",
+      COPY.MASTHEAD.status.includes(`${manifestIds.length} phases`) &&
+        COPY.MASTHEAD.status.includes(`${freeCount} free`) &&
+        // Three courses reads as three videos. The names read as range, so the
+        // status line counts phases and says nothing about how many courses.
+        !COPY.MASTHEAD.status.includes("courses")
     );
   }
 }
@@ -1668,9 +1675,9 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
       });
       ok(
         "one label per intent: the download is called the same thing everywhere",
-        COPY.HERO.primary === "Download the IDE" &&
-          COPY.FOOTER_LINKS[0]?.label === "Download the IDE" &&
-          COPY.STEPS[0]?.link.label === "Download the IDE" &&
+        COPY.HERO.primary === "Try it free" &&
+          COPY.FOOTER_LINKS[0]?.label === "Try it free" &&
+          COPY.STEPS[0]?.link.label === "Try it free" &&
           otherLabels.length === 0
       );
     }

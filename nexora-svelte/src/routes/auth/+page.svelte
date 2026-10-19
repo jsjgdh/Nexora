@@ -158,7 +158,7 @@
 
 <PageHead
   title={pageTitle("Account")}
-  description="Sign in to unlock IDE courses per your tier, or keep the bundled base course locally. It works without an account."
+  description="Sign in to unlock IDE courses per your tier, or keep the nine free phases locally. It works without an account."
   path="/auth"
 />
 
@@ -174,7 +174,7 @@
         class="text-[clamp(1.9rem,4.4vw,3.2rem)] text-ink"
       />
       <p class="mt-6 max-w-[44ch] text-[14.5px] leading-relaxed text-muted">
-        An account unlocks IDE courses per your tier. The base course bundled in the IDE works
+        An account unlocks IDE courses per your tier. The nine free phases bundled in the IDE work
         without one, and it stays that way.
       </p>
 
@@ -228,7 +228,7 @@
         <Plate>
           <p class="stamp text-review">cloud accounts not connected</p>
           <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
-            This build runs in local mode, so there are no accounts to sign into. The base course in
+            This build runs in local mode, so there are no accounts to sign into. The nine free phases in
             the IDE works without one.
           </p>
           <div class="mt-5">

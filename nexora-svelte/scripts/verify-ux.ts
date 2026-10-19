@@ -275,12 +275,8 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     note("keyboard", `the focused control has no visible ring (${ring})`);
   }
 
-  const pro = page.locator("button", { hasText: /^pro$/i }).first();
-  await pro.focus();
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(200);
-  const tierState = await pro.getAttribute("aria-pressed");
-  if (tierState !== "true") note("keyboard", "the tier toggle did not respond to the keyboard");
+  // The tier toggle is gone: the front page no longer prices the curriculum
+  // line by line, so there is nothing here to press.
 
   const head = page.locator("button[id^='course-head-']").nth(1);
   await head.focus();

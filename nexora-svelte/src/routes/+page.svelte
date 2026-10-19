@@ -367,7 +367,7 @@
 <section id="courses" class="border-t border-rule">
   <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
     <SectionHead
-      title="Three courses. Eighty phases. One editor."
+      title="A JavaScript app, a ledger in Rust, and reading an API from the outside."
       caption="Everything below ships inside the IDE and is judged there. This site teaches nothing itself. Open a course to read its real phase list."
       wide
     />
@@ -529,7 +529,7 @@
     <div class="mt-12 border-t border-rule pt-8">
       <p class="stamp text-faint">or be told when the desktop build ships</p>
       <div class="mt-4">
-        <LaunchList />
+        <LaunchList variant={data.headline} />
       </div>
     </div>
     <div id="foot-sentinel" class="h-px" aria-hidden="true"></div>
@@ -540,7 +540,7 @@
   <aside class="ctabar" aria-label="Download the IDE">
     <p class="stamp text-[11.5px] text-faint">
       <span class="sm:hidden">Free</span>
-      <span class="hidden sm:inline">Free to download · base course included</span>
+      <span class="hidden sm:inline">Free to download · nine phases included</span>
     </p>
     <ActionLink href={downloadHref} size="sm" island>{HERO.primaryShort}</ActionLink>
   </aside>

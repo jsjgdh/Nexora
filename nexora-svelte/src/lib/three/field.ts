@@ -506,7 +506,7 @@ export async function mountPhaseField(
   camera.lookAt(centre[0], centre[1], centre[2]);
 
   const freeColour = readToken("--color-added");
-  const proColour = readToken("--color-accent");
+  const proColour = readToken("--color-rule-strong");
   const ruleColour = readToken("--color-rule-strong");
   const inkColour = readToken("--color-ink");
 
@@ -790,7 +790,7 @@ export function drawPhaseFieldFlat(
 
   const layout = buildLayout();
   const freeColour = readToken("--color-added");
-  const proColour = readToken("--color-accent");
+  const proColour = readToken("--color-rule-strong");
   const ruleColour = readToken("--color-rule-strong");
   const inkColour = readToken("--color-ink");
 

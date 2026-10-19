@@ -164,7 +164,7 @@
         {:else if !session.loggedIn}
           <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
             <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to manage a
-            subscription. The base course in the IDE is free either way.
+            subscription. The nine free phases in the IDE are free either way.
           </p>
         {:else if billingLoading}
           <p class="stamp mt-4 text-muted">loading plan…</p>
@@ -206,7 +206,7 @@
           </div>
         {:else}
           <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
-            Free plan — the base course in the IDE is free. Pro unlocks the further courses per your
+            Free plan — the nine free phases in the IDE are free. Pro unlocks the further courses per your
             tier, inside the IDE you already have.
           </p>
           {#if plans.length > 0}

@@ -7,8 +7,12 @@
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
-  import { BILLING_COMMITMENTS, FREE_TIER_POINTS } from "$lib/content/site";
+  import { BILLING_COMMITMENTS, FREE_TIER_POINTS, PRICING } from "$lib/content/site";
   import { SUBSCRIPTION_TERMS } from "$lib/legal";
+
+  /* The price, printed. One number, in one place, and the same number in the
+     payment provider's dashboard. */
+  const price = `$${PRICING.monthly}`;
 
   /* Pricing backed by the real plans feed — never hardcoded copy. The API
      names plans only (no amounts travel through it), so prices live where
@@ -71,7 +75,7 @@
 
 <PageHead
   title={pageTitle("Pricing")}
-  description="The base course in the IDE and every check are free. Pro unlocks the further IDE courses per your tier when plans are published."
+  description="The nine free phases in the IDE and every check are free. Pro unlocks the further IDE courses per your tier when plans are published."
   path="/pricing"
 />
 
@@ -82,7 +86,7 @@
     class="text-[clamp(2.2rem,6.5vw,5rem)] text-ink"
   />
   <p class="mt-7 max-w-[54ch] font-serif text-[clamp(1.05rem,2vw,1.5rem)] leading-snug text-muted">
-    Learning happens in the IDE. The base course ships inside the download and stays free, and
+    Learning happens in the IDE. The nine free phases ship inside the download and stay free, and
     assessment is never gated.
   </p>
 </div>
@@ -102,7 +106,7 @@
         {/each}
       </ul>
       <div class="mt-7">
-        <ActionLink href="/download" island>Download the IDE</ActionLink>
+        <ActionLink href="/download" island>Try it free</ActionLink>
       </div>
     </Plate>
 
@@ -110,7 +114,8 @@
     <Plate crosshair label="Pro plan">
       <div class="flex items-baseline justify-between gap-4">
         <h2 class="display text-[clamp(1.3rem,2.4vw,1.9rem)] text-ink">Pro</h2>
-        <span class="stamp text-[11px] text-accent">metered</span>
+        <span class="num text-[clamp(1.1rem,2vw,1.5rem)] font-bold text-ink">{price}</span>
+        <span class="stamp text-[11px] text-accent">a month</span>
       </div>
 
       <div class="mt-5">
@@ -124,8 +129,8 @@
           <p class="stamp text-muted">checking your session…</p>
         {:else if !session.loggedIn}
           <p class="text-[14px] leading-relaxed text-muted">
-            <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to see Pro
-            plans. Everything you can learn stays free either way.
+            <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to subscribe
+            and manage the plan. Everything you can learn stays free either way.
           </p>
         {:else if loading}
           <p class="stamp text-muted">loading plans…</p>
@@ -146,7 +151,9 @@
           </p>
         {:else if plans.length === 0}
           <p class="text-[14px] leading-relaxed text-muted">
-            No paid plans published yet. Everything stays free until they are.
+            The plan is priced and it is not on sale yet. {price} a month opens the other
+            {PRICING.paidPhases} phases inside the editor you already have. Until the checkout
+            opens, everything stays free.
           </p>
         {:else}
           <ul class="grid gap-3">

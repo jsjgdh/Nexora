@@ -18,6 +18,15 @@
    * process, because this is the one thing here that a person holds rather
    * than the platform. */
 
+  type Props = {
+    /** Which headline the reader saw, when the page knows. The operator
+        counts sign-ups per headline, so the test is a test and not a
+        rotation. It identifies nobody: it is a word, not a person. */
+    variant?: string;
+  };
+
+  let { variant }: Props = $props();
+
   let email = $state("");
   let status = $state<"idle" | "sending" | "sent" | "error">("idle");
   let error = $state("");
@@ -34,7 +43,9 @@
         body: JSON.stringify({
           kind: "launch",
           email: email.trim(),
-          message: "Tell me when the desktop build is published.",
+          message: variant
+            ? `Tell me when the desktop build is published. (headline: ${variant})`
+            : "Tell me when the desktop build is published.",
         }),
       });
       if (!response.ok) throw new Error("not sent");

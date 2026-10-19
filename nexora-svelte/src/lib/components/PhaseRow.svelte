@@ -15,7 +15,10 @@
   type Props = {
     index: number;
     title: string;
-    tier: "free" | "pro";
+    /** The tier, when the row is showing it. The public ledger does not: the
+        front page is a syllabus, not a price list, and the tier is the
+        pricing page's business and the IDE's. */
+    tier?: "free" | "pro";
     state?: "completed" | "recommended" | "available" | "locked";
   };
 
@@ -28,5 +31,7 @@
 <li class="phase-row" data-state={state}>
   <span class="row-mark" aria-hidden="true">{position} {mark}</span>
   <span class="row-title min-w-0 truncate text-[13.5px] text-ink">{title}</span>
-  <TierStamp {tier} />
+  {#if tier}
+    <TierStamp {tier} />
+  {/if}
 </li>

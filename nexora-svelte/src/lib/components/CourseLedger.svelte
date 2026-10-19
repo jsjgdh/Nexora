@@ -81,13 +81,8 @@
               </p>
             </div>
             <ol class="border border-rule">
-              {#each course.phases as [id, title, tier], i (id)}
-                <PhaseRow
-                  index={i}
-                  {title}
-                  {tier}
-                  state={tier === "free" ? "recommended" : "available"}
-                />
+              {#each course.phases as [id, title], i (id)}
+                <PhaseRow index={i} {title} />
               {/each}
             </ol>
           </div>

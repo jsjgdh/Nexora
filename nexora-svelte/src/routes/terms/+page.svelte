@@ -68,7 +68,7 @@
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">What is free, and what a paid tier unlocks</h2>
           <p class="mt-3">
-            The IDE download, the base course bundled inside it, and every check and verdict are free
+            The IDE download, the nine free phases bundled inside it, and every check and verdict are free
             and stay free: assessment is never placed behind the paywall. A paid tier unlocks further
             courses, which are fetched into the IDE for the account that is entitled to them. The
             price, the billing period and what each tier includes are shown on the pricing page and at

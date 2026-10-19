@@ -49,7 +49,7 @@ export const BRAND = "NEXORA";
  */
 export const MASTHEAD = {
   descriptor: "the course that runs inside your editor",
-  status: "3 courses · 80 phases · free to start",
+  status: "80 phases · 9 free · inside the editor",
 } as const;
 
 /**
@@ -110,9 +110,9 @@ export const HERO = {
   lineTwo: HERO_VARIANTS[0].lineTwo,
   markOne: HERO_VARIANTS[0].markOne,
   lede: HERO_VARIANTS[0].lede,
-  note: "Free to download. Base course included, bundled with the installer, and it runs offline, so your first judged verdict is minutes away rather than an account away.",
-  primary: "Download the IDE",
-  primaryShort: "Download",
+  note: "Free to download. Nine phases ship inside the installer, and they run offline, so your first judged verdict is minutes away rather than an account away.",
+  primary: "Try it free",
+  primaryShort: "Try free",
   secondary: "See the courses",
 } as const;
 
@@ -278,10 +278,10 @@ export const LANDSCAPE = {
  * is checkable by the reader without asking us anything.
  */
 export const FACTS = [
-  { value: "3", label: "courses, shipped" },
   { value: "80", label: "phases, judged in the IDE" },
-  { value: "9", label: "free phases, no account" },
+  { value: "9", label: "of them free, no account" },
   { value: "0", label: "badges, scores or streaks" },
+  { value: "1", label: "editor, with the course inside it" },
 ] as const;
 
 export const SPEC = [
@@ -301,7 +301,7 @@ export const SPEC = [
       {
         param: "what it costs to start",
         value: "Nothing",
-        note: "The base course ships inside the installer. Every check is free, forever.",
+        note: "Nine phases ship inside the installer. Every check is free, forever.",
       },
     ],
   },
@@ -374,7 +374,7 @@ export const EMPLOYER = {
     {
       claim: "That the scope is known.",
       evidence:
-        "The curriculum is a public manifest: three courses, eighty phases, each with a name, an order and a tier.",
+        "The curriculum is a public manifest: eighty phases, each with a name, an order and a tier.",
     },
     {
       claim: "That it was not a quiz.",
@@ -433,13 +433,13 @@ export const STEPS = [
     id: "download",
     title: "Download the IDE.",
     caption:
-      "A desktop editor with the course inside it. The base course ships in the installer and runs offline, so the first judged verdict is minutes away rather than an account away.",
+      "A desktop editor with nine phases of the course inside it. Install it, open it, and the first judged verdict is minutes away rather than an account away.",
     points: [
-      "Base course, bundled. Works offline, no account",
+      "Nine phases, bundled. Work offline, no account",
       "A real workspace: your files, your tests, your mistakes",
       "A miss comes back with the reason, never a score",
     ],
-    link: { href: "/download", label: "Download the IDE" },
+    link: { href: "/download", label: "Try it free" },
   },
   {
     n: "02",
@@ -459,7 +459,7 @@ export const STEPS = [
     id: "tier",
     title: "Your tier opens the courses.",
     caption:
-      "The base course is free forever and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.",
+      "Those nine phases are free forever and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.",
     points: [
       "Free: nine phases, judged end to end",
       "Pro: every further phase, fetched per entitlement",
@@ -649,7 +649,7 @@ export const FAQ = [
   },
   {
     q: "What does free include?",
-    a: "The IDE download, the base course, every check and every verdict. Assessment is never behind the paywall.",
+    a: "The IDE download, the nine free phases, every check and every verdict. Assessment is never behind the paywall.",
   },
   {
     q: "How am I judged?",
@@ -681,7 +681,7 @@ export const FAQ = [
   },
   {
     q: "Will it teach me a framework?",
-    a: "It teaches three things, in full: a JavaScript app with a Go backend behind it, a ledger in Rust taken to a tested service, and reading an API from the outside. There is no React course, and we are not going to pretend one is coming.",
+    a: "It teaches a JavaScript app with a Go backend behind it, a ledger in Rust taken to a tested service, and reading an API from the outside. There is no React course, and we are not going to pretend one is coming.",
   },
   {
     q: "Is there a mark of completion?",
@@ -689,9 +689,28 @@ export const FAQ = [
   },
 ] as const;
 
-/** What the free tier is, in the words the pricing page and the suite share. */
+/**
+ * The price, decided.
+ *
+ * One plan, one number, and the same number in the payment provider's
+ * dashboard. The site prints the price rather than hiding it behind a
+ * checkout, because a price you cannot see before you commit to something is
+ * not a price, it is a surprise.
+ *
+ * What the paid tier opens is stated as a count of phases, because that is
+ * what it is: the same editor, with the other seventy-one phases in it.
+ */
+export const PRICING = {
+  plan: "Pro",
+  monthly: 29,
+  currency: "USD",
+  freePhases: 9,
+  paidPhases: 71,
+} as const;
+
+/** The free tier is, in the words the pricing page and the suite share. */
 export const FREE_TIER_POINTS = [
-  "Base course bundled with the IDE, offline, no account",
+  "Nine phases bundled with the IDE, offline, no account",
   "Every check and verdict, free forever",
   "Further courses per your tier, inside the same IDE",
   "Account with IDE sign-in through the browser",
@@ -719,7 +738,7 @@ export const BILLING_COMMITMENTS = [
 
 /** The footer's one job: get back to the four real surfaces. */
 export const FOOTER_LINKS = [
-  { href: "/download", label: "Download the IDE" },
+  { href: "/download", label: "Try it free" },
   { href: "/pricing", label: "Pricing" },
   { href: "/verify", label: "Verify" },
   { href: "/auth", label: "Account" },

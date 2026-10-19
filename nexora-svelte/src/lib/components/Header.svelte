@@ -168,13 +168,15 @@
         {MASTHEAD.status}
       </p>
       <div class="ml-auto flex items-center gap-2.5">
-        <a
-          href="/download"
-          aria-current={pathname === "/download" ? "page" : undefined}
-          class="inline-flex min-h-[44px] shrink-0 items-center border border-accent bg-accent px-3.5 text-[12.5px] font-bold whitespace-nowrap text-ground transition-[color,background-color,border-color] duration-200 hover:border-accent-bright hover:bg-accent-bright"
-        >
-          Download the IDE
-        </a>
+        {#if !session.loggedIn}
+          <a
+            href="/download"
+            aria-current={pathname === "/download" ? "page" : undefined}
+            class="inline-flex min-h-[44px] shrink-0 items-center border border-accent bg-accent px-3.5 text-[12.5px] font-bold whitespace-nowrap text-ground transition-[color,background-color,border-color] duration-200 hover:border-accent-bright hover:bg-accent-bright"
+          >
+            Try it free
+          </a>
+        {/if}
 
         <!-- The sign-in link waits for `restoring`: the session lives in a
              cookie this page cannot read, so "signed out" is not known yet on
