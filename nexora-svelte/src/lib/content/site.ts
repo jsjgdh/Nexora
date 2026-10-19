@@ -78,18 +78,21 @@ export const HERO_VARIANTS = [
     id: "a",
     lineOne: "Build real software.",
     lineTwo: "Not another quiz.",
+    markOne: "real",
     lede: "A course that runs inside your editor. Every phase is a working app in your own workspace, and every miss comes back with the reason, the file and the line.",
   },
   {
     id: "b",
     lineOne: "One window, start to finish.",
     lineTwo: "Lesson, editor and test together.",
+    markOne: "window",
     lede: "Nothing to paste and no second app to keep in sync. The tutorial, the code and the check are one object, so the work never leaves the screen it started on.",
   },
   {
     id: "c",
     lineOne: "Prove it by building.",
     lineTwo: "Not by answering.",
+    markOne: "building",
     lede: "A finished phase leaves a receipt anyone can re-derive: the command, the exit code, the file hash. No score, and nothing to collect.",
   },
 ] as const;
@@ -105,6 +108,7 @@ export const HERO_VARIANTS = [
 export const HERO = {
   lineOne: HERO_VARIANTS[0].lineOne,
   lineTwo: HERO_VARIANTS[0].lineTwo,
+  markOne: HERO_VARIANTS[0].markOne,
   lede: HERO_VARIANTS[0].lede,
   note: "Free to download. Base course included, bundled with the installer, and it runs offline, so your first judged verdict is minutes away rather than an account away.",
   primary: "Download the IDE",
@@ -125,6 +129,7 @@ export const HERO = {
 export const HIRING = {
   lineOne: "Juniors arrive with work,",
   lineTwo: "not with promises.",
+  markOne: "work",
   lede: "A finished phase leaves a signed receipt. Anyone can re-derive it at /verify, with no account and no call.",
   
   primary: "See the evidence",
@@ -378,9 +383,18 @@ export const EMPLOYER = {
     },
   ],
   notYet: [
-    "No employer console and no candidate record: there is no place yet to see a person, only the work they did.",
-    "No portfolio export and no ATS integration, so nothing here can be attached to a ticket.",
-    "No placement rate, no salary figure and no customer logo, because we have not run a cohort we could honestly report on.",
+    {
+      text: "No employer console and no candidate record: there is no place yet to see a person, only the work they did.",
+      scope: "hiring",
+    },
+    {
+      text: "No portfolio export and no ATS integration, so nothing here can be attached to a ticket.",
+      scope: "hiring",
+    },
+    {
+      text: "No placement rate, no salary figure and no customer logo, because we have not run a cohort we could honestly report on.",
+      scope: "all",
+    },
   ],
   pilot: {
     title: "A pilot starts with the receipt, not a form.",
@@ -651,7 +665,27 @@ export const FAQ = [
   },
   {
     q: "What is not built yet?",
-    a: "The desktop build is not hosted, so the download is not live. There is no portfolio export and no employer-facing record yet, and we do not claim one.",
+    a: "The desktop build is not published, so the download is not live. There is no portfolio export and no employer-facing record yet, and we do not claim one.",
+  },
+  {
+    q: "I already know the basics. Is this for me?",
+    a: "The first course opens with the tools and the editor, which are free, and it does not spend a phase on what a variable is. After that it assumes you can read code and use a terminal, and it says so before it asks.",
+  },
+  {
+    q: "How long does a phase take?",
+    a: "We are not going to guess. A phase is a working app with a check on it, so the time it takes is the time the work takes, and the two that are about setup are the short ones because there is little in them.",
+  },
+  {
+    q: "Do I have to be a programmer to start?",
+    a: "No. The first phase is putting the tools on the machine and bringing an app up, and it is free. The course expects a terminal by the second phase and tells you so when it asks.",
+  },
+  {
+    q: "Will it teach me a framework?",
+    a: "It teaches three things, in full: a JavaScript app with a Go backend behind it, a ledger in Rust taken to a tested service, and reading an API from the outside. There is no React course, and we are not going to pretend one is coming.",
+  },
+  {
+    q: "Is there a mark of completion?",
+    a: "No, and there will not be. There is nothing to collect here: no badge, no score, no streak. What a finished phase leaves is a receipt, and a receipt is the one thing a stranger can check.",
   },
 ] as const;
 

@@ -1813,6 +1813,55 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
         "data-device-agree"
       )
     );
+
+    // The launch list. It is the only thing on the site that collects an
+    // address, so the promise about it has to be in three places at once: the
+    // form, the privacy notice, and the address the mail goes to.
+    {
+      const launch = readFileSync(
+        new URL("../src/lib/components/LaunchList.svelte", import.meta.url),
+        "utf8"
+      );
+      const privacy = readFileSync(
+        new URL("../src/routes/privacy/+page.svelte", import.meta.url),
+        "utf8"
+      );
+      const mail = readFileSync(
+        new URL("../src/routes/api/mail/+server.ts", import.meta.url),
+        "utf8"
+      );
+      ok(
+        "the launch list says what it will do and how to leave it",
+        launch.includes("One message, when the desktop build is published.") &&
+          launch.includes("removes you")
+      );
+      ok(
+        "and the privacy notice names it, as the one thing a person holds",
+        privacy.includes("ask to be told when the desktop build is published") &&
+          privacy.includes("a person holds rather than the platform")
+      );
+      ok(
+        "and the mail endpoint has a launch channel of its own",
+        mail.includes('kind !== "launch"') && mail.includes("LAUNCH_CONTACT")
+      );
+    }
+
+    // The employer's gaps are scoped: the front page shows the gap that
+    // concerns everybody, and the hiring document carries the rest.
+    ok(
+      "the gaps are scoped to the audience they concern",
+      COPY.EMPLOYER.notYet.length >= 3 &&
+        COPY.EMPLOYER.notYet.some((gap) => gap.scope === "all") &&
+        COPY.EMPLOYER.notYet.some((gap) => gap.scope === "hiring")
+    );
+
+    // The poster's marked word has to be a word that is in the line.
+    ok(
+      "the poster's second voice marks a word that is actually there",
+      COPY.HERO_VARIANTS.every(
+        (variant) => variant.lineOne.includes(variant.markOne)
+      ) && COPY.HIRING.lineOne.includes(COPY.HIRING.markOne)
+    );
   }
 
   // A state is never carried by a colour alone. The lamp is a shape and the

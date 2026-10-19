@@ -18,7 +18,22 @@
    * face, because it is the one passage on the site that belongs to somebody
    * else rather than to us. */
 
-  let { verifyHref = "/verify" }: { verifyHref?: string } = $props();
+  let {
+    verifyHref = "/verify",
+    scope = "all",
+  }: { verifyHref?: string; scope?: "all" | "hiring" } = $props();
+
+  /* The gaps, filtered by who they concern.
+   *
+   * "No employer console" is a hiring manager's gap. A learner reading the
+   * front page has no employer console to want, and the line is noise there;
+   * the hiring version of this page carries the whole list. The gap that
+   * concerns everybody — no placement rate, no customer logo — stays on both,
+   * because a learner is entitled to know that the proof on this page is not
+   * backed by a cohort either. */
+  const gaps = $derived(
+    EMPLOYER.notYet.filter((gap) => gap.scope === "all" || gap.scope === scope)
+  );
 </script>
 
 <div class="grid gap-px border border-rule bg-rule lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
@@ -39,20 +54,22 @@
   <div class="bg-panel p-6 sm:p-8">
     <p class="stamp text-[11px] text-review">not built yet</p>
     <ul class="mt-6">
-      {#each EMPLOYER.notYet as line (line)}
+      {#each gaps as gap (gap.text)}
         <li class="flex gap-3 border-t border-rule py-4 first:border-t-0 first:pt-0">
           <span class="num pt-0.5 text-[12px] text-removed" aria-hidden="true">✗</span>
-          <span class="text-[14px] leading-relaxed text-muted">{line}</span>
+          <span class="text-[14px] leading-relaxed text-muted">{gap.text}</span>
         </li>
       {/each}
     </ul>
 
-    <div class="mt-8 border-t border-rule pt-6">
-      <p class="reading text-[17px] leading-snug text-ink">{EMPLOYER.pilot.title}</p>
-      <p class="reading mt-3 text-[15.5px] leading-relaxed text-muted">{EMPLOYER.pilot.body}</p>
-      <div class="mt-6">
-        <ActionLink href={verifyHref} variant="ghost" size="sm">Check a receipt yourself</ActionLink>
+    {#if scope === "hiring"}
+      <div class="mt-8 border-t border-rule pt-6">
+        <p class="reading text-[17px] leading-snug text-ink">{EMPLOYER.pilot.title}</p>
+        <p class="reading mt-3 text-[15.5px] leading-relaxed text-muted">{EMPLOYER.pilot.body}</p>
+        <div class="mt-6">
+          <ActionLink href={verifyHref} variant="ghost" size="sm">Check a receipt yourself</ActionLink>
+        </div>
       </div>
-    </div>
+    {/if}
   </div>
 </div>

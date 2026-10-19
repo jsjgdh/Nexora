@@ -97,6 +97,16 @@ export const PRIVACY_CONTACT = "privacy@nexora.dev";
 export const SECURITY_CONTACT = "security@nexora.dev";
 
 /**
+ * Email address that receives the launch list.
+ *
+ * A person reads this mailbox, so the promise the site makes about it is a
+ * promise a person makes: one message, when the desktop build is published,
+ * and the address is deleted when that message has gone out or on request,
+ * whichever comes first.
+ */
+export const LAUNCH_CONTACT = "launch@nexora.dev";
+
+/**
  * Send a privacy request acknowledgement to the person who filed it.
  *
  * Used when someone writes in by email and the operator needs to acknowledge

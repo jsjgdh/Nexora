@@ -729,10 +729,17 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   if (first && first === second) {
     note("headline test", `both variants rendered the same heading ("${first}")`);
   }
-  if (!askedHtml.includes("One window, start to finish")) {
+  /* The markup is stripped before the phrases are looked for, because the
+     poster's marked word is wrapped in an element: the text on the page is
+     "One window, start to finish", and the document says so with a tag in
+     the middle of it. */
+  const plain = (html: string): string =>
+    html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ");
+
+  if (!plain(askedHtml).includes("One window, start to finish.")) {
     note("headline test", "the variant that was asked for did not render");
   }
-  if (defaultHtml.includes("One window, start to finish")) {
+  if (plain(defaultHtml).includes("One window, start to finish.")) {
     note("headline test", "the default document renders more than one variant");
   }
 }
@@ -859,6 +866,40 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   const body = await page.content();
   if (!body.includes("three arms of one spine")) {
     note("field", "the field's own line is missing when the renderer cannot be fetched");
+  }
+  await page.close();
+}
+
+/* ------------------------------------------------------------------ *
+ * 13. The launch list. The one field on the site that collects an
+ *     address has to be labelled, reachable and big enough to hit.
+ * ------------------------------------------------------------------ */
+{
+  const page = await browser.newPage({ viewport: { width: 360, height: 800 } });
+  await page.goto(ORIGIN + "/download", { waitUntil: "networkidle" });
+  await page.waitForTimeout(600);
+
+  const form = page.locator("[data-launch-list]");
+  if ((await form.count()) === 0) {
+    note("launch list", "the download page has no launch list");
+  } else {
+    const field = page.locator("[data-launch-list] input");
+    const labelled = await field.evaluate((el) => {
+      const input = el as HTMLInputElement;
+      if (input.getAttribute("aria-label")) return true;
+      if (input.id && document.querySelector(`label[for="${input.id}"]`)) return true;
+      return !!input.closest("label");
+    });
+    if (!labelled) note("launch list", "the email field has no label");
+    const height = await field.evaluate((el) => el.getBoundingClientRect().height);
+    if (height < 44) {
+      note("launch list", `the email field is ${Math.round(height)}px tall`);
+    }
+    const button = page.locator("[data-launch-list] button");
+    const buttonHeight = await button.evaluate((el) => el.getBoundingClientRect().height);
+    if (buttonHeight < 44) {
+      note("launch list", `the submit button is ${Math.round(buttonHeight)}px tall`);
+    }
   }
   await page.close();
 }

@@ -116,10 +116,10 @@
       </p>
     </div>
     <ul class="grid gap-4">
-      {#each EMPLOYER.notYet as line (line)}
+      {#each EMPLOYER.notYet as gap (gap.text)}
         <li class="grid grid-cols-[auto_1fr] gap-4 border-t border-rule pt-4 text-[15px] leading-relaxed text-muted">
           <span class="num pt-0.5 text-[12px] text-removed" aria-hidden="true">✗</span>
-          <span>{line}</span>
+          <span>{gap.text}</span>
         </li>
       {/each}
     </ul>

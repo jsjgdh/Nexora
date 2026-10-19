@@ -54,6 +54,10 @@
       what: "Messages you send us for support",
       why: "To answer you. There is no marketing list and no newsletter.",
     },
+    {
+      what: "Your email address, if you ask to be told when the desktop build is published",
+      why: "To write to you once, when it is. This is the one thing on this list a person holds rather than the platform: the address sits in the studio's launch mailbox until that one message has gone out, or until you ask us to delete it, and then it is gone. It is never added to anything else.",
+    },
   ];
 </script>
 

@@ -14,6 +14,7 @@
   import SpecSheet from "$lib/components/SpecSheet.svelte";
   import FactStrip from "$lib/components/FactStrip.svelte";
   import EmployerBoard from "$lib/components/EmployerBoard.svelte";
+  import LaunchList from "$lib/components/LaunchList.svelte";
   import MarketPanel from "$lib/components/MarketPanel.svelte";
   import PropositionStack from "$lib/components/PropositionStack.svelte";
   import CategoryMap from "$lib/components/CategoryMap.svelte";
@@ -87,9 +88,11 @@
     ...HERO,
     lineOne: variant.lineOne,
     lineTwo: variant.lineTwo,
+    markOne: variant.markOne,
     lede: variant.lede,
   };
   const active = $derived(audience === "employer" ? HIRING : learnerHero);
+  const marks = $derived<Record<number, string>>(active.markOne ? { 0: active.markOne } : {});
 
   /* The field picks a phase; the ledger shows the course. A click on a point
      opens the drawer it belongs to and brings it into view, so the picture is
@@ -148,32 +151,35 @@
      labels. -->
 
 <section class="relative overflow-x-clip" data-headline-variant={data.headline}>
-  <div class="hero-block mx-auto max-w-[1320px] px-5 pt-8 pb-12 sm:px-8 sm:pt-10 sm:pb-14">
-    <AudienceSwitch bind:value={audience} />
+  <div class="hero-block relative z-10 mx-auto max-w-[1320px] px-5 pt-8 pb-12 sm:px-8 sm:pt-10 sm:pb-14">
+    <div class="relative z-10">
+      <AudienceSwitch bind:value={audience} />
 
-    <Headline
-      as="h1"
-      lines={[active.lineOne, active.lineTwo]}
-      class="mt-8 text-[clamp(2.6rem,6.6vw,5.6rem)] text-ink"
-    />
+      <Headline
+        as="h1"
+        lines={[active.lineOne, active.lineTwo]}
+        {marks}
+        class="mt-8 text-[clamp(2.6rem,6.6vw,5.6rem)] text-ink"
+      />
 
-    <div
-      class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16"
-    >
-      <!-- The lede is prose, so it is set in the reading face. Everything
-           that is a label, a reading or a control is not. -->
-      <p class="reading max-w-[54ch] text-[clamp(1.2rem,2.1vw,1.55rem)] leading-snug text-ink">
-        {active.lede}
-      </p>
+      <div
+        class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16"
+      >
+        <!-- The lede is prose, so it is set in the reading face. Everything
+             that is a label, a reading or a control is not. -->
+        <p class="reading max-w-[54ch] text-[clamp(1.2rem,2.1vw,1.55rem)] leading-snug text-ink">
+          {active.lede}
+        </p>
 
-      <div class="hero-actions flex flex-wrap items-center gap-3 lg:justify-end">
-        {#if audience === "learner"}
-          <ActionLink href={downloadHref} island>{active.primary}</ActionLink>
-          <ActionLink href={coursesHref} variant="ghost">{active.secondary}</ActionLink>
-        {:else}
-          <ActionLink href={employersHref} island>{active.primary}</ActionLink>
-          <ActionLink href={downloadHref} variant="ghost">{HERO.primary}</ActionLink>
-        {/if}
+        <div class="hero-actions flex flex-wrap items-center gap-3 lg:justify-end">
+          {#if audience === "learner"}
+            <ActionLink href={downloadHref} island>{active.primary}</ActionLink>
+            <ActionLink href={coursesHref} variant="ghost">{active.secondary}</ActionLink>
+          {:else}
+            <ActionLink href={employersHref} island>{active.primary}</ActionLink>
+            <ActionLink href={downloadHref} variant="ghost">{HERO.primary}</ActionLink>
+          {/if}
+        </div>
       </div>
     </div>
   </div>
@@ -182,7 +188,7 @@
        produces. Everything above is type; this is the object, and it is
        printed live. The band is ruled to the millimetre, because that is what
        a bench is: a surface you measure on, not a panel you look at. -->
-  <div id="hero-run" class="plot border-y border-rule bg-ground">
+  <div id="hero-run" class="plot relative z-10 border-y border-rule bg-ground">
     <div class="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 sm:py-16">
       <div class="mb-8 max-w-[62ch]">
         <h2 class="display text-[clamp(1.4rem,2.6vw,2.1rem)] text-ink">
@@ -197,7 +203,7 @@
   </div>
 
   <!-- The measurements, as a readout row. -->
-  <div class="mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
+  <div class="relative z-10 mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
     <FactStrip />
   </div>
 </section>
@@ -413,6 +419,17 @@
     <div class="mt-14">
       <EmployerBoard {verifyHref} />
     </div>
+
+    <!-- The hiring manager's own document: the whole list of gaps, the pilot,
+         and the pages. -->
+    <div class="mt-10 border-t border-rule pt-8">
+      <p class="reading max-w-[62ch] text-[16px] leading-relaxed text-muted">
+        The rest of that list, and how a pilot starts, is on the hiring manager's page.
+      </p>
+      <div class="mt-6">
+        <ActionLink href="/employers" variant="ghost" island>For hiring</ActionLink>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -506,6 +523,15 @@
         <ActionLink href={pricingHref} variant="ghost">Compare tiers</ActionLink>
       </div>
     </div>
+
+    <!-- The build is not published yet, and a reader who is convinced at this
+         point needs somewhere to go. One field, one message, and a way out. -->
+    <div class="mt-12 border-t border-rule pt-8">
+      <p class="stamp text-faint">or be told when the desktop build ships</p>
+      <div class="mt-4">
+        <LaunchList />
+      </div>
+    </div>
     <div id="foot-sentinel" class="h-px" aria-hidden="true"></div>
   </div>
 </section>
@@ -521,6 +547,24 @@
 {/if}
 
 <style>
+  /* A light behind the poster.
+     The ground is not a flat sheet: a soft pool of light sits under the type,
+     the way a bench lamp sits over a bench. It is a gradient and not an
+     image, and it is the only depth the page has. */
+  .hero-block::before {
+    content: "";
+    position: absolute;
+    inset: -24% -12% auto -12%;
+    height: 150%;
+    background: radial-gradient(
+      56% 50% at 24% 32%,
+      color-mix(in srgb, var(--color-ink) 7%, transparent) 0%,
+      transparent 72%
+    );
+    pointer-events: none;
+    z-index: -1;
+  }
+
   .ctabar {
     position: fixed;
     left: 0;

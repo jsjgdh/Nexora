@@ -106,31 +106,29 @@ function mulberry32(seed: number): () => number {
 /**
  * The three arms.
  *
- * One curve per course, each leaving its own root, so the field reads as one
- * thing with three branches rather than as three things standing next to
- * each other. The numbers are the shape, not decoration: the long arm is the
- * long course, and the short arm is the short one.
+ * One curve per course, each leaving its own root on the spine, so the field
+ * reads as one thing with three branches rather than as three things standing
+ * next to each other. Every arm leaves its root in a different direction, so
+ * the field has a shape from any angle the camera reaches, and no two arms
+ * ever sit on top of one another.
+ *
+ * The numbers are the shape, not ornament: the long arm is the long course
+ * and the short arm is the short one, so the point spacing is the same on
+ * every arm and the field is read at one scale rather than three.
  */
-const ARMS: readonly { root: Vec3; p1: Vec3; p2: Vec3; p3: Vec3 }[] = [
-  {
-    root: [-4.6, 0, 0.3],
-    p1: [-4.2, 1.3, 2.9],
-    p2: [-2.0, 2.3, 5.4],
-    p3: [0.2, 2.9, 6.9],
-  },
-  {
-    root: [0, 0, 1.1],
-    p1: [0.4, 1.5, -1.9],
-    p2: [0.9, 2.5, -4.5],
-    p3: [1.3, 3.1, -6.1],
-  },
-  {
-    root: [4.6, 0, 0.3],
-    p1: [5.2, 1.7, 1.3],
-    p2: [5.7, 3.2, 2.3],
-    p3: [5.9, 4.2, 2.9],
-  },
+const ARMS: readonly { tx: number; ty: number; tz: number }[] = [
+  { tx: -4.2, ty: 2.6, tz: 3.0 },
+  { tx: 2.6, ty: 3.4, tz: -3.4 },
+  { tx: 4.2, ty: 2.4, tz: 2.6 },
 ];
+
+/** Where the roots sit along the spine. */
+const ROOT_SPACING = 5;
+
+/** The field of view, in degrees. The camera is placed from the field's own
+ * bounds, so this is the only thing that decides how much of the sheet the
+ * field takes up. */
+const FIELD_FOV = 45;
 
 /** A cubic segment, evaluated. */
 function bezier(p0: Vec3, p1: Vec3, p2: Vec3, p3: Vec3, t: number): Vec3 {
@@ -200,31 +198,38 @@ export function buildLayout(courses: readonly CourseLike[] = COURSES): FieldLayo
 
   courses.forEach((course, index) => {
     const shape = ARMS[index % ARMS.length]!;
-    const root = shape.root;
-    roots.push(root);
-
     const count = course.phases.length;
     const arm: number[][] = [];
 
-    /* The arm is scaled by the length of the course it carries, so the short
-     * course is a short arm rather than three points strung along a long one.
-     * The shape is the same shape; only its reach changes. */
-    const reach = 0.55 + 0.45 * Math.min(1, count / 54);
+    /* The root is on the spine, and the spine runs straight through the
+     * three of them: a rule the field hangs from. */
+    const root: Vec3 = [
+      (index - (courses.length - 1) / 2) * ROOT_SPACING,
+      0,
+      0,
+    ];
+    roots.push(root);
+
+    /* The arm is scaled by the number of phases it carries, so the points are
+     * the same distance apart on every arm and the field is read at one
+     * scale. The shape is the same shape; only its reach changes. */
+    const reach = 0.32 + 0.68 * Math.min(1, count / 54);
+    const tip: Vec3 = [
+      root[0] + shape.tx * reach,
+      shape.ty * reach,
+      shape.tz * reach,
+    ];
     const p1: Vec3 = [
-      root[0] + (shape.p1[0] - root[0]) * reach,
-      root[1] + (shape.p1[1] - root[1]) * reach,
-      root[2] + (shape.p1[2] - root[2]) * reach,
+      root[0] + shape.tx * 0.3 * reach,
+      shape.ty * 0.42 * reach,
+      shape.tz * 0.3 * reach,
     ];
     const p2: Vec3 = [
-      root[0] + (shape.p2[0] - root[0]) * reach,
-      root[1] + (shape.p2[1] - root[1]) * reach,
-      root[2] + (shape.p2[2] - root[2]) * reach,
+      root[0] + shape.tx * 0.74 * reach,
+      shape.ty * 0.82 * reach,
+      shape.tz * 0.74 * reach,
     ];
-    const p3: Vec3 = [
-      root[0] + (shape.p3[0] - root[0]) * reach,
-      root[1] + (shape.p3[1] - root[1]) * reach,
-      root[2] + (shape.p3[2] - root[2]) * reach,
-    ];
+    const p3 = tip;
 
     course.phases.forEach((phase, phaseIndex) => {
       const t = count > 1 ? phaseIndex / (count - 1) : 0.5;
@@ -431,14 +436,74 @@ export async function mountPhaseField(
   const THREE = (await import("three")) as unknown as ThreeSurface;
 
   const layout = buildLayout();
+
+  let width = canvas.clientWidth || 640;
+  let height = canvas.clientHeight || 360;
+
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.setClearAlpha(0);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
-  camera.position.set(9.6, 4.2, 0);
-  camera.lookAt(0.4, 1.6, 0.2);
+  const camera = new THREE.PerspectiveCamera(FIELD_FOV, 1, 0.1, 400);
+
+  /* The camera is framed on the field rather than on a fixed point, so the
+   * field fills the sheet whatever the curriculum is. The bounds are read off
+   * the layout that was just built, and the distance is whatever it takes to
+   * hold the whole field with a margin, so a fourth course would frame itself
+   * rather than fall out of the picture. */
+  const bounds = layout.nodes.reduce(
+    (box, node) => ({
+      minX: Math.min(box.minX, node.x),
+      maxX: Math.max(box.maxX, node.x),
+      minY: Math.min(box.minY, node.y),
+      maxY: Math.max(box.maxY, node.y),
+      minZ: Math.min(box.minZ, node.z),
+      maxZ: Math.max(box.maxZ, node.z),
+    }),
+    { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity, minZ: Infinity, maxZ: -Infinity }
+  );
+  const centre: Vec3 = [
+    (bounds.minX + bounds.maxX) / 2,
+    (bounds.minY + bounds.maxY) / 2,
+    (bounds.minZ + bounds.maxZ) / 2,
+  ];
+  const radius =
+    Math.max(
+      (bounds.maxX - bounds.minX) / 2,
+      (bounds.maxY - bounds.minY) / 2,
+      (bounds.maxZ - bounds.minZ) / 2
+    ) || 1;
+
+  /* The camera is level with the middle of the field and far enough back to
+   * hold it. The field is a wide, shallow spread rather than a ball, so it is
+   * measured against the sheet's own proportions: the sheet is wide, the field
+   * is wide, and a camera that framed the field as a sphere would sit much
+   * too far away and leave the sheet mostly empty. */
+  const halfVertical = (FIELD_FOV * Math.PI) / 360;
+
+  /* The distance is recomputed when the sheet changes shape, so a phone in
+   * portrait and a wide desktop both get a field that fills them. */
+  const halfWidth = (bounds.maxX - bounds.minX) / 2;
+  const halfHeight = (bounds.maxY - bounds.minY) / 2;
+  let distance = halfWidth * 2;
+  const place = (): void => {
+    const aspect = Math.max(0.4, width / Math.max(1, height));
+    const halfHorizontal = Math.atan(Math.tan(halfVertical) * aspect);
+    distance =
+      Math.max(
+        halfWidth / Math.tan(halfHorizontal),
+        halfHeight / Math.tan(halfVertical)
+      ) * 1.2;
+  };
+  place();
+
+  camera.position.set(
+    centre[0],
+    centre[1] + distance * 0.22,
+    centre[2] + distance
+  );
+  camera.lookAt(centre[0], centre[1], centre[2]);
 
   const freeColour = readToken("--color-added");
   const proColour = readToken("--color-accent");
@@ -492,8 +557,8 @@ export async function mountPhaseField(
 
   makePoints(layout.nodes.filter((node) => node.tier === "free"));
   makePoints(layout.nodes.filter((node) => node.tier === "pro"));
-  makeLine(layout.spine, 0.9);
-  for (const arm of layout.arms) makeLine(arm, 0.5);
+  makeLine(layout.spine, 1);
+  for (const arm of layout.arms) makeLine(arm, 0.8);
 
   /* The reticle: a small square of ink around the point the pointer is on.
    * A pointer that has been heard is a pointer that has been seen. */
@@ -532,14 +597,13 @@ export async function mountPhaseField(
     reticle.visible = true;
   };
 
-  let width = canvas.clientWidth || 640;
-  let height = canvas.clientHeight || 360;
   const resize = (): void => {
     width = canvas.clientWidth || width;
     height = canvas.clientHeight || height;
     renderer.setSize(width, height, false);
     camera.aspect = width / Math.max(1, height);
     camera.updateProjectionMatrix();
+    place();
   };
   resize();
 
@@ -612,11 +676,11 @@ export async function mountPhaseField(
     last = now;
     angle += delta * 0.11;
     camera.position.set(
-      Math.cos(angle) * 9.6,
-      4.2 + Math.sin(angle * 0.6) * 0.8,
-      Math.sin(angle) * 9.6
+      centre[0] + Math.sin(angle) * distance,
+      centre[1] + distance * 0.28,
+      centre[2] + Math.cos(angle) * distance
     );
-    camera.lookAt(0.4, 1.6, 0.2);
+    camera.lookAt(centre[0], centre[1], centre[2]);
     camera.updateMatrixWorld();
     renderer.render(scene, camera);
     if (running) frame = requestAnimationFrame(tick);
@@ -665,8 +729,16 @@ export async function mountPhaseField(
 
 /** A point turned into a place on a sheet. */
 function flatProjector(points: Vec3[], width: number, height: number) {
-  const yaw = -0.72;
-  const pitch = 0.42;
+  /* The sheet is a plan, not a perspective.
+   *
+   * The three courses leave their roots on one line and curve away from it, so
+   * a view from above separates them completely: three arms, fanning out of
+   * one spine, which is the shape the curriculum actually has. Seen from the
+   * side, two of the three arms collapse into lines and the drawing reads as
+   * dust on a sheet. The slight tilt left in the pitch keeps a little depth,
+   * because the arms climb as they go. */
+  const yaw = 0;
+  const pitch = 1.36;
   const cy = Math.cos(yaw);
   const sy = Math.sin(yaw);
   const cp = Math.cos(pitch);

@@ -4,6 +4,7 @@
   import Headline from "$lib/components/Headline.svelte";
   import SectionHead from "$lib/components/SectionHead.svelte";
   import Plate from "$lib/components/Plate.svelte";
+  import LaunchList from "$lib/components/LaunchList.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
 
@@ -69,6 +70,15 @@
         </p>
         <div class="mt-7">
           <ActionLink href="/pricing" variant="ghost" island>See pricing while you wait</ActionLink>
+        </div>
+        <!-- The somewhere to go. The build is not published, so the reader who
+             is convinced needs a way to hear when it is. One field, one
+             message, and a way out: the launch list. -->
+        <div class="mt-8 border-t border-rule pt-6">
+          <p class="stamp text-faint">or be told when it ships</p>
+          <div class="mt-4">
+            <LaunchList />
+          </div>
         </div>
         <!-- What a reader can do today, without the build. The curriculum is
              public and complete, and the verifier works on a receipt anybody
