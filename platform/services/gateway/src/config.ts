@@ -29,6 +29,16 @@ export interface GatewayConfig {
   jwtSecret: string;
   clerkSecretKey: string;
   clerkJwtKey: string;
+  /**
+   * Where the Clerk Backend API (and its `/jwks` signing keys) live. Empty means
+   * "use Clerk's hosted default", which is right for the common case but makes
+   * two production shapes impossible: a self-hosted or sovereign Clerk behind a
+   * private issuer, and any offline or CI verification — the JWKS fetch has no
+   * address to reach. Set, it names the issuer the operator actually runs, and
+   * it is the same address the JWKS proof test points at to exercise the HTTP
+   * key path without a network.
+   */
+  clerkApiUrl: string;
   clerkAuthorizedParties: string[];
   internalKey: string;
   /**
@@ -152,6 +162,12 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   if (mode === "clerk" && !clerkSecretKey && !clerkJwtKey) {
     throw new Error("Clerk mode needs CLERK_SECRET_KEY or CLERK_JWT_KEY");
   }
+  // Default empty = Clerk's hosted API. A set value must be a real http(s) URL
+  // with no trailing slash, because the SDK appends `/{apiVersion}/jwks` to it.
+  const clerkApiUrl = str(env, "CLERK_API_URL", "").replace(/\/$/, "");
+  if (clerkApiUrl !== "" && !/^https?:\/\//.test(clerkApiUrl)) {
+    throw new Error(`Invalid CLERK_API_URL: must be an http(s) URL`);
+  }
   const parties = str(env, "CLERK_AUTHORIZED_PARTIES")
     .split(",")
     .map((s) => s.trim())
@@ -179,6 +195,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     jwtSecret,
     clerkSecretKey,
     clerkJwtKey,
+    clerkApiUrl,
     clerkAuthorizedParties: parties.length > 0 ? parties : [frontendUrl],
     internalKey,
     trustProxy: parseTrustProxy(env),

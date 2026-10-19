@@ -20,6 +20,7 @@ const verifier: TokenVerifier =
     ? clerkVerifier({
         secretKey: config.clerkSecretKey || undefined,
         jwtKey: config.clerkJwtKey || undefined,
+        apiUrl: config.clerkApiUrl || undefined,
         authorizedParties: config.clerkAuthorizedParties,
       })
     : localVerifier(config.jwtSecret);

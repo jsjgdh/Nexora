@@ -240,11 +240,16 @@ export class RevocationCache {
     if (reason === "credential") {
       const until = subject.expiresAtMs ?? now + DEFAULT_HOLD_MS;
       this.revoked.set(subject.jti, until);
-      // A refusal now overrides any earlier clear: the fallback must never be able
-      // to serve an answer the service has since contradicted.
-      this.clears.delete(subject.jti);
       this.sweep(now);
     }
+    // A refusal now overrides any earlier clear — for EVERY refusal, not only a
+    // per-credential one. The clear is a last confirmed "not revoked"; a refusal
+    // is the service contradicting it, and the degraded fallback must never be
+    // able to serve an answer the service has since contradicted. An account
+    // cut-off used to leave the clear behind, so a revoked credential was
+    // admitted as "clear, degraded" for the rest of the clear TTL after an
+    // auth outage.
+    this.clears.delete(subject.jti);
     this.counters.refused[reason] += 1;
     return { verdict: "revoked", reason, degraded: false };
   }

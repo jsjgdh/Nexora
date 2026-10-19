@@ -62,6 +62,11 @@ export function localVerifier(secret: string): TokenVerifier {
 export function clerkVerifier(opts: {
   secretKey?: string;
   jwtKey?: string;
+  /** Backend API base; empty/undefined means Clerk's hosted default. This is the
+      address the JWKS signing keys are fetched from when a pinned PEM is not in
+      use, so a self-hosted or sovereign Clerk is reachable and the HTTP key path
+      can be exercised against a local issuer. */
+  apiUrl?: string;
   authorizedParties: string[];
 }): TokenVerifier {
   if (!opts.secretKey && !opts.jwtKey) {
@@ -73,6 +78,7 @@ export function clerkVerifier(opts: {
         const payload = await verifyToken(token, {
           ...(opts.secretKey ? { secretKey: opts.secretKey } : {}),
           ...(opts.jwtKey ? { jwtKey: opts.jwtKey } : {}),
+          ...(opts.apiUrl ? { apiUrl: opts.apiUrl } : {}),
           authorizedParties: opts.authorizedParties,
         });
         const sub = (payload as { sub?: unknown }).sub;

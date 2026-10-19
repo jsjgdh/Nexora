@@ -522,6 +522,96 @@ describe("gateway pure units", () => {
     assert.equal(two("proxy", 1), true);
     assert.equal(two("client", 2), false);
   });
+
+  it("clerk JWKS is fetched over HTTP from a named issuer and rejects mismatches", async () => {
+    // The proof the pinned-PEM test cannot give: the LIVE key path. Here the
+    // gateway is handed only a secret (sk_test_...) and an issuer address — no
+    // public key — so verifyToken must go fetch {apiUrl}/v1/jwks over real HTTP,
+    // pick the key by the token's kid, and check the signature with it. A local
+    // http server plays the issuer, which is also what makes a self-hosted or
+    // sovereign Clerk (and offline/CI verification) a supported shape rather than
+    // an untested assumption. No Clerk credentials and no network are required.
+    const { generateKeyPairSync, createPublicKey } = await import("node:crypto");
+    const http = (await import("node:http")).default;
+    const jwt = (await import("jsonwebtoken")).default;
+
+    const { publicKey, privateKey } = generateKeyPairSync("rsa", {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: "spki", format: "pem" },
+      privateKeyEncoding: { type: "pkcs8", format: "pem" },
+    });
+
+    // Build the JWK for a given kid exactly as Clerk publishes it: n/e base64url.
+    const jwkFor = (kid) => {
+      const jwk = createPublicKey(publicKey).export({ format: "jwk" });
+      return { kid, alg: "RS256", kty: "RSA", use: "sig", n: jwk.n, e: jwk.e };
+    };
+
+    const requests = [];
+    // One live key set per cache scope. The backend caches a fetched key set per
+    // (apiUrl, version, secret) for a few minutes, so to observe a *rotated* key
+    // set I address the second phase at its own base path and let it be fetched
+    // once; after that it stays pinned, exactly as the real cache would pin it.
+    const published = new Map();
+    published.set("/v1/jwks", [jwkFor("kid_2025_a")]);
+    published.set("/rotated/v1/jwks", [jwkFor("kid_2025_b")]);
+    const issuer = http.createServer((req, res) => {
+      requests.push({ url: req.url, auth: req.headers.authorization || null });
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ keys: published.get(req.url) ?? published.get("/v1/jwks") }));
+    });
+    await new Promise((r) => issuer.listen(0, "127.0.0.1", r));
+    const apiUrl = `http://127.0.0.1:${issuer.address().port}`;
+    const secretKey = "sk_test_jwks_proof";
+
+    try {
+      const now = Math.floor(Date.now() / 1000);
+      const mkToken = (kid) =>
+        jwt.sign(
+          { iss: apiUrl, sub: "user_jwks_1", sid: "sess_j", iat: now, nbf: now, exp: now + 300 },
+          privateKey,
+          { algorithm: "RS256", keyid: kid }
+        );
+
+      // 1. The named issuer's key set is fetched over HTTP and verifies the token.
+      const v = gwAuth.clerkVerifier({ secretKey, apiUrl, authorizedParties: [] });
+      const good = await v.verify(mkToken("kid_2025_a"));
+      assert.equal(good.userId, "user_jwks_1");
+      assert.equal(good.jti, null, "Clerk owns its own revocation; the edge invents no id");
+      // The request reached the named issuer, authenticated with the secret — not
+      // the hosted default, and not a pinned key.
+      assert.ok(
+        requests.some((r) => r.url === "/v1/jwks" && r.auth === `Bearer ${secretKey}`),
+        "the gateway fetched /v1/jwks from the named issuer with the secret as bearer"
+      );
+
+      // 2. A token signed by a key the issuer no longer publishes (kid mismatch)
+      //    is refused even though the signature is self-consistent — the JWKS is
+      //    the source of trust, not the token's own claim to a key. This phase
+      //    gets its own issuer address: the backend caches a key set per
+      //    (apiUrl, version, secret) for a few minutes by design, so a second
+      //    address is how we observe a *changed* key set rather than re-reading
+      //    the first one from cache.
+      const apiUrl2 = `${apiUrl}/rotated`;
+      const stale = gwAuth.clerkVerifier({ secretKey, apiUrl: apiUrl2, authorizedParties: [] });
+      await assert.rejects(() => stale.verify(mkToken("kid_2025_a")), /invalid token/);
+
+      // 3. A tampered payload under a key that IS published is refused — the
+      //    signature no longer covers the claim that names the user.
+      const token = mkToken("kid_2025_a");
+      const forged = token.slice(0, token.lastIndexOf(".")) + ".AAAA";
+      const vt = gwAuth.clerkVerifier({ secretKey, apiUrl, authorizedParties: [] });
+      await assert.rejects(() => vt.verify(forged), /invalid token/);
+
+      // 4. The pinned-PEM path still works and does not reach for the network.
+      const reqsBefore = requests.length;
+      const pinned = gwAuth.clerkVerifier({ jwtKey: publicKey, apiUrl, authorizedParties: [] });
+      assert.equal((await pinned.verify(mkToken("kid_2025_a"))).userId, "user_jwks_1");
+      assert.equal(requests.length, reqsBefore, "a pinned key never fetches JWKS");
+    } finally {
+      await new Promise((r) => issuer.close(r));
+    }
+  });
 });
 
 describe("gateway entitlement cache", () => {
@@ -2916,8 +3006,14 @@ describe("auth device flow (in-process, fake pg)", () => {
       }
       if (sql.startsWith("UPDATE device_codes SET consumed_at")) {
         const row = devices.get(params[0]);
-        if (row && !row.consumed_at) row.consumed_at = new Date("2026-01-01T00:00:00Z");
-        return { rows: [], rowCount: 1 };
+        // The claim is guarded, and the driver reports the row only when it
+        // actually claimed it. The double used to report a row every time,
+        // which is how two polls of one code could both mint a session.
+        if (row && !row.consumed_at) {
+          row.consumed_at = new Date("2026-01-01T00:00:00Z");
+          return { rows: [{ id: row.id }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
       }
       if (sql.startsWith("SELECT id, email, name, created_at FROM users WHERE id =")) {
         if (params[0] !== "u-device") return { rows: [], rowCount: 0 };
@@ -3021,6 +3117,25 @@ describe("auth device flow (in-process, fake pg)", () => {
       payload: { userCode },
     });
     assert.equal(reused.statusCode, 404, "an approved code cannot be approved again");
+  });
+  it("two polls of one code mint exactly one session", async () => {
+    const { deviceCode, userCode } = (await start()).json();
+    await app.inject({
+      method: "POST", url: "/device/approve",
+      headers: { "content-type": "application/json", "x-user-id": "u-device" },
+      payload: { userCode },
+    });
+    // The race the claim exists for: two polls of one code, both of which can
+    // read it as unconsumed before either has claimed it, must not both come
+    // away with a session.
+    const poll = () => app.inject({
+      method: "POST", url: "/device/poll",
+      headers: { "content-type": "application/json" },
+      payload: { deviceCode },
+    });
+    const [a, b] = await Promise.all([poll(), poll()]);
+    const statuses = [a.json().status, b.json().status].sort();
+    assert.deepEqual(statuses, ["approved", "pending"], "exactly one poll may claim the code");
   });
 });
 
@@ -6094,5 +6209,63 @@ describe("lawful basis, erasure and the rights ledger (in-process, fake pg)", ()
       false,
       "and an operator can turn it off deliberately, in writing"
     );
+  });
+});
+
+describe("execution compile-time abuse bounds (P0)", () => {
+  it("rejects a Go submission whose import graph is a compile workload", () => {
+    // A small file count can still hide a deep type-check: `go run` compiles
+    // every package in the import graph, so shape - not size - is the cost.
+    const imports = Array.from({ length: execValidate.MAX_GO_IMPORTS + 5 }, (_, i) => `\t"lib/pkg${i}"`).join("\n");
+    const job = {
+      language: "go",
+      files: [{ path: "main.go", content: `package main\n\nimport (\n${imports}\n)\n` }],
+      command: ["go", "run", "main.go"],
+    };
+    assert.throws(() => execValidate.validateJob(job), /imports .+ packages; the limit is/);
+  });
+  it("counts every import form exactly once, and ignores non-Go files", () => {
+    const forms = `package main\n\nimport (\n\t_ "os"\n\talias "net/http"\n\t. "strings"\n)\n\nimport "fmt"\n`;
+    assert.equal(execValidate.countGoImports([{ path: "main.go", content: forms }]), 4);
+    // A commented-out or in-string `import` is not an import, and go.mod is not Go.
+    assert.equal(
+      execValidate.countGoImports([
+        { path: "a.go", content: '// import "fmt"\nvar s = "import \\"fake\\""\n' },
+        { path: "go.mod", content: 'module x\nrequire "github.com/google/uuid" v1.0.0\n' },
+      ]),
+      0
+    );
+    // A normal learner submission stays well inside the limit.
+    assert.equal(
+      execValidate.countGoImports([{ path: "m.go", content: 'import (\n\t"fmt"\n\t"sync"\n)\n' }]),
+      2
+    );
+  });
+  it("caps a Go job at the compile budget, and leaves other languages alone", () => {
+    const goFiles = [{ path: "main.go", content: 'package main\nimport "fmt"\nfunc main() { fmt.Println(1) }\n' }];
+    // A Go job asking for more than the compile ceiling gets the ceiling, not
+    // a longer build than any learner submission needs.
+    const go = execValidate.validateJob({
+      language: "go",
+      files: goFiles,
+      command: ["go", "run", "main.go"],
+      limits: { timeoutMs: 999_999 },
+    });
+    assert.equal(go.timeoutMs, execValidate.MAX_COMPILE_MS);
+    assert.ok(go.timeoutMs <= execValidate.MAX_TIMEOUT_MS);
+    // A Go job with no explicit request still gets its compile-sized default.
+    assert.equal(
+      execValidate.validateJob({ language: "go", files: goFiles, command: ["go", "run", "main.go"] }).timeoutMs,
+      execValidate.DEFAULT_TIMEOUT_BY_LANGUAGE.go
+    );
+    // Non-Go jobs are untouched: they face only the generic wall-clock cap.
+    const node = execValidate.validateJob({
+      language: "node",
+      files: [{ path: "m.js", content: "1" }],
+      command: ["node", "m.js"],
+      limits: { timeoutMs: 999_999 },
+    });
+    assert.equal(node.timeoutMs, execValidate.MAX_TIMEOUT_MS);
+    assert.ok(node.timeoutMs > execValidate.MAX_COMPILE_MS, "node keeps the larger generic ceiling");
   });
 });

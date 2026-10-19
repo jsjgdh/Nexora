@@ -10,6 +10,43 @@ const MAX_FILE_BYTES = 256_000;
 const MAX_STDIN_BYTES = 64_000;
 const MIN_TIMEOUT_MS = 100;
 
+/* Compile-time abuse bounds.
+   Submission size alone does not bound what a Go compile can cost: `go run`
+   type-checks and compiles every package in the import graph, so a small file
+   count with a deep dependency chain still burns CPU and wall clock at build
+   time — a phase the single run-time deadline does not describe. These bounds
+   are rejected here, before any runner sees the job, and are the pure,
+   pre-runner half of the abuse story; the docker tier's cgroup caps are the
+   enforced half. */
+
+/** A learner submission imports packages, never writes them. This is the
+    practical ceiling on how deep the type-check can go before the job is not a
+    learner's submission but a compile workload. */
+export const MAX_GO_IMPORTS = 40;
+
+/** Wall-clock ceiling for a single run. The docker tier additionally caps CPU
+    at 0.5 and memory per job; this is the pre-runner bound that keeps a
+    runaway build inside a predictable window on any tier. */
+export const MAX_COMPILE_MS = 20_000;
+
+/** Counts import specs across every `.go` file in a submission — single-line
+    `import "x"` and block `import ( ... )` forms alike. Blank (`_`), named, and
+    dot imports each count once: the bound is on graph shape, not on how the
+    import is written. */
+export function countGoImports(files: { path: string; content: string }[]): number {
+  let n = 0;
+  for (const f of files) {
+    if (!f.path.endsWith(".go")) continue;
+    // Block form: capture the parens, then count the quoted spec lines.
+    const block = f.content.match(/import\s*\(([\s\S]*?)\)/g) ?? [];
+    for (const b of block) n += (b.match(/"[^"]+"/g) ?? []).length;
+    // Single-line form, after removing block form so it is not double-counted.
+    const withoutBlocks = f.content.replace(/import\s*\(([\s\S]*?)\)/g, "");
+    n += (withoutBlocks.match(/^import\s+(?:\w+\s+)?"[^"]+"/gm) ?? []).length;
+  }
+  return n;
+}
+
 const ALLOWLIST: Record<string, string[]> = {
   node: ["node"],
   python: ["python3", "python"],
@@ -81,6 +118,24 @@ export function validateJob(body: ExecuteRequest): ValidatedJob {
   }
   const allowed = ALLOWLIST[body.language];
   const command = body.command ?? defaultCommand(body.language, files.map((f) => f.path));
+
+  /* Compile abuse bounds, before any runner sees the job. A Go submission's
+     cost is its import graph, not its file count: `go run` type-checks every
+     package in that graph, so a deep chain is a compile workload wearing a
+     learner's submission as a disguise. Reject the shape here rather than let
+     a runner eat the wall clock discovering it. Total source size is already
+     bounded for every language above (MAX_TOTAL_BYTES); what is missing is
+     this shape bound. */
+  if (body.language === "go") {
+    const imports = countGoImports(files);
+    if (imports > MAX_GO_IMPORTS) {
+      throw new ApiError(
+        400,
+        "bad_request",
+        `Submission imports ${imports} packages; the limit is ${MAX_GO_IMPORTS}.`
+      );
+    }
+  }
   if (command.length === 0 || !allowed.includes(command[0])) {
     throw new ApiError(400, "bad_request", `Command not allowed for ${body.language}.`);
   }
@@ -103,7 +158,13 @@ export function validateJob(body: ExecuteRequest): ValidatedJob {
   }
   const limits = body.limits ?? {};
   const fallback = DEFAULT_TIMEOUT_BY_LANGUAGE[body.language] ?? 8000;
-  const timeoutMs = Math.min(MAX_TIMEOUT_MS, Math.max(MIN_TIMEOUT_MS, limits.timeoutMs ?? fallback));
+  // Every language faces the generic wall-clock cap; a Go job faces the tighter
+  // compile budget instead, because its deadline covers a compile as well as a
+  // run and the generic ceiling would let a learner buy a longer build than any
+  // learner submission needs. A `go` request that asks for more than the
+  // compile budget is not answered with a longer build.
+  const ceiling = body.language === "go" ? MAX_COMPILE_MS : MAX_TIMEOUT_MS;
+  const timeoutMs = Math.min(ceiling, Math.max(MIN_TIMEOUT_MS, limits.timeoutMs ?? fallback));
   return {
     language: body.language,
     files,

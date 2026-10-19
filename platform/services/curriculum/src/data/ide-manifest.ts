@@ -4,7 +4,7 @@ export const IDE_MANIFEST: unknown = {
   "id": "task-manager",
   "title": "Task Manager",
   "description": "Two tracks in one course. The JavaScript track builds one real app, phase by phase, from the first terminal command to a reviewed pull request. The Go track then works a backend on a ledger: values, control flow, functions, structs, methods, interfaces, packages, collections. Two phases leave the app for a project of their own — navigation searches an unfamiliar codebase, and the dependency exercise imports a vendored module in Go Deps. Every phase is Learn, then Solve, then Review.",
-  "version": 44,
+  "version": 46,
   "role": "main",
   "phases": [
     {
@@ -253,7 +253,7 @@ export const IDE_MANIFEST: unknown = {
     {
       "id": "go-embedding",
       "title": "Go embedding",
-      "goal": "Embedding lifts one type’s fields and methods into another: composition that reads like inheritance, with no hierarchy and no subclasses.",
+      "goal": "Embedding lifts one type's fields and methods into another: composition that reads like inheritance, with no hierarchy and no subclasses.",
       "level": 2,
       "tier": "pro",
       "authored": true,
@@ -432,9 +432,9 @@ export const IDE_MANIFEST: unknown = {
     },
     {
       "id": "go-deps",
-      "title": "Third-party modules: standing on code you did not write",
-      "goal": "Real programs are built from modules you did not write, and using one well is a distinct skill from writing your own. This phase makes you the person who adds a dependency correctly: it is already declared in go.mod and copied under vendor/, and your job is to import it and reach for its function instead of hand-rolling its job. The judgement is a hidden test that parses your value with the very package you are supposed to be using, then calls it thousands of times and refuses any repeat — so a constant that merely looks right passes the shape and fails the suite. Along the way you learn why a team commits vendor/: a build that fetches nothing cannot be broken by an outage or a retracted tag.",
-      "level": 3,
+      "title": "Go dependencies",
+      "goal": "Read a module pair, and reconcile a dependency the code adopted but go.mod never declared.",
+      "level": 2,
       "tier": "pro",
       "authored": true,
       "activityCount": 4

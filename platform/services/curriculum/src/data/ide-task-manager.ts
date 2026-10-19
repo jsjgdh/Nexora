@@ -4,7 +4,7 @@ export const IDE_TASK_MANAGER: unknown = {
   "id": "task-manager",
   "title": "Task Manager",
   "description": "Two tracks in one course. The JavaScript track builds one real app, phase by phase, from the first terminal command to a reviewed pull request. The Go track then works a backend on a ledger: values, control flow, functions, structs, methods, interfaces, packages, collections. Two phases leave the app for a project of their own — navigation searches an unfamiliar codebase, and the dependency exercise imports a vendored module in Go Deps. Every phase is Learn, then Solve, then Review.",
-  "version": 44,
+  "version": 46,
   "phases": [
     {
       "id": "setup",
@@ -907,7 +907,7 @@ export const IDE_TASK_MANAGER: unknown = {
     {
       "id": "go-deps",
       "title": "Go dependencies",
-      "goal": "Understanding Go module dependencies and how to manage external packages.",
+      "goal": "Read a module pair, and reconcile a dependency the code adopted but go.mod never declared.",
       "level": 2,
       "authored": true,
       "project": "go-ledger",
@@ -918,9 +918,9 @@ export const IDE_TASK_MANAGER: unknown = {
         "go-deps-review"
       ],
       "interviewQuestions": [
-        "How do you declare and resolve module dependencies in Go?",
-        "What is the difference between direct and indirect dependencies?",
-        "How does Go ensure reproducible builds across environments?"
+        "What does go mod tidy decide, and which of the two module files can it rewrite?",
+        "Why does a replaced local module leave no line in go.sum, and what does that prove about a checksum?",
+        "A teammate hand-edits go.mod and the build now fetches something new. Which file catches that, and how?"
       ]
     },
     {
@@ -3654,6 +3654,7 @@ export const IDE_TASK_MANAGER: unknown = {
       "testCommand": "node --test --test-reporter=tap test/cart.test.mjs",
       "mutationJudge": {
         "source": "/** Cart total with a discount once the basket is large enough. */\nexport function cartTotal(items, opts = {}) {\n\tconst threshold = opts.threshold ?? 100;\n\tconst rate = opts.rate ?? 0.1;\n\tconst net = items.reduce((sum, item) => sum + item.price * item.qty, 0);\n\tif (net < threshold) {\n\t\treturn Math.round(net * 100) / 100;\n\t}\n\tconst discounted = net - net * rate;\n\treturn Math.round(discounted * 100) / 100;\n}\n\n/** How many items are in the cart. */\nexport function cartCount(items) {\n\treturn items.length;\n}\n",
+        "target": "src/cart.js",
         "mutants": [
           {
             "id": "no-discount",
@@ -3682,6 +3683,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a discounted basket totals less than the net"
           ],
+          "mutant": "no-discount",
           "feedback": "Your suite passes a cart that ignores the threshold entirely. Write the assertion that states what the discount is for: a basket over the threshold comes back reduced."
         },
         {
@@ -3690,6 +3692,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the threshold decides which total is returned"
           ],
+          "mutant": "inverted-threshold",
           "feedback": "A basket just under the threshold and one just over it must give different answers. If your suite gives the same answer for both, it is not reading the threshold."
         },
         {
@@ -3698,6 +3701,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a fractional total is rounded, not truncated"
           ],
+          "mutant": "unrounded",
           "feedback": "The contract says two decimal places. Pick a basket whose raw total has more digits and assert the exact rounded value."
         },
         {
@@ -5856,7 +5860,24 @@ export const IDE_TASK_MANAGER: unknown = {
       ],
       "misconceptions": [
         "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
-        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
+        "Treating a nearby code as the same case - 201 is not 200, and default exists so that proximity is not a match."
+      ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "switch code: 201",
+            "case 200: no",
+            "case 201: yes",
+            "default: other"
+          ]
+        }
+      },
+      "resources": [
+        {
+          "label": "Effective Go: control structures",
+          "url": "https://go.dev/doc/effective_go#control-structures"
+        }
       ]
     },
     "go-control-flow-ask": {
@@ -5962,7 +5983,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the sum of 1 through 4 is 10"
           ],
-          "feedback": "SumUntil(4) is 1+2+3+4. The limit is included. A for loop from 1 to n does that."
+          "feedback": "SumUntil(4) is 1+2+3+4. The limit is included, and a for loop from 1 to n does that. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "edge-empty",
@@ -6036,6 +6057,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
         "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
+      ],
+      "resources": [
+        {
+          "label": "Effective Go: functions",
+          "url": "https://go.dev/doc/effective_go#Functions"
+        }
       ]
     },
     "go-functions-ask": {
@@ -6089,7 +6116,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the string 3 parses as 3 with no error"
           ],
-          "feedback": "ParseQty(\"3\") returns 3 and a nil error. The number is the whole string, not a prefix."
+          "feedback": "ParseQty(\"3\") returns 3 and a nil error. The number is the whole string, not a prefix. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "empty",
@@ -6404,6 +6431,33 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
         "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "value receiver",
+            "lines": [
+              "Balance() reads a copy",
+              "the copy is enough",
+              "the caller keeps 500"
+            ]
+          },
+          "after": {
+            "title": "pointer receiver",
+            "lines": [
+              "Deposit(100) writes through",
+              "the same Account",
+              "now holds 600"
+            ]
+          }
+        }
+      },
+      "resources": [
+        {
+          "label": "Effective Go: pointees vs. value receivers",
+          "url": "https://go.dev/doc/effective_go#pointers_vs_values"
+        }
       ]
     },
     "go-methods-ask": {
@@ -6457,7 +6511,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "depositing 10 leaves a balance of 10"
           ],
-          "feedback": "Deposit must use a pointer receiver. After Deposit(10) the same Account reports 10 from Balance."
+          "feedback": "Deposit must use a pointer receiver. After Deposit(10) the same Account reports 10 from Balance. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "twice",
@@ -6583,6 +6637,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
         "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
+      ],
+      "resources": [
+        {
+          "label": "Effective Go: interfaces",
+          "url": "https://go.dev/doc/effective_go#interfaces"
+        }
       ]
     },
     "go-interfaces-ask": {
@@ -6636,7 +6696,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "two priced items sum their Price methods"
           ],
-          "feedback": "SumPriced adds item.Price() for each element. It does not know the concrete struct. Two items priced 40 and 15 total 55."
+          "feedback": "SumPriced adds item.Price() for each element. It does not know the concrete struct. Two items priced 40 and 15 total 55. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "empty",
@@ -6750,6 +6810,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
         "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
+      ],
+      "resources": [
+        {
+          "label": "Effective Go: packages",
+          "url": "https://go.dev/doc/effective_go#packages"
+        }
       ]
     },
     "go-packages-ask": {
@@ -6803,7 +6869,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "money.Cents formats 199 as 1.99"
           ],
-          "feedback": "Cents lives in package money. 199 is 1.99, 0 is 0.00, and the tests import that package directly."
+          "feedback": "Cents lives in package money. 199 is 1.99, 0 is 0.00, and the tests import that package directly. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "checkout",
@@ -6950,6 +7016,24 @@ export const IDE_TASK_MANAGER: unknown = {
         "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
         "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent.",
         "Ranging a map in insertion order — Go picks the order fresh each run, so a report built on that range flips lists between two runs of the same binary."
+      ],
+      "visualization": {
+        "type": "slice-memory",
+        "spec": {
+          "header": "order",
+          "cells": [
+            "\"milk\"",
+            "\"egg\""
+          ],
+          "len": 2,
+          "cap": 4
+        }
+      },
+      "resources": [
+        {
+          "label": "Go blog: the slice type",
+          "url": "https://go.dev/blog/slices-intro"
+        }
       ]
     },
     "go-collections-ask": {
@@ -7318,6 +7402,38 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
         "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
+      ],
+      "visualization": {
+        "type": "component-tree",
+        "spec": {
+          "root": "s: Satellite",
+          "props": [
+            "s.Twice() gives 10"
+          ],
+          "children": [
+            {
+              "root": "Kernel",
+              "props": [
+                "embedded - no field name",
+                "Twice() promoted from it"
+              ],
+              "children": []
+            },
+            {
+              "root": "Bonus int",
+              "props": [
+                "named field - s.Bonus"
+              ],
+              "children": []
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "label": "Effective Go: embedding",
+          "url": "https://go.dev/doc/effective_go#embedding"
+        }
       ]
     },
     "go-embedding-ask": {
@@ -7508,6 +7624,12 @@ export const IDE_TASK_MANAGER: unknown = {
         "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
         "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless.",
         "Writing if err != nil inside a block and trusting the function still reports that failure — the name can point at a second variable the caller never sees."
+      ],
+      "resources": [
+        {
+          "label": "Go blog: working with errors in Go 1.13",
+          "url": "https://go.dev/blog/go1.13-errors"
+        }
       ]
     },
     "go-errors-ask": {
@@ -7676,6 +7798,12 @@ export const IDE_TASK_MANAGER: unknown = {
         "Defers run first-in-first-out — they stack: the last deferred runs first, which is what makes nested cleanup unwind correctly.",
         "panic as Go's exceptions — expected failures are error values; panic is reserved for what the programmer got wrong.",
         "recover() anywhere catches anything — it only works inside the deferred call that bounds the panic."
+      ],
+      "resources": [
+        {
+          "label": "Effective Go: defer",
+          "url": "https://go.dev/doc/effective_go#defer"
+        }
       ]
     },
     "go-lifecycle-ask": {
@@ -7844,6 +7972,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
         "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
+      ],
+      "resources": [
+        {
+          "label": "Generics tutorial",
+          "url": "https://go.dev/doc/tutorial/generics"
+        }
       ]
     },
     "go-generics-ask": {
@@ -7897,7 +8031,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a generic Max finds the largest int"
           ],
-          "feedback": "Max([]int{3,9,2}) must be 9. Compare each value against a running best and keep the larger one."
+          "feedback": "Max([]int{3,9,2}) must be 9. Compare each value against a running best and keep the larger one. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "max-string",
@@ -8011,6 +8145,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
         "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
+      ],
+      "resources": [
+        {
+          "label": "Go modules reference",
+          "url": "https://go.dev/ref/mod"
+        }
       ]
     },
     "go-modules-ask": {
@@ -8064,7 +8204,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a sibling package is imported by its module path"
           ],
-          "feedback": "app.Use(4) must be 8. Double returns 8 for 4, and app reaches it via example.com/moddemo/double with no external dependency."
+          "feedback": "app.Use(4) must be 8. Double returns 8 for 4, and app reaches it via example.com/moddemo/double with no external dependency. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "mod-neg",
@@ -8168,7 +8308,7 @@ export const IDE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "In chan.go, make FanSum start n goroutines that each send their index on a channel, receive all n values, and return their sum."
+          "body": "In chan.go, make FanSum start n goroutines that each send their index on a channel, receive all n values, and return their sum. If go is missing from your PATH, run the environment check first."
         }
       ],
       "hints": [
@@ -8178,6 +8318,50 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
         "Believing a goroutine sends the value you meant — it reads the variable when it runs, so anything the loop changes after that is what arrives. Passing the index in as an argument pins it."
+      ],
+      "visualization": {
+        "type": "goroutine-timeline",
+        "spec": {
+          "lanes": [
+            "main",
+            "worker"
+          ],
+          "events": [
+            {
+              "lane": "main",
+              "step": 0,
+              "label": "go work(ch)"
+            },
+            {
+              "lane": "worker",
+              "step": 1,
+              "label": "ch <- 42"
+            },
+            {
+              "lane": "main",
+              "step": 1,
+              "label": "n := <-ch"
+            },
+            {
+              "lane": "main",
+              "step": 2,
+              "label": "FanSum stops"
+            }
+          ],
+          "links": [
+            {
+              "from": 1,
+              "to": 2,
+              "label": "42"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "label": "Effective Go: goroutines",
+          "url": "https://go.dev/doc/effective_go#goroutines"
+        }
       ]
     },
     "go-goroutines-ask": {
@@ -8231,7 +8415,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "five goroutines each send and the receiver sums"
           ],
-          "feedback": "FanSum(5) must be 10, which is 0+1+2+3+4. Start five goroutines, receive all five values, add them."
+          "feedback": "FanSum(5) must be 10, which is 0+1+2+3+4. Start five goroutines, receive all five values, add them. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "fan-four",
@@ -8673,7 +8857,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a bare context carries no deadline"
           ],
-          "feedback": "DeadlineMs(context.Background()) must return -1. ctx.Deadline returns ok false when no deadline is set, so return the -1 sentinel instead of a zero time.",
+          "feedback": "DeadlineMs(context.Background()) must return -1. ctx.Deadline returns ok false when no deadline is set, so return the -1 sentinel instead of a zero time. If node is missing when the suite runs, the environment check names the install.",
           "edge": true
         },
         {
@@ -8747,6 +8931,66 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Closing the jobs channel before every value is sent — the remaining sends then panic on a closed channel and workers stop early.",
         "Summing into one shared total from every worker without a lock — that is a data race; send partials on a channel instead."
+      ],
+      "visualization": {
+        "type": "goroutine-timeline",
+        "spec": {
+          "lanes": [
+            "main",
+            "worker-1",
+            "worker-2"
+          ],
+          "events": [
+            {
+              "lane": "main",
+              "step": 0,
+              "label": "jobs <- 1"
+            },
+            {
+              "lane": "worker-1",
+              "step": 1,
+              "label": "v := <-jobs"
+            },
+            {
+              "lane": "main",
+              "step": 1,
+              "label": "jobs <- 2"
+            },
+            {
+              "lane": "worker-2",
+              "step": 2,
+              "label": "v := <-jobs"
+            },
+            {
+              "lane": "main",
+              "step": 3,
+              "label": "close(jobs)"
+            },
+            {
+              "lane": "main",
+              "step": 4,
+              "label": "wg.Wait()"
+            }
+          ],
+          "links": [
+            {
+              "from": 0,
+              "to": 1,
+              "label": ""
+            },
+            {
+              "from": 2,
+              "to": 3,
+              "label": ""
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "label": "Go blog: pipelines and cancellation",
+          "url": "https://go.dev/blog/pipelines"
+        }
       ]
     },
     "go-concur-ask": {
@@ -9142,7 +9386,36 @@ export const IDE_TASK_MANAGER: unknown = {
         "Thinking the server keeps your session or your last request in memory between calls — HTTP is stateless, so every request arrives as a stranger unless it carries its own identity and data.",
         "Thinking the status code is implied by the body — it is not; you call WriteHeader, and the first call wins, with 200 assumed if you never call it.",
         "Writing the body before the headers or status — once bytes are flushed the status and header set are already on the wire and cannot change.",
-        "Encoding an empty list is the same as encoding nothing — a nil slice goes out as null, and the client reads that as a missing field rather than an empty one."
+        "Encoding an empty list is the same as encoding nothing — a nil slice goes out as null, so a client looking for the field finds no list and blames its own parsing."
+      ],
+      "visualization": {
+        "type": "http-lifecycle",
+        "spec": {
+          "steps": [
+            {
+              "side": "client",
+              "label": "GET /tasks"
+            },
+            {
+              "side": "server",
+              "label": "mux serves list"
+            },
+            {
+              "side": "server",
+              "label": "200 with JSON"
+            },
+            {
+              "side": "client",
+              "label": "read the list"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "label": "net/http package reference",
+          "url": "https://pkg.go.dev/net/http"
+        }
       ]
     },
     "go-http-ask": {
@@ -9196,7 +9469,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the tasks list comes back as JSON"
           ],
-          "feedback": "GET /tasks must answer 200 with Content-Type application/json and a non-empty JSON array. Set the header, WriteHeader(200), then encode a slice with at least one task."
+          "feedback": "GET /tasks must answer 200 with Content-Type application/json and a non-empty JSON array. Set the header, WriteHeader(200), then encode a slice with at least one task. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "http-post-validation",
@@ -9859,6 +10132,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Assuming a line must be fast because it is short — a one-call strings.Join beats a hand-rolled loop because of the work it avoids under the hood, not because it has fewer characters.",
         "Treating performance as something you only look at after it breaks, when the O(n^2) copy was written on day one and the input was simply too small to reveal it yet."
+      ],
+      "resources": [
+        {
+          "label": "Go blog: profiling Go programs",
+          "url": "https://go.dev/blog/pprof"
+        }
       ]
     },
     "go-perf-ask": {
@@ -9912,7 +10191,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the words join with the separator"
           ],
-          "feedback": "JoinWords must glue the parts with sep *between* them and nothing at the ends: [a b c] with \"-\" is \"a-b-c\", an empty slice is \"\", and a lone element is itself. strings.Join already gets all of these right."
+          "feedback": "JoinWords must glue the parts with sep *between* them and nothing at the ends: [a b c] with \"-\" is \"a-b-c\", an empty slice is \"\", and a lone element is itself. strings.Join already gets all of these right. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "perf-join-economy",
@@ -10498,7 +10777,8 @@ export const IDE_TASK_MANAGER: unknown = {
         "Open cache.go. NewMemo is three fields — fetch, ttl, clock — and the state you add is yours to design: an entry map under a mutex is the floor.",
         "An entry is a value plus the time it was stored; freshness is now().Sub(at) < ttl on the injected clock, which is why tests move time instead of sleeping.",
         "Invalidate is a map delete under the same mutex — drop the key and let the next Get miss.",
-        "For the herd: keep a per-key flight (a done channel plus the result) that the first miss creates; later readers find it and wait instead of fetching."
+        "For the herd: keep a per-key flight (a done channel plus the result) that the first miss creates; later readers find it and wait instead of fetching.",
+        "The clock is injected, so the tests move time instead of sleeping — a cache that reads time.Now directly ignores the ttl it was given and never expires."
       ],
       "misconceptions": [
         "Storing the loader's error in the entry — return it and leave the key empty, or one timeout is served until the TTL expires.",
@@ -10589,6 +10869,12 @@ export const IDE_TASK_MANAGER: unknown = {
         "Answering 200 from a health endpoint keeps monitoring green while you investigate — the load balancer uses that same 200 to decide this instance can still take traffic, so the green dashboard is also a routing decision.",
         "Including the full error text in the health body is more helpful, because the operator can act faster — the same text often carries the DSN, the password inside it, and a copy of it lands in every log aggregator and screenshot downstream.",
         "Any nonzero exit code means failure, so the exact number does not matter — documented per-class codes are what let a supervisor decide restart vs. alert vs. give up without parsing a log line."
+      ],
+      "resources": [
+        {
+          "label": "Google SRE: monitoring distributed systems",
+          "url": "https://sre.google/sre-book/monitoring-distributed-systems/"
+        }
       ]
     },
     "go-ops-ask": {
@@ -10642,7 +10928,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a healthy service answers ready with no problems"
           ],
-          "feedback": "The healthy path reports problems it does not have (\"checked: db\"), and a caller cannot tell a list of successes from a list of failures. Only failed probes append to Problems — when nothing is wrong the list is empty, and the status is 200."
+          "feedback": "The healthy path reports problems it does not have (\"checked: db\"), and a caller cannot tell a list of successes from a list of failures. Only failed probes append to Problems — when nothing is wrong the list is empty, and the status is 200. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "ops-503-named",
@@ -10758,6 +11044,12 @@ export const IDE_TASK_MANAGER: unknown = {
         "Logging the request id by hand on every call — derive once with With and the id rides along.",
         "fmt.Println debugging in production code — unstructured lines cannot be filtered when it matters.",
         "A nil logger means quiet — calling methods on nil panics; quiet must be chosen, with a fallback or a discard handler."
+      ],
+      "resources": [
+        {
+          "label": "log/slog package reference",
+          "url": "https://pkg.go.dev/log/slog"
+        }
       ]
     },
     "go-logging-ask": {
@@ -10876,7 +11168,7 @@ export const IDE_TASK_MANAGER: unknown = {
     },
     "go-deps-learn": {
       "id": "go-deps-learn",
-      "title": "Learn: module graph and go mod",
+      "title": "Learn: the pair that pins every dependency",
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -10886,43 +11178,57 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A Go module is a collection of related files. The go.mod file at the root declares the module name and its dependencies. Direct dependencies are listed explicitly, while indirect dependencies are those your code imports but your dependencies also import. go.sum contains cryptographic checksums of module versions to ensure reproducible builds across different environments and over time."
-        },
-        {
-          "kind": "prose",
-          "body": "Why it matters: A well-maintained module graph is critical for team collaboration. When go.mod and go.sum are correct, every teammate can check out the project and build it identically. Without them, builds are non-reproducible and dependency conflicts surface later. Common pitfalls: editing go.mod by hand without running go mod tidy leaves go.sum out of sync, causing mysterious build failures, and deleting go.sum forces a full rebuild to regenerate checksums correctly."
+          "body": "A Go module is a directory with a go.mod at its root. That file names the module and lists the versions it builds against. The go.sum beside it records a checksum for each of those versions, so the same commit builds the same binary anywhere."
         },
         {
           "kind": "example",
-          "body": "A minimal go.mod:",
-          "code": "module example.com/myproject\n\ngo 1.21\n\nrequire (\n\tgithub.com/some/dependency v1.2.3\n)\n\nexclude github.com/another/incompatible v0.0.0-20240101"
+          "body": "The two files a dependency leaves behind, one line each:",
+          "code": "// go.mod\nrequire github.com/google/uuid v1.6.0\n\n// go.sum\ngithub.com/google/uuid v1.6.0 h1:<base64hash>="
+        },
+        {
+          "kind": "prose",
+          "body": "Why it matters: two people who check out one commit must fetch identical code. go.mod decides what is fetched; go.sum proves what arrived matches what everyone else fetched. A require with no checksum, or a checksum no require claims, is the pair out of step."
+        },
+        {
+          "kind": "prose",
+          "body": "go mod tidy reads the imports and reconciles both files: it adds a requirement the code adopted, drops one nothing imports, and records the checksums. It is the tool that writes the pair, which is why a hand edit that skips it resurfaces as a build error on someone else's machine."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "go.mod declares the module name and dependency requirements.",
-            "go.sum records checksums for reproducibility.",
-            "go mod tidy ensures the module graph is consistent and up to date."
+            "go.mod declares versions; go.sum records their checksums.",
+            "Tidy adds what the code imports and drops what it ignores.",
+            "A replaced local module gets no checksum line.",
+            "The pair is what makes one commit build identically anywhere."
           ]
         },
         {
           "kind": "task",
-          "body": "Run go mod tidy to ensure go.mod and go.sum are consistent with the project's source code."
+          "body": "In depsdemo/, main.go already imports github.com/google/uuid while go.mod declares nothing. Run go mod tidy to write the pair, then open go.mod and go.sum and name the two lines it added. If go is missing, run the environment check first."
         }
       ],
       "hints": [
-        "If you add a new import, run go mod tidy to update go.mod and go.sum.",
-        "Use go list -m all to see all dependencies in the module graph."
+        "The two files answer different questions: go.mod says what to fetch, go.sum says what must arrive."
       ],
       "misconceptions": [
-        "go.mod and go.sum are optional — without them, builds are not reproducible across environments.",
-        "Indirect dependencies don't matter - they can introduce version conflicts and security vulnerabilities."
+        "Hand-editing go.mod and skipping tidy — the next build finds a pair the tool no longer recognises.",
+        "Expecting a local replace to appear in go.sum — a directory has no content to checksum."
+      ],
+      "resources": [
+        {
+          "label": "Go modules reference: go.mod and go.sum",
+          "url": "https://go.dev/ref/mod#go-mod-files"
+        },
+        {
+          "label": "How to add a module: go get and go mod tidy",
+          "url": "https://go.dev/doc/modules/adding_module"
+        }
       ]
     },
     "go-deps-ask": {
       "id": "go-deps-ask",
-      "title": "Reason: why does go mod tidy change versions?",
+      "title": "Reason: what does tidy add to the pair",
       "kind": "question",
       "mode": "learn",
       "guidance": 1,
@@ -10932,28 +11238,28 @@ export const IDE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A project has go.mod requiring github.com/foo/bar v1.0.0. That package in turn requires github.com/baz v2.0.0. After running go mod tidy, what versions appear in go.mod and go.sum?"
+          "body": "The project requires github.com/foo/bar v1.0.0, and foo/bar itself requires github.com/baz v2.0.0. Nothing else is in the graph. You run go mod tidy. What ends up in the pair?"
         }
       ],
       "options": [
-        "go.mod keeps v1.0.0; go.sum adds checksums for both v1.0.0 and v2.0.0",
-        "go.mod updates to v2.0.0; go.sum only records v2.0.0",
-        "go.mod stays at v1.0.0; go.sum is unchanged",
-        "go.mod updates to v2.0.0; go.sum records checksums for both v1.0.0 and v2.0.0"
+        "keeps foo/bar v1.0.0, adds baz v2.0.0 as indirect, go.sum hashes both",
+        "go.mod upgrades foo/bar to v2.0.0 and go.sum keeps a single checksum",
+        "go.sum is the only file tidy writes; a direct require never moves or grows",
+        "tidy deletes the transitive entry, so only foo/bar remains in the pair"
       ],
-      "answer": 3,
-      "explanation": "go mod tidy resolves the full module graph. If github.com/foo/bar v1.0.0 requires github.com/baz v2.0.0, then go.mod updates its requirement to github.com/baz v2.0.0 (or the latest compatible version), and go.sum records checksums for both the direct dependency (foo/bar v1.0.0) and the transitive dependency (baz v2.0.0).",
+      "answer": 0,
+      "explanation": "Tidy resolves the whole graph and keeps the minimal versions that satisfy it: foo/bar stays at v1.0.0, baz is added as an indirect requirement at the version bar asked for, and go.sum gains a checksum line for each of the two.",
       "hints": [
-        "go mod tidy resolves the complete module graph including transitive dependencies"
+        "Direct and transitive are two different questions: what your own code imports, and what an imported module imports in turn."
       ],
       "misconceptions": [
-        "go mod tidy only adds checksums without changing versions",
-        "Indirect dependencies are ignored by go mod tidy"
+        "Thinking tidy upgrades a direct require — it keeps the version already declared and records what the graph needs beneath it.",
+        "Expecting go.sum to hold only the top-level module — every version the build fetched, direct or not, earns a line."
       ]
     },
     "go-deps-do": {
       "id": "go-deps-do",
-      "title": "Solve: manage a dependency update",
+      "title": "Solve: reconcile the dependency the code adopted",
       "kind": "challenge",
       "mode": "solve",
       "guidance": 2,
@@ -10962,40 +11268,52 @@ export const IDE_TASK_MANAGER: unknown = {
       ],
       "files": [
         "go.mod",
-        "go.sum"
+        "go.sum",
+        "depsdemo/main.go"
       ],
-      "testCommand": "go build ./...",
+      "testCommand": "node --test --test-reporter=tap test/deps.test.mjs",
       "checks": [
         {
-          "id": "build",
-          "label": "Project builds after dependency update",
+          "id": "declared",
+          "label": "Every module the code imports is a declared requirement",
           "tests": [
-            "go build ./... succeeds"
+            "go.mod declares every module the code imports"
           ],
-          "feedback": "After updating dependencies and running go mod tidy, the project should compile without errors."
+          "feedback": "main.go imports a module go.mod never declared, so the pair is out of step. Reconcile the module directory so the requirement appears — go mod tidy reads the imports and writes it for you."
         },
         {
           "id": "checksums",
-          "label": "go.sum checksums are valid",
+          "label": "go.sum records a checksum for every declared requirement",
           "tests": [
-            "go.sum contains valid checksums for all dependencies"
+            "go.sum records a checksum for every declared requirement"
           ],
-          "feedback": "go mod tidy should produce correct checksums; if checksums are invalid, builds may fail unexpectedly."
+          "feedback": "A requirement with no checksum line is not reproducible: the next fetch is unverified. Tidy records the hash of what it downloaded, and every require line in go.mod should have a matching entry in go.sum."
+        },
+        {
+          "id": "tidy-stable",
+          "label": "The reconciled module survives another tidy",
+          "tests": [
+            "go mod tidy leaves the module's own files untouched"
+          ],
+          "feedback": "Once the pair matches the imports, tidy has nothing left to change: it should exit without editing go.mod or go.sum. A file that still moves means an import and a requirement disagree somewhere.",
+          "edge": true
         }
       ],
       "hints": [
-        "Run go get <package>@<version> to update a specific dependency version.",
-        "After modifying go.mod, always run go mod tidy to update go.sum and reconcile the graph.",
-        "Use go build ./... to verify the project compiles after changes."
+        "Open depsdemo/main.go first and read its imports; then open depsdemo/go.mod and compare what is declared against what is imported.",
+        "go mod tidy reads the imports of every package in the module and rewrites the pair to match — that is the one command this task is built around.",
+        "Tidy needs to fetch the module it has never seen, so this is the one step in the Go track that reaches the module proxy; offline it stops rather than guessing, and if go is not installed the environment check names the install.",
+        "A solved pair looks like this: a require line naming the imported module at a released version, and a go.sum line carrying that version's hash.",
+        "Reconciled means stable: run tidy a second time and neither file should change. If it still edits one, an import and a requirement disagree — read the diff it prints."
       ],
       "misconceptions": [
-        "go.mod can be edited by hand without running go mod tidy",
-        "go.sum is just a cache — it does not affect build success."
+        "Thinking tidy invents a version — it resolves what the imports ask for and records the released version it fetched.",
+        "Thinking go.sum is regenerated from thin air — its lines come from the content that was actually downloaded."
       ]
     },
     "go-deps-review": {
       "id": "go-deps-review",
-      "title": "Review: module best practices",
+      "title": "Review: read the pair unaided",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -11004,31 +11322,33 @@ export const IDE_TASK_MANAGER: unknown = {
       ],
       "files": [
         "go.mod",
-        "go.sum"
+        "go.sum",
+        "depsdemo/main.go"
       ],
-      "testCommand": "go build ./...",
+      "testCommand": "node --test --test-reporter=tap test/deps.test.mjs",
       "checks": [
         {
-          "id": "reproducibility",
-          "label": "go.mod and go.sum enable reproducibility",
+          "id": "declared",
+          "label": "Every module the code imports is a declared requirement",
           "tests": [
-            "running go build on a fresh checkout produces identical output"
+            "go.mod declares every module the code imports"
           ],
-          "feedback": "If a teammate checks out the project and runs go build, the result should be the same. go.mod and go.sum are the keys to that reproducibility."
+          "feedback": "Read the import block, then the require block, and name the module one of them knows about and the other does not. If node is missing when the suite runs, the environment check names the install."
         },
         {
-          "id": "go-get-vs-edit",
-          "label": "Know when to use go get vs manual editing",
+          "id": "checksums",
+          "label": "go.sum records a checksum for every declared requirement",
           "tests": [
-            "can distinguish go get from manual go.mod editing"
+            "go.sum records a checksum for every declared requirement"
           ],
-          "feedback": "Use go get to add or update dependencies (it runs go mod tidy automatically). Only manually edit go.mod for advanced workflows and always follow with go mod tidy."
+          "feedback": "Every require line should have a go.sum line for that same module and version. The checksum is the proof both fetches agree; if node is missing, the environment check names the install.",
+          "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "go.sum is automatically generated and never needs attention",
-        "It is safe to delete go.sum and rebuild — the checksums will be regenerated correctly every time."
+        "Reading go.sum as a cache it may delete — it is the record that makes the build reproducible.",
+        "Thinking indirect means unimportant — an indirect requirement is still pinned and still checksummed."
       ]
     },
     "go-resilience-learn": {
@@ -11084,6 +11404,12 @@ export const IDE_TASK_MANAGER: unknown = {
       "misconceptions": [
         "Believing more retries make you more reliable — an unbounded retry loop turns one slow dependency into a pile-up of your own callers, and a fleet of clients retrying in lockstep can knock a recovering service flat again the instant it comes back.",
         "Throwing away the last error when every attempt fails — returning nil on exhaustion tells the caller the work succeeded, which is the single most expensive lie a resilient helper can tell."
+      ],
+      "resources": [
+        {
+          "label": "Google SRE: handling overload",
+          "url": "https://sre.google/sre-book/handling-overload/"
+        }
       ]
     },
     "go-resilience-ask": {
@@ -11137,7 +11463,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "a retry that succeeds first try stops there"
           ],
-          "feedback": "When op returns nil on the very first call, DoWithRetry must return nil and stop — it may not call op again. A helper that loops a fixed number of times regardless of success calls op too many times."
+          "feedback": "When op returns nil on the very first call, DoWithRetry must return nil and stop — it may not call op again. A helper that loops a fixed number of times regardless of success calls op too many times. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "retry-recovers",
@@ -11162,7 +11488,7 @@ export const IDE_TASK_MANAGER: unknown = {
         "The loop runs at most as many times as the caller allowed, and the suite counts those calls: one more than that fails the count it keeps.",
         "Inside the loop call op once, assign its result to your error variable, and if it is nil return nil immediately — do not call op again after it succeeded.",
         "A suite calls op and counts the calls: success on try one must make exactly one call, and failure on all four of four attempts must make exactly four before you give up.",
-        "Solution review: defer cleanup(); fn(). The panic travels through the deferred call with its value intact, and cleanup ran exactly once either way. Run the checks — three tests, three green."
+        "Solution review: the finished loop makes one attempt per pass, treats the caller's budget as its bound, keeps every failure in the error variable it declared, and returns non-nil the moment the attempts run out — the flake is contained, and no call is ever spent twice."
       ],
       "misconceptions": [
         "Returning nil once attempts run out, so a caller that trusts the result thinks the flaky operation eventually succeeded when it never did.",
@@ -11351,8 +11677,7 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the runtime process does not run as root"
           ],
-          "feedback": "Add a USER line to the final stage naming a non-root user — distroless images ship a nonroot user for exactly this. A container that starts as root hands a compromised process the whole namespace.",
-          "edge": true
+          "feedback": "Add a USER line to the final stage naming a non-root user — distroless images ship a nonroot user for exactly this. A container that starts as root hands a compromised process the whole namespace."
         },
         {
           "id": "ship-pipeline-runs-suite",
@@ -11368,7 +11693,8 @@ export const IDE_TASK_MANAGER: unknown = {
           "tests": [
             "the suite passes inside the container"
           ],
-          "feedback": "With a Docker daemon available this check builds your image and runs go test ./... inside the builder it came from, and a failure shows Docker’s own output. Without a daemon it reports itself not-run with that reason — missing infrastructure never fails a check here."
+          "feedback": "With a Docker daemon available this check builds your image and runs go test ./... inside the builder it came from, and a failure shows Docker’s own output. Without a daemon it reports itself not-run with that reason — missing infrastructure never fails a check here.",
+          "edge": true
         }
       ]
     },

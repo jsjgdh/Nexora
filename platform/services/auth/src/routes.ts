@@ -508,8 +508,21 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
     if (!users[0]) {
       return { status: "pending" as const };
     }
+    // Claim the code BEFORE minting the pair. The order matters: two
+    // concurrent polls of one code — a retried poll on a flaky network, or a
+    // thief holding the device secret — both passed the read above, and both
+    // were handed a session, because the guarded UPDATE that claims the code
+    // matched no row for the second poll and its result was never read. The
+    // claim is the mutex: exactly one poll can win it, and the loser is told
+    // "pending", which is the same answer an unapproved code gets.
+    const claimed = await pool.query(
+      "UPDATE device_codes SET consumed_at = now() WHERE id = $1 AND consumed_at IS NULL RETURNING id",
+      [row.id]
+    );
+    if (!claimed.rows[0]) {
+      return { status: "pending" as const };
+    }
     const tokens = await issuePair(pool, row.approved_user_id);
-    await pool.query("UPDATE device_codes SET consumed_at = now() WHERE id = $1 AND consumed_at IS NULL", [row.id]);
     return { status: "approved" as const, user: toPublic(users[0]), tokens };
   });
 
