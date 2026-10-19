@@ -497,6 +497,16 @@ export const TASK_MANAGER: [string, string, "free" | "pro"][] = [
   ["pr-review", "Respond to code review", "pro"],
   ["ai-audit", "Audit AI-generated code", "pro"],
   ["independent", "Independent challenge", "pro"],
+];
+
+/**
+ * The Go language on its own, from its first value to a module.
+ *
+ * This was the first half of what used to be one course with the JavaScript
+ * app, and it is now its own course because it is its own subject: the
+ * language, before the service and before the app it sits behind.
+ */
+export const GO_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
   ["go-values", "Go values", "pro"],
   ["go-control-flow", "Go control flow", "pro"],
   ["go-functions", "Go functions", "pro"],
@@ -511,6 +521,15 @@ export const TASK_MANAGER: [string, string, "free" | "pro"][] = [
   ["go-lifecycle", "Go cleanup and panic", "pro"],
   ["go-generics", "Go generics", "pro"],
   ["go-modules", "Go modules", "pro"],
+];
+
+/**
+ * The Go service, from its first goroutine to the two labs that close it.
+ *
+ * The second half of the old course, split off because it is a different
+ * subject: a running service, its storage, its operations and its failures.
+ */
+export const GO_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
   ["go-goroutines", "Goroutines and channels", "pro"],
   ["go-sync", "Shared state and sync", "pro"],
   ["go-context", "Contexts and cancellation", "pro"],
@@ -568,37 +587,56 @@ export const API_BASICS: [string, string, "free" | "pro"][] = [
 ];
 
 /**
- * The three shipped courses, with the real counts that follow from the lists
+ * The five shipped courses, with the real counts that follow from the lists
  * above.
  *
- * The order is the shipped order: the main line a learner starts on, the
- * second main line, and the side course that gates nothing. `role` is not
- * marketing: it is the manifest's own word for whether a course is a main
- * line, and the side course is the one that can be left at any point.
+ * The order is the shipped order: the line a learner starts on, the two Go
+ * courses behind it, the Rust ledger, and the side course that gates nothing.
+ * `role` is not marketing: it is the manifest's own word for whether a course
+ * is a main line, and the side course is the one that can be left at any point.
+ *
+ * The label says what a course IS, never how big it is. A count next to a name
+ * turns a curriculum into a price list, and the prices are on the pricing page.
  */
 export const COURSES = [
   {
     slug: "task-manager",
     role: "main",
-    label: "course one · one app, two tracks",
+    label: "course one · the JavaScript app",
     title: "Task Manager",
-    sub: "Two tracks in one course: the JavaScript app, then the Go backend behind it.",
+    sub: "the JavaScript app taken from the first terminal command to a reviewed pull request",
     phases: TASK_MANAGER,
+  },
+  {
+    slug: "go-fundamentals",
+    role: "main",
+    label: "course two · the Go language",
+    title: "Go fundamentals",
+    sub: "the language itself, from values to modules",
+    phases: GO_FUNDAMENTALS,
+  },
+  {
+    slug: "go-in-production",
+    role: "main",
+    label: "course three · the Go service",
+    title: "Go in production",
+    sub: "the service behind it, from goroutines and HTTP through storage, operations and the two labs that close it",
+    phases: GO_IN_PRODUCTION,
   },
   {
     slug: "rust-ledger",
     role: "main",
-    label: "course two · the ledger in Rust",
+    label: "course four · the ledger in Rust",
     title: "Rust Ledger",
-    sub: "The ledger rebuilt in Rust, taken to a tested Axum service.",
+    sub: "the ledger rebuilt in Rust, taken to a tested Axum service",
     phases: RUST_LEDGER,
   },
   {
     slug: "api-basics",
     role: "side",
-    label: "course three · three phases, gates nothing",
+    label: "course five · reading an API from the outside",
     title: "APIs from the outside",
-    sub: "What a request is, and why valid JSON is not valid data.",
+    sub: "three phases on what a request is, and it gates nothing",
     phases: API_BASICS,
   },
 ] as const;
@@ -606,9 +644,32 @@ export const COURSES = [
 /** Every shipped phase, in one list: the marquee, the count, the drift gate. */
 export const ALL_PHASES: [string, string, "free" | "pro"][] = [
   ...TASK_MANAGER,
+  ...GO_FUNDAMENTALS,
+  ...GO_IN_PRODUCTION,
   ...RUST_LEDGER,
   ...API_BASICS,
 ] as const;
+
+/** How many phases ship on the free tier, counted from the lists above. */
+export const FREE_PHASE_COUNT = ALL_PHASES.filter(([, , tier]) => tier === "free").length;
+
+/** How many phases open with a paid tier, counted from the lists above. */
+export const PRO_PHASE_COUNT = ALL_PHASES.length - FREE_PHASE_COUNT;
+
+/**
+ * The curriculum, described on the front page: the courses by name, and how
+ * deep each one is.
+ *
+ * The depths are counted from the phase lists above rather than written out,
+ * so the sentence cannot drift away from the shipped phases. The page names
+ * the courses and never counts them: a count of courses reads as a count of
+ * videos, and this is not that.
+ */
+export const CURRICULUM = {
+  title:
+    "A JavaScript app, the Go language, the Go service behind it, a ledger in Rust, and an API from the outside.",
+  caption: `The JavaScript app is ${TASK_MANAGER.length} phases. The Go service is ${GO_FUNDAMENTALS.length + GO_IN_PRODUCTION.length}, across the language course and the production course. The Rust ledger is ${RUST_LEDGER.length}, and the side course is ${API_BASICS.length}. Everything below ships inside the IDE and is judged there.`,
+} as const;
 
 /**
  * The disclosure. This is the second clause of the positioning line made
@@ -681,7 +742,11 @@ export const FAQ = [
   },
   {
     q: "Will it teach me a framework?",
-    a: "It teaches a JavaScript app with a Go backend behind it, a ledger in Rust taken to a tested service, and reading an API from the outside. There is no React course, and we are not going to pretend one is coming.",
+    a: "It teaches a JavaScript app, the Go language on its own, the Go service behind that app, a ledger in Rust taken to a tested service, and reading an API from the outside. There is no React course, and we are not going to pretend one is coming.",
+  },
+  {
+    q: "What is actually in the curriculum?",
+    a: `Task Manager is the JavaScript app, ${TASK_MANAGER.length} phases, from the first terminal command to a reviewed pull request. Go fundamentals is the language itself, ${GO_FUNDAMENTALS.length} phases, from values to modules. Go in production is the service behind it, ${GO_IN_PRODUCTION.length} phases, ending in the debugging and design labs. Rust Ledger is the ledger rebuilt in Rust, ${RUST_LEDGER.length} phases, taken to a tested Axum service. APIs from the outside is ${API_BASICS.length} phases on what a request is, and it gates nothing.`,
   },
   {
     q: "Is there a mark of completion?",
@@ -692,21 +757,35 @@ export const FAQ = [
 /**
  * The price, decided.
  *
- * One plan, one number, and the same number in the payment provider's
- * dashboard. The site prints the price rather than hiding it behind a
- * checkout, because a price you cannot see before you commit to something is
- * not a price, it is a surprise.
+ * Every number a buyer can be charged lives here and nowhere else: the page
+ * prints them, the suite reads them, and the payment provider is configured
+ * with the same figures. The monthly price is the one the provider is set to.
+ * The yearly price is the same plan bought in advance. The teams price is the
+ * same plan again, with one invoice instead of several.
  *
- * What the paid tier opens is stated as a count of phases, because that is
- * what it is: the same editor, with the other seventy-one phases in it.
+ * The phase counts are not written here either: they are counted from the
+ * phase lists above, so a phase added to the curriculum cannot leave a stale
+ * count behind in the price.
  */
 export const PRICING = {
   plan: "Pro",
-  monthly: 29,
   currency: "USD",
-  freePhases: 9,
-  paidPhases: 71,
+  free: 0,
+  monthly: 29,
+  annual: 290,
+  freePhases: FREE_PHASE_COUNT,
+  paidPhases: PRO_PHASE_COUNT,
+  teams: {
+    perLearnerMonthly: 29,
+    minLearners: 5,
+    billedYearly: true,
+  },
 } as const;
+
+/** An amount as the provider charges it. The page never writes a price itself. */
+export function money(amount: number): string {
+  return `$${amount}`;
+}
 
 /** The free tier is, in the words the pricing page and the suite share. */
 export const FREE_TIER_POINTS = [
@@ -715,6 +794,86 @@ export const FREE_TIER_POINTS = [
   "Further courses per your tier, inside the same IDE",
   "Account with IDE sign-in through the browser",
 ] as const;
+
+/**
+ * The three lines, in the words the owner decided on.
+ *
+ * Free is the first hour. Pro is the whole curriculum. Teams is the same Pro
+ * with one invoice and the two things a hiring manager needs.
+ */
+export const PRICING_PLANS = [
+  {
+    id: "free",
+    name: "Free",
+    price: money(PRICING.free),
+    priceNote: "the first hour",
+    points: FREE_TIER_POINTS,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: money(PRICING.monthly),
+    priceNote: `a month, or ${money(PRICING.annual)} a year`,
+    points: [
+      `All ${ALL_PHASES.length} phases, in the IDE you already have`,
+      "Sync across devices",
+      "Hosted runs: the platform runs your code",
+      "The evidence ledger and the portfolio",
+      "New phases as they land",
+    ],
+  },
+  {
+    id: "teams",
+    name: "Teams",
+    price: money(PRICING.teams.perLearnerMonthly),
+    priceNote: "per learner per month, billed yearly",
+    points: [
+      "The same Pro, on one invoice",
+      `${PRICING.teams.minLearners} learners or more`,
+      "The hiring one-pager",
+      "A verified-evidence link for the hiring manager",
+    ],
+  },
+] as const;
+
+/**
+ * What is not sold.
+ *
+ * The list is here because a buyer is better served by a plain refusal than by
+ * a quiet omission. These are not things that are coming later either: they
+ * are the product's shape, stated in the negative.
+ */
+export const NOT_SOLD = [
+  "No certificates. Nothing here is issued, framed and signed.",
+  "No leaderboards, and no ranking of learners.",
+  "No AI grading. A model explains a failure; it never decides one.",
+  "No content packs. The curriculum is the shipped phases, and new ones arrive as they land.",
+] as const;
+
+/**
+ * The address a hiring manager writes to, and the promise made about it.
+ *
+ * Same treatment as the launch list: a person holds the mailbox, the message
+ * is used to answer the question, and it is not added to anything.
+ */
+export const HIRING_CONTACT = "hiring@nexora.dev";
+
+export const HIRING_ENQUIRY = {
+  title: "Tell us what you are hiring for.",
+  lead: "One form, and a person reads it. We answer hiring enquiries within two working days.",
+  next: "What happens next: we read it, we reply to the address you gave, and we say plainly if we are not the right fit for the role.",
+  privacy:
+    "Your name, your work email and what you are hiring for go to the studio's hiring mailbox. They are used to answer you and for nothing else, they are not added to a list, and the message is deleted when the thread is over or when you ask us to delete it.",
+  replyTime: "two working days",
+  notConfigured:
+    "This build has no mail provider configured, so the form cannot send. Write to the address on this page instead, and it reaches the same person.",
+  name: "your name",
+  email: "your work email",
+  need: "what you are hiring for",
+  submit: "Send it",
+  sent: "Your message is with us. A person reads this mailbox and answers within two working days.",
+  failed: "That did not go through. Try again, or write to hiring@nexora.dev.",
+} as const;
 
 /** The billing promises. Stated before there is a price to sell (D-012). */
 export const BILLING_COMMITMENTS = [
@@ -816,3 +975,136 @@ export const FORBIDDEN_WORDS = [
   "AI-powered",
   "10x",
 ] as const;
+
+/* ===========================================================================
+ * ADDED BY THE ACCOUNT-SURFACE WORKER, 2026-10-20.
+ *
+ * The copy for the account home, the password reset and the email
+ * verification. It lives here, at the end of the file, in one block, because
+ * the worker that owns the rest of this module did not write it: the shape
+ * of the existing constants is untouched, and the block can be moved into
+ * the body of the file whenever the two are next edited together.
+ *
+ * Two rules this block keeps, the same ones the rest of the file keeps.
+ *
+ *   - Every sentence is true of the shipped product. Where a thing does not
+ *     exist yet, the page says so in the same way `/pricing` does.
+ *   - No em dash and no en dash in a visible string.
+ *
+ * The account page is not a marketing page. Nothing here promises anything,
+ * and the sentences are written the way a bench is labelled: what it is,
+ * what it does, and what happens when it cannot answer.
+ * ======================================================================== */
+
+/**
+ * The account home: the screen a learner lands on after signing in.
+ *
+ * It answers four questions in order, and the order is the point. Who you
+ * are, what your plan opens, what you have actually proved, and how to get
+ * back to the work. The last one is first in the reader's mind, so it is
+ * never the last thing on the page.
+ */
+export const ACCOUNT_HOME = {
+  title: "Your account.",
+  lede: "This is what the platform holds about this account, and what it opens. Your work itself stays on your own machine, in the IDE.",
+  identity: {
+    label: "who you are",
+    title: "The account",
+    empty: "No account is connected to this browser.",
+    created: "Account made",
+    unknown: "The platform does not say when this account was made.",
+  },
+  plan: {
+    label: "your plan",
+    title: "What your tier opens",
+    free: "Free plan. The phases bundled with the IDE are free, they run offline, and every check is free.",
+    pro: "Pro. Every further phase appears inside the IDE you already have, fetched per entitlement.",
+    renews: "Renews",
+    unknown: "The billing service did not answer, so what this account is entitled to is not known here.",
+    manage: "Manage your plan",
+  },
+  evidence: {
+    label: "your evidence",
+    title: "What the platform has verified",
+    empty:
+      "Nothing is verified yet. A finished phase leaves a signed receipt, and the platform signs those receipts as your IDE syncs them. Practice stays in the IDE either way.",
+    footnote:
+      "Verified means the platform signed it. Each row re-derives at /verify, and it says nothing about who wrote it, only that the platform judged it.",
+  },
+  ide: {
+    label: "the editor",
+    title: "The IDE",
+    body: "The lessons, the editor and the checks are one thing, and they run on your machine. The IDE shows a short code and opens this site, so your password is never typed into an editor.",
+    download: "Download the IDE",
+    ideSignIn: "IDE sign-in code",
+  },
+  session: {
+    label: "this session",
+    title: "Signed in on this browser",
+    body: "Signing out ends this session here. Signing out everywhere ends every session this account has, on every device, including this one.",
+  },
+} as const;
+
+/**
+ * The password reset, in two parts: asking for a link, and using it.
+ *
+ * The request copy is the same sentence whether or not the address has an
+ * account, and that is deliberate: the page must never be able to tell a
+ * prober which addresses are registered. The sentence therefore says both
+ * halves in one breath.
+ */
+export const PASSWORD_RESET = {
+  request: {
+    title: "Set a new password.",
+    lede: "Give the address you signed up with. If it has an account, a link to set a new password is on its way.",
+    field: "email address",
+    action: "Send the link",
+    sending: "Sending the link",
+    /* One sentence, and it is the only one: the same words whether the
+       address is known or not, so this page can never be an oracle. */
+    sent: "If that address has an account, a link to set a new password is on its way. If it has not, nothing is sent and no account is created.",
+    again: "Ask for another link",
+  },
+  confirm: {
+    title: "Choose a new password.",
+    lede: "This link lets you set the password on the account it was sent to, and then it stops working.",
+    field: "new password: 10 characters or more",
+    tokenField: "the link, if you opened it in another browser",
+    action: "Set the new password",
+    sending: "Setting the password",
+    done: "Your password is set. Sign in with it.",
+    failed:
+      "That link was not accepted. It may have expired, or it may already have been used. Ask for a new one.",
+    newLink: "Ask for a new link",
+  },
+} as const;
+
+/**
+ * The email verification screen.
+ *
+ * Two facts are stated here rather than implied: that the account is created,
+ * and that a link is on its way. The screen also accepts a code, because a
+ * learner who opened the mail on another machine has a code and not a link.
+ */
+export const VERIFY_EMAIL = {
+  title: "Verify your email.",
+  created: "Your account is created. A verification link is on its way to the address you gave.",
+  idle: "Paste the code from the verification email, or open the link in that email.",
+  field: "verification code",
+  action: "Verify my email",
+  sending: "Verifying",
+  done: "Verified. Your email address is confirmed, and nothing else about the account changes.",
+  failed: "That code was not accepted. It may have expired, or it may already have been used.",
+  notConnected:
+    "Accounts are not connected in this build, so no verification was sent and no code is waiting for you.",
+  back: "Back to your account",
+  /* Asking for another code. The sentence is the same one the password reset
+     uses: an address that has an account gets a code, an address that has not
+     gets nothing, and the page cannot tell the two apart. */
+  resend: "Send another code",
+  resending: "Sending the code",
+  resent:
+    "If that address has an account, a verification code is on its way. If it has not, nothing is sent and no account is created.",
+  addressField: "email address",
+} as const;
+

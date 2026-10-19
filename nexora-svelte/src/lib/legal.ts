@@ -57,6 +57,12 @@ export const OPERATOR_READY: boolean = false;
  */
 export const SUBPROCESSORS = [
   {
+    name: "Resend",
+    purpose: "Transactional email: the launch list, hiring enquiries, and the acknowledgements we send",
+    data: "Email address, name, and the message you send us",
+    location: "United States",
+  },
+  {
     name: "Clerk",
     purpose: "Account sign-in and identity",
     data: "Email address, display name, session tokens",
@@ -134,8 +140,9 @@ export const RIGHTS_RESPONSE_DAYS = 30;
  * checkout cannot describe the subscription three different ways.
  */
 export const SUBSCRIPTION_TERMS = {
-  /** Printed wherever the price is. The page itself holds no number: plans come
-   * from the provider, because that is where the money is charged. */
+  /** Printed wherever the price is. The page prints the decided price from the
+   * copy module, and the provider's own checkout shows the same number before
+   * anything is charged, so the two cannot disagree. */
   renewal:
     "Plans renew automatically until you cancel. The renewal date is shown before you pay, in your profile afterwards, and in every receipt.",
   cancellation:

@@ -6,9 +6,9 @@
    *
    * Four measured facts, set as an instrument's readout row: a figure in
    * monospace and a label under it. Every figure is a count the suite can
-   * check — three courses, eighty phases, nine free phases, and no badge
-   * of any kind — and the last one is a zero, which is the number the whole
-   * product is arguing for.
+   * check — eighty phases, nine free phases, and no badge of any kind — and
+   * the last one is a zero, which is the number the whole product is arguing
+   * for.
    *
    * The figure counts up when the row is first seen, and the element's own
    * text is the target, so a crawler and a reduced-motion visitor read the

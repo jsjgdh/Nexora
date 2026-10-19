@@ -653,6 +653,11 @@ export async function pruneRetention(pool: Pool): Promise<Record<string, number>
   // A refresh token past its own expiry is dead: nothing can renew with it, and
   // the reuse-detection window it took part in closed with it.
   await run("refreshTokens", "DELETE FROM refresh_tokens WHERE expires_at < now()");
+  // A spent or expired identity token is dead in the same way: it can never be
+  // spent again, and a token that is gone is refused exactly as a token that
+  // was never issued. The day of grace is for an odd host's clock, not for a
+  // live token.
+  await run("authTokens", "DELETE FROM auth_tokens WHERE expires_at < now() - interval '1 day'");
   // A device code is fifteen minutes of work; the day of grace is for an odd
   // host's clock, not for a live code.
   await run("deviceCodes", "DELETE FROM device_codes WHERE expires_at < now() - interval '1 day'");

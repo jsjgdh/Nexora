@@ -8,6 +8,9 @@ out/
 .env
 .env.local
 
+# The local stack's databases (PGlite data directories) and its scratch files.
+platform/.local/
+
 # Compiled output. Both images build from source (see nexora-svelte/Dockerfile
 # and platform/Dockerfile), so nothing generated belongs in history.
 dist/

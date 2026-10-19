@@ -32,6 +32,7 @@
     NO_LIST,
     FAQ,
     POSITIONING,
+    CURRICULUM,
   } from "$lib/content/site";
 
   /* The front door, as a bench.
@@ -362,15 +363,13 @@
 </section>
 
 <!-- = 9 · The manifest =====================
-     The curriculum as a plate of lights and a ledger of phases. Thirty-two
-     squares, one per shipped phase, and the real names underneath. -->
+     The curriculum as a plate of lights and a ledger of phases. One square per
+     shipped phase, and the real names underneath. The heading names the
+     courses and the caption says how deep each one is; neither counts the
+     courses, because a count of courses reads as a count of videos. -->
 <section id="courses" class="border-t border-rule">
   <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-    <SectionHead
-      title="A JavaScript app, a ledger in Rust, and reading an API from the outside."
-      caption="Everything below ships inside the IDE and is judged there. This site teaches nothing itself. Open a course to read its real phase list."
-      wide
-    />
+    <SectionHead title={CURRICULUM.title} caption={CURRICULUM.caption} wide />
 
     <div class="mt-14">
       <PhaseField onselect={openCourse} />

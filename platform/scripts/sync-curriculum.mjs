@@ -16,19 +16,26 @@
    curriculum data dir) remain until the platform pass removes the services' classroom
    surface; this script no longer reads or writes them. */
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const check = process.argv.includes("--check");
 
 /* The IDE curriculum lives in the nexora-ide repo, checked out as a sibling of
-   branchcraft. Two files cross over, and only these two:
-     task-manager.json     every phase and activity — the content an entitled IDE
-                           fetches per session and holds in memory.
-     shipped/task-manager.manifest.json
-                           the roadmap by name and tier, holding no lesson body.
+   branchcraft. The catalogue decides what crosses over, and the catalogue is
+   the IDE's own `curriculum/shipped/index.json` — the same file the extension
+   reads to know which courses it carries. So a course added in the IDE arrives
+   here without a line of platform code, and a course removed in the IDE leaves
+   here without one.
+
+   Two files cross over per course:
+     <id>.json                    every phase and activity — the content an
+                                  entitled IDE fetches per session and holds in
+                                  memory.
+     shipped/<id>.manifest.json   the roadmap by name and tier, holding no
+                                  lesson body.
    The manifest is synced rather than re-derived here on purpose: the free/pro
    boundary is computed by the extension's own tier.ts, and re-deriving it in
    this script would be a second place that boundary can be wrong. Syncing the
@@ -36,10 +43,37 @@ const check = process.argv.includes("--check");
    stale copy. */
 const ideSrc = join(root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum");
 const ideDataDir = join(root, "services", "curriculum", "src", "data");
-const IDE_SOURCES = [
-  { rel: "task-manager.json", out: "ide-task-manager.ts", symbol: "IDE_TASK_MANAGER" },
-  { rel: join("shipped", "task-manager.manifest.json"), out: "ide-manifest.ts", symbol: "IDE_MANIFEST" },
-];
+const ideIndex = JSON.parse(await readFile(join(ideSrc, "shipped", "index.json"), "utf8"));
+const ideDefaultCourse = ideIndex.defaultCourse;
+const IDE_COURSES = (ideIndex.courses ?? []).map((course) => {
+  const stem = course.id.toUpperCase().replace(/-/g, "_");
+  return {
+    id: course.id,
+    doc: {
+      rel: `${course.id}.json`,
+      out: `ide-course-${course.id}.ts`,
+      symbol: `IDE_COURSE_${stem}`,
+    },
+    manifest: {
+      rel: join("shipped", `${course.id}.manifest.json`),
+      out: `ide-manifest-${course.id}.ts`,
+      symbol: `IDE_MANIFEST_${stem}`,
+    },
+  };
+});
+if (IDE_COURSES.length === 0) {
+  throw new Error("sync-curriculum: the IDE catalogue names no course");
+}
+/* The one file the service reads: it maps every course id to its document and
+   its manifest, so the service has no list of courses of its own to fall out
+   of date. Generated, because the courses are data. */
+const IDE_COURSES_INDEX = {
+  rel: "shipped/index.json",
+  out: "ide-courses.ts",
+  symbol: "IDE_COURSES",
+};
+const IDE_SOURCES = IDE_COURSES.flatMap((course) => [course.doc, course.manifest]);
+
 
 /* The web-classroom snapshot list is intentionally empty: the browser missions
    it used to copy no longer exist (see the header comment). TARGETS stays as
@@ -73,6 +107,12 @@ if (Object.keys(TARGETS).length > 0) {
    and tutor stamps whenever an IDE phase changed. */
 const ideHash = createHash("sha256");
 const ideJobs = [];
+/* The catalogue is hashed first, and it is hashed because it is content: a
+   course added or removed changes what this snapshot holds, and the version
+   stamp has to say so. The order is the catalogue's own order, then each
+   course's document and manifest, and the drift check in verify.mjs mirrors
+   it exactly. */
+ideHash.update("ide/" + IDE_COURSES_INDEX.rel.split("\\").join("/") + "\n" + JSON.stringify(ideIndex) + "\n");
 for (const s of IDE_SOURCES) {
   const from = join(ideSrc, s.rel);
   let raw;
@@ -103,6 +143,31 @@ const emitted = ideJobs.map((job) => [
     `// Source: nexora-ide/extensions/nexora/curriculum/${job.canonicalRel}\n` +
     `export const ${job.symbol}: unknown = ${JSON.stringify(job.parsed, null, 2)};\n`,
 ]);
+/* The catalogue file the service reads: every course, its document and its
+   manifest, in one map. Generated from the IDE's own index, so the service
+   never holds a list of courses of its own. */
+const courseIndexImports = IDE_COURSES.map(
+  (course) =>
+    `import { ${course.doc.symbol} } from "./${course.doc.out.replace(/\.ts$/, ".js")}";\n` +
+    `import { ${course.manifest.symbol} } from "./${course.manifest.out.replace(/\.ts$/, ".js")}";`
+).join("\n");
+const courseIndexEntries = IDE_COURSES.map(
+  (course) =>
+    `  ${JSON.stringify(course.id)}: { manifest: ${course.manifest.symbol}, document: ${course.doc.symbol} },`
+).join("\n");
+emitted.push([
+  join(ideDataDir, IDE_COURSES_INDEX.out),
+  `// Generated by npm run sync:curriculum — do not edit by hand.\n` +
+    `// Source: nexora-ide/extensions/nexora/curriculum/${IDE_COURSES_INDEX.rel.split("\\").join("/")}\n` +
+    courseIndexImports +
+    `\n\n/** The course a fresh install opens, as the IDE's catalogue says. */\n` +
+    `export const IDE_DEFAULT_COURSE = ${JSON.stringify(ideDefaultCourse)};\n\n` +
+    `/** Every course the IDE carries, with its roadmap and its authored document. */\n` +
+    `export const IDE_COURSES: Record<string, { manifest: unknown; document: unknown }> = {\n` +
+    courseIndexEntries +
+    `\n};\n`,
+]);
+
 // Same idempotent-stamp rule as CONTENT_VERSION: it records when this content
 // was last snapshotted, so it must not move when the content does not. That rule
 // is also what makes the byte comparison below honest rather than a date trap: a
@@ -121,6 +186,16 @@ emitted.push([
     `export const IDE_CONTENT_SOURCE = "nexora-ide/extensions/nexora/curriculum";\n`,
 ]);
 
+/* The files this sync owns: everything in the data dir whose name starts with
+   `ide-`. A file that is not emitted any more is a leftover from a course that
+   is gone, and it is removed rather than left to rot: a stale snapshot beside
+   a fresh one is a snapshot somebody will read. The dir is generated in full
+   (the verify harness asserts exactly that), so this is safe to do. */
+const emittedNames = new Set(emitted.map(([file]) => basename(file)));
+const stale = (await readdir(ideDataDir).catch(() => []))
+  .filter((name) => name.startsWith("ide-") && !emittedNames.has(name))
+  .map((name) => join(ideDataDir, name));
+
 if (check) {
   const drifted = [];
   for (const [file, text] of emitted) {
@@ -129,17 +204,24 @@ if (check) {
       drifted.push(file.slice(root.length + 1).split("\\").join("/"));
     }
   }
+  for (const file of stale) {
+    drifted.push(file.slice(root.length + 1).split("\\").join("/") + " (stale: not emitted any more)");
+  }
   if (drifted.length > 0) {
     throw new Error(
       `IDE curriculum sync has drifted: ${drifted.join(", ")} is not what the IDE source emits — ` +
         "run `npm run sync:curriculum` and commit the regenerated snapshot. The platform must never serve stale curriculum."
     );
   }
-  console.log(`curriculum sync clean (ide ${ideVersion}).`);
+  console.log(`curriculum sync clean (ide ${ideVersion}, ${IDE_COURSES.length} course(s)).`);
 } else {
   await mkdir(ideDataDir, { recursive: true });
   for (const [file, text] of emitted) {
     await writeFile(file, text, "utf8");
   }
-  console.log(`curriculum synced (ide ${ideVersion}).`);
+  for (const file of stale) {
+    await rm(file, { force: true });
+    console.log(`removed stale ${file.slice(root.length + 1).split("\\").join("/")}`);
+  }
+  console.log(`curriculum synced (ide ${ideVersion}, ${IDE_COURSES.length} course(s)).`);
 }

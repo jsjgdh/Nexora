@@ -744,6 +744,13 @@ details.nexora-details > summary::-webkit-details-marker {
     padding-bottom: 0.35rem !important;
   }
 
+  /* The hiring form is for the screen. A field a reader cannot fill in on
+     paper is not worth the space on a one-pager, and the address and the
+     promise beside it are what the printed sheet needs. */
+  .onepager [data-hiring-enquiry] {
+    display: none !important;
+  }
+
   /* A printed link is useless without its address. Internal links keep their
      label, because a reader holding the document has the site to hand. */
   a[href^="http"]::after {

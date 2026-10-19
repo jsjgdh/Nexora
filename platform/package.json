@@ -10,6 +10,7 @@
   "scripts": {
     "build": "npm run build --workspace=@nexora/contracts && npm run build --workspace=@nexora/service-kit && npm run build --workspace=@nexora/gateway && npm run build --workspace=@nexora/auth && npm run build --workspace=@nexora/curriculum && npm run build --workspace=@nexora/execution && npm run build --workspace=@nexora/billing",
     "dev:gateway": "npm run dev --workspace=@nexora/gateway",
+    "dev:stack": "node scripts/dev-stack.mjs",
     "verify": "node --test scripts/verify.mjs",
     "verify:e2e": "node --test scripts/verify.e2e.mjs",
     "healthcheck": "node scripts/healthcheck.mjs",
@@ -21,6 +22,9 @@
     "sync:check": "node scripts/sync-curriculum.mjs --check && node scripts/sync-design.mjs --check && node scripts/sync-incidents.mjs --check && node scripts/sync-fixtures.mjs --check"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@electric-sql/pglite-socket": "^0.2.13",
+    "pg": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.7.0"
   }

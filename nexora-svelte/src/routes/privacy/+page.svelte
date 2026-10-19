@@ -12,6 +12,7 @@
     RIGHT_KINDS,
     SUBPROCESSORS,
   } from "$lib/legal";
+  import { HIRING_CONTACT } from "$lib/content/site";
 
   /* The privacy notice, written against the data the product actually handles.
    *
@@ -57,6 +58,10 @@
     {
       what: "Your email address, if you ask to be told when the desktop build is published",
       why: "To write to you once, when it is. This is the one thing on this list a person holds rather than the platform: the address sits in the studio's launch mailbox until that one message has gone out, or until you ask us to delete it, and then it is gone. It is never added to anything else.",
+    },
+    {
+      what: "Your name, your work email and what you are hiring for, if you write to us about a role",
+      why: "To answer your enquiry. It goes to the studio's hiring mailbox, where a person reads it, and it is used to answer you and for nothing else. It is never added to a list, and it is deleted when the thread is over or when you ask us to delete it.",
     },
   ];
 </script>
@@ -262,8 +267,10 @@
             <p class="mt-3">
               Rights requests and questions: <span class="text-ink">{PRIVACY_CONTACT}</span>. Security
               reports: see the <a class="text-accent underline" href="/security">security page</a>.
-              Every request is logged with the date it must be answered by, and the list of what you
-              can ask for is on <a class="text-accent underline" href="/privacy-choices"
+              Hiring enquiries: <span class="text-ink">{HIRING_CONTACT}</span>, the same privacy
+              treatment as the launch list above. Every request is logged with the date it must be
+              answered by, and the list of what you can ask for is on
+              <a class="text-accent underline" href="/privacy-choices"
                 >your privacy choices</a
               >.
             </p>

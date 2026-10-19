@@ -53,6 +53,22 @@ const NEVER_FORWARDED = new Set([
   "forwarded",
 ]);
 
+/**
+ * The path the upstream service is asked for.
+ *
+ * The gateway strips the matched prefix, because upstream services own their
+ * root paths (/register, not /api/auth/register). An alias is the case where
+ * the two differ: the caller says /api/proofs and the auth service owns
+ * /proofs, so the alias is translated rather than stripped. Without this the
+ * alias was forwarded as "/" and answered 404, which reads like a missing
+ * route rather than a mistranslated one.
+ */
+export function upstreamPathFor(route: RouteConfig, path: string): string {
+  const remainder = path.length === route.prefix.length ? "" : path.slice(route.prefix.length);
+  if (route.upstreamPrefix) return `${route.upstreamPrefix}${remainder}`;
+  return remainder === "" ? "/" : remainder;
+}
+
 export function matchRoute(path: string, routes: RouteConfig[]): RouteConfig | null {
   let best: RouteConfig | null = null;
   for (const r of routes) {

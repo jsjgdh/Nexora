@@ -145,7 +145,7 @@
   <p class="mt-4 text-[14px] text-muted">
     {#if session.loggedIn}
       Signed in as <span class="text-ink">{session.user?.email ?? "…"}</span> ·
-      <a href="/auth" class="text-accent underline underline-offset-4">account</a>
+      <a href="/account" class="text-accent underline underline-offset-4">your account</a>
     {:else if session.restoring}
       Checking your session…
     {:else}

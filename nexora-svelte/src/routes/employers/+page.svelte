@@ -3,8 +3,9 @@
   import Headline from "$lib/components/Headline.svelte";
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
+  import HiringEnquiry from "$lib/components/HiringEnquiry.svelte";
   import { pageTitle } from "$lib/seo";
-  import { COURSES, EMPLOYER, FACTS, PROPS } from "$lib/content/site";
+  import { COURSES, EMPLOYER, FACTS, HIRING_CONTACT, HIRING_ENQUIRY, PROPS } from "$lib/content/site";
 
   /* The employer one-pager.
    *
@@ -27,7 +28,11 @@
    *
    * It is meant to be printed: the print stylesheet in `app.css` turns this
    * route into a single sheet of paper, because a document that has to be
-   * screenshotted is a document that does not get read. */
+   * screenshotted is a document that does not get read. The one thing the
+   * printed sheet drops is the form: a field a reader cannot fill in on
+   * paper is not worth the space, and the address and the promise stay. */
+
+  let { data }: { data: { mailConfigured: boolean } } = $props();
 
   const total = COURSES.reduce((n, course) => n + course.phases.length, 0);
 </script>
@@ -68,8 +73,7 @@
         {/each}
       </dl>
       <p class="mt-6 border-t border-rule pt-4 text-[12.5px] leading-relaxed text-faint">
-        {total} phases across {COURSES.length} courses, every one of them judged inside the desktop
-        IDE. {COURSES.map((course) => course.title).join(", ")}.
+        {total} phases, every one of them judged inside the desktop IDE. {COURSES.map((course) => course.title).join(", ")}.
       </p>
     </Plate>
   </div>
@@ -137,6 +141,34 @@
       <div class="flex flex-wrap items-center gap-3 lg:justify-end">
         <ActionLink href="/download" variant="ghost">Download the IDE</ActionLink>
         <ActionLink href="/verify" island>Verify a receipt</ActionLink>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== The contact ===================== -->
+  <!-- The way to reach a person. This page used to end with a refusal and no
+       address, which is the worst of both: a reader who believes the page and
+       wants to talk has nowhere to go. -->
+  <section id="contact" class="mt-20 border-t border-rule pt-12" aria-labelledby="employer-contact">
+    <h2 id="employer-contact" class="display max-w-[20ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
+      {HIRING_ENQUIRY.title}
+    </h2>
+    <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
+      <div class="min-w-0">
+        <p class="reading max-w-[46ch] text-[15px] leading-relaxed text-muted">
+          {HIRING_ENQUIRY.lead}
+        </p>
+        <p class="reading mt-4 max-w-[46ch] text-[15px] leading-relaxed text-muted">
+          {HIRING_ENQUIRY.next}
+        </p>
+        <p class="mt-6 border-t border-rule pt-4 text-[13.5px] leading-relaxed text-muted">
+          Write to
+          <a class="text-accent underline underline-offset-4" href="mailto:{HIRING_CONTACT}">{HIRING_CONTACT}</a>
+          if you would rather not use a form. It is the same mailbox.
+        </p>
+      </div>
+      <div class="min-w-0">
+        <HiringEnquiry mailConfigured={data.mailConfigured} />
       </div>
     </div>
   </section>

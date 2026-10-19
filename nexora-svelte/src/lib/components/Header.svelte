@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { page } from "$app/state";
-  import { apiConfigured, session } from "$lib/session.svelte";
+  import { session } from "$lib/session.svelte";
   import { BRAND, MASTHEAD, NAV } from "$lib/content/site";
 
   /* The instrument face.
@@ -182,18 +182,22 @@
              cookie this page cannot read, so "signed out" is not known yet on
              a fresh load, and offering the link is a claim we cannot make until
              the server has answered. The avatar has no such problem — being
-             shown something is only ever wrong once. -->
+             shown something is only ever wrong once.
+             The link is shown in local mode too: there is no account to sign
+             into there, but the account page still has something to say about
+             it, and a header with no account control at all is how a site
+             looks like a site that has no accounts. -->
         {#if session.loggedIn}
           <a
-            href="/auth"
-            aria-current={pathname === "/auth" || pathname === "/profile" ? "page" : undefined}
+            href="/account"
+            aria-current={pathname === "/account" || pathname === "/profile" || pathname === "/auth" ? "page" : undefined}
             aria-label={session.user ? `Account: ${session.user.email}` : "Account"}
             title={session.user?.email ?? "Account"}
             class="grid h-11 w-11 place-items-center border border-rule-strong font-mono text-[12px] font-bold text-ink transition-[color,background-color,border-color] duration-200 hover:border-accent hover:bg-accent hover:text-ground"
           >
             {(session.user?.email ?? "?").slice(0, 1).toUpperCase()}
           </a>
-        {:else if apiConfigured && !session.restoring}
+        {:else if !session.restoring}
           <a
             href="/auth"
             aria-current={pathname === "/auth" ? "page" : undefined}

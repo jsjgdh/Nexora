@@ -73,6 +73,15 @@ npm run verify:e2e        # drives the real HTTP surface end to end
 `PUBLIC_API_URL` must be reachable **from the browser**, not from inside the container. Point the
 learner app at the gateway (`http://127.0.0.1:8080`) to switch it from local mode to cloud mode.
 
+No Docker on this machine? One command starts the same platform locally, with the databases
+inside the process instead of in a container. See [`platform/LOCAL.md`](platform/LOCAL.md).
+
+```bash
+cd platform
+npm install
+npm run dev:stack         # databases, migrations, the services, and the app's .env
+```
+
 Once it is up, one command asks whether it is actually well, and says why not:
 
 ```bash

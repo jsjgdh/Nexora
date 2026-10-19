@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { ApiError, requireUserId } from "@nexora/service-kit";
 import { IDE_CONTENT_VERSION } from "./data/ide-version.js";
-import { getIdeManifest, getIdePhase, getIdeVersion } from "./ide.js";
+import { getIdeManifest, getIdePhase, getIdeVersion, getIdeCourses, getDefaultIdeCourse } from "./ide.js";
 
 /* The curriculum service serves the IDE curriculum only: a public roadmap
    (names and tiers, no lesson bodies) and paid phase payloads behind
@@ -47,8 +47,25 @@ export function registerCurriculumRoutes(app: FastifyInstance) {
   // Public: a signed-out learner still sees the whole road and what it costs to
   // walk, rather than a one-item course that hides the rest. Names and tiers
   // only — getIdeManifest holds no lesson body, no check and no brief.
+  //
+  // The course is a query parameter, because the IDE carries five courses and
+  // each one has its own road. Without it the call answers for the course a
+  // fresh install opens, which is what every existing client asked for, so the
+  // old call still works and still means the same thing.
   app.get("/ide/version", async () => getIdeVersion());
-  app.get("/ide/manifest", async () => ({ manifest: getIdeManifest() }));
+  app.get("/ide/courses", async () => ({ courses: getIdeCourses(), defaultCourse: getDefaultIdeCourse() }));
+  app.get("/ide/manifest", async (req) => {
+    const query = req.query as { course?: string } | undefined;
+    const courseId = query?.course;
+    if (courseId !== undefined && courseId.length === 0) {
+      throw new ApiError(400, "bad_request", "Give the course a name: ?course=<id>.");
+    }
+    const manifest = getIdeManifest(courseId);
+    if (!manifest) {
+      throw new ApiError(404, "not_found", `Unknown course ${courseId}.`);
+    }
+    return { manifest, course: manifest.id };
+  });
 
   /* Paid: one phase and exactly the activities it reaches. Two floors, both
      required, in this order:
@@ -65,7 +82,12 @@ export function registerCurriculumRoutes(app: FastifyInstance) {
     requireUserId(req);
     requireEntitled(req);
     const id = (req.params as { id: string }).id;
-    const payload = getIdePhase(id);
+    // The course is optional: a phase id is unique across the catalogue, and
+    // the IDE asks for a phase by id alone. A caller that names the course
+    // gets that course's phase, and a phase that is not in it is a phase that
+    // is not there.
+    const query = req.query as { course?: string } | undefined;
+    const payload = getIdePhase(id, query?.course);
     if (!payload) throw new ApiError(404, "not_found", `Unknown phase ${id}.`);
     return payload;
   });

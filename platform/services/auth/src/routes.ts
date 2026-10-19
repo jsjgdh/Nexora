@@ -16,7 +16,6 @@ import {
   registerSchema,
   revocationCheckSchema,
   runReceiptPayload,
-  type PublicUser,
 } from "@nexora/contracts";
 import {
   credentialStatus,
@@ -24,6 +23,8 @@ import {
   revokeCredential,
 } from "./revocation-store.js";
 import { assertDeclarationsAllowed, registerRightsRoutes, signupStatement } from "./rights.js";
+import { registerIdentityRoutes } from "./identity-flows.js";
+import { toPublic } from "./public-user.js";
 import { ApiError, clientIp, newId, parseOr400, requireUserId, receiptEdPublicKey, sha256, verifyReceiptEd, verifyReceiptSignature } from "@nexora/service-kit";
 import { randomBytes } from "node:crypto";
 import {
@@ -135,10 +136,6 @@ function randomUserCode(): string {
   return `${code.slice(0, 4)}-${code.slice(4)}`;
 }
 
-function toPublic(row: { id: string; email: string; name: string | null; created_at: Date }): PublicUser {
-  return { id: row.id, email: row.email, name: row.name, createdAt: row.created_at.toISOString() };
-}
-
 /* Project one stored or incoming proof to the shape the profile reads: which
  * competency, at what level, of which kind, issued when. `kind` is read off
  * the receipt's own facts, never trusted from a client field — there is none. */
@@ -180,6 +177,12 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
      here so one call site mounts the whole identity surface, and so a deployment
      cannot end up with accounts it has no way to give back. */
   registerRightsRoutes(app, pool);
+
+  /* The two flows that let a learner back in and let the platform trust an
+     address: a forgotten password and an unverified email. Mounted from here
+     for the same reason as the rights routes: one call site, so the identity
+     surface is one surface. */
+  registerIdentityRoutes(app, pool);
 
   app.post("/register", async (req, reply) => {
     // Before parseOr400 and long before hashPassword: the point of the budget is
@@ -453,7 +456,13 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
 
   app.get("/me", async (req) => {
     const userId = requireUserId(req);
-    const { rows } = await pool.query("SELECT id, email, name, created_at FROM users WHERE id = $1", [userId]);
+    // `email_verified_at` is read here and nowhere else on this route: the
+    // account page has to be able to say whether the address it shows is
+    // confirmed, and this is the one place that knows.
+    const { rows } = await pool.query(
+      "SELECT id, email, name, created_at, email_verified_at FROM users WHERE id = $1",
+      [userId]
+    );
     if (!rows[0]) throw new ApiError(404, "not_found", "Account not found.");
     return { user: toPublic(rows[0]) };
   });
@@ -504,9 +513,10 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
     if (!row.approved_user_id) {
       return { status: "pending" as const };
     }
-    const { rows: users } = await pool.query("SELECT id, email, name, created_at FROM users WHERE id = $1", [
-      row.approved_user_id,
-    ]);
+    const { rows: users } = await pool.query(
+      "SELECT id, email, name, created_at, email_verified_at FROM users WHERE id = $1",
+      [row.approved_user_id]
+    );
     if (!users[0]) {
       return { status: "pending" as const };
     }
@@ -559,7 +569,7 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
     const userId = requireUserId(req);
     const body = parseOr400(linkSchema, req.body);
     const email = body.email.trim().toLowerCase();
-    const byId = await pool.query("SELECT id, email, name, created_at FROM users WHERE id = $1", [userId]);
+    const byId = await pool.query("SELECT id, email, name, created_at, email_verified_at FROM users WHERE id = $1", [userId]);
     if (byId.rows[0]) return { user: toPublic(byId.rows[0]), linked: false };
     const clash = await pool.query("SELECT id FROM users WHERE lower(email) = $1", [email]);
     if (clash.rowCount) {

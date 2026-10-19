@@ -54,6 +54,14 @@ const allRoutes = [
   // (and California forbids making a request conditional on an account), so the
   // signed-out state is the one that has to be usable.
   "/account",
+  // The account flows. They are pages a learner meets when something has gone
+  // wrong, so they are scanned like any other page: a form nobody can use with
+  // a screen reader is a form nobody can use.
+  "/auth/password-reset",
+  "/auth/password-reset/confirm",
+  "/auth/password-reset/some-token",
+  "/auth/verify",
+  "/auth/verify-email/confirm",
   "/route-that-does-not-exist",
 ];
 const routes = process.env.AXE_ROUTES

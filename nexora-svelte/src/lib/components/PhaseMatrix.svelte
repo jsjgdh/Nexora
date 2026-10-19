@@ -5,16 +5,14 @@
    *
    * Eighty small squares, one per shipped phase, in the order the courses
    * ship them. It is the same data the ledger below prints, read a third way,
-   * and it is the quickest way to see the size of the thing: three courses
-   * that are not three videos.
+   * and it is the quickest way to see the size of the thing: courses that are
+   * not videos.
    *
-   * The plate does not price anything. The nine phases that ship free in the
-   * box are the ones lit in green, because they are the ones you can open
-   * today, and the other seventy-one are the course itself, drawn in ink.
-   * Which of them opens with a paid tier is the pricing page's business and
-   * the IDE's business; a front page that labelled all eighty would be a
-   * catalogue with the prices on it, which is a different kind of page from
-   * the one we are making.
+   * The plate does not price anything. Every square is the same ink, because
+   * a square that was a different colour because of what it costs would label
+   * a phase on a public page, and the curriculum is not a catalogue with the
+   * prices on it. The free count is stated once, in words, in the panel's own
+   * line, which is the pricing page's business and the IDE's.
    *
    * The squares are `aria-hidden` decoration, and they are decoration on
    * purpose: making eighty cells into eighty tab stops would put a keyboard
@@ -77,10 +75,7 @@
             <span
               data-phase-cell
               data-title={`${String(course.phases.indexOf(phase) + 1).padStart(2, "0")} · ${phase[1]}`}
-              class="block h-[16px] w-[16px] border transition-[color,background-color,border-color] duration-300
-                {phase[2] === 'free'
-                  ? 'border-added bg-added'
-                  : 'border-rule-strong bg-ink/30'}"
+              class="block h-[16px] w-[16px] border border-rule-strong bg-ink/30 transition-[color,background-color,border-color] duration-300"
             ></span>
           {/each}
         </div>

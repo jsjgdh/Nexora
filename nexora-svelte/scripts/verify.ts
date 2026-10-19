@@ -655,12 +655,14 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       pricingSrc.includes("The plan is priced and it is not on sale yet") &&
       // One price, one source: the number on the page is the number in the
       // copy module, so the page cannot drift from the decision.
-      pricingSrc.includes("${PRICING.monthly}") &&
+      pricingSrc.includes("money(PRICING.monthly)") &&
+      pricingSrc.includes("money(PRICING.annual)") &&
       COPY.PRICING.monthly > 0 &&
       Number.isInteger(COPY.PRICING.monthly) &&
       // And it is not written into the page as a literal, where it would be a
-      // second copy of the same number.
-      !/\$[1-9]/.test(pricingSrc)
+      // second copy of the same number. Not one amount, not even the free
+      // one: the free price comes out of the module as well.
+      !/\$[0-9]/.test(pricingSrc)
   );
   ok(
     "its upgrade path is the shared checkout, and prices live on the provider's page",
@@ -706,7 +708,9 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     copyFlat.includes("Nine phases bundled with the IDE") &&
       copyFlat.includes("Every check and verdict, free forever") &&
       copyFlat.includes("Further courses per your tier") &&
-      pricingSrc.includes("FREE_TIER_POINTS")
+      pricingSrc.includes("PRICING_PLANS") &&
+      (COPY.PRICING_PLANS.find((plan) => plan.id === "free")?.points ?? []).length ===
+        COPY.FREE_TIER_POINTS.length
   );
   ok(
     "and it links nowhere but the download — the IDE is the only way to learn",
@@ -788,12 +792,15 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     sitemapPaths().includes("/pricing")
   );
 
-  // The courses section names real phases with real tiers. The manifest is
-  // the truth and it moves (phases landed mid-session twice); hardcoded
-  // lists that drift become invented courses. When the sibling checkout is
-  // present, the homepage's listed ids must equal the manifest's — no more,
-  // no fewer. Absent (a front-door-only checkout), say so rather than pass
-  // silently.
+  // The curriculum gate. The manifest is the truth and it moves: the course
+  // list was split while this suite was being written, and a split that only
+  // half lands is exactly the failure a drift gate exists to catch. So the
+  // comparison is EQUALITY, course by course: the same courses, the same
+  // titles, the same roles, the same phases in the same order, and the same
+  // tier on each phase. A subset check would let a course that does not ship
+  // stay on the page, and a count-only check would let a phase be renamed or
+  // moved without a word. Absent (a front-door-only checkout), say so rather
+  // than pass silently.
   const shippedDir = new URL(
     "../../../nexora-ide/extensions/nexora/curriculum/shipped/",
     import.meta.url
@@ -803,6 +810,7 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   let manifestCourses: {
     id: string;
     title: string;
+    role: string;
     phases: { id: string; title: string; tier: string }[];
   }[] = [];
   let registryMissing = false;
@@ -814,9 +822,15 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       const manifest = JSON.parse(readFileSync(new URL(course.manifest, shippedDir), "utf8")) as {
         id: string;
         title: string;
+        role: string;
         phases: { id: string; title: string; tier: string }[];
       };
-      return { id: manifest.id, title: manifest.title, phases: manifest.phases };
+      return {
+        id: manifest.id,
+        title: manifest.title,
+        role: manifest.role ?? "main",
+        phases: manifest.phases,
+      };
     });
     manifestIds = manifestCourses.flatMap((course) => course.phases.map((phase) => phase.id));
   } catch {
@@ -838,42 +852,96 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       console.log("  (course-list drift not checked: nexora-ide sibling absent)");
     }
   } else {
-    // The phase lists moved into the content module with the copy; the page
-    // renders them from there. The gate follows them, so it still fails when a
-    // phase is listed that the manifest does not ship (or the reverse).
-    const contentSrc = readFileSync(new URL("../src/lib/content/site.ts", import.meta.url), "utf8");
-    const listed = [...contentSrc.matchAll(/\["([a-z0-9-]+)", "[^"]+", "(?:free|pro)"\]/g)].map(
-      (m) => m[1]!
-    );
-    ok(
-      `the homepage lists every shipped phase exactly once (${listed.length} listed, ${manifestIds.length} shipped)`,
-      listed.length === manifestIds.length &&
-        manifestIds.every((id) => listed.includes(id)) &&
-        new Set(listed).size === listed.length
-    );
-    // The course titles are the same kind of claim: a course the site names
-    // that does not ship is an invented course, and a shipped course the site
-    // does not name is a phase a learner cannot find.
+    // The phase lists live in the content module with the copy, and the page
+    // renders them from there. The gate reads the same exports the page
+    // renders, so a phase that ships and is not on the page fails here.
     const siteCourses = COPY.COURSES.map((course) => ({
       slug: course.slug,
       title: course.title,
-      count: course.phases.length,
+      role: course.role,
+      phases: course.phases,
     }));
+
+    // 1. The same courses, no more and no fewer.
+    const shippedCourseIds = manifestCourses.map((course) => course.id);
+    const siteCourseIds: string[] = siteCourses.map((course) => course.slug);
     ok(
-      "the site names every shipped course, with its own title and phase count",
-      manifestCourses.every((course) => {
-        const site = siteCourses.find((c) => c.slug === course.id);
-        return (
-          site !== undefined &&
-          site.title === course.title &&
-          site.count === course.phases.length
-        );
-      }) && siteCourses.length === manifestCourses.length
+      `the site names exactly the shipped courses (${siteCourseIds.length} on the site, ${shippedCourseIds.length} shipped)`,
+      siteCourseIds.length === shippedCourseIds.length &&
+        shippedCourseIds.every((id) => siteCourseIds.includes(id)) &&
+        siteCourseIds.every((id) => shippedCourseIds.includes(id)),
+      `site: ${siteCourseIds.join(", ")}\nshipped: ${shippedCourseIds.join(", ")}`
     );
 
-    // The headline count is prose, and prose drifts first. Turn the shipped
-    // total into its English word and require it — adding a phase without
-    // updating the headline fails here, not in a learner's screenshot.
+    // 2. Course by course: the title, the role, and every phase in order,
+    //    with its name and its tier. This is equality, not a subset.
+    for (const course of manifestCourses) {
+      const site = siteCourses.find((c) => c.slug === course.id);
+      const shippedPhases = course.phases;
+      const sitePhases = site ? site.phases : [];
+      const same =
+        site !== undefined &&
+        site.title === course.title &&
+        site.role === course.role &&
+        sitePhases.length === shippedPhases.length &&
+        shippedPhases.every(
+          (phase, i) =>
+            sitePhases[i]?.[0] === phase.id &&
+            sitePhases[i]?.[1] === phase.title &&
+            sitePhases[i]?.[2] === phase.tier
+        );
+      ok(
+        `the site and the manifest are the same course "${course.id}" (${shippedPhases.length} phases, same order, same names, same tiers)`,
+        same,
+        site === undefined
+          ? `the site does not name "${course.id}"`
+          : `site: ${site.phases.map(([id]) => id).join(", ")}\nshipped: ${shippedPhases.map((phase) => phase.id).join(", ")}`
+      );
+    }
+
+    // 3. The curriculum answer on the front page names every course and says
+    //    how deep it is, so the sentence cannot drift away from the lists.
+    const curriculumAnswer =
+      COPY.FAQ.find((item) => item.q === "What is actually in the curriculum?")?.a ?? "";
+    ok(
+      "the curriculum answer names every course with its depth",
+      siteCourses.every(
+        (course) =>
+          curriculumAnswer.includes(course.title) &&
+          curriculumAnswer.includes(`${course.phases.length} phases`)
+      )
+    );
+
+    // 4. The counts, from the manifest and from the site.
+    const shippedFree = manifestCourses
+      .flatMap((course) => course.phases)
+      .filter((phase) => phase.tier === "free").length;
+    const shippedPro = manifestIds.length - shippedFree;
+    ok(
+      `the site's free phases are the shipped free phases (${shippedFree})`,
+      COPY.FREE_PHASE_COUNT === shippedFree
+    );
+    ok(
+      `the site's paid phases are the shipped paid phases (${shippedPro})`,
+      COPY.PRO_PHASE_COUNT === shippedPro
+    );
+    ok(
+      "the site's phase list is the manifest's list, with nothing added and nothing left out",
+      COPY.ALL_PHASES.length === manifestIds.length &&
+        manifestIds.every((id) => COPY.ALL_PHASES.some(([siteId]) => siteId === id)) &&
+        new Set(COPY.ALL_PHASES.map(([id]) => id)).size === COPY.ALL_PHASES.length
+    );
+
+    // 4. The price opens the phases the manifest ships, not a remembered
+    //    number that happens to be right today.
+    ok(
+      "the price counts the shipped phases, not a remembered number",
+      COPY.PRICING.freePhases === shippedFree && COPY.PRICING.paidPhases === shippedPro
+    );
+
+    // 5. The headline count is prose, and prose drifts first. Turn the shipped
+    //    total into its English word and require it — adding a phase without
+    //    updating the headline fails here, not in a learner's screenshot.
     const words = numberWords(manifestIds.length);
     ok(
       "the count the page states matches the shipped total",
@@ -883,21 +951,220 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     // The readings on the bench carry the counts too, and they drift the same
     // way. The free count is the one a learner acts on: it is what the free
     // tier actually opens, so it has to be the shipped number.
-    const freeCount = manifestCourses
-      .flatMap((course) => course.phases)
-      .filter((phase) => phase.tier === "free").length;
     const freeFact = COPY.FACTS.find((fact) => fact.label.includes("free"));
     ok(
-      `the free-phase reading matches the shipped free phases (${freeCount})`,
-      freeFact !== undefined && freeFact.value === String(freeCount)
+      `the free-phase reading matches the shipped free phases (${shippedFree})`,
+      freeFact !== undefined && freeFact.value === String(shippedFree)
+    );
+    const phaseFact = COPY.FACTS.find((fact) => fact.label.includes("phases"));
+    ok(
+      `the phase reading matches the shipped total (${manifestIds.length})`,
+      phaseFact !== undefined && phaseFact.value === String(manifestIds.length)
     );
     ok(
       "the masthead's status states the shipped counts, and does not count the courses",
       COPY.MASTHEAD.status.includes(`${manifestIds.length} phases`) &&
-        COPY.MASTHEAD.status.includes(`${freeCount} free`) &&
-        // Three courses reads as three videos. The names read as range, so the
-        // status line counts phases and says nothing about how many courses.
+        COPY.MASTHEAD.status.includes(`${shippedFree} free`) &&
+        // A count of courses reads as a count of videos. The names read as
+        // range, so the status line counts phases and says nothing about how
+        // many courses there are.
         !COPY.MASTHEAD.status.includes("courses")
+    );
+
+    // 6. The site never leads with a count of courses. It names them.
+    const courseCount = /(\b(?:one|two|three|four|five|six|seven|eight|nine|ten)\b|\d+)\s+courses?\b/i;
+    const publicCopy = JSON.stringify([
+      COPY.HERO,
+      COPY.HIRING,
+      COPY.AUDIENCES,
+      COPY.SPEC,
+      COPY.EMPLOYER,
+      COPY.FACTS,
+      COPY.WEDGE,
+      COPY.STEPS,
+      COPY.DISCLOSURE,
+      COPY.NO_LIST,
+      COPY.FAQ,
+      COPY.BILLING_COMMITMENTS,
+      COPY.FREE_TIER_POINTS,
+      COPY.PRICING_PLANS,
+      COPY.NOT_SOLD,
+      COPY.CURRICULUM,
+      COPY.MASTHEAD,
+      COPY.NAV,
+      COPY.FOOTER_LINKS,
+      COPY.POSITIONING,
+      COPY.TAGLINE,
+    ]);
+    ok("the copy names the courses and never counts them", !courseCount.test(publicCopy));
+    const routeCopy = srcFiles
+      .filter((f) => f.includes("/routes/"))
+      .map((f) =>
+        readFileSync(f, "utf8")
+          .replace(/\/\*[\s\S]*?\*\//g, "")
+          .replace(/<!--[\s\S]*?-->/g, "")
+      );
+    ok("and no public page counts them either", !routeCopy.some((src) => courseCount.test(src)));
+
+    // 7. The homepage shows the courses by name and by depth, and does not
+    //    print what a phase costs. A phase row with a price on it is a
+    //    catalogue, and this page is not a catalogue.
+    const courseComponents = ["CourseLedger.svelte", "PhaseMatrix.svelte", "PhaseField.svelte"].map(
+      (name) => readFileSync(new URL(`../src/lib/components/${name}`, import.meta.url), "utf8")
+    );
+    ok(
+      "the homepage prints every course by name with its phase count",
+      courseComponents[0]!.includes("{course.title}") &&
+        courseComponents[0]!.includes("{course.phases.length} phases")
+    );
+    ok(
+      "and no public course surface labels a phase with its tier",
+      !courseComponents.some((src) => /phase\[2\]|picked\.tier|<TierStamp/.test(src))
+    );
+    const fieldSrc = readFileSync(new URL("../src/lib/three/field.ts", import.meta.url), "utf8");
+    ok(
+      "and the field does not colour a point by what it costs",
+      !/tier === "free"/.test(fieldSrc)
+    );
+  }
+
+  // The price, in three lines, decided and printed from one place.
+  {
+    const pricingPage = readFileSync(
+      new URL("../src/routes/pricing/+page.svelte", import.meta.url),
+      "utf8"
+    );
+    const money = COPY.money;
+    ok(
+      "the decided prices are the ones that were decided, and they agree with each other",
+      COPY.PRICING.monthly === 29 &&
+        COPY.PRICING.annual === 290 &&
+        COPY.PRICING.annual === COPY.PRICING.monthly * 10 &&
+        COPY.PRICING.teams.perLearnerMonthly === COPY.PRICING.monthly &&
+        COPY.PRICING.teams.minLearners === 5 &&
+        COPY.PRICING.teams.billedYearly === true &&
+        COPY.PRICING.free === 0
+    );
+    const freePlan = COPY.PRICING_PLANS.find((plan) => plan.id === "free");
+    const proPlan = COPY.PRICING_PLANS.find((plan) => plan.id === "pro");
+    const teamsPlan = COPY.PRICING_PLANS.find((plan) => plan.id === "teams");
+    ok(
+      "the free line is the first hour, and it is the free phases and the free checks",
+      freePlan !== undefined &&
+        freePlan.price === money(COPY.PRICING.free) &&
+        freePlan.priceNote === "the first hour" &&
+        freePlan.points.some((point) =>
+          point.includes("Nine phases bundled with the IDE, offline, no account")
+        ) &&
+        freePlan.points.some((point) => point.includes("Every check and verdict, free forever"))
+    );
+    ok(
+      "the pro line is the whole curriculum, at the monthly or the yearly price",
+      proPlan !== undefined &&
+        proPlan.price === money(COPY.PRICING.monthly) &&
+        proPlan.priceNote.includes(money(COPY.PRICING.annual)) &&
+        proPlan.points.some((point) => point.includes(`${COPY.ALL_PHASES.length} phases`)) &&
+        proPlan.points.some((point) => point.includes("Hosted runs")) &&
+        proPlan.points.some((point) => point.includes("New phases as they land"))
+    );
+    ok(
+      "the teams line reads its per-learner price from the one constant",
+      teamsPlan !== undefined &&
+        teamsPlan.price === money(COPY.PRICING.teams.perLearnerMonthly) &&
+        teamsPlan.priceNote === "per learner per month, billed yearly" &&
+        teamsPlan.points.some((point) =>
+          point.includes(`${COPY.PRICING.teams.minLearners} learners or more`)
+        ) &&
+        teamsPlan.points.some((point) => point.includes("one invoice")) &&
+        teamsPlan.points.some((point) => point.includes("verified-evidence link"))
+    );
+    ok(
+      "there are three lines, and the page prints all three from the module",
+      COPY.PRICING_PLANS.length === 3 && pricingPage.includes("PRICING_PLANS")
+    );
+    ok(
+      "the page writes no amount of its own, and does not restate the teams rule",
+      !/\$[0-9]/.test(pricingPage) && !pricingPage.includes("per learner per month")
+    );
+    ok(
+      "the page says checkout is not on sale yet, and that the provider must carry the same price",
+      pricingPage.includes("The plan is priced and it is not on sale yet") &&
+        pricingPage.includes("configured with the same number")
+    );
+    ok(
+      "and it offers no dead checkout button: the checkout only appears when the provider has plans",
+      pricingPage.indexOf("plans.length === 0") < pricingPage.indexOf("upgrade(pl.slug)") &&
+        !/Subscribe|Buy now|Upgrade now/.test(pricingPage)
+    );
+    ok(
+      "what is not sold is stated plainly, in the words that were decided",
+      COPY.NOT_SOLD.length === 4 &&
+        ["certificates", "leaderboards", "AI grading", "content packs"].every((word) =>
+          COPY.NOT_SOLD.some((line) => line.toLowerCase().includes(word.toLowerCase()))
+        ) &&
+        pricingPage.includes("NOT_SOLD")
+    );
+  }
+
+  // The employer contact path: one real way for a hiring manager to reach a
+  // person, with the same privacy treatment as the launch list.
+  {
+    const employersSrc = readFileSync(
+      new URL("../src/routes/employers/+page.svelte", import.meta.url),
+      "utf8"
+    );
+    const enquirySrc = readFileSync(
+      new URL("../src/lib/components/HiringEnquiry.svelte", import.meta.url),
+      "utf8"
+    );
+    const mailEndpointSrc = readFileSync(
+      new URL("../src/routes/api/mail/+server.ts", import.meta.url),
+      "utf8"
+    );
+    const privacyPageSrc = readFileSync(
+      new URL("../src/routes/privacy/+page.svelte", import.meta.url),
+      "utf8"
+    );
+    const termsSrc = readFileSync(new URL("../src/routes/terms/+page.svelte", import.meta.url), "utf8");
+    ok(
+      "the hiring page gives an employer one real way to reach us",
+      employersSrc.includes("HiringEnquiry") && employersSrc.includes("mailto:{HIRING_CONTACT}")
+    );
+    ok(
+      "the form asks for a name, a work email, and what you are hiring for",
+      enquirySrc.includes('id="hiring-name"') &&
+        enquirySrc.includes('id="hiring-email"') &&
+        enquirySrc.includes('id="hiring-need"')
+    );
+    ok(
+      "and it sends through the same endpoint as the launch list",
+      enquirySrc.includes('kind: "employer"') &&
+        enquirySrc.includes('fetch("/api/mail"') &&
+        mailEndpointSrc.includes('kind !== "employer"') &&
+        mailEndpointSrc.includes("HIRING_CONTACT")
+    );
+    ok(
+      "the page says what happens next and how long a reply takes",
+      employersSrc.includes("HIRING_ENQUIRY.lead") &&
+        employersSrc.includes("HIRING_ENQUIRY.next") &&
+        COPY.HIRING_ENQUIRY.lead.includes(COPY.HIRING_ENQUIRY.replyTime)
+    );
+    ok(
+      "and it says plainly when the mail provider is not configured",
+      enquirySrc.includes("notConfigured") &&
+        employersSrc.includes("mailConfigured") &&
+        COPY.HIRING_ENQUIRY.notConfigured.includes("no mail provider configured")
+    );
+    ok(
+      "the privacy notice and the terms cover what the hiring form collects",
+      privacyPageSrc.includes("what you are hiring for") &&
+        privacyPageSrc.includes("hiring mailbox") &&
+        termsSrc.includes("HIRING_CONTACT")
+    );
+    ok(
+      "and the notice promises the same treatment the form makes",
+      COPY.HIRING_ENQUIRY.privacy.includes("not added to a list") &&
+        privacyPageSrc.includes("never added to a list")
     );
   }
 }
@@ -1370,6 +1637,9 @@ console.log("\n== the design is held to the same rules as the product ==");
   // actually rendered rather than grepping the source, so the list itself
   // cannot trip its own assertion — and a future rewrite cannot reintroduce
   // "mastery" by accident.
+  // NOT_SOLD is deliberately not in this list. The forbidden words are the
+  // words a claim may not use, and "no certificates" is not a claim: it is
+  // the refusal of one, in the owner's words, on the pricing page.
   const corpus = JSON.stringify([
     COPY.HERO,
     COPY.HIRING,
@@ -1630,6 +1900,10 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
       COPY.FAQ,
       COPY.BILLING_COMMITMENTS,
       COPY.FREE_TIER_POINTS,
+      COPY.PRICING_PLANS,
+      COPY.NOT_SOLD,
+      COPY.CURRICULUM,
+      COPY.HIRING_ENQUIRY,
       COPY.RUN_SCRIPT,
       COPY.RECEIPT,
       COPY.MASTHEAD,

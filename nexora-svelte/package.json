@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
     "start": "node build",
-    "verify": "tsx scripts/verify.ts",
+    "verify": "tsx scripts/verify.ts && tsx scripts/verify-account.ts",
+    "verify:account": "tsx scripts/verify-account.ts",
     "verify:a11y": "tsx scripts/verify-a11y.ts",
     "verify:ux": "tsx scripts/verify-ux.ts",
     "sync:copy": "node scripts/sync-curriculum-copy.mjs"

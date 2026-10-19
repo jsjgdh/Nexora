@@ -35,18 +35,60 @@ const PROJECT_ROOTS = {
   "go-ledger": "fixtures/go-ledger",
   "go-deps": "fixtures/go-deps",
   "go-persist": "fixtures/go-persist",
+  /* The two Go courses run in the Go workspace. Their phases name it
+     explicitly, so these two entries are the fallback for the ones that do
+     not — and a fallback that pointed at the wrong directory would sync the
+     wrong suite, so it is stated rather than guessed. */
+  "go-fundamentals": "fixtures/go-ledger",
+  "go-in-production": "fixtures/go-ledger",
+  /* The short course and the Rust course have workspaces of their own. Their
+     suites were never synced while the script read one course's document; now
+     that it reads the catalogue, they come with it. */
+  "api-basics": "fixtures/api-basics",
+  "rust-ledger": "fixtures/rust-ledger",
 };
 
-let doc;
+/* Every course the IDE carries, and the suites its activities name.
+ *
+ * The catalogue is the IDE's own `curriculum/shipped/index.json`, the same file
+ * the extension reads: a course added in the IDE brings its suites with it, and
+ * a course removed takes them. Reading one course's document by name would
+ * have left the Go suites behind when the Go track became two courses of its
+ * own, and the platform would have judged a Go run against a suite it did not
+ * hold. */
+const ideCurriculum = join(ideRoot, "curriculum");
+let catalogue;
 try {
-  doc = JSON.parse(await readFile(join(ideRoot, "curriculum", "task-manager.json"), "utf8"));
+  catalogue = JSON.parse(await readFile(join(ideCurriculum, "shipped", "index.json"), "utf8"));
 } catch {
   throw new Error(
-    `cannot sync attestation fixtures: no curriculum at ${join(ideRoot, "curriculum", "task-manager.json")}\n` +
+    `cannot sync attestation fixtures: no curriculum catalogue at ${join(ideCurriculum, "shipped", "index.json")}\n` +
       `   nexora-ide must be checked out as a sibling of branchcraft (both under the same parent directory).`
   );
 }
-const phases = Object.fromEntries(doc.phases.map((p) => [p.id, p]));
+
+const activities = {};
+/* The project a phase runs in. A phase that names none runs in its own
+   course's project, which is what the extension's loader does with it. */
+const projectOfActivity = new Map();
+for (const course of catalogue.courses ?? []) {
+  let doc;
+  try {
+    doc = JSON.parse(await readFile(join(ideCurriculum, `${course.id}.json`), "utf8"));
+  } catch {
+    throw new Error(
+      `cannot sync attestation fixtures: no course document at ${join(ideCurriculum, `${course.id}.json`)}\n` +
+        `   nexora-ide must be checked out as a sibling of branchcraft (both under the same parent directory).`
+    );
+  }
+  for (const phase of doc.phases) {
+    const project = phase.project || course.id;
+    for (const aid of phase.activities ?? []) {
+      projectOfActivity.set(aid, project);
+    }
+  }
+  Object.assign(activities, doc.activities);
+}
 
 const seen = new Map();
 const add = (key, file, content, via) => {
@@ -61,18 +103,12 @@ const add = (key, file, content, via) => {
   seen.set(key, { file, content, via });
 };
 
-for (const [aid, activity] of Object.entries(doc.activities)) {
+for (const [aid, activity] of Object.entries(activities)) {
   for (const kind of ["testCommand", "acceptanceCommand"]) {
     const command = activity[kind];
     if (!command) continue;
     const paths = [...command.matchAll(/[\w\-.\\/]+\.test\.mjs/g)].map((m) => m[0]);
-    let project = null;
-    for (const [pid, phase] of Object.entries(phases)) {
-      if ((phase.activities || []).includes(aid)) {
-        project = phase.project || "task-manager";
-        break;
-      }
-    }
+    const project = projectOfActivity.get(aid) ?? "task-manager";
     for (const rel of paths) {
       let key;
       let full;

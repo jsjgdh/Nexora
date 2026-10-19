@@ -58,6 +58,15 @@ const REGISTER_PATH = `${SESSION_BASE}/register`;
 const REFRESH_PATH = `${SESSION_BASE}/refresh`;
 const LOGOUT_PATH = `${SESSION_BASE}/logout`;
 const LOGOUT_ALL_PATH = `${SESSION_BASE}/logout-all`;
+/* The three account flows that are not a session but go through the same
+   broker: the password reset (ask, then set), the email verification (ask,
+   then confirm) and the proof ledger. They are same-origin for the same
+   reason the session endpoints are: the platform is a different origin, and
+   the app's server is the one that can reach it. */
+const PASSWORD_RESET_REQUEST_PATH = `${SESSION_BASE}/password-reset/request`;
+const PASSWORD_RESET_CONFIRM_PATH = `${SESSION_BASE}/password-reset/confirm`;
+const VERIFY_EMAIL_REQUEST_PATH = `${SESSION_BASE}/verify-email/request`;
+const VERIFY_EMAIL_CONFIRM_PATH = `${SESSION_BASE}/verify-email/confirm`;
 /** Cross-tab serialization of refreshes (see rotate()). */
 const REFRESH_LOCK = "nexora-session-refresh";
 
@@ -475,6 +484,84 @@ class SessionStore {
     await this.startSession(LOGIN_PATH, { email, password });
   }
 
+  /* ---- the two account flows that are not sessions ----
+   *
+   * A password reset and an email verification are not a session: they
+   * neither mint a token nor read one. They travel through the same broker
+   * anyway, for two reasons that both matter.
+   *
+   * The first is reachability. The gateway is a different origin from this
+   * app, and in a compose deployment the browser's `127.0.0.1` is not the
+   * gateway's address, so the call belongs on this origin's own server
+   * (see lib/server/session-broker.ts).
+   *
+   * The second is the shape of the answer. The platform's contract for the
+   * request half of both flows is that it always answers 202 and never says
+   * whether the address has an account. That guarantee has to hold on this
+   * side of the wire as well, so the broker answers 202 whatever the
+   * platform said, and the page has one sentence for both cases. If the
+   * broker passed the platform's body through, a future platform that
+   * started answering "no such account" would turn this page into an
+   * oracle without anybody changing the page.
+   *
+   * The confirm half is different: it has to be able to fail, so its error
+   * envelope is passed through as it is, and the page reads the code. */
+
+  /**
+   * Ask for a password reset link.
+   *
+   * The answer is deliberately uninteresting: `ok` is true when the request
+   * was accepted, and it says nothing about whether the address has an
+   * account. A failure here is either the platform being unreachable or
+   * this build having no platform, and both are reported as themselves.
+   */
+  async requestPasswordReset(email: string) {
+    return this.request<{ ok: boolean }>(PASSWORD_RESET_REQUEST_PATH, {
+      method: "POST",
+      body: { email },
+      retry: false,
+    });
+  }
+
+  /**
+   * Set a new password with the token from the link.
+   *
+   * The token is a one-time credential and it is used the way a one-time
+   * credential is used: it is sent once, in a body, to this app's own
+   * server, and it is never written to storage or to the URL by anything
+   * this code controls.
+   */
+  async confirmPasswordReset(token: string, newPassword: string) {
+    return this.request<{ ok: boolean }>(PASSWORD_RESET_CONFIRM_PATH, {
+      method: "POST",
+      body: { token, newPassword },
+      retry: false,
+    });
+  }
+
+  /** Ask for a verification email. The answer never says whether one was sent. */
+  async requestEmailVerification(email: string) {
+    return this.request<{ ok: boolean }>(VERIFY_EMAIL_REQUEST_PATH, {
+      method: "POST",
+      body: { email },
+      retry: false,
+    });
+  }
+
+  /**
+   * Confirm an address with the code or the token from the link.
+   *
+   * The platform answers with the user it verified, so the page can say
+   * whose address it was without asking again.
+   */
+  async confirmEmailVerification(token: string) {
+    return this.request<{ user: SessionUser; verified: boolean }>(VERIFY_EMAIL_CONFIRM_PATH, {
+      method: "POST",
+      body: { token },
+      retry: false,
+    });
+  }
+
   /**
    * Approve an IDE's device code, binding this browser session's account to it.
    * The IDE polls and signs itself in — the browser never sees the device
@@ -636,11 +723,31 @@ class SessionStore {
    * Verified proof, synced from the IDE: attested records the platform's own
    * signatures verify, newest first. Rendered as-is — rows are never
    * synthesized, cached as credentials, or mixed with local practice.
+   *
+   * The ledger lives in the auth service, and the gateway publishes it twice:
+   * under the auth prefix, where the service's own routes live, and under the
+   * proofs prefix, which is the same service behind a name that says what the
+   * route is for. The auth prefix is asked first because that is the
+   * service's own path, and the proofs prefix is the fallback for a
+   * deployment that publishes only that one. A 404 falls through to the
+   * other path; anything else is the answer, because a 401 must not be
+   * retried against a second route and reported as something it is not.
    */
   async myProofs() {
-    return this.request<{
-      proofs: { competencyId: string; level: string; kind: string; issuedAt: string }[];
-    }>("/api/proofs", { token: await this.resolveToken() });
+    const paths = ["/api/auth/proofs", "/api/proofs"];
+    let last: unknown = null;
+    for (const path of paths) {
+      try {
+        return await this.request<{
+          proofs: { competencyId: string; level: string; kind: string; issuedAt: string }[];
+        }>(path, { token: await this.resolveToken() });
+      } catch (err) {
+        last = err;
+        const status = (err as { status?: number }).status;
+        if (status !== 404 && status !== 501) throw err;
+      }
+    }
+    throw last instanceof Error ? last : new Error("Could not load verified proof.");
   }
 }
 

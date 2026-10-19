@@ -1148,6 +1148,20 @@ describe("gateway live proxy against stubs", () => {
     assert.equal(h["authorization"], undefined);
     assert.equal(res.headers.get("x-request-id"), h["x-request-id"]);
   });
+  it("the proofs alias reaches the ledger the auth service owns", async () => {
+    stubHits = [];
+    const jwt = (await import("jsonwebtoken")).default;
+    const t = jwt.sign({ sub: "u1" }, SECRET, { algorithm: "HS256", expiresIn: "15m" });
+    const res = await fetch(`http://127.0.0.1:${GW_PORT}/api/proofs`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    assert.equal(res.status, 200);
+    assert.equal(stubHits.length, 1);
+    // The caller says /api/proofs and the auth service owns /proofs, so the
+    // alias is translated rather than stripped. Stripping it forwarded "/"
+    // and the route answered 404, which reads like a missing route.
+    assert.equal(stubHits[0].url, "/proofs");
+  });
   it("auth routes reject missing/invalid tokens without proxying", async () => {
     stubHits = [];
     const r1 = await fetch(`http://127.0.0.1:${GW_PORT}/api/execute/capabilities`);
@@ -2396,7 +2410,7 @@ describe("curriculum service (in-process)", () => {
     // The phase count grows as the co-author authors content, so pin the
     // INVARIANT, not a magic number: the public roadmap shows every phase in the
     // snapshot (the drift test already pins that snapshot to the IDE source).
-    const doc = (await import("../services/curriculum/dist/data/ide-task-manager.js")).IDE_TASK_MANAGER;
+    const doc = (await import("../services/curriculum/dist/data/ide-course-task-manager.js")).IDE_COURSE_TASK_MANAGER;
     assert.equal(m.phases.length, doc.phases.length, "the whole road is visible, not just the free loop");
     const free = m.phases.filter((p) => p.tier === "free");
     // The free tier is setup + fundamentals (FREE_PHASE_COUNT 2, D-023): a true
@@ -2418,17 +2432,47 @@ describe("curriculum service (in-process)", () => {
     assert.equal(r.headers["x-ide-content-version"]?.length, 12, "the IDE content version rides along");
     assert.match(r.headers["cache-control"], /public/, "the roadmap is cacheable");
   });
+  it("serves the roadmap of the course asked for, and only that course", async () => {
+    // The IDE carries five courses, and each one has its own road. The course
+    // is a query parameter; without it the call answers for the course a fresh
+    // install opens, so the old call still means what it always meant.
+    const list = await app.inject({ method: "GET", url: "/ide/courses" });
+    assert.equal(list.statusCode, 200);
+    const courses = list.json().courses;
+    assert.ok(courses.length >= 2, "the catalogue lists the courses the IDE carries");
+    assert.equal(list.json().defaultCourse, "task-manager", "a fresh install opens the JavaScript app");
+    for (const course of courses) {
+      const r = await app.inject({ method: "GET", url: `/ide/manifest?course=${course.id}` });
+      assert.equal(r.statusCode, 200, `${course.id} has a roadmap`);
+      const m = r.json().manifest;
+      assert.equal(m.id, course.id, "the roadmap is the course that was asked for");
+      assert.equal(m.title, course.title);
+      assert.equal(m.phases.length, course.phases, "the roadmap holds every phase of that course");
+      assert.equal(m.phases.filter((p) => p.tier === "free").length, course.freePhases);
+    }
+    // A course that is not there is a 404, not an empty roadmap.
+    const missing = await app.inject({ method: "GET", url: "/ide/manifest?course=nope" });
+    assert.equal(missing.statusCode, 404, "an unknown course is not served");
+  });
   it("reports the IDE content version and shape", async () => {
     const r = await app.inject({ method: "GET", url: "/ide/version" });
     assert.equal(r.statusCode, 200);
     const b = r.json();
     assert.match(b.ideVersion, /^[0-9a-f]{12}$/);
     // Counts move with authored content; assert the endpoint agrees with the
-    // snapshot (the drift test pins that snapshot to the IDE source) and that the
-    // free tier stays the fixed two-phase D-023 loop.
-    const doc = (await import("../services/curriculum/dist/data/ide-task-manager.js")).IDE_TASK_MANAGER;
-    assert.equal(b.phases, doc.phases.length, "the version report counts the snapshot the service serves");
-    assert.equal(b.freePhases, 2, "the two leading free phases are offline (D-023)");
+    // snapshot (the drift test pins that snapshot to the IDE source) and that
+    // the free tier stays the fixed two-phase D-023 loop.
+    const courses = (await import("../services/curriculum/dist/data/ide-courses.js")).IDE_COURSES;
+    const ids = Object.keys(courses);
+    const phases = ids.reduce((sum, id) => sum + courses[id].manifest.phases.length, 0);
+    const free = ids.reduce(
+      (sum, id) => sum + courses[id].manifest.phases.filter((p) => p.tier === "free").length,
+      0
+    );
+    assert.equal(b.courses, ids.length, "the version report counts the courses the service serves");
+    assert.equal(b.phases, phases, "the version report counts the snapshot the service serves");
+    assert.equal(b.freePhases, free, "the free phases are counted across every course");
+    assert.equal(b.defaultCourse, "task-manager");
     assert.ok(b.activities > b.phases, "activities outnumber phases");
   });
   it("refuses a paid phase without a user, then without entitlement, with distinct codes", async () => {
@@ -2890,7 +2934,7 @@ describe("auth link (in-process, fake pg)", () => {
   const users = new Map();
   const fakePool = {
     query: async (sql, params) => {
-      if (sql.startsWith("SELECT id, email, name, created_at FROM users WHERE id =")) {
+      if (sql.startsWith("SELECT id, email, name, created_at, email_verified_at FROM users WHERE id =")) {
         const u = users.get(params[0]);
         return u ? { rows: [u], rowCount: 1 } : { rows: [], rowCount: 0 };
       }
@@ -2925,7 +2969,15 @@ describe("auth link (in-process, fake pg)", () => {
     });
     assert.equal(first.statusCode, 201);
     assert.deepEqual(first.json(), {
-      user: { id: "user_clerk1", email: "ada@example.com", name: "Ada", createdAt: "2026-01-01T00:00:00.000Z" },
+      user: {
+        id: "user_clerk1",
+        email: "ada@example.com",
+        name: "Ada",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        // The address of a fresh account is not confirmed yet. The field is
+        // optional on the wire, and a client that ignores it keeps working.
+        emailVerified: false,
+      },
       linked: true,
     });
     const replay = await app.inject({
@@ -3015,7 +3067,7 @@ describe("auth device flow (in-process, fake pg)", () => {
         }
         return { rows: [], rowCount: 0 };
       }
-      if (sql.startsWith("SELECT id, email, name, created_at FROM users WHERE id =")) {
+      if (sql.startsWith("SELECT id, email, name, created_at, email_verified_at FROM users WHERE id =")) {
         if (params[0] !== "u-device") return { rows: [], rowCount: 0 };
         return {
           rows: [{ id: "u-device", email: "ide@example.com", name: "Ide", created_at: new Date("2026-01-01T00:00:00Z") }],
@@ -3223,6 +3275,487 @@ describe("auth login throttle (in-process, fake pg)", () => {
     // fresh) is untouched: the budget is per client, not one global bucket.
     const other = await attempt("wrong-password", "192.0.2.78", "addr-b@test.dev");
     assert.equal(other.statusCode, 401, "another client is not collaterally throttled");
+  });
+});
+
+/* The two identity flows the platform did not have: a forgotten password and
+ * an unverified address.
+ *
+ * The fake pool stores rows the way the real schema does, so every query the
+ * routes issue has an answer, and the properties under test are the ones the
+ * answers are checked for: the request route says the same thing about every
+ * address, a token can be spent once, a password change ends every session
+ * the account holds, and a message that could not be sent is logged and does
+ * not fail the request.
+ *
+ * A fresh app per test, because the budgets are per app instance: a suite
+ * that shared one would spend the first test's budget on the second, and the
+ * rate limit would then be testing the order of the tests rather than the
+ * limiter. */
+describe("password reset and email verification (in-process, fake pg)", () => {
+  const SITE = "http://localhost:5173";
+  const PASSWORD = "correct-horse-battery";
+  const NEW_PASSWORD = "a-brand-new-passphrase";
+
+  let app;
+  let users;
+  let tokens;
+  let tokenById;
+  let sessions;
+  let cutoffs;
+  let passwordHash;
+  let captured;
+
+  /* The pool, answering the queries these routes issue.
+   *
+   * It answers the data-modifying statements faithfully rather than
+   * stubbing them, because the interesting properties ARE the statements: that
+   * the claim of a token is guarded, that the password and the session
+   * revocations happen in the same statement as the claim, and that the
+   * cut-off is written through the mechanism the platform already has. */
+  const fakePool = {
+    query: async (sql, params) => {
+      if (sql.startsWith("SELECT * FROM users WHERE lower(email)")) {
+        const hit = [...users.values()].find((u) => u.email.toLowerCase() === params[0]);
+        return hit ? { rows: [{ ...hit }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("SELECT * FROM users WHERE id = $1")) {
+        const hit = users.get(params[0]);
+        return hit ? { rows: [{ ...hit }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("SELECT id, email, name, created_at, email_verified_at FROM users WHERE id = $1")) {
+        const hit = users.get(params[0]);
+        return hit ? { rows: [{ ...hit }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("INSERT INTO auth_tokens")) {
+        const row = {
+          id: params[0],
+          user_id: params[1],
+          purpose: params[2],
+          token_hash: params[3],
+          expires_at: params[4],
+          used_at: null,
+        };
+        tokens.set(row.token_hash, row);
+        tokenById.set(row.id, row);
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("UPDATE auth_tokens SET used_at = now() WHERE user_id = $1 AND purpose = $2")) {
+        // The older tokens of the same purpose are spent, and the new one is
+        // excluded. The guard is the behaviour under test, so it is honoured.
+        let n = 0;
+        for (const row of tokens.values()) {
+          if (row.user_id === params[0] && row.purpose === params[1] && !row.used_at && row.id !== params[2]) {
+            row.used_at = new Date();
+            n += 1;
+          }
+        }
+        return { rows: [], rowCount: n };
+      }
+      if (sql.startsWith("SELECT * FROM auth_tokens WHERE token_hash = $1 AND purpose =")) {
+        const purpose = sql.includes("'email_verification'") ? "email_verification" : "password_reset";
+        const hit = tokens.get(params[0]);
+        return hit && hit.purpose === purpose ? { rows: [{ ...hit }], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
+      if (sql.startsWith("WITH claimed AS (UPDATE auth_tokens SET used_at = now() WHERE id = $1")) {
+        const row = tokenById.get(params[0]);
+        // The claim is guarded, so a token that was already spent claims
+        // nothing and the whole statement changes nothing.
+        if (!row || row.used_at) return { rows: [{ claimed: 0 }], rowCount: 1 };
+        row.used_at = new Date();
+        const user = users.get(row.user_id);
+        if (user && sql.includes("email_verified_at")) {
+          if (!user.email_verified_at) user.email_verified_at = new Date();
+        } else if (user) {
+          user.password_hash = params[1];
+          for (const s of sessions.values()) {
+            if (s.user_id === row.user_id && !s.revoked_at) s.revoked_at = new Date();
+          }
+        }
+        return { rows: [{ claimed: 1 }], rowCount: 1 };
+      }
+      if (sql.startsWith("INSERT INTO user_revocations (user_id, revoked_before)")) {
+        const previous = cutoffs.get(params[0]);
+        const at = new Date(params[1]);
+        // GREATEST, exactly as the statement does: a cut-off never moves back.
+        cutoffs.set(params[0], previous && previous > at ? previous : at);
+        return { rows: [], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    },
+  };
+
+  before(async () => {
+    passwordHash = await authCrypto.hashPassword(PASSWORD);
+  });
+
+  beforeEach(async () => {
+    users = new Map();
+    tokens = new Map();
+    tokenById = new Map();
+    sessions = new Map();
+    cutoffs = new Map();
+    captured = [];
+    const created = new Date("2026-01-01T00:00:00Z");
+    users.set("u-known", {
+      id: "u-known",
+      email: "known@example.com",
+      name: "Known",
+      created_at: created,
+      email_verified_at: null,
+      password_hash: passwordHash,
+      provider: "local",
+    });
+    users.set("u-clerk", {
+      id: "u-clerk",
+      email: "clerk@example.com",
+      name: "Clerk",
+      created_at: created,
+      email_verified_at: null,
+      // A Clerk-managed account has no password here, and minting one would
+      // create a second way into an identity the provider owns.
+      password_hash: null,
+      provider: "clerk",
+    });
+    users.set("u-verified", {
+      id: "u-verified",
+      email: "verified@example.com",
+      name: "Verified",
+      created_at: created,
+      email_verified_at: new Date("2026-01-02T00:00:00Z"),
+      password_hash: passwordHash,
+      provider: "local",
+    });
+    sessions.set("r1", { id: "r1", user_id: "u-known", revoked_at: null });
+    sessions.set("r2", { id: "r2", user_id: "u-known", revoked_at: null });
+    sessions.set("r3", { id: "r3", user_id: "u-clerk", revoked_at: null });
+
+    // The site's origin, so the link can be built; no mail provider, so the
+    // send is skipped and the token is written to the log instead.
+    process.env.PUBLIC_SITE_URL = SITE;
+    delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM;
+
+    const kit = await import("../packages/service-kit/dist/index.js");
+    const routes = await import("../services/auth/dist/routes.js");
+    app = await kit.createService("test-auth-identity");
+    routes.registerAuthRoutes(app, fakePool);
+    await app.ready();
+  });
+
+  /* The mail module writes its lines with console.log, in the shape the
+   * site's own mail module uses. Capturing them is how the suite sees what
+   * the service said about a message it did not send. */
+  const capture = async (fn) => {
+    const original = console.log;
+    console.log = (...args) => {
+      captured.push(args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" "));
+    };
+    try {
+      return await fn();
+    } finally {
+      console.log = original;
+    }
+  };
+  const lines = () =>
+    captured
+      .map((l) => {
+        try {
+          return JSON.parse(l);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+  const request = (email, ip = "198.51.100.10") =>
+    app.inject({
+      method: "POST",
+      url: "/password-reset/request",
+      headers: { "content-type": "application/json", "x-client-ip": ip },
+      payload: { email },
+    });
+
+  const confirm = (payload, ip = "198.51.100.20") =>
+    app.inject({
+      method: "POST",
+      url: "/password-reset/confirm",
+      headers: { "content-type": "application/json", "x-client-ip": ip },
+      payload,
+    });
+
+  /* The token, read out of the log the development line writes. It is the
+   * only place the plaintext exists outside the learner's mail, which is
+   * exactly why that line is a development-only line. */
+  const devToken = (purpose) => {
+    const line = lines().find((l) => l.event === "auth.dev-token" && l.purpose === purpose);
+    return line ?? null;
+  };
+
+  it("the request route answers a known address and an unknown one identically", async () => {
+    const known = await capture(() => request("known@example.com", "198.51.100.1"));
+    const unknown = await capture(() => request("nobody@example.com", "198.51.100.2"));
+    assert.equal(known.statusCode, 202);
+    assert.equal(unknown.statusCode, 202);
+    assert.deepEqual(known.json(), { ok: true });
+    assert.deepEqual(unknown.json(), { ok: true });
+    // The whole no-enumeration property, in one assertion: the same status
+    // and the same body, whatever the address turns out to be.
+    assert.deepEqual(known.json(), unknown.json());
+    assert.equal(known.headers["content-type"], unknown.headers["content-type"]);
+  });
+
+  it("a Clerk-managed account gets the same answer, and no token", async () => {
+    const clerk = await capture(() => request("clerk@example.com", "198.51.100.3"));
+    const unknown = await capture(() => request("nobody@example.com", "198.51.100.4"));
+    assert.equal(clerk.statusCode, 202);
+    assert.deepEqual(clerk.json(), unknown.json());
+    // The difference is internal, and only internal: no token row exists for
+    // either of them, because a Clerk-managed account has no password here.
+    assert.equal([...tokens.values()].filter((t) => t.user_id === "u-clerk").length, 0);
+    assert.equal([...tokens.values()].length, 0);
+  });
+
+  it("the request route does the same work for an address that has no account", async () => {
+    // The answer must not arrive faster for an address that does not exist,
+    // or the identical body is an oracle for exactly what it hides. The
+    // equalising bcrypt comparison is what makes the two answers cost the
+    // same, so this measures it: with a twelve-round cost factor a compare
+    // cannot finish in under a hundred milliseconds, and a request that did
+    // no such work would be a couple of milliseconds.
+    const saved = process.env.BCRYPT_ROUNDS;
+    process.env.BCRYPT_ROUNDS = "12";
+    try {
+      // Warm-up, so the cost of building the dummy hash is not counted as
+      // the cost of the comparison.
+      await capture(() => request("warmup@example.com", "198.51.100.5"));
+      const started = Date.now();
+      await capture(() => request("nobody-at-all@example.com", "198.51.100.6"));
+      const elapsed = Date.now() - started;
+      assert.ok(elapsed >= 50, `an unknown address was answered in ${elapsed}ms, which is too fast to be the same work`);
+    } finally {
+      if (saved === undefined) delete process.env.BCRYPT_ROUNDS;
+      else process.env.BCRYPT_ROUNDS = saved;
+    }
+  });
+
+  it("a request that cannot send mail logs why, and still answers 202", async () => {
+    const res = await capture(() => request("known@example.com", "198.51.100.7"));
+    assert.equal(res.statusCode, 202, "a missing mail provider never fails the request");
+    const skipped = lines().find((l) => l.event === "mail.skipped");
+    assert.ok(skipped, "the skipped message is logged");
+    assert.match(skipped.reason, /RESEND_API_KEY/);
+    assert.equal(skipped.to, "known@example.com");
+    // The token is still stored: the flow is not lost, only the mail is.
+    assert.equal(tokens.size, 1);
+    const token = tokens.values().next().value;
+    assert.equal(token.purpose, "password_reset");
+    assert.notEqual(token.token_hash, devToken("password_reset").token, "the token is stored as a hash");
+  });
+
+  it("the reset link points at the site's confirmation route", async () => {
+    await capture(() => request("known@example.com", "198.51.100.8"));
+    const dev = devToken("password_reset");
+    assert.ok(dev, "outside production the token is written to the log, so a developer can finish the flow");
+    assert.equal(dev.url, `${SITE}/auth/password-reset/confirm?token=${dev.token}`);
+  });
+
+  it("the link path can be moved, and only to a path", async () => {
+    // A deployment whose site moved the page sets the variable, and the two
+    // halves cannot drift apart.
+    process.env.PASSWORD_RESET_PATH = "/auth/reset/confirm";
+    try {
+      await capture(() => request("known@example.com", "198.51.100.21"));
+      const dev = devToken("password_reset");
+      assert.equal(dev.url, `${SITE}/auth/reset/confirm?token=${dev.token}`);
+    } finally {
+      delete process.env.PASSWORD_RESET_PATH;
+    }
+    // An absolute URL is refused: the origin of a mail carrying a live token
+    // is PUBLIC_SITE_URL and nothing else, so the default stands.
+    captured.length = 0;
+    process.env.PASSWORD_RESET_PATH = "https://elsewhere.example/steal";
+    try {
+      await capture(() => request("known@example.com", "198.51.100.22"));
+      const dev = devToken("password_reset");
+      assert.equal(dev.url, `${SITE}/auth/password-reset/confirm?token=${dev.token}`);
+    } finally {
+      delete process.env.PASSWORD_RESET_PATH;
+    }
+  });
+
+  it("a fresh token is accepted, and the password change ends every session", async () => {
+    await capture(() => request("known@example.com", "198.51.100.9"));
+    const dev = devToken("password_reset");
+    const res = await confirm({ token: dev.token, newPassword: NEW_PASSWORD });
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.json(), { ok: true });
+    // The password changed.
+    assert.notEqual(users.get("u-known").password_hash, passwordHash);
+    // Every session of the account is gone, and the cut-off that kills the
+    // access token in the learner's hand is written through the mechanism
+    // the platform already has.
+    assert.ok(sessions.get("r1").revoked_at, "the first session was revoked");
+    assert.ok(sessions.get("r2").revoked_at, "the second session was revoked");
+    assert.equal(sessions.get("r3").revoked_at, null, "another account's session is untouched");
+    assert.ok(cutoffs.has("u-known"), "the account cut-off was recorded");
+  });
+
+  it("the new password is the one that signs in, and the old one no longer is", async () => {
+    await capture(() => request("known@example.com", "198.51.100.10"));
+    const dev = devToken("password_reset");
+    await confirm({ token: dev.token, newPassword: NEW_PASSWORD });
+    const stillMatches = await authCrypto.verifyPassword(NEW_PASSWORD, users.get("u-known").password_hash);
+    assert.equal(stillMatches, true, "the new password is the stored one");
+    const oldStillMatches = await authCrypto.verifyPassword(PASSWORD, users.get("u-known").password_hash);
+    assert.equal(oldStillMatches, false, "the old password is gone");
+  });
+
+  it("a spent token, an expired one and an unknown one are refused the same way", async () => {
+    await capture(() => request("known@example.com", "198.51.100.11"));
+    const dev = devToken("password_reset");
+    const used = await confirm({ token: dev.token, newPassword: NEW_PASSWORD });
+    assert.equal(used.statusCode, 200);
+    // Spent.
+    const again = await confirm({ token: dev.token, newPassword: "another-passphrase" });
+    assert.equal(again.statusCode, 400);
+    assert.equal(again.json().error.code, "invalid_token");
+    assert.equal(again.json().error.message, "That reset link is not valid any more. Ask for a new one.");
+    // Expired.
+    const expiredHash = kit.sha256("expired-token-value");
+    tokens.set(expiredHash, {
+      id: "t-expired",
+      user_id: "u-known",
+      purpose: "password_reset",
+      token_hash: expiredHash,
+      expires_at: new Date(Date.now() - 1000),
+      used_at: null,
+    });
+    tokenById.set("t-expired", tokens.get(expiredHash));
+    const expired = await confirm({ token: "expired-token-value", newPassword: NEW_PASSWORD });
+    assert.equal(expired.statusCode, 400);
+    assert.equal(expired.json().error.code, "invalid_token");
+    // Unknown.
+    const unknown = await confirm({ token: "no-such-token-value", newPassword: NEW_PASSWORD });
+    assert.equal(unknown.statusCode, 400);
+    assert.equal(unknown.json().error.code, "invalid_token");
+    // Malformed: a token that is not a token at all.
+    const malformed = await confirm({ token: 12345, newPassword: NEW_PASSWORD });
+    assert.equal(malformed.statusCode, 400);
+    assert.equal(malformed.json().error.code, "invalid_token");
+    // One answer for all four.
+    assert.equal(again.json().error.message, expired.json().error.message);
+    assert.equal(expired.json().error.message, unknown.json().error.message);
+    assert.equal(unknown.json().error.message, malformed.json().error.message);
+  });
+
+  it("a password that breaks the policy is refused, and says which rule", async () => {
+    await capture(() => request("known@example.com", "198.51.100.12"));
+    const dev = devToken("password_reset");
+    const res = await confirm({ token: dev.token, newPassword: "short" });
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.json().error.code, "weak_password");
+    assert.match(res.json().error.message, /at least 10 characters/);
+    // The token is not spent by a refusal, so the learner can try again
+    // without asking for a new link.
+    assert.equal(tokens.get(kit.sha256(dev.token)).used_at, null);
+    const retry = await confirm({ token: dev.token, newPassword: NEW_PASSWORD });
+    assert.equal(retry.statusCode, 200, "the same link still works after a policy refusal");
+  });
+
+  it("the budget refuses a burst, and refuses a known address the way it refuses an unknown one", async () => {
+    const known = [];
+    for (let i = 0; i < 8; i++) {
+      known.push(await request("known@example.com", "192.0.2.50"));
+    }
+    const unknown = [];
+    for (let i = 0; i < 8; i++) {
+      unknown.push(await request("nobody@example.com", "192.0.2.60"));
+    }
+    assert.equal(known[0].statusCode, 202, "the budget starts out available");
+    assert.ok(known.some((r) => r.statusCode === 429), "a burst is refused");
+    // The same burst, from another address, against an address that has no
+    // account: the budgets are counted for every request, so their verdicts
+    // never depend on the account and a prober learns nothing from either
+    // the answer or the refusal.
+    assert.deepEqual(
+      unknown.map((r) => r.statusCode),
+      known.map((r) => r.statusCode),
+      "the same burst is answered the same way whatever the address is"
+    );
+    // The request id is per request and is never part of the answer a client
+    // reads, so the comparison is about the code and the message.
+    const shape = (r) => ({ code: r.json().error.code, message: r.json().error.message });
+    assert.deepEqual(shape(unknown.at(-1)), shape(known.at(-1)));
+  });
+
+  it("an address verification confirms the address, and /me says so", async () => {
+    const asked = await capture(() =>
+      app.inject({
+        method: "POST",
+        url: "/verify-email/request",
+        headers: { "content-type": "application/json", "x-client-ip": "198.51.100.13" },
+        payload: { email: "known@example.com" },
+      })
+    );
+    assert.equal(asked.statusCode, 202);
+    const dev = devToken("email_verification");
+    assert.ok(dev, "the confirmation link is in the development log");
+    assert.equal(dev.url, `${SITE}/auth/verify-email/confirm?token=${dev.token}`);
+    const confirmed = await app.inject({
+      method: "POST",
+      url: "/verify-email/confirm",
+      headers: { "content-type": "application/json", "x-client-ip": "198.51.100.14" },
+      payload: { token: dev.token },
+    });
+    assert.equal(confirmed.statusCode, 200);
+    const body = confirmed.json();
+    assert.equal(body.verified, true);
+    assert.equal(body.user.emailVerified, true);
+    assert.equal(body.user.email, "known@example.com");
+    // And the account route carries the same fact.
+    const me = await app.inject({
+      method: "GET",
+      url: "/me",
+      headers: { "x-user-id": "u-known" },
+    });
+    assert.equal(me.statusCode, 200);
+    assert.equal(me.json().user.emailVerified, true);
+  });
+
+  it("a verification request for an address that is already confirmed is a no-op that still answers 202", async () => {
+    const res = await capture(() =>
+      app.inject({
+        method: "POST",
+        url: "/verify-email/request",
+        headers: { "content-type": "application/json", "x-client-ip": "198.51.100.15" },
+        payload: { email: "verified@example.com" },
+      })
+    );
+    assert.equal(res.statusCode, 202);
+    assert.deepEqual(res.json(), { ok: true });
+    assert.equal([...tokens.values()].filter((t) => t.purpose === "email_verification").length, 0);
+  });
+
+  it("the verification request route says nothing about an address that has no account", async () => {
+    const known = await capture(() =>
+      app.inject({
+        method: "POST",
+        url: "/verify-email/request",
+        headers: { "content-type": "application/json", "x-client-ip": "198.51.100.16" },
+        payload: { email: "known@example.com" },
+      })
+    );
+    const unknown = await capture(() =>
+      app.inject({
+        method: "POST",
+        url: "/verify-email/request",
+        headers: { "content-type": "application/json", "x-client-ip": "198.51.100.17" },
+        payload: { email: "nobody@example.com" },
+      })
+    );
+    assert.equal(known.statusCode, unknown.statusCode);
+    assert.deepEqual(known.json(), unknown.json());
   });
 });
 
@@ -4624,6 +5157,34 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     assert.ok(auth004.includes("CREATE TABLE IF NOT EXISTS user_revocations"), "auth 004 records an account-wide cut-off");
     assert.ok(auth004.includes("revoked_before TIMESTAMPTZ NOT NULL"), "auth 004 stores the moment, not a list of ids");
     assert.ok(auth004.includes("user_id TEXT PRIMARY KEY"), "auth 004 keeps one row per account: the cut-off cannot grow with sign-outs");
+    // The identity tokens ride a forward-only migration of their own: one table
+    // for the two single-use secrets the account flows need, the token stored as
+    // a hash and never in the clear, an expiry and a used-at marker, and the
+    // column that says whether an address has been confirmed.
+    const auth008 = readFileSync(join(root, "services", "auth", "migrations", "008_auth_tokens.sql"), "utf8");
+    assert.ok(auth008.includes("CREATE TABLE IF NOT EXISTS auth_tokens"), "auth 008 holds the identity tokens");
+    assert.ok(auth008.includes("token_hash TEXT NOT NULL UNIQUE"), "auth 008 stores a hash and never the token, and no two tokens share one");
+    assert.ok(auth008.includes("purpose TEXT NOT NULL"), "auth 008 says which promise a token carries");
+    assert.ok(
+      auth008.includes("CHECK (purpose IN ('password_reset', 'email_verification'))"),
+      "auth 008 refuses a purpose that no route would ever spend"
+    );
+    assert.ok(auth008.includes("expires_at TIMESTAMPTZ NOT NULL"), "auth 008 knows when a token stops working");
+    assert.ok(auth008.includes("used_at TIMESTAMPTZ"), "auth 008 knows when a token was spent");
+    assert.ok(
+      auth008.includes("ADD COLUMN IF NOT EXISTS email_verified_at"),
+      "auth 008 records whether an address has been confirmed"
+    );
+    // The runner reads the directory, so a new forward-only file is picked up
+    // with no change to the runner and no change to the deployment.
+    const dbSrc = readFileSync(join(root, "packages", "service-kit", "src", "db.ts"), "utf8");
+    assert.ok(
+      dbSrc.includes('filter((f) => f.endsWith(".sql"))'),
+      "the migration runner takes every .sql file in the directory"
+    );
+    // And the tokens that can never be spent again are swept, not kept.
+    const rightsSrc = readFileSync(join(root, "services", "auth", "src", "rights.ts"), "utf8");
+    assert.ok(rightsSrc.includes("DELETE FROM auth_tokens"), "the retention sweep removes the spent and expired tokens");
     // The operational half of revocation cannot be exercised from a request: the
     // prune fires on a fifteen-minute timer and the edge's counters are reported on
     // one too. Both are therefore asserted at the source, with the alternative in
@@ -4681,11 +5242,23 @@ describe("boot fail-fast + migrations + sync + compose", () => {
       assert.ok(!exists(join(root, dir)), `${dir} stays deleted (no service reads classroom content anymore)`);
     }
     const dataFiles = readdir(join(root, "services", "curriculum", "src", "data"));
-    assert.deepEqual(
-      [...dataFiles].sort(),
-      ["ide-manifest.ts", "ide-task-manager.ts", "ide-version.ts"].sort(),
+    assert.ok(
+      dataFiles.every((f) => f.startsWith("ide-")),
       "the curriculum data dir holds only the IDE snapshot"
     );
+    assert.deepEqual(
+      dataFiles.filter((f) => f === "ide-courses.ts" || f === "ide-version.ts").sort(),
+      ["ide-courses.ts", "ide-version.ts"],
+      "the catalogue file and the version stamp are there"
+    );
+    const courseFiles = dataFiles.filter((f) => f.startsWith("ide-course-"));
+    const manifestFiles = dataFiles.filter((f) => f.startsWith("ide-manifest-"));
+    assert.equal(
+      courseFiles.length,
+      manifestFiles.length,
+      "every course has its document and its roadmap"
+    );
+    assert.ok(courseFiles.length > 0, "the snapshot holds at least one course");
   });
   it("IDE curriculum snapshot matches its source and its own stamp (run sync on drift)", async () => {
     // The paid phases the platform serves are a snapshot of the IDE's authored
@@ -4697,68 +5270,97 @@ describe("boot fail-fast + migrations + sync + compose", () => {
     const { createHash } = await import("node:crypto");
     const { readFile } = await import("node:fs/promises");
     const ideVer = await import("../services/curriculum/dist/data/ide-version.js");
-    const ideTm = await import("../services/curriculum/dist/data/ide-task-manager.js");
-    const ideMf = await import("../services/curriculum/dist/data/ide-manifest.js");
+    const ideCourses = await import("../services/curriculum/dist/data/ide-courses.js");
 
     // Mirror sync-curriculum.mjs's IDE hash exactly: canonical (compact) JSON,
-    // keyed by the forward-slash relative path, in source order.
+    // keyed by the forward-slash relative path, in source order - the catalogue
+    // first, then each course's document and its roadmap.
     const ideHashOf = (pairs) => {
       const h = createHash("sha256");
       for (const [rel, value] of pairs) h.update("ide/" + rel + "\n" + JSON.stringify(value) + "\n");
       return h.digest("hex").slice(0, 12);
     };
 
+    // The committed catalogue, read from the generated file: the courses the
+    // snapshot holds, in the order the IDE's own catalogue names them.
+    const ideIndex = JSON.parse(
+      await readFile(join(root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum", "shipped", "index.json"), "utf8").catch(
+        () => "null"
+      )
+    );
+    const courseIds = Object.keys(ideCourses.IDE_COURSES);
+
     // (1) Self-consistency, always available: the committed content hashes to
-    //     the committed stamp, and the snapshot is internally coherent — the
-    //     roadmap lines up with the authored document, and the free/paid split
-    //     is real (a build with no free loop would ship nothing at all).
+    //     the committed stamp, and the snapshot is internally coherent — every
+    //     roadmap lines up with its own authored document, and the free/paid
+    //     split is real (a build with no free loop would ship nothing at all).
     assert.match(ideVer.IDE_CONTENT_VERSION, /^[0-9a-f]{12}$/);
+    const selfPairs = [];
+    if (ideIndex) {
+      selfPairs.push(["shipped/index.json", ideIndex]);
+      for (const id of courseIds) {
+        const entry = ideCourses.IDE_COURSES[id];
+        selfPairs.push([`${id}.json`, entry.document]);
+        selfPairs.push([`shipped/${id}.manifest.json`, entry.manifest]);
+      }
+    } else {
+      // No sibling checkout: hash what the committed snapshot holds, in the
+      // order the generated catalogue names it.
+      for (const id of courseIds) {
+        const entry = ideCourses.IDE_COURSES[id];
+        selfPairs.push([`${id}.json`, entry.document]);
+        selfPairs.push([`shipped/${id}.manifest.json`, entry.manifest]);
+      }
+    }
     assert.equal(
-      ideHashOf([
-        ["task-manager.json", ideTm.IDE_TASK_MANAGER],
-        ["shipped/task-manager.manifest.json", ideMf.IDE_MANIFEST],
-      ]),
+      ideHashOf(selfPairs),
       ideVer.IDE_CONTENT_VERSION,
       "the IDE snapshot hashes to its own version stamp (a hand-edit must re-sync)"
     );
-    const doc = ideTm.IDE_TASK_MANAGER;
-    const manifest = ideMf.IDE_MANIFEST;
-    assert.deepEqual(
-      manifest.phases.map((p) => p.id),
-      doc.phases.map((p) => p.id),
-      "the roadmap and the authored document list the same phases in the same order"
-    );
-    assert.ok(manifest.phases.some((p) => p.tier === "free"), "at least one phase is free");
-    assert.ok(manifest.phases.some((p) => p.tier === "pro"), "at least one phase is paid");
+    for (const id of courseIds) {
+      const entry = ideCourses.IDE_COURSES[id];
+      const manifest = entry.manifest;
+      const doc = entry.document;
+      assert.deepEqual(
+        manifest.phases.map((p) => p.id),
+        doc.phases.map((p) => p.id),
+        `course ${id}: the roadmap and the authored document list the same phases in the same order`
+      );
+    }
+    const everyPhase = courseIds.flatMap((id) => ideCourses.IDE_COURSES[id].manifest.phases);
+    assert.ok(everyPhase.some((p) => p.tier === "free"), "at least one phase is free");
+    assert.ok(everyPhase.some((p) => p.tier === "pro"), "at least one phase is paid");
 
     // (2) Source match, when the sibling repo is present: regenerate the wrapper
     //     bytes from source and compare, and re-hash from source. When it is
     //     absent (a platform-only checkout), say so rather than pass silently.
     const ideSrc = join(root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum");
-    const sources = [
-      { rel: "task-manager.json", out: "ide-task-manager.ts", symbol: "IDE_TASK_MANAGER" },
-      { rel: join("shipped", "task-manager.manifest.json"), out: "ide-manifest.ts", symbol: "IDE_MANIFEST" },
-    ];
-    if (!sources.every((s) => existsSync(join(ideSrc, s.rel)))) {
+    if (!ideIndex) {
       process.stdout.write(
         "      (IDE source drift not checked: nexora-ide sibling absent; committed snapshot self-consistency verified)\n"
       );
       return;
     }
-    const fromSource = [];
-    for (const s of sources) {
-      const canonicalRel = s.rel.split("\\").join("/");
-      const parsed = JSON.parse(await readFile(join(ideSrc, s.rel), "utf8"));
-      fromSource.push([canonicalRel, parsed]);
-      const expected =
-        `// Generated by npm run sync:curriculum — do not edit by hand.\n` +
-        `// Source: nexora-ide/extensions/nexora/curriculum/${canonicalRel}\n` +
-        `export const ${s.symbol}: unknown = ${JSON.stringify(parsed, null, 2)};\n`;
-      const committed = await readFile(
-        join(root, "services", "curriculum", "src", "data", s.out),
-        "utf8"
-      );
-      assert.equal(committed, expected, `${s.out} matches the IDE source (run npm run sync:curriculum)`);
+    const fromSource = [["shipped/index.json", ideIndex]];
+    for (const id of courseIds) {
+      const stem = id.toUpperCase().replace(/-/g, "_");
+      for (const [rel, out, symbol] of [
+        [`${id}.json`, `ide-course-${id}.ts`, `IDE_COURSE_${stem}`],
+        [join("shipped", `${id}.manifest.json`), `ide-manifest-${id}.ts`, `IDE_MANIFEST_${stem}`],
+      ]) {
+        const canonicalRel = rel.split("\\").join("/");
+        const parsed = JSON.parse(await readFile(join(ideSrc, rel), "utf8"));
+        fromSource.push([canonicalRel, parsed]);
+        const expected =
+          `// Generated by npm run sync:curriculum — do not edit by hand.\n` +
+          `// Source: nexora-ide/extensions/nexora/curriculum/${canonicalRel}\n` +
+          `export const ${symbol}: unknown = ${JSON.stringify(parsed, null, 2)};\n`;
+        const committed = await readFile(
+          join(root, "services", "curriculum", "src", "data", out),
+          "utf8"
+        );
+        assert.equal(committed, expected, `${out} matches the IDE source (run npm run sync:curriculum)`);
+      }
     }
     assert.equal(
       ideHashOf(fromSource),
@@ -5060,7 +5662,7 @@ function fakeAuthPool() {
         const u = users.get(params[0]);
         return u ? { rows: [{ ...u, provider: u.provider ?? "local" }], rowCount: 1 } : { rows: [], rowCount: 0 };
       }
-      if (sql.startsWith("SELECT id, email, name, created_at FROM users WHERE id")) {
+      if (sql.startsWith("SELECT id, email, name, created_at, email_verified_at FROM users WHERE id")) {
         const u = users.get(params[0]);
         return u ? { rows: [u], rowCount: 1 } : { rows: [], rowCount: 0 };
       }

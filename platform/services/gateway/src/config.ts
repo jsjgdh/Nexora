@@ -14,6 +14,18 @@ export interface RouteConfig {
   limit: RouteLimit;
   /** Exact paths exempt from auth (e.g. third-party webhooks, verified downstream). */
   publicPaths?: string[];
+  /**
+   * The path the upstream service actually owns, when it is not the prefix.
+   *
+   * A prefix names what the CALLER says; the upstream service owns its own
+   * root paths (/register, not /api/auth/register), so the gateway normally
+   * strips the prefix and forwards the remainder. An alias is the case where
+   * the two differ: the caller says /api/proofs, and the auth service owns
+   * /proofs, so the alias has to be translated rather than stripped. Without
+   * this, /api/proofs was forwarded as "/" and answered 404, which looks like
+   * a missing route rather than a mistranslated one.
+   */
+  upstreamPrefix?: string;
   /** Path prefixes whose content is behind the paywall. On these the gateway
       resolves entitlement via billing before forwarding, denies 402 without it,
       and injects x-entitled so the service has a second floor to stand on. */
@@ -226,6 +238,11 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
         auth: true,
         timeoutMs: 10_000,
         limit: { windowMs: 60_000, max: 120 },
+        // The alias for the ledger the IDE syncs into. The caller says
+        // /api/proofs; the auth service owns /proofs, so the path is
+        // translated rather than stripped. The same ledger is reachable at
+        // /api/auth/proofs, and the two are one route with two names.
+        upstreamPrefix: "/proofs",
         // The verified ledger lives in the auth service beside the users it
         // belongs to. Both directions require the learner's own JWT: syncing
         // someone else's proof, or reading it, is 401 by construction.

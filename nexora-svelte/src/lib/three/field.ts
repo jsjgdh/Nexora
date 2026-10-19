@@ -13,12 +13,13 @@
  *
  * Second, nothing here is decoration. There are no shadows, no textures, no
  * environment map, no bloom and no post-processing: flat points and flat
- * lines, in the two colours the token table already names. The green ink is a
- * phase that is open on the free tier, the amber lamp is a phase that opens
- * with Pro, and the rule colour is the structure that holds the field
- * together. The palette is read from the document at runtime rather than
- * written here, because a second copy of a colour is a second place for the
- * palette to drift.
+ * lines, in the colours the token table already names. The points are the
+ * data and the rule colour is the structure that holds the field together.
+ * Every point is the same colour on purpose: a point that was a different
+ * colour because of what it costs would label a phase on a public page, and
+ * the curriculum is not a catalogue with the prices on it. The palette is read
+ * from the document at runtime rather than written here, because a second copy
+ * of a colour is a second place for the palette to drift.
  *
  * Third, nothing here is the only copy. Every point in the field is a phase
  * that is named in the DOM beside the canvas, and every phase in the field is
@@ -40,8 +41,9 @@ export type PhaseTier = "free" | "pro";
 /**
  * One phase, as the field reports it.
  *
- * The shape is the one the page can act on: enough to name the phase, enough
- * to open its course in the ledger, and the tier as a word rather than a hue.
+ * The shape is the one the page can act on: enough to name the phase and
+ * enough to open its course in the ledger. The tier travels with the phase
+ * because the curriculum carries it, and the public page does not print it.
  */
 export interface PhasePick {
   courseSlug: string;
@@ -104,17 +106,16 @@ function mulberry32(seed: number): () => number {
 }
 
 /**
- * The three arms.
+ * The arm shapes.
  *
  * One curve per course, each leaving its own root on the spine, so the field
- * reads as one thing with three branches rather than as three things standing
- * next to each other. Every arm leaves its root in a different direction, so
- * the field has a shape from any angle the camera reaches, and no two arms
- * ever sit on top of one another.
+ * reads as one thing with branches rather than as separate things standing
+ * next to each other. There are three shapes and the courses take them in
+ * turn, so no two arms sit on top of one another however many courses ship.
  *
  * The numbers are the shape, not ornament: the long arm is the long course
  * and the short arm is the short one, so the point spacing is the same on
- * every arm and the field is read at one scale rather than three.
+ * every arm and the field is read at one scale rather than several.
  */
 const ARMS: readonly { tx: number; ty: number; tz: number }[] = [
   { tx: -4.2, ty: 2.6, tz: 3.0 },
@@ -505,8 +506,6 @@ export async function mountPhaseField(
   );
   camera.lookAt(centre[0], centre[1], centre[2]);
 
-  const freeColour = readToken("--color-added");
-  const proColour = readToken("--color-rule-strong");
   const ruleColour = readToken("--color-rule-strong");
   const inkColour = readToken("--color-ink");
 
@@ -523,8 +522,13 @@ export async function mountPhaseField(
     });
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    /* One colour for every point. The field is a picture of the curriculum,
+     * and the curriculum is not a price list: a point that was a different
+     * colour because of what it costs would label a phase on the public page,
+     * which this page does not do. The free count is stated in words beside
+     * the panel instead, where it belongs. */
     const material = new THREE.PointsMaterial({
-      color: group[0]!.tier === "free" ? freeColour : proColour,
+      color: inkColour,
       size: 6,
       sizeAttenuation: false,
       transparent: true,
@@ -555,8 +559,7 @@ export async function mountPhaseField(
     scene.add(new THREE.Line(geometry, material));
   };
 
-  makePoints(layout.nodes.filter((node) => node.tier === "free"));
-  makePoints(layout.nodes.filter((node) => node.tier === "pro"));
+  makePoints(layout.nodes);
   makeLine(layout.spine, 1);
   for (const arm of layout.arms) makeLine(arm, 0.8);
 
@@ -731,12 +734,12 @@ export async function mountPhaseField(
 function flatProjector(points: Vec3[], width: number, height: number) {
   /* The sheet is a plan, not a perspective.
    *
-   * The three courses leave their roots on one line and curve away from it, so
-   * a view from above separates them completely: three arms, fanning out of
+   * The courses leave their roots on one line and curve away from it, so
+   * a view from above separates them completely: one arm each, fanning out of
    * one spine, which is the shape the curriculum actually has. Seen from the
-   * side, two of the three arms collapse into lines and the drawing reads as
-   * dust on a sheet. The slight tilt left in the pitch keeps a little depth,
-   * because the arms climb as they go. */
+   * side, the arms collapse into lines and the drawing reads as dust on a
+   * sheet. The slight tilt left in the pitch keeps a little depth, because
+   * the arms climb as they go. */
   const yaw = 0;
   const pitch = 1.36;
   const cy = Math.cos(yaw);
@@ -789,8 +792,6 @@ export function drawPhaseFieldFlat(
   if (!context) return { destroy: (): void => {} };
 
   const layout = buildLayout();
-  const freeColour = readToken("--color-added");
-  const proColour = readToken("--color-rule-strong");
   const ruleColour = readToken("--color-rule-strong");
   const inkColour = readToken("--color-ink");
 
@@ -835,9 +836,10 @@ export function drawPhaseFieldFlat(
     for (const arm of layout.arms) stroke(arm, ruleColour, 0.5);
 
     for (let i = 0; i < layout.nodes.length; i++) {
-      const node = layout.nodes[i]!;
       const [x, y] = screen[i]!;
-      context.fillStyle = node.tier === "free" ? freeColour : proColour;
+      /* One colour for every point, for the reason the renderer gives: a point
+       * is not labelled with what it costs on the public page. */
+      context.fillStyle = inkColour;
       context.fillRect(x - 3, y - 3, 6, 6);
     }
 

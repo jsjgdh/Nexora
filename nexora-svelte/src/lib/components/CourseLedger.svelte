@@ -4,11 +4,15 @@
 
   /* The curriculum as a ledger, not a row of cards.
    *
-   * Three courses, each a heavy rule and a poster-scale name; open one and the
-   * full shipped phase list unfolds underneath with its real tiers. The rows
-   * and the names come from `$lib/content/site`, which is the module the suite
-   * compares against the IDE manifest — so the count printed here cannot drift
-   * away from what the IDE actually ships.
+   * The shipped courses, each a heavy rule and a poster-scale name; open one
+   * and the full shipped phase list unfolds underneath. The rows and the names
+   * come from `$lib/content/site`, which is the module the suite compares
+   * against the IDE manifest — so the count printed here cannot drift away
+   * from what the IDE actually ships.
+   *
+   * The public ledger does not print a phase's tier. The front page is a
+   * syllabus, not a price list: the tier is the pricing page's business and
+   * the IDE's, and the curriculum is not a catalogue with the prices on it.
    *
    * One course is open at a time and the first one starts open, so the section
    * is never a wall of closed drawers. The trigger is a real button with
@@ -76,8 +80,8 @@
             <div>
               <p class="stamp text-faint">{course.label}</p>
               <p class="mt-3 max-w-[30ch] text-[15px] leading-relaxed text-muted">
-                {course.title} ships {course.phases.length} phases inside the IDE, judged there, end
-                to end. This page only lists them.
+                {course.title} ships {course.phases.length} phases inside the IDE, judged there,
+                end to end. This page only lists them.
               </p>
             </div>
             <ol class="border border-rule">

@@ -83,6 +83,26 @@ no value of `NODE_ENV` can open the mesh, and a compose file that forgets
 the key line fails loudly instead of coming up unauthenticated. An environment that has ever run with a placeholder value must
 rotate both; they cannot be un-leaked.
 
+## Pricing
+
+One plan, one number, printed by the front door: **Pro at $29 a month, or $290 a
+year** (`nexora-svelte/src/lib/content/site.ts`, `PRICING`). The platform's own
+plan configuration says the same thing, and the provider's dashboard has to be
+configured to match before checkout is switched on.
+
+`BILLING_PLANS_JSON` in `.env.example` holds the plan slugs and the provider
+product ids, and the product ids in it are placeholders: a deployment that
+merely copied the file can read the plans and cannot check out against Dodo.
+Go-live is blocked until each `pdt_...PLACEHOLDER` is replaced with the real
+product id from the dashboard, and until the dashboard's price for the monthly
+product is $29 and for the annual product is $290. A checkout that charges a
+different number than the front door printed is the one failure this
+configuration exists to prevent.
+
+Teams ($29 per learner per month, billed yearly, five learners or more) is
+invoiced rather than sold through a checkout, so it has no provider product
+and is deliberately absent from `BILLING_PLANS_JSON`.
+
 ## Honestly not done yet (see TODO.md Phase 5)
 
 - No live rehearsal: this procedure has not been run against a real host,

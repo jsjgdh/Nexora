@@ -5,7 +5,7 @@ import { ApiError } from "@nexora/service-kit";
 import { loadConfig, type RouteConfig } from "./config.js";
 import { bearerIdentity, clerkVerifier, localVerifier, type TokenVerifier } from "./auth.js";
 import { FixedWindow } from "./limits.js";
-import { MAX_BODY_BYTES, forward, matchRoute, buildForwardHeaders } from "./proxy.js";
+import { MAX_BODY_BYTES, forward, matchRoute, buildForwardHeaders, upstreamPathFor } from "./proxy.js";
 import { EntitlementCache, billingLookup } from "./entitlement.js";
 import { RevocationCache, revocationLookup } from "./revocation.js";
 
@@ -323,9 +323,7 @@ app.route({
     }
 
     const qs = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
-    // Strip the matched prefix: upstream services own their root paths
-    // (/register, not /api/auth/register).
-    const upstreamPath = path.length === route.prefix.length ? "/" : path.slice(route.prefix.length);
+    const upstreamPath = upstreamPathFor(route, path);
     const headers = buildForwardHeaders(req.headers as Record<string, string | string[] | undefined>, {
       userId,
       internalKey: config.internalKey,

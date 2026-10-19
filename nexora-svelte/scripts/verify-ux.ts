@@ -24,6 +24,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright";
+import { CURRICULUM } from "../src/lib/content/site";
 
 const PORT = 5199;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
@@ -366,6 +367,11 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     "/verify",
     "/auth",
     "/auth/ide",
+    "/auth/password-reset",
+    "/auth/password-reset/confirm",
+    "/auth/password-reset/some-token",
+    "/auth/verify",
+    "/auth/verify-email/confirm",
     "/profile",
     "/account",
     "/privacy",
@@ -424,6 +430,11 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     "/verify",
     "/auth",
     "/auth/ide",
+    "/auth/password-reset",
+    "/auth/password-reset/confirm",
+    "/auth/password-reset/some-token",
+    "/auth/verify",
+    "/auth/verify-email/confirm",
     "/account",
     "/privacy",
     "/privacy-choices",
@@ -860,7 +871,9 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.goto(ORIGIN, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(1500);
   const body = await page.content();
-  if (!body.includes("three arms of one spine")) {
+  // The line is read from the copy module rather than written here, so the
+  // check follows the words the page actually prints.
+  if (!body.includes(CURRICULUM.title)) {
     note("field", "the field's own line is missing when the renderer cannot be fetched");
   }
   await page.close();

@@ -5,11 +5,11 @@
 
   /* The curriculum as a field.
    *
-   * Eighty phases, one point each, laid out as three arms of one shape. It is
-   * the same data the plate of lights and the ledger further down are made of,
-   * read a third way, and the third reading is the only one that shows how the
-   * three courses sit against each other rather than how many phases each one
-   * has.
+   * Eighty phases, one point each, laid out as one arm of one shape per
+   * course. It is the same data the plate of lights and the ledger further
+   * down are made of, read a third way, and the third reading is the only one
+   * that shows how the courses sit against each other rather than how many
+   * phases each one has.
    *
    * The rules this component is built under are the ones the rest of the page
    * is built under, and they are why the canvas is not the content.
@@ -31,6 +31,8 @@
    *   4. The renderer is never in the first payload. It is imported at the
    *      moment the canvas is both wanted and on screen, so a reader who never
    *      scrolls to the courses section never downloads a 3D library.
+   *   5. No point is labelled with what it costs. A phase is a phase here,
+   *      and the free count is stated once, in words, where it belongs.
    *
    * `data-phase-field` and `data-phase-readout` are hooks for the sweep, so it
    * can ask what the field is saying without matching on the copy, which
@@ -68,8 +70,8 @@
   /** The name under the pointer, in the panel's own line. */
   const readout = $derived(
     picked
-      ? `${String(picked.index + 1).padStart(2, "0")} · ${picked.title} · ${picked.courseTitle} · ${picked.tier}`
-      : `${totals.all} phases on three arms of one spine · point at a point to name a phase`
+      ? `${String(picked.index + 1).padStart(2, "0")} · ${picked.title} · ${picked.courseTitle}`
+      : `${totals.all} phases on one arm each of one spine · point at a point to name a phase`
   );
 
   function report(pick: PhasePick | null): void {
@@ -158,7 +160,7 @@
   <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule px-5 py-4">
     <p class="stamp text-faint">the shipped curriculum, in space</p>
     <p class="num text-[11.5px] text-faint">
-      {totals.all} phases · {totals.free} open on free
+      {totals.all} phases · {totals.free} of them free
     </p>
   </div>
 
@@ -187,8 +189,8 @@
     </div>
 
     <p class="mt-3 max-w-[70ch] text-[12.5px] leading-relaxed text-faint">
-      One point per shipped phase, on three arms of one spine. The open phases are green and the
-      ones that open with Pro are amber.
+      One point per shipped phase, one arm for each course, all of them leaving the same spine. No
+      point is marked with what it costs: the price is on the pricing page.
     </p>
 
     <p class="mt-2 max-w-[70ch] text-[12.5px] leading-relaxed text-faint">
@@ -204,13 +206,10 @@
        is the curriculum. -->
   <div class="border-t border-rule px-5 py-5" data-phase-list>
     {#each COURSES as course (course.slug)}
-      {@const free = course.phases.filter(([, , tier]) => tier === "free").length}
       <div class="grid gap-2 py-3 first:pt-0 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-6">
         <div>
           <p class="text-[13.5px] font-semibold text-ink">{course.title}</p>
-          <p class="num mt-1 text-[11.5px] text-faint">
-            {course.phases.length} phases · {free} open on free
-          </p>
+          <p class="num mt-1 text-[11.5px] text-faint">{course.phases.length} phases</p>
         </div>
         <p class="text-[12.5px] leading-relaxed text-muted">
           {course.phases.map(([, title]) => title).join(", ")}

@@ -9,6 +9,61 @@ export interface ErrorEnvelope {
 
 /* ---------- auth ---------- */
 
+/* ---------- the password policy, in one place ----------
+ *
+ * There is exactly one rule set, and a password that is accepted anywhere in
+ * the product is accepted everywhere: the same floor, the same ceiling, the
+ * same words. A policy that is written twice is a policy that drifts, and the
+ * drift shows up as an account that can be created with a password the sign-in
+ * path would have refused.
+ */
+
+/** The floor. Ten characters, and no composition rules (see below). */
+export const PASSWORD_MIN_LENGTH = 10;
+
+/**
+ * The ceiling. Long enough that a passphrase fits and short enough that the
+ * hash is not a denial-of-service weapon against our own CPU.
+ */
+export const PASSWORD_MAX_LENGTH = 200;
+
+/**
+ * The rule, as a schema.
+ *
+ * Length only, deliberately: a composition rule ("one capital, one digit, one
+ * symbol") measures how well a password resists a dictionary, and it is
+ * answered by "Password1!" every time. A long passphrase is stronger and
+ * easier to remember, so the policy asks for length and nothing else.
+ */
+export const passwordSchema = z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH);
+
+/**
+ * Which rule a password breaks, in words, or null when it breaks none.
+ *
+ * The schema says only "invalid". A learner who is told "Invalid request
+ * body" learns nothing and guesses; a learner who is told "Your password must
+ * be at least 10 characters" can fix it on the spot. This is why the message
+ * exists, and why the flows that set a password (registration, password
+ * reset) use it rather than the bare schema error.
+ */
+export function passwordPolicyMessage(password: string): string | null {
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    return `Your password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+  }
+  if (password.length > PASSWORD_MAX_LENGTH) {
+    return `Your password must be at most ${PASSWORD_MAX_LENGTH} characters.`;
+  }
+  return null;
+}
+
+/**
+ * An address, as the wire carries it.
+ *
+ * One definition, used by sign-up, sign-in and both of the address-keyed
+ * flows, so the same string is accepted and rejected in the same places.
+ */
+export const emailAddressSchema = z.string().email().max(254);
+
 /* Registration, and the four affirmations that ride with it.
  *
  * The account itself is processed on the contract basis (GDPR Art. 6(1)(b)) —
@@ -42,9 +97,10 @@ export interface ErrorEnvelope {
  * existing end-to-end suite keep their old wire shape and the refusal lives
  * where the law does — in the refusal to operate, not in a parser.
  */
+
 export const registerSchema = z.object({
-  email: z.string().email().max(254),
-  password: z.string().min(10).max(200),
+  email: emailAddressSchema,
+  password: passwordSchema,
   name: z.string().min(1).max(80).optional(),
   acceptTerms: z.boolean().optional(),
   acceptPrivacy: z.boolean().optional(),
@@ -59,7 +115,7 @@ export const registerSchema = z.object({
 export type RegisterRequest = z.infer<typeof registerSchema>;
 
 export const loginSchema = z.object({
-  email: z.string().email().max(254),
+  email: emailAddressSchema,
   password: z.string().min(1).max(200),
 });
 export type LoginRequest = z.infer<typeof loginSchema>;
@@ -183,7 +239,76 @@ export interface PublicUser {
   email: string;
   name: string | null;
   createdAt: string;
+  /**
+   * Whether the address has been confirmed.
+   *
+   * Optional on the wire, and optional here: a client written before the
+   * verification flow existed ignores the field and keeps working, and a
+   * client that reads it must treat "absent" as "not known" rather than as
+   * "not verified". A required field would have been a breaking change to
+   * every client that parses this shape.
+   */
+  emailVerified?: boolean;
 }
+
+/* ---------- forgotten password and unverified address ----------
+ *
+ * The two flows the platform did not have. A learner who forgot their
+ * password was locked out permanently, with no mail and no way back in, and
+ * an address was never confirmed at all.
+ *
+ * Both request routes answer the same way whatever the address turns out to
+ * be: an existing local account, a Clerk-managed account, an address nobody
+ * has heard of. There is no enumeration here, ever. The bodies are identical,
+ * the statuses are identical, and the work done before the answer is the same
+ * work in every case, so the answer does not arrive faster for an address
+ * that does not exist. A prober who can tell those apart can walk the
+ * customer list of a product people pay for.
+ */
+
+/**
+ * The body of a request route: an address and nothing else.
+ *
+ * The same shape for both flows, because the answer is the same shape and
+ * there is no reason for the wire to differ.
+ */
+export const emailRequestSchema = z.object({
+  email: emailAddressSchema,
+});
+export type EmailRequest = z.infer<typeof emailRequestSchema>;
+
+/**
+ * The body of a password-reset confirmation: the token from the link and the
+ * new password.
+ *
+ * The password is bounded loosely here on purpose. The policy is checked by
+ * the service and reported in words ("Your password must be at least 10
+ * characters"), and a bare schema refusal would say only "Invalid request
+ * body" and teach the learner nothing.
+ */
+export const passwordResetConfirmSchema = z.object({
+  token: z.string().min(1).max(4096),
+  newPassword: z.string().min(1).max(2000),
+});
+export type PasswordResetConfirmRequest = z.infer<typeof passwordResetConfirmSchema>;
+
+/**
+ * The body of an email-verification confirmation: the token from the link.
+ */
+export const emailVerifyConfirmSchema = z.object({
+  token: z.string().min(1).max(4096),
+});
+export type EmailVerifyConfirmRequest = z.infer<typeof emailVerifyConfirmSchema>;
+
+/**
+ * The one answer a token that cannot be spent gets.
+ *
+ * Unknown, expired, already used and malformed are four different facts, and
+ * the client is told the same thing about all four: one message, one code.
+ * A client that could tell them apart could probe for live tokens, and a
+ * live token is a way into somebody else's account.
+ */
+export const INVALID_TOKEN_CODE = "invalid_token";
 
 /* ---------- lawful basis, consent records and data-subject rights ----------
  *

@@ -13,6 +13,16 @@ const apiKey = process.env.RESEND_API_KEY;
 export const mail =
   apiKey ? new Resend(apiKey) : null;
 
+/**
+ * Whether this build can actually send mail.
+ *
+ * The hiring page needs to know, so that it can say plainly that the form
+ * cannot send and give the address instead. It is exported here rather than
+ * read from the environment a second time, so the page's honesty and the mail
+ * helper's behaviour cannot disagree.
+ */
+export const mailConfigured = Boolean(apiKey);
+
 const FROM_ADDRESS = "nexora@nexora.dev";
 const FROM_NAME = "NEXORA";
 

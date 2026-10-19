@@ -172,10 +172,24 @@ describe("compose stack", () => {
     const ideRoadmap = join(
       root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum", "shipped", "task-manager.manifest.json"
     );
+    const ideIndex = join(
+      root, "..", "..", "nexora-ide", "extensions", "nexora", "curriculum", "shipped", "index.json"
+    );
     const source = existsSync(ideRoadmap)
       ? JSON.parse(readFileSync(ideRoadmap, "utf8"))
-      : (await import("../services/curriculum/dist/data/ide-manifest.js")).IDE_MANIFEST;
-    assert.ok(source.phases.length >= 40, `the roadmap source is a stub (${source.phases.length} phases)`);
+      : (await import("../services/curriculum/dist/data/ide-manifest-task-manager.js")).IDE_MANIFEST_TASK_MANAGER;
+    // The floor is the whole catalogue, not one course: the IDE carries five
+    // courses now, and the flagship is a fifth of the road. A source that
+    // reads as a stub would otherwise match a stub deployment perfectly.
+    const total = existsSync(ideIndex)
+      ? JSON.parse(readFileSync(ideIndex, "utf8")).courses.reduce((sum, course) => {
+          const manifest = JSON.parse(
+            readFileSync(join(dirname(ideRoadmap), course.manifest), "utf8")
+          );
+          return sum + manifest.phases.length;
+        }, 0)
+      : 80;
+    assert.ok(total >= 40, `the roadmap source is a stub (${total} phases)`);
     assert.equal(
       manifest.json.manifest.phases.length,
       source.phases.length,

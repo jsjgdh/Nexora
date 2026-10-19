@@ -50,9 +50,9 @@ thing the whole site is arguing for, and it is the only picture of the
 product that is not a screenshot of a screen that does not exist yet.
 
 Behind it, in the courses section, **the field**: the eighty shipped phases
-as eighty points in space, three arms of one spine, green where the phase is
-open on the free tier and amber where it opens with Pro. It is the same data
-the ledger prints, read a third way.
+as eighty points in space, one arm of one spine for each of the five courses,
+every point the same ink, because a public page does not put a price on a
+phase. It is the same data the ledger prints, read a third way.
 
 ## Palette
 

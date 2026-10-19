@@ -1,14 +1,12 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { apiConfigured, session } from "$lib/session.svelte";
-  // Aliased: this page has its own `signOutEverywhere` (the account-wide control
-  // below), and importing Clerk's helper under the same name would collide with it.
   import {
     clerkConfigured,
     clerkStatus,
     mountClerkAuth,
-    signOutEverywhere as signOutOfClerk,
   } from "$lib/clerk";
+  import { authFailure, authMessage } from "$lib/auth-errors";
   import Button from "$lib/components/Button.svelte";
   import Check from "$lib/components/Check.svelte";
   import { cn } from "$lib/format";
@@ -16,6 +14,7 @@
   import Headline from "$lib/components/Headline.svelte";
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
+  import SessionControls from "$lib/components/SessionControls.svelte";
   import { pageTitle } from "$lib/seo";
   import { EFFECTIVE_DATE } from "$lib/legal";
 
@@ -23,17 +22,39 @@
      local-mode auth service; Clerk (when PUBLIC_CLERK_PUBLISHABLE_KEY is
      set) mounts Clerk's own components and stores the Clerk session token.
      Either way the rest of the app — header, billing, subscription reads —
-     only ever reads session.token. */
+     only ever reads session.token.
+
+     This page has four states and each of them has to read as a finished
+     product, because a learner meets one of them first:
+
+       signed out   the form, and the two ways out of it if the password is
+                    the thing that is wrong;
+       signed in    where the account is, and the two places to go next;
+       restoring    the session is a cookie the page cannot read, so it
+                    asks the server before it claims anything;
+       not connected  this build has no platform behind it, and the honest
+                    answer is the IDE, not a form that cannot work.
+
+     The local-mode decision is deliberate: when the platform is not
+     connected there is no form on this page at all. A local account stored
+     in the browser would be a fiction: no refresh token, no proofs, no plan,
+     no rights, and a "signed in" state the platform knows nothing about.
+     So the page says the truth and points at the nine free phases, which
+     need no account at all. */
 
   let mode = $state<"login" | "register">("login");
   let email = $state("");
   let password = $state("");
   let name = $state("");
   let error = $state<string | null>(null);
+  /** What kind of failure this was, so the page can offer the way out that
+      fits it: a rejected password gets the reset route, an outage gets the
+      download. */
+  let failure = $state<"rejected" | "outage" | "not-configured" | "other" | null>(null);
   let busy = $state(false);
 
   /* The two affirmations registration carries.
-   *
+
    * Not consent to process — the account rests on the contract, which is why the
    * form does not gate on a checkbox to create one — but the record of the notice
    * having been given, which GDPR Arts. 13–14, California's notice-at-collection
@@ -49,18 +70,12 @@
   let agree = $state(false);
   let age = $state(false);
 
-  /** Account-wide sign-out: armed by one click, performed by the next. */
-  let confirmEverywhere = $state(false);
-  let everywhereBusy = $state(false);
-  let everywhereError = $state<string | null>(null);
-  let everywhereNote = $state<string | null>(null);
-
   let clerkTab = $state<"sign-in" | "sign-up">("sign-in");
   let clerkNode: HTMLDivElement | null = $state(null);
   let clerkNote = $state<"conflict" | "unavailable" | null>(null);
 
   // Clerk branch: adopt an existing Clerk session (return visits), then
-  // render Clerk's own form. A linked session leaves for the profile; a
+  // render Clerk's own form. A linked session leaves for the account home; a
   // conflict or an unreachable Clerk keeps the learner here with words.
   $effect(() => {
     if (!clerkConfigured || !apiConfigured || session.loggedIn) return;
@@ -73,7 +88,7 @@
       const status = await clerkStatus();
       if (cancelled) return;
       if (status === "linked") {
-        goto("/profile");
+        goto("/account");
         return;
       }
       if (status === "conflict") clerkNote = "conflict";
@@ -91,67 +106,38 @@
     if (busy) return;
     busy = true;
     error = null;
+    failure = null;
     if (mode === "register" && (!agree || !age)) {
       error =
         "Both boxes are required to create an account: the terms and privacy notice, and the age statement.";
+      busy = false;
       return;
     }
     try {
-      if (mode === "login") await session.login(email.trim(), password);
-      else
+      if (mode === "login") {
+        await session.login(email.trim(), password);
+        // The account home, not the profile: a learner who has just signed in
+        // wants to see their account, not a subscription panel.
+        goto("/account");
+      } else {
         await session.register(email.trim(), password, name.trim(), {
           acceptTerms: agree,
           acceptPrivacy: agree,
           ageAffirmed: age,
           documentVersions: { terms: EFFECTIVE_DATE, privacy: EFFECTIVE_DATE },
         });
-      goto("/profile");
+        // Creating an account is not the end of it: the address has to be
+        // confirmed, and the screen that says so is the next one.
+        goto("/auth/verify?created=1");
+      }
     } catch (err) {
-      error = err instanceof Error ? err.message : "Something went wrong.";
+      // The platform's own code decides the sentence, so a rejected password
+      // does not read like an outage and an outage does not read like a
+      // mistake of the learner's.
+      error = authMessage(err);
+      failure = authFailure(err);
     } finally {
       busy = false;
-    }
-  }
-
-  async function signOut() {
-    if (clerkConfigured) await signOutOfClerk();
-    else session.logout();
-  }
-
-  /**
-   * "Sign out everywhere": end every session this account has, not just this one.
-   *
-   * Two clicks, like the reset control on the profile page, because it is the one
-   * account action a learner cannot undo for the devices they are not holding —
-   * every other tab and phone will have to sign in again. The notes live outside
-   * the signed-in branch: this page stops being signed in the moment the call
-   * starts, and the learner still needs to read the answer.
-   *
-   * Offered in local mode only (see the template): the platform cut-off is judged
-   * on a token's `jti`, and a Clerk token carries none the gateway can look up, so
-   * for those accounts the sessions live in Clerk and this call would be answered
-   * 401 by a service that never issued them.
-   */
-  async function signOutEverywhere() {
-    if (!confirmEverywhere) {
-      confirmEverywhere = true;
-      everywhereError = null;
-      return;
-    }
-    confirmEverywhere = false;
-    everywhereBusy = true;
-    everywhereError = null;
-    everywhereNote = null;
-    try {
-      const ended = await session.logoutEverywhere();
-      everywhereNote =
-        ended > 0
-          ? `Every session for this account is ended (${ended} ended just now). Sign in again wherever you need to.`
-          : "Every session for this account is ended. Sign in again wherever you need to.";
-    } catch (err) {
-      everywhereError = err instanceof Error ? err.message : "Could not end your other sessions.";
-    } finally {
-      everywhereBusy = false;
     }
   }
 </script>
@@ -198,22 +184,6 @@
 
     <!-- Every state of the account, in one column. -->
     <div class="min-w-0">
-      <!-- Outside the signed-in branch on purpose: ending every session signs this
-           page out too, and the learner still has to see whether it worked. -->
-      {#if everywhereNote}
-        <p
-          class="mb-4 border border-approved px-4 py-3 text-[13.5px] leading-relaxed text-ink"
-          role="status"
-        >
-          {everywhereNote}
-        </p>
-      {/if}
-      {#if everywhereError}
-        <p class="mb-4 border border-removed px-4 py-3 text-[13.5px] leading-relaxed text-ink" role="alert">
-          {everywhereError}
-        </p>
-      {/if}
-
       {#if session.restoring}
         <!-- Shown before the sign-in form, never instead of the account: the
              session is a cookie the page cannot read, so the form would be a guess. -->
@@ -225,11 +195,19 @@
           </p>
         </Plate>
       {:else if !apiConfigured}
+        <!-- Local mode. There is no form here on purpose: a form that cannot
+             work is worse than no form, and the nine free phases do not need
+             one. -->
         <Plate>
           <p class="stamp text-review">cloud accounts not connected</p>
           <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
-            This build runs in local mode, so there are no accounts to sign into. The nine free phases in
-            the IDE works without one.
+            This build runs in local mode, so there are no accounts to sign into and no password to
+            reset. The free phases in the IDE work without one, offline, and every check is free.
+          </p>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+            When the platform is connected, this page holds the sign-in form, the create-account
+            form, and the two things that go with a password: the reset link and the email
+            verification.
           </p>
           <div class="mt-5">
             <ActionLink href="/download" variant="ghost" size="sm" island>Download the IDE</ActionLink>
@@ -243,26 +221,12 @@
             <p class="mt-1 text-[13px] text-muted">{session.user.name}</p>
           {/if}
           <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-rule pt-6">
-            <ActionLink href="/profile" island>Manage your plan</ActionLink>
-            <Button variant="ghost" onclick={signOut}>Sign out</Button>
-            {#if !clerkConfigured}
-              <Button variant="quiet" disabled={everywhereBusy} onclick={signOutEverywhere}>
-                {everywhereBusy
-                  ? "Ending every session…"
-                  : confirmEverywhere
-                    ? "Click again to end every session"
-                    : "Sign out everywhere"}
-              </Button>
-            {/if}
+            <ActionLink href="/account" island>Your account</ActionLink>
+            <ActionLink href="/profile" variant="ghost" size="sm" island>Manage your plan</ActionLink>
           </div>
           <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
-            {#if clerkConfigured}
-              Sessions on this account are managed by Clerk, so ending them on every device is done
-              from its dashboard. Signing out here ends this device.
-            {:else}
-              “Sign out everywhere” ends every session on this account, every tab and every device,
-              including this one, for a device you no longer hold or trust.
-            {/if}
+            Your account home holds your plan, the work the platform has verified, the way into the
+            IDE, and the controls over your own data.
           </p>
         </Plate>
       {:else if clerkConfigured}
@@ -318,6 +282,7 @@
                 onclick={() => {
                   mode = m as "login" | "register";
                   error = null;
+                  failure = null;
                 }}
                 class={cn(
                   "cursor-pointer border-b-2 bg-transparent px-4 py-2 text-[13px] font-semibold",
@@ -388,6 +353,25 @@
                 <p class="stamp text-removed">that did not work</p>
                 <p class="mt-2 text-[13.5px] leading-relaxed text-muted">{error}</p>
               </div>
+              <!-- The way out that fits the failure. A rejected password is
+                   fixed by a new password, an outage is not fixed by
+                   anything this page can offer. -->
+              {#if failure === "rejected"}
+                <div class="mt-4">
+                  <a
+                    href="/auth/password-reset"
+                    class="text-[13px] text-accent underline underline-offset-4"
+                  >
+                    Forgot your password?
+                  </a>
+                </div>
+              {:else if failure === "outage"}
+                <div class="mt-4">
+                  <a href="/download" class="text-[13px] text-accent underline underline-offset-4">
+                    The nine free phases work without an account
+                  </a>
+                </div>
+              {/if}
             {/if}
             <div class="mt-6">
               <Button type="submit" busy={busy}>
@@ -395,11 +379,33 @@
               </Button>
             </div>
           </form>
+          <!-- The two things that go with a password. They are here, on the
+               form a learner is looking at when the password is the thing
+               that is wrong, and not behind a menu. -->
+          <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2 border-t border-rule pt-5">
+            <a
+              href="/auth/password-reset"
+              class="text-[13px] text-accent underline underline-offset-4"
+            >
+              Forgot your password?
+            </a>
+            <a href="/auth/verify" class="text-[13px] text-accent underline underline-offset-4">
+              Verify your email
+            </a>
+          </div>
           <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
-            Passwords are bcrypt-hashed. Sessions rotate, and theft revokes the whole family.
+            Passwords are bcrypt-hashed. Sessions rotate, and theft revokes the whole family. A new
+            account is verified by email, and the next screen says so.
           </p>
         </Plate>
       {/if}
+
+      <!-- The session controls live outside every branch, because ending
+           every session signs this page out too and the learner still has
+           to read what happened. -->
+      <div class="mt-6">
+        <SessionControls />
+      </div>
     </div>
   </div>
 </div>
