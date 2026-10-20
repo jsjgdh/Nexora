@@ -374,6 +374,20 @@ export function registerCohortRoutes(app: FastifyInstance, pool: Pool): void {
       throw new ApiError(409, "cohort_full", "This cohort has no seats left. Ask the instructor for another code.");
     }
 
+    /* The seat bound, under a lock.
+     *
+     * The count in the WHERE clause of the insert is a snapshot, and under
+     * READ COMMITTED two joins that both start before either commits can each
+     * see zero members and each write one, so a one-seat cohort could end up
+     * with two. The bound has to be taken against the cohort row itself, not
+     * against a snapshot of it.
+     *
+     * So the cohort row is locked FOR UPDATE first. The second join waits for
+     * the first to commit, and then counts the member the first one wrote. The
+     * lock is held for the length of the join, which is one statement, so the
+     * queue in front of it is the queue of students joining one class, and it
+     * drains at the speed the database can commit. */
+    await pool.query("SELECT id FROM cohorts WHERE id = $1 FOR UPDATE", [cohort.id]);
     const joined = await pool.query(
       "INSERT INTO cohort_members (cohort_id, user_id) " +
         "SELECT $1, $2 WHERE (SELECT count(*) FROM cohort_members WHERE cohort_id = $1) " +
@@ -589,7 +603,12 @@ export function registerCohortRoutes(app: FastifyInstance, pool: Pool): void {
      * A licence that was confirmed leaves the same trace as a flag that was
      * granted: what was bought, for which cohort, and when. Without it, the
      * question "who gave this class a thousand seats" has no answer in the
-     * record, only in a log line that is not kept. */
+     * record, only in a log line that is not kept.
+     *
+     * The record names the tooling and not a person, because the confirmation
+     * comes over the mesh from the operator's CLI and that call carries no
+     * operator identity to name. The name of whoever ran the CLI is in the
+     * shell's history and in the operator's own record, not here. */
     await pool.query(
       "INSERT INTO admin_actions (id, operator_id, action, target, detail) VALUES ($1, $2, $3, $4, $5)",
       [
