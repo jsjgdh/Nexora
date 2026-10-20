@@ -1200,6 +1200,75 @@ const takeHomeTitle = ALL_PHASES.find(([id]) => id === TAKE_HOME_ID)?.[1] ?? "";
     as a count of videos, and this is not that. */
 const courseNames = COURSES.map((course) => course.title).join(", ");
 
+/**
+ * What the cohort surface does not do.
+ *
+ * The teaching page's honesty list, in one place, and the truth the suite
+ * checks it against. Each entry has an id, so the page's list and the
+ * platform can be compared without reading prose.
+ *
+ * The list is here rather than in the page because the page and the suite
+ * read the same one, and a page that kept its own copy of the gaps would
+ * drift from it exactly when the truth changed.
+ *
+ * The rule about the list is the rule the hiring page keeps: a thing that is
+ * not built is stated with the same weight as a thing that is, because a
+ * lecturer who finds out in week three that the thing they were sold does
+ * not exist stops trusting the part that does.
+ */
+export const TEACHING_GAPS = [
+  {
+    id: "lti",
+    text: "No LTI: a course cannot be launched from Canvas or Moodle yet.",
+    scope: "teaching",
+  },
+  {
+    id: "grade-passback",
+    text: "No grade passback: there is nothing to write back to, because there is no LTI.",
+    scope: "teaching",
+  },
+  {
+    id: "certificates",
+    text: "No certificates: a receipt is the record, and a certificate would be the same claim with a seal on it.",
+    scope: "teaching",
+  },
+  {
+    id: "credit",
+    text: "No credit and no accreditation: those are the institution's to grant and the regulator's to recognise, and this product does not issue them.",
+    scope: "teaching",
+  },
+  {
+    id: "attendance",
+    text: "No attendance: nothing here records whether a student was in the room.",
+    scope: "teaching",
+  },
+  {
+    id: "timetable",
+    text: "No timetable: a cohort is a course, a term and a teacher, and it is not a schedule.",
+    scope: "teaching",
+  },
+  {
+    id: "marks",
+    text: "No marks: the work is judged, and a judgement is not a mark.",
+    scope: "teaching",
+  },
+  {
+    id: "transcripts",
+    text: "No transcripts: there is no record of study to transcribe.",
+    scope: "teaching",
+  },
+  {
+    id: "outcome-data",
+    text: "No outcome data: no cohort has been taught, so there is no pass rate, no completion figure and no institution to name.",
+    scope: "teaching",
+  },
+  {
+    id: "under-16",
+    text: "This is a higher education and adult offer. A school for under-16s is not what this is, and we would rather say so than hold a school's students' data badly.",
+    scope: "teaching",
+  },
+] as const;
+
 export const UNIVERSITY = {
   /** The label the folio carries. One label per intent, everywhere. */
   navLabel: "For teaching",
@@ -1262,37 +1331,13 @@ export const UNIVERSITY = {
    * disclaimer at the bottom of a page: a lecturer who finds out in week three
    * that the thing they were sold does not exist stops trusting the part that
    * does.
+   *
+   * The list itself lives in `TEACHING_GAPS`, above, because the teaching page
+   * and the suite read the same one. A page that kept its own copy of the gaps
+   * would drift from the truth exactly when the truth moved, which is the one
+   * moment a drift costs something.
    */
-  notYet: [
-    {
-      text: "No LMS integration: nothing connects to Moodle, Canvas, Blackboard or Gradescope, and no grade is written back.",
-      scope: "teaching",
-    },
-    {
-      text: "No roster and no instructor dashboard: a lecturer cannot watch a cohort from one screen. The receipts are per student, and a student shares a receipt or syncs it to their own account.",
-      scope: "teaching",
-    },
-    {
-      text: "No gradebook export: a receipt records one phase's judged work. It is not a grade, and there is no spreadsheet of a class.",
-      scope: "teaching",
-    },
-    {
-      text: "No certificates and no transcript: a receipt is not a certificate, and nothing here is issued, framed and signed.",
-      scope: "teaching",
-    },
-    {
-      text: "No credit and no accreditation: a phase is not a credit, and a degree body cannot count one.",
-      scope: "teaching",
-    },
-    {
-      text: "No outcome data: no cohort has been taught, so there is no pass rate, no completion figure and no institution to name.",
-      scope: "teaching",
-    },
-    {
-      text: "This is a higher education and adult offer. A school for under-16s is not what this is, and we would rather say so than hold a school's students' data badly.",
-      scope: "teaching",
-    },
-  ],
+  notYet: TEACHING_GAPS,
   /**
    * The accessibility statement.
    *
@@ -1345,5 +1390,394 @@ export const TEACHING_ENQUIRY = {
   submit: "Send it",
   sent: "Your message is with us. A person reads this mailbox, and every enquiry is answered.",
   failed: `That did not go through. Try again, or write to ${TEACHING_CONTACT}.`,
+} as const;
+
+/* ===========================================================================
+ * ADDED BY THE COHORT-SURFACE WORKER, 2026-10-20.
+ *
+ * The cohort surface: the instructor's page, the way a student joins, and the
+ * line the account home says about the cohort a learner is in.
+ *
+ * The rules this block keeps are the ones the rest of the file keeps.
+ *
+ *   - A number comes from this module or from the platform. A page never
+ *     types one.
+ *   - The course a cohort is for is named from the course list above, so a
+ *     cohort cannot offer a course that does not ship, and the title beside a
+ *     cohort is the site's own title and never a name the platform made up.
+ *   - A cohort in `pending` grants nothing. The sentences here say that in
+ *     plain words, because a page that prints the word "pending" and leaves
+ *     it there reads like an administrative detail, and it is not one: it is
+ *     a licence that has not been confirmed, and the students who join get
+ *     the nine free phases and nothing more.
+ *   - No em dash and no en dash in a visible string.
+ * ======================================================================== */
+
+/**
+ * The courses a cohort can be for.
+ *
+ * Read out of the course list above rather than written out, so the select on
+ * the instructor's page cannot offer a course the platform does not ship, and
+ * so the title printed beside a cohort is this site's title.
+ */
+export const COHORT_COURSE_OPTIONS = COURSES.map((course) => ({
+  id: course.slug,
+  title: course.title,
+  sub: course.sub,
+}));
+
+/**
+ * The three states of a licence, in the words the pages say them in.
+ *
+ * The state is not a label with a colour beside it. Each one says what the
+ * state means for the students, because that is the part a lecturer has to be
+ * able to explain to a room, and because a pending licence that reads like a
+ * pending sign-up is a licence people describe as "sorted".
+ */
+export const COHORT_STATUS = {
+  pending: {
+    label: "pending",
+    title: "The studio has to confirm the licence.",
+    body: "The cohort exists and you can see it, but the licence has not been confirmed. While it waits, the students who join get the nine free phases and nothing more. They do not have the paid course.",
+  },
+  active: {
+    label: "active",
+    title: "The licence is confirmed and the seats are real.",
+    body: "The students in this cohort can open the paid phases of this course, and only this course, until the licence ends.",
+  },
+  ended: {
+    label: "ended",
+    title: "The licence has ended.",
+    body: "No new entitlement is granted. The receipts the members already have stay, because a receipt is a record of work and ending a licence does not unprove it.",
+  },
+} as const;
+
+/**
+ * The export.
+ *
+ * The column names are written out here, in one place, because the page has
+ * to describe the file in the words the file itself uses. These are the
+ * platform's own column names, in the platform's own order, and the suite
+ * reads them and compares them with the platform's header, so the two cannot
+ * drift apart in silence.
+ */
+const COHORT_EXPORT_COLUMNS = [
+  "email",
+  "name",
+  "joined_at",
+  "competency_id",
+  "level",
+  "kind",
+  "issued_at",
+  "receipt_sha256",
+] as const;
+
+const cohortExportColumnSentence = `${COHORT_EXPORT_COLUMNS.slice(0, -1).join(", ")} and ${COHORT_EXPORT_COLUMNS[COHORT_EXPORT_COLUMNS.length - 1]}`;
+
+export const COHORT_EXPORT = {
+  /** The header the file carries, in the order it carries it. */
+  columns: COHORT_EXPORT_COLUMNS,
+  header: COHORT_EXPORT_COLUMNS.join(","),
+  /** What the file is, in the words the file's own header uses. */
+  description: `The file has one row per piece of verified work, and its columns are ${cohortExportColumnSentence}. That is what the file is: a statement of the work the platform judged for this cohort.`,
+  /**
+   * What the file is not, in the file's own words.
+   *
+   * These are the sentences the platform writes into the file, so the page and
+   * the document a lecturer hands to somebody else say the same thing.
+   */
+  whatItIsNot:
+    "It is not a grade. It is not a certificate. It is not a transcript. It carries no credit and it is not accredited.",
+  label: "the file",
+  button: "Download the cohort statement",
+  downloading: "Building the file",
+  done: "The file downloaded.",
+  failed: "The file could not be fetched, so nothing was downloaded.",
+} as const;
+
+/**
+ * The instructor's page.
+ *
+ * A front door for a lecturer, not a classroom. It shows the cohorts, the
+ * code to put on a slide, the roster with what the platform has verified,
+ * the file, and the way to end the licence. It does not teach, and it does
+ * not pretend the platform is there when it is not.
+ */
+export const COHORT_TEACH = {
+  title: "Your cohorts.",
+  lede: "This is the instructor's side. It holds the cohorts you teach, the code your students type, the work the platform has verified for them, and the file you can take away.",
+  signedOut: {
+    title: "Sign in to see your cohorts.",
+    body: "A cohort belongs to the account that created it, so this page asks the server who you are before it shows anything. Sign in and come back.",
+  },
+  platformDown:
+    "The platform did not answer, so nothing here is known. Your work in the IDE is untouched, and nothing was changed.",
+  cohorts: {
+    label: "your cohorts",
+    title: "The cohorts you teach.",
+    loading: "Reading your cohorts.",
+    empty: "You do not teach a cohort yet. Create one below and the join code appears at once.",
+    name: "name",
+    institution: "institution",
+    course: "course",
+    term: "term",
+    status: "status",
+    code: "join code",
+    codeHint:
+      "Put this on a slide. A student types it once, and the page tells them what joining gives them.",
+    members: "members",
+    seats: "seats",
+    open: "Open the roster",
+    close: "Close the roster",
+    share: "the link to give your students",
+  },
+  create: {
+    label: "a new cohort",
+    title: "Create a cohort.",
+    lede: "A cohort is one course, one term, one instructor and one licence. It is created in the pending state, and the studio confirms the licence.",
+    name: "the name of the cohort",
+    namePlaceholder: "CS 202: distributed systems",
+    institution: "the institution",
+    institutionPlaceholder: "Delft University",
+    course: "the course",
+    term: "the term",
+    termPlaceholder: "2026 autumn",
+    seats: "the number of seats",
+    seatsHint: `A term licence is ${money(CAMPUS.perStudent)} a student, for ${CAMPUS.minStudents} students or more. The seats you put here are the seats the licence covers.`,
+    submit: "Create the cohort",
+    submitting: "Creating the cohort",
+    created:
+      "The cohort is created, and it is pending. The studio has to confirm the licence before it carries anything, and until it does, the students who join get the nine free phases and nothing more.",
+    failed:
+      "The cohort was not created, and what you typed is still here. The platform did not answer.",
+  },
+  roster: {
+    label: "the roster",
+    title: "Who is in this cohort.",
+    loading: "Reading the roster.",
+    failed: "The roster could not be read, so it is not shown.",
+    empty: "Nobody has joined with this code yet.",
+    emptyWhy:
+      "A student joins by typing the join code, so the roster fills when the first one does.",
+    member: "member",
+    joined: "joined",
+    proofs: "what the platform has verified",
+    noProofs:
+      "Nothing is verified for this member yet. The work is judged in the IDE, and it syncs when the learner syncs it.",
+    proofLevel: "level",
+    proofKind: "kind",
+    proofIssued: "issued",
+  },
+  end: {
+    label: "the licence",
+    title: "End the licence.",
+    body: "Ending the licence stops the entitlement. No new student is given a seat, and the students who are in the cohort keep the receipts they already have.",
+    button: "End this licence",
+    confirm: "Click again to end the licence",
+    working: "Ending the licence",
+    done: "The licence has ended. No new entitlement is granted, and the receipts the members already have stay.",
+    failed: "The licence was not ended, and it is still as it was.",
+  },
+} as const;
+
+/**
+ * How a student joins.
+ *
+ * The code is on a slide and it is typed once, so the page says one thing
+ * before the code is entered: what joining gives, and what it does not.
+ */
+export const COHORT_JOIN = {
+  title: "Join a cohort.",
+  lede: "Your instructor puts a code on the slide. You type it once, and you are in.",
+  gives: "Joining gives you the paid course of that cohort, and nothing else. It does not open the other courses, and it does not open the paid phases of a course that is not this one.",
+  free: "The nine free phases are free either way, with no code and no account, and every check is free.",
+  pending: "If the licence is still waiting for the studio, joining gets you the nine free phases and nothing more, and this page says so.",
+  field: "the join code from the slide",
+  placeholder: "KQ7M-XR42",
+  action: "Join with this code",
+  working: "Joining",
+  joined: "You are in.",
+  joinedAlready: "You were already in this cohort, so nothing changed.",
+  inCourse: "the course",
+  atInstitution: "the institution",
+  theTerm: "the term",
+  notConfigured:
+    "Accounts are not connected in this build, so no code can be joined. The nine free phases in the IDE need no account.",
+  signedOut:
+    "Joining puts the cohort on your account, so sign in first and the code will still be here.",
+  errors: {
+    unknown: "That code is not a code we know. Read the letters on the slide again and type it once more.",
+    expired: "That code has expired. Ask your instructor for a new one.",
+    ended:
+      "That cohort's licence has ended, so the code no longer works. Ask your instructor for a new cohort.",
+    full: "That cohort has no seats left. Ask your instructor for a seat.",
+    refused:
+      "That code was not accepted. Read the letters on the slide again, or ask your instructor for a new one.",
+    platform:
+      "The platform did not answer, so nothing was joined. Your work in the IDE is untouched, and you can try again.",
+  },
+} as const;
+
+/**
+ * The cohort, on the account home.
+ *
+ * The account home says nothing about a cohort when there is none. When there
+ * is one, it names the course, the institution and the term, and it says what
+ * the cohort gives, which depends on the state of the licence.
+ */
+export const COHORT_ACCOUNT = {
+  label: "your cohort",
+  title: "The cohort you are in.",
+  course: "the course",
+  institution: "the institution",
+  term: "the term",
+  active:
+    "This gives you the paid course of that cohort, and nothing else. It does not open the other courses.",
+  pending:
+    "The licence of this cohort is still waiting for the studio to confirm it, so it gives you the nine free phases and nothing more for now.",
+  ended:
+    "The licence of this cohort has ended, so it gives you nothing further. The receipts you already have stay.",
+  unknown: "The platform did not answer, so what this account holds is not known here.",
+  reading: "Reading what this account holds.",
+  joinLink: "Join a cohort with a code",
+} as const;
+
+/**
+ * What the cohort surface does, in the words the teaching page uses.
+ *
+ * Three things, and each one names the artefact behind it, the way every
+ * other claim on that page does.
+ */
+export const COHORT_SURFACE = {
+  title: "What a cohort gives you.",
+  label: "a cohort gives you",
+  lede: "Three things the cohort surface does, and where each one is kept.",
+  built: [
+    {
+      id: "roster",
+      claim: "A roster.",
+      evidence:
+        "You can see who is in the cohort, when they joined, and what the platform has verified for each of them.",
+    },
+    {
+      id: "instructor-view",
+      claim: "An instructor's view.",
+      evidence:
+        "Your cohorts, the licence, the join code and the seat count are on one page, and the code is the thing you put on a slide.",
+    },
+    {
+      id: "export",
+      claim: "An export.",
+      evidence:
+        "A CSV of what the platform judged for each member of the cohort, and the file says what it is and what it is not.",
+    },
+  ],
+  link: { href: "/teach", label: "Open the instructor's page" },
+} as const;
+
+/**
+ * The truth table the suite checks the teaching page against.
+ *
+ * `built` is what the cohort surface does. Each entry names the route behind
+ * it, the words the platform's own source has to carry, and the call the
+ * front door makes, so the suite can check the two sides against each other
+ * without a hand-written list of its own. `gaps` is what it does not do, and
+ * each one has no route and no claim anywhere on the site.
+ *
+ * The two sets are disjoint by construction, and the suite fails when a page
+ * keeps calling a gap a gap after it has been built, or when a feature has
+ * quietly gone while the page still says it is there. That is the whole point
+ * of writing the list down: the truth of the day changes, and the page has to
+ * change with it rather than beside it.
+ */
+export const COHORT_TRUTH = {
+  built: [
+    {
+      id: "roster",
+      route: "/api/auth/cohorts/:id",
+      platform: "/cohorts/:id",
+      what: "the roster of a cohort, with the members and what the platform has verified for them",
+      call: "/api/auth/cohorts/${encodeURIComponent(id)}",
+    },
+    {
+      id: "instructor-view",
+      route: "/api/auth/cohorts",
+      platform: "/cohorts",
+      what: "the cohorts the caller teaches",
+      call: '"/api/auth/cohorts"',
+    },
+    {
+      id: "membership",
+      route: "/api/auth/cohorts/mine",
+      platform: "/cohorts/mine",
+      what: "the cohorts the caller is in",
+      call: '"/api/auth/cohorts/mine"',
+    },
+    {
+      id: "export",
+      route: "/api/auth/cohorts/:id/export",
+      platform: "/cohorts/:id/export",
+      what: "the file of what the platform judged",
+      call: "/api/auth/cohorts/${encodeURIComponent(id)}/export",
+    },
+    {
+      id: "create",
+      route: "/api/auth/cohorts",
+      platform: "/cohorts",
+      what: "creating a cohort",
+      call: '"/api/auth/cohorts"',
+    },
+    {
+      id: "join",
+      route: "/api/auth/cohorts/join",
+      platform: "/cohorts/join",
+      what: "joining with a join code",
+      call: '"/api/auth/cohorts/join"',
+    },
+    {
+      id: "end",
+      route: "/api/auth/cohorts/:id/end",
+      platform: "/cohorts/:id/end",
+      what: "ending a licence",
+      call: "/api/auth/cohorts/${encodeURIComponent(id)}/end",
+    },
+  ],
+  /** The ids of the things the cohort surface does not do. */
+  gaps: [
+    "lti",
+    "grade-passback",
+    "certificates",
+    "credit",
+    "attendance",
+    "timetable",
+    "marks",
+    "transcripts",
+    "outcome-data",
+  ],
+  /**
+   * The ids on the teaching page's list that are a scope note rather than a
+   * gap. The offer is for higher education and adults, and that is a fact
+   * about the product rather than a thing that is missing, so it is on the
+   * page and it is not in the gap list.
+   */
+  notes: ["under-16"],
+  /**
+   * The route path fragments a gap would have if it were built.
+   *
+   * The suite looks for them in the platform's own route table, so a gap that
+   * has quietly been built fails here rather than staying on the page. They
+   * are path fragments and not words, because the platform's own file says in
+   * words that it is not a certificate, and that is the file doing its job.
+   */
+  gapRoutes: [
+    "lti",
+    "passback",
+    "certificate",
+    "attendance",
+    "timetable",
+    "transcript",
+    "grade",
+    "outcome",
+  ],
 } as const;
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>http://localhost:5173/</loc></url>
+  <url><loc>http://localhost:5173/pricing</loc></url>
+  <url><loc>http://localhost:5173/employers</loc></url>
+  <url><loc>http://localhost:5173/universities</loc></url>
+  <url><loc>http://localhost:5173/auth</loc></url>
+  <url><loc>http://localhost:5173/auth/ide</loc></url>
+  <url><loc>http://localhost:5173/verify</loc></url>
+  <url><loc>http://localhost:5173/download</loc></url>
+  <url><loc>http://localhost:5173/privacy</loc></url>
+  <url><loc>http://localhost:5173/privacy-choices</loc></url>
+  <url><loc>http://localhost:5173/ai</loc></url>
+  <url><loc>http://localhost:5173/terms</loc></url>
+  <url><loc>http://localhost:5173/cookies</loc></url>
+  <url><loc>http://localhost:5173/subprocessors</loc></url>
+  <url><loc>http://localhost:5173/dpa</loc></url>
+  <url><loc>http://localhost:5173/security</loc></url>
+  <url><loc>http://localhost:5173/accessibility</loc></url>
+</urlset>

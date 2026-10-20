@@ -135,8 +135,37 @@ and is deliberately absent from `BILLING_PLANS_JSON`.
 
   What is still missing is anything that would *page* someone. The
   command has to be wired to a monitor, and there is no alerting system
-  in this stack yet (5.2) — `docker logs` and this command are the whole
-  of production visibility.
+  in this stack yet (5.2) — `docker logs` and these commands are the
+  whole of production visibility.
+
+  The second command walks what a learner walks. `npm run synthetic`
+  (`scripts/synthetic.mjs`) signs in with a canary account, reads its
+  identity back, fetches the curriculum manifest, fetches one phase
+  body and runs one program, under the same three exit statuses — `0`
+  the journey answered, `1` the platform said something is wrong, `2`
+  the check could not ask. Credentials come from `SYNTHETIC_EMAIL` and
+  `SYNTHETIC_PASSWORD`; the account is created once with
+  `node scripts/synthetic.mjs --provision` and needs no subscription:
+  the paywall's own 402 counts as the entitlement layers answering,
+  and an entitled account gets a 200 and exercises the content path
+  too. Run it on the hour, never on the minute — each run spends one
+  of the account's `EXECUTION_DAILY_QUOTA` executions (200 a day by
+  default, so hourly costs 24 of them), and a per-minute cadence would
+  trip the quota by morning and page for a problem the check caused
+  itself:
+
+      0 * * * * SYNTHETIC_EMAIL=canary@example.com SYNTHETIC_PASSWORD=... \
+                node /srv/nexora/platform/scripts/synthetic.mjs --quiet
+
+  When a reply fails, the `x-request-id` on it is enough to find the
+  whole request: the gateway mints that id, returns it, forwards it
+  downstream, and each service keeps the id it was given instead of
+  minting its own — so one incident is `docker logs <service> |
+  grep <id>` per service, rather than an id per process to correlate
+  by hand. A value that would not be safe as a log line (wrong shape,
+  wrong length) is dropped for a fresh UUID rather than written out;
+  the client-chosen-header spoof path is stripped at the gateway, as
+  it always was.
 - Rate limiting and quotas are in-memory and single-instance (5.4) — true
   on one host by construction, and the reason the one-host decision and
   the Redis move are linked: leaving one host means moving limits to

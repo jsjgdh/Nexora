@@ -294,6 +294,7 @@
           <dl class="grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
             {#each [
               { label: ADMIN.overview.accounts, value: overview.counts.accounts },
+              { label: ADMIN.overview.verifiedAddresses, value: overview.counts.verifiedAddresses },
               { label: ADMIN.overview.activeSessions, value: overview.counts.activeSessions },
               { label: ADMIN.overview.proofs, value: overview.counts.proofs },
               { label: ADMIN.overview.operators, value: overview.counts.operators },
@@ -342,6 +343,12 @@
                     value: overview.configuration.cohortsAvailable
                       ? ADMIN.configuration.cohortsOn
                       : ADMIN.configuration.cohortsOff,
+                  },
+                  {
+                    label: ADMIN.configuration.ledgerAvailable,
+                    value: overview.configuration.proofsAvailable
+                      ? ADMIN.configuration.ledgerOn
+                      : ADMIN.configuration.ledgerOff,
                   },
                 ] as row (row.label)}
                   <div class="flex items-baseline gap-4 border-t border-rule pt-3 first:border-t-0 first:pt-0">
@@ -495,7 +502,9 @@
             <div class="mt-10">
               <p class="stamp text-faint">{ADMIN.accounts.detail.proofs}</p>
               {#if detail.proofs.length === 0}
-                <p class="mt-3 text-[13.5px] text-muted">{ADMIN.accounts.detail.noProofs}</p>
+                <p class="mt-3 text-[13.5px] text-muted">
+                  {detail.proofsAvailable ? ADMIN.accounts.detail.noProofs : ADMIN.accounts.detail.noProofsHere}
+                </p>
               {:else}
                 <ul class="mt-3 border-t border-rule">
                   {#each detail.proofs as proof (proof.competencyId + proof.issuedAt)}

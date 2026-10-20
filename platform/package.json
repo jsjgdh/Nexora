@@ -5,21 +5,26 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "services/*"
+    "services/*",
+    "infra/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@nexora/contracts && npm run build --workspace=@nexora/service-kit && npm run build --workspace=@nexora/gateway && npm run build --workspace=@nexora/auth && npm run build --workspace=@nexora/curriculum && npm run build --workspace=@nexora/execution && npm run build --workspace=@nexora/billing",
+    "build": "npm run build --workspace=@nexora/contracts && npm run build --workspace=@nexora/service-kit && npm run build --workspace=@nexora/gateway && npm run build --workspace=@nexora/auth && npm run build --workspace=@nexora/curriculum && npm run build --workspace=@nexora/execution && npm run build --workspace=@nexora/billing && npm run build --workspace=@nexora/gcp-plan",
     "dev:gateway": "npm run dev --workspace=@nexora/gateway",
     "dev:stack": "node scripts/dev-stack.mjs",
     "verify": "node --test scripts/verify.mjs",
     "verify:e2e": "node --test scripts/verify.e2e.mjs",
+    "verify:admin": "node --test scripts/verify-admin.mjs",
     "healthcheck": "node scripts/healthcheck.mjs",
+    "synthetic": "node scripts/synthetic.mjs",
     "sync:curriculum": "node scripts/sync-curriculum.mjs",
     "sync:design": "node scripts/sync-design.mjs",
     "sync:incidents": "node scripts/sync-incidents.mjs",
     "sync:fixtures": "node scripts/sync-fixtures.mjs",
     "sync": "npm run sync:curriculum && npm run sync:design && npm run sync:incidents && npm run sync:fixtures",
-    "sync:check": "node scripts/sync-curriculum.mjs --check && node scripts/sync-design.mjs --check && node scripts/sync-incidents.mjs --check && node scripts/sync-fixtures.mjs --check"
+    "sync:check": "node scripts/sync-curriculum.mjs --check && node scripts/sync-design.mjs --check && node scripts/sync-incidents.mjs --check && node scripts/sync-fixtures.mjs --check",
+    "cohort:activate": "node scripts/cohort-activate.mjs",
+    "operator": "node scripts/operator.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.10",

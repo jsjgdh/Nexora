@@ -364,6 +364,8 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   const routes = [
     "/pricing",
     "/universities",
+    "/teach",
+    "/teach/join",
     "/download",
     "/verify",
     "/auth",
@@ -428,6 +430,8 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     "/",
     "/pricing",
     "/universities",
+    "/teach",
+    "/teach/join",
     "/download",
     "/verify",
     "/auth",

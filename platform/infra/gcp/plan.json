@@ -1,0 +1,261 @@
+{
+  "$comment": [
+    "The NEXORA mesh on Google Cloud. This file is DATA, not a script: the plan is",
+    "read by `infra/gcp/plan.ts` (which validates it against the code that actually",
+    "exists) and applied by `infra/gcp/deploy.ts` (which shells out to gcloud).",
+    "",
+    "Why a plan and not a shell script: a shell script that shells out to gcloud can",
+    "only be checked by running it, against a real project, with real credentials.",
+    "A plan can be checked against the source tree — that every service named here",
+    "exists, that every peer URL points at a service in this file, that every secret",
+    "a service refuses to boot without is mapped, that no secret value is written",
+    "down here. Those checks are the ones that catch drift, and drift is what breaks",
+    "a deployment at 2am.",
+    "",
+    "The topology, and why each piece is what it is:",
+    "",
+    "  - Five Cloud Run services, one per service in the mesh. Independent deploys,",
+    "    independent scaling, independent restarts. The code needs no change: every",
+    "    service already reads its peers' URLs from the environment, and the gateway",
+    "    already reads the same names.",
+    "  - The gateway is the only one with a public ingress. The other four are",
+    "    `internal`, which on Cloud Run means reachable only by other Cloud Run",
+    "    services and the load balancer — not by the internet.",
+    "  - The peer URLs are resolved in a second pass. A Cloud Run URL carries a hash",
+    "    (`nexora-auth-abc123.run.app`) that is not known before the service exists,",
+    "    so the deploy deploys the independents first, reads each URL back from the",
+    "    API, and then deploys the dependents with those URLs filled in. The plan",
+    "    says `{{auth}}` where the URL goes; the deploy fills it.",
+    "  - Postgres is Cloud SQL, one instance, two databases (`authdb`, `billingdb`)",
+    "    — one per service that owns data, so neither can read the other's tables",
+    "    without asking.",
+    "  - Secrets are Secret Manager. The plan names the Secret Manager entry and the",
+    "    environment variable it lands in; the value is never in this file and never",
+    "    in the image.",
+    "  - The run receipts are signed by a key that lives in ONE service's",
+    "    environment and nowhere else. The plan keeps that true:",
+    "    `RECEIPT_ED25519_KEY` is mapped for `auth` and `execution` only, because",
+    "    both mint receipts — and for nothing else."
+  ],
+
+  "project": "nexora-prod",
+  "region": "us-central1",
+  "artifactRegistry": "nexora",
+
+  "database": {
+    "instance": "nexora-postgres",
+    "engineVersion": "POSTGRES_17",
+    "tier": "db-custom-2-4096",
+    "availability": "ZONAL",
+    "databases": ["authdb", "billingdb"]
+  },
+
+  "services": [
+    {
+      "name": "nexora-curriculum",
+      "service": "curriculum",
+      "ingress": "internal",
+      "public": false,
+      "order": 10,
+      "minInstances": 1,
+      "maxInstances": 4,
+      "cpu": "1",
+      "memory": "512Mi",
+      "timeoutSeconds": 60,
+      "dependsOn": [],
+      "env": {
+        "PORT": "8080",
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info"
+      },
+      "secrets": [
+        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" }
+      ]
+    },
+    {
+      "name": "nexora-billing",
+      "service": "billing",
+      "ingress": "internal",
+      "public": false,
+      "order": 20,
+      "minInstances": 1,
+      "maxInstances": 4,
+      "cpu": "1",
+      "memory": "512Mi",
+      "timeoutSeconds": 60,
+      "dependsOn": [],
+      "env": {
+        "PORT": "8080",
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info",
+        "DATABASE_URL": "postgres://nexora:{{db_password}}@{{db_host}}:5432/billingdb",
+        "DODO_PAYMENTS_BASE": "https://test.dodopayments.com",
+        "DODO_BUSINESS_ID": "",
+        "BILLING_PLANS_JSON": "",
+        "OPERATOR_LEGAL_NAME": "NEXORA"
+      },
+      "secrets": [
+        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" },
+        { "env": "DODO_PAYMENTS_API_KEY", "secret": "nexora-dodo-api-key" },
+        { "env": "DODO_PAYMENTS_WEBHOOK_SECRET", "secret": "nexora-dodo-webhook-secret" }
+      ]
+    },
+    {
+      "name": "nexora-auth",
+      "service": "auth",
+      "ingress": "internal",
+      "public": false,
+      "order": 30,
+      "minInstances": 1,
+      "maxInstances": 6,
+      "cpu": "1",
+      "memory": "512Mi",
+      "timeoutSeconds": 60,
+      "dependsOn": ["nexora-billing"],
+      "env": {
+        "PORT": "8080",
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info",
+        "DATABASE_URL": "postgres://nexora:{{db_password}}@{{db_host}}:5432/authdb",
+        "BILLING_URL": "https://{{billing}}",
+        "PUBLIC_SITE_URL": "https://nexora.dev",
+        "AUTH_MODE": "local",
+        "RESEND_FROM": "NEXORA <hello@nexora.dev>",
+        "ACCESS_TOKEN_TTL_SECONDS": "300",
+        "BCRYPT_ROUNDS": "12",
+        "REVOCATION_PRUNE_INTERVAL_MS": "3600000",
+        "OPERATOR_LEGAL_NAME": "NEXORA",
+        "NEXORA_REQUIRE_CONSENT": "1"
+      },
+      "secrets": [
+        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" },
+        { "env": "AUTH_JWT_SECRET", "secret": "nexora-auth-jwt-secret" },
+        { "env": "RESEND_API_KEY", "secret": "nexora-resend-api-key" },
+        { "env": "RECEIPT_ED25519_PUBLIC_KEY", "secret": "nexora-receipt-ed25519-public-key" }
+      ]
+    },
+    {
+      "name": "nexora-execution",
+      "service": "execution",
+      "ingress": "internal",
+      "public": false,
+      "order": 40,
+      "minInstances": 1,
+      "maxInstances": 4,
+      "cpu": "1",
+      "memory": "512Mi",
+      "timeoutSeconds": 60,
+      "dependsOn": [],
+      "env": {
+        "PORT": "8080",
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info",
+        "EXECUTION_RUNNER": "docker",
+        "EXECUTION_CONCURRENCY": "2",
+        "EXECUTION_DAILY_QUOTA": "200",
+        "EXECUTION_DEFAULT_TIMEOUT_MS": "8000",
+        "RECEIPT_KEY_ID": "ed1"
+      },
+      "secrets": [
+        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" },
+        { "env": "RECEIPT_ED25519_KEY", "secret": "nexora-receipt-ed25519-key" }
+      ],
+      "optionalEnv": {
+        "EXECUTION_ALLOW_SUBPROCESS": "Only consulted when EXECUTION_RUNNER is `subprocess`. This deployment uses the `docker` tier, and leaving this unset is exactly what keeps the subprocess tier refused at boot in production — a submitted program must not be able to read this service's own environment.",
+        "EXECUTION_GO_CACHE": "A path to a persistent Go build cache. Cloud Run's filesystem is ephemeral, so a shared cache would not survive a cold start; the runner image already carries a prewarmed standard-library cache, which is the part that costs every learner the most.",
+        "NEXORA_TAKEHOME_PROJECT": "Only read by the take-home path, where the acceptance suite is handed the learner's project root through the environment. The attested path judges against the platform's own canonical suites and never reads it."
+      }
+    },
+    {
+      "name": "nexora-gateway",
+      "service": "gateway",
+      "ingress": "internal-and-cloud-load-balancing",
+      "public": true,
+      "order": 50,
+      "minInstances": 1,
+      "maxInstances": 6,
+      "cpu": "1",
+      "memory": "512Mi",
+      "timeoutSeconds": 60,
+      "dependsOn": ["nexora-auth", "nexora-curriculum", "nexora-execution", "nexora-billing"],
+      "env": {
+        "PORT": "8080",
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info",
+        "AUTH_URL": "https://{{auth}}",
+        "CURRICULUM_URL": "https://{{curriculum}}",
+        "EXECUTION_URL": "https://{{execution}}",
+        "BILLING_URL": "https://{{billing}}",
+        "FRONTEND_URL": "https://nexora.dev",
+        "TRUST_PROXY": "1",
+        "AUTH_MODE": "local",
+        "GATEWAY_GLOBAL_LIMIT": "600",
+        "REVOCATION_TIMEOUT_MS": "2000",
+        "REVOCATION_CLEAR_TTL_MS": "60000",
+        "REVOCATION_REPORT_MS": "60000",
+        "ENTITLEMENT_CACHE_TTL_MS": "60000"
+      },
+      "secrets": [
+        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" },
+        { "env": "AUTH_JWT_SECRET", "secret": "nexora-auth-jwt-secret" }
+      ],
+      "optionalEnv": {
+        "CLERK_SECRET_KEY": "Only read in clerk mode. This deployment runs AUTH_MODE=local, where the auth service signs its own tokens; switching to Clerk means setting this and re-running the plan check.",
+        "CLERK_JWT_KEY": "Only read in clerk mode, and only as the alternative to CLERK_SECRET_KEY. Local mode never fetches a JWKS, so there is no address to reach.",
+        "CLERK_API_URL": "Only read in clerk mode, and only to point at a self-hosted or sovereign Clerk instead of Clerk's hosted default. Local mode has no Clerk to point at.",
+        "CLERK_AUTHORIZED_PARTIES": "Only read in clerk mode. In local mode the allowed origin comes from FRONTEND_URL, which this plan sets."
+      }
+    }
+  ],
+
+  "loadBalancer": {
+    "name": "nexora-api",
+    "domain": "api.nexora.dev",
+    "certificate": "nexora-api-cert",
+    "service": "nexora-gateway"
+  },
+
+  "secrets": [
+    {
+      "name": "nexora-internal-api-key",
+      "purpose": "Authenticates every service-to-service call. Derived from it is the key that signs run receipts, so a leaked one would let a caller mint receipts.",
+      "generate": "random-32-bytes-hex"
+    },
+    {
+      "name": "nexora-auth-jwt-secret",
+      "purpose": "Signs the access tokens the gateway verifies without asking anyone.",
+      "generate": "random-32-bytes-hex"
+    },
+    {
+      "name": "nexora-receipt-ed25519-key",
+      "purpose": "The operator-held Ed25519 receipt key. Its public half is published at GET /api/execute/verify-key so a stranger can re-derive a verdict offline.",
+      "generate": "ed25519-pkcs8-pem"
+    },
+    {
+      "name": "nexora-receipt-ed25519-public-key",
+      "purpose": "The PUBLIC half of the receipt key, for the auth service, which verifies receipts when they are synced and never mints one. The value is not secret — it is published at GET /api/execute/verify-key — but it is kept in Secret Manager so the two halves are versioned from one place, and so a rotation is one write rather than two.",
+      "generate": "external"
+    },
+    {
+      "name": "nexora-resend-api-key",
+      "purpose": "Transactional mail: password reset and email verification. Without it the requests still succeed and no mail is sent.",
+      "generate": "external"
+    },
+    {
+      "name": "nexora-dodo-api-key",
+      "purpose": "Dodo Payments API key. Without it checkout 503s and plan reads still work.",
+      "generate": "external"
+    },
+    {
+      "name": "nexora-dodo-webhook-secret",
+      "purpose": "Dodo's Standard-Webhooks signing secret, for verifying that a webhook really came from Dodo.",
+      "generate": "external"
+    },
+    {
+      "name": "nexora-db-password",
+      "purpose": "The Cloud SQL password for the `nexora` role. Written into the DATABASE_URL of the two services that own data.",
+      "generate": "random-32-bytes-hex",
+      "placeholder": "db_password"
+    }
+  ]
+}

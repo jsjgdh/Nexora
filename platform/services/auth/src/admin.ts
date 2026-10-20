@@ -70,15 +70,17 @@ async function record(
 }
 
 /**
- * Whether the cohort tables exist yet.
+ * Whether a table exists in this service's database.
  *
- * The cohort work is a separate piece of the platform, and the console
- * reads the cohorts when they are there. A missing table is not an error
- * here: it means the build in front of the operator does not have cohorts,
- * and the panel says so rather than failing.
+ * The console reads what the identity service holds. Two of the tables it
+ * reads can live elsewhere in a given build: the cohorts are a separate
+ * piece of work, and the verified ledger may be moved to a service of its
+ * own. A table that is not here is not an error: it means this build keeps
+ * that record somewhere else, and the console says which, rather than
+ * answering with a number it does not have.
  */
-async function hasCohorts(pool: Pool): Promise<boolean> {
-  const { rows } = await pool.query("SELECT to_regclass('public.cohorts') IS NOT NULL AS present");
+async function hasTable(pool: Pool, name: string): Promise<boolean> {
+  const { rows } = await pool.query("SELECT to_regclass($1) IS NOT NULL AS present", [`public.${name}`]);
   return rows[0]?.present === true;
 }
 
@@ -127,12 +129,12 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
      never needs to see the key. */
   app.get("/admin/overview", async (req) => {
     const operatorId = await requireOperator(pool, req);
-    const [counts, operator, actions, cohorts] = await Promise.all([
+    const [counts, operator, actions, cohorts, proofsHere] = await Promise.all([
       pool.query(
         "SELECT " +
           "(SELECT count(*) FROM users) AS accounts, " +
+          "(SELECT count(*) FROM users WHERE email_verified_at IS NOT NULL) AS verified, " +
           "(SELECT count(*) FROM refresh_tokens WHERE revoked_at IS NULL AND expires_at > now()) AS sessions, " +
-          "(SELECT count(*) FROM proofs) AS proofs, " +
           "(SELECT count(*) FROM operators) AS operators, " +
           "(SELECT count(*) FROM rights_requests WHERE resolved_at IS NULL) AS open_requests, " +
           "(SELECT count(*) FROM erasures WHERE completed_at IS NULL) AS pending_erasures, " +
@@ -142,9 +144,11 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
       pool.query(
         "SELECT id, action, target, detail, created_at FROM admin_actions ORDER BY created_at DESC LIMIT 10"
       ),
-      hasCohorts(pool),
+      hasTable(pool, "cohorts"),
+      hasTable(pool, "proofs"),
     ]);
     const row = counts.rows[0] ?? {};
+    const proofs = proofsHere ? await pool.query("SELECT count(*) FROM proofs") : { rows: [{ count: 0 }] };
     return {
       operator: {
         id: operatorId,
@@ -153,8 +157,9 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
       },
       counts: {
         accounts: Number(row.accounts ?? 0),
+        verifiedAddresses: Number(row.verified ?? 0),
         activeSessions: Number(row.sessions ?? 0),
-        proofs: Number(row.proofs ?? 0),
+        proofs: Number(proofs.rows[0]?.count ?? 0),
         operators: Number(row.operators ?? 0),
         openRightsRequests: Number(row.open_requests ?? 0),
         pendingErasures: Number(row.pending_erasures ?? 0),
@@ -165,6 +170,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         mailConfigured: Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM),
         meshKeyPresent: Boolean(process.env.INTERNAL_API_KEY),
         cohortsAvailable: cohorts,
+        proofsAvailable: proofsHere,
       },
       recentActions: actions.rows.map((r: Record<string, unknown>) => ({
         id: r.id,
@@ -219,6 +225,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
   app.get("/admin/accounts/:id", async (req) => {
     await requireOperator(pool, req);
     const id = (req.params as { id: string }).id;
+    const proofsHere = await hasTable(pool, "proofs");
     const [account, sessions, proofs, consents, requests, cohorts] = await Promise.all([
       pool.query(
         "SELECT id, email, name, created_at, provider, email_verified_at FROM users WHERE id = $1",
@@ -228,10 +235,12 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         "SELECT id, created_at, expires_at, revoked_at FROM refresh_tokens WHERE user_id = $1 ORDER BY created_at DESC",
         [id]
       ),
-      pool.query(
-        "SELECT competency_id, level, CASE WHEN receipt->'facts'->>'kind' = 'design' THEN 'design' ELSE 'run' END AS kind, issued_at FROM proofs WHERE user_id = $1 ORDER BY issued_at DESC",
-        [id]
-      ),
+      proofsHere
+        ? pool.query(
+            "SELECT competency_id, level, CASE WHEN receipt->'facts'->>'kind' = 'design' THEN 'design' ELSE 'run' END AS kind, issued_at FROM proofs WHERE user_id = $1 ORDER BY issued_at DESC",
+            [id]
+          )
+        : Promise.resolve({ rows: [] as Record<string, unknown>[] }),
       pool.query(
         "SELECT document, version, purpose, basis, accepted_at, withdrawn_at FROM consents WHERE user_id = $1 ORDER BY accepted_at",
         [id]
@@ -240,7 +249,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         "SELECT id, kind, status, detail, created_at, due_at, resolved_at, resolution FROM rights_requests WHERE user_id = $1 ORDER BY created_at DESC",
         [id]
       ),
-      hasCohorts(pool).then((present): Promise<{ rows: Record<string, unknown>[] }> =>
+      hasTable(pool, "cohorts").then((present): Promise<{ rows: Record<string, unknown>[] }> =>
         present
           ? pool.query(
               "SELECT c.id, c.name, c.course_id, c.term, c.status FROM cohorts c JOIN cohort_members m ON m.cohort_id = c.id WHERE m.user_id = $1",
@@ -297,6 +306,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         term: r.term,
         status: r.status,
       })),
+      proofsAvailable: proofsHere,
     };
   });
 

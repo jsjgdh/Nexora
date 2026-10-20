@@ -27,7 +27,10 @@ const HOP_BY_HOP = new Set([
  * optional-auth route calls `requireUserId`. `x-entitled` is the same kind of
  * trust: the gateway sets it only after billing confirms a subscription, and a
  * paid curriculum route serves on it, so a client that could send it could
- * unlock the paywall by typing a header. `x-internal-key` would forge mesh
+ * unlock the paywall by typing a header. `x-entitled-courses` is the same kind of
+ * trust with a second half: it says WHICH courses the verdict covers, so a
+ * client that could send it could widen a seat into a whole curriculum.
+ * `x-internal-key` would forge mesh
  * auth, and the `x-forwarded-*` family would let a caller lie about their IP to
  * services that also trust the proxy layer. Overwriting a header after the loop
  * only helps when the value we overwrite with is truthy — on an anonymous
@@ -39,6 +42,7 @@ const NEVER_FORWARDED = new Set([
   "host",
   "x-user-id",
   "x-entitled",
+  "x-entitled-courses",
   "x-internal-key",
   "x-request-id",
   // The client address is ours to resolve, never theirs to assert: a service
@@ -95,6 +99,14 @@ export function buildForwardHeaders(
     internalKey: string;
     requestId: string;
     entitled?: boolean;
+    /**
+     * The courses the verdict covers.
+     *
+     * `undefined` means there is no verdict to carry. `null` means every
+     * course, which is what a subscription is. A list means exactly those
+     * courses, which is what a seat in one class is.
+     */
+    entitledCourses?: string[] | null;
     clientIp?: string;
   }
 ): Record<string, string> {
@@ -111,6 +123,13 @@ export function buildForwardHeaders(
   if (opts.clientIp) out["x-client-ip"] = opts.clientIp;
   if (opts.userId) out["x-user-id"] = opts.userId;
   if (opts.entitled) out["x-entitled"] = "1";
+  // The courses ride with the verdict and never without it: a service that
+  // sees "entitled" and no course list is told nothing about which courses
+  // that covers, and refuses what it cannot place.
+  if (opts.entitled && opts.entitledCourses !== undefined) {
+    out["x-entitled-courses"] =
+      opts.entitledCourses === null ? "*" : opts.entitledCourses.join(",");
+  }
   if (opts.internalKey) out["x-internal-key"] = opts.internalKey;
   return out;
 }

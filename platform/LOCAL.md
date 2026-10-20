@@ -116,6 +116,30 @@ against it, and it refuses to issue a token when it is missing, because a
 link pointing at a host that is not this product is a token in somebody else's
 inbox. The local value is the origin the app is served from.
 
+## Cohorts, and the licence an operator confirms
+
+A cohort is a group of learners in one course, under one licence. The licence is
+the operator's: an instructor creates a cohort and it sits in `pending`, which
+entitles nobody. The operator confirms it, and the members of an active cohort
+hold a seat in that course, and in no other course.
+
+The confirmation is a command:
+
+```bash
+cd platform
+npm run cohort:activate -- KQ7M-XR42 --seats 20
+```
+
+It needs the mesh key, which it reads from the environment or from the
+gitignored `platform/.env.local` the local stack writes. The join code is the
+one the instructor puts on a slide; the dash is display-only. The same
+confirmation is available over the mesh for automation, at
+`POST /internal/cohorts/activate` on the auth service, and there is no way to
+reach it from the public surface.
+
+A seat appears at the edge within the entitlement cache's TTL (30 seconds by
+default), because the edge caches a verdict for that long and no longer.
+
 ## What the local run does not do
 
 - The execution service runs learner code as a child process on this host,

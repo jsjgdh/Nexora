@@ -1,0 +1,3 @@
+import{A as e,E as t,J as n,O as r,k as i}from"./BIY4tbHy.js";import"./xihTtKlq.js";import"./DlOAuT6D.js";import"./Bv0DsFJE.js";e(`<p class="num text-[11.5px] text-faint"> </p>`);var a=e(`<p class="mt-3 border-l border-rule pl-3 text-[12.5px] leading-relaxed text-muted"><span class="text-ink">Draft. Not yet in force.</span> The operator's legal name and a monitored
+    contact address are still placeholders, so this document is published early and labelled honestly
+    rather than dated as final. Nothing here is a claim that a live, reviewed policy exists.</p>`);function o(e){var o=i(),s=n(o),c=e=>{var t=a();r(e,t)};t(s,e=>{e(c,-1)}),r(e,o)}export{o as t};

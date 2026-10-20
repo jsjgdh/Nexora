@@ -60,12 +60,24 @@ export function absoluteUrl(origin: string, path: string): string {
     is. It is a signed-in tool, not a document: a crawler has no account, so every
     visit is a sign-in prompt. What it must never become is the *only* route to a
     right — the notice publishes the contact address for exactly that reason, and
-    California requires that a request be possible without an account. */
+    California requires that a request be possible without an account.
+
+    The two cohort routes are the exception, and they are here for the same
+    reason the rest of the list is: they are the front door to a surface that
+    exists and that a reader arrives at from a link, not from a guess. `/teach`
+    is where a lecturer creates a cohort and reads its roster, and `/teach/join`
+    is where a student types the code from a slide. Both read without an
+    account: they say what they are, what joining gives, and that a sign-in is
+    needed before anything is created or joined. A crawler that lands there
+    learns the truth of the surface rather than a sign-in form, and a lecturer
+    who lands there from a search finds the page the slide points at. */
 const PUBLIC_PATHS = [
   "/",
   "/pricing",
   "/employers",
   "/universities",
+  "/teach",
+  "/teach/join",
   "/auth",
   "/auth/ide",
   "/verify",
@@ -112,7 +124,15 @@ export function sitemapXml(origin: string): string {
 /** The robots file: crawl everything public, and name the sitemap. */
 export function robotsTxt(origin: string): string {
   const base = resolveOrigin(origin);
-  return ["User-agent: *", "Allow: /", `Sitemap: ${base}/sitemap.xml`, ""].join("\n");
+  return [
+    "User-agent: *",
+    "Allow: /",
+    // The operator's console is behind a session and it holds other people's
+    // accounts. There is nothing in it for a crawler, and the route says so.
+    "Disallow: /admin",
+    `Sitemap: ${base}/sitemap.xml`,
+    "",
+  ].join("\n");
 }
 
 /* ---------- Page metadata ---------- */

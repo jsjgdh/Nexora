@@ -1161,3 +1161,91 @@ export interface BillingEraseResponse {
   anonymised: boolean;
   retained: { category: string; reason: string; basis: LawfulBasis }[];
 }
+
+/* ---------- cohorts: the institutional surface ----------
+ *
+ * A cohort is a group of learners, in one course, in one term, taught by one
+ * instructor, under one licence. The licence is the operator's: a cohort a
+ * learner creates is `pending` and entitles nobody, and only the operator can
+ * make it `active`. These schemas are the bodies that say so, and the seat
+ * check the edge asks over the mesh.
+ *
+ * The course id is the one thing the auth service cannot check for itself: it
+ * does not know the curriculum. The list of shipped courses lives with the
+ * curriculum service, which owns the truth, and the verification suite holds
+ * the two to each other.
+ */
+
+/** The body of a cohort creation. The instructor is the caller, never a field. */
+export const cohortCreateSchema = z.object({
+  name: z.string().min(1).max(120),
+  institution: z.string().min(1).max(120),
+  courseId: z.string().min(1).max(64),
+  term: z.string().min(1).max(64),
+  /** Seats bought. The price is the platform's, not the caller's: there is no
+   *  amount on this body, because the platform does not take the money. */
+  seats: z.number().int().min(1).max(1000),
+});
+export type CohortCreateRequest = z.infer<typeof cohortCreateSchema>;
+
+/**
+ * The body of a join: the code, and nothing else.
+ *
+ * The code is a human-typed credential (eight unambiguous characters, the dash
+ * is display-only), so it is accepted with or without the dash and in any case.
+ * Who is joining is the caller's identity, never a field.
+ */
+export const cohortJoinSchema = z.object({
+  joinCode: z.string().min(1).max(32),
+});
+export type CohortJoinRequest = z.infer<typeof cohortJoinSchema>;
+
+/**
+ * The seat check, gateway to auth over the mesh.
+ *
+ * The subject is in the body because this route is reached only with the mesh
+ * key, by the edge, which has already resolved the identity from the
+ * learner's own token. It is never a public surface.
+ */
+export const seatCheckSchema = z.object({
+  userId: z.string().min(1).max(128),
+});
+export type SeatCheckRequest = z.infer<typeof seatCheckSchema>;
+
+export interface SeatCheckResponse {
+  /** True when the learner holds a seat in at least one active cohort. */
+  entitled: boolean;
+  /** The courses those seats cover. Empty means no seat. */
+  courses: string[];
+}
+
+/**
+ * The operator's confirmation of a licence, over the mesh.
+ *
+ * The code names the cohort and the seat count says how many seats were bought.
+ * Nothing here lets a caller grant a seat to itself: the route is the operator's
+ * and is unreachable without the mesh key.
+ */
+export const cohortActivateSchema = z.object({
+  joinCode: z.string().min(1).max(32),
+  /** Optional: the cohort's own seat count stands when the operator does not
+   *  say otherwise. An operator correcting a seat count says it. */
+  seats: z.number().int().min(1).max(1000).optional(),
+});
+export type CohortActivateRequest = z.infer<typeof cohortActivateSchema>;
+
+/** A cohort as the wire carries it. The join code is in it: it goes on a slide. */
+export interface Cohort {
+  id: string;
+  name: string;
+  institution: string;
+  courseId: string;
+  term: string;
+  /** 'pending' | 'active' | 'ended'. Only 'active' carries a seat. */
+  status: "pending" | "active" | "ended";
+  seats: number;
+  perStudentCents: number;
+  joinCode: string;
+  memberCount: number;
+  createdAt: string;
+}

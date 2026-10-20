@@ -25,7 +25,7 @@ import {
 import { assertDeclarationsAllowed, registerRightsRoutes, signupStatement } from "./rights.js";
 import { registerIdentityRoutes } from "./identity-flows.js";
 import { toPublic } from "./public-user.js";
-import { ApiError, clientIp, newId, parseOr400, requireUserId, receiptEdPublicKey, sha256, verifyReceiptEd, verifyReceiptSignature } from "@nexora/service-kit";
+import { ApiError, clientIp, newId, parseOr400, requireUserId, sha256, verifyReceiptEd, verifyReceiptSignature } from "@nexora/service-kit";
 import { randomBytes } from "node:crypto";
 import {
   accessTokenClaims,
@@ -621,8 +621,13 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
     let verified: "hmac" | "ed25519" | null = null;
     if (body.receipt.sigEd) {
       try {
-        const edKey = process.env.RECEIPT_ED25519_KEY;
-        if (edKey && verifyReceiptEd(payload, body.receipt.sigEd, receiptEdPublicKey(edKey))) verified = "ed25519";
+        /* The PUBLIC half only. This service STORES receipts; it never mints
+         * them, so it has no business holding the key that can. The private key
+         * lives in the execution service, which is the one that signs what it
+         * observed, and its public half is published at /api/execute/verify-key
+         * so a stranger can check a receipt without asking anybody. */
+        const publicKey = process.env.RECEIPT_ED25519_PUBLIC_KEY;
+        if (publicKey && verifyReceiptEd(payload, body.receipt.sigEd, publicKey)) verified = "ed25519";
       } catch {
         // No receipt key configured, or a key that cannot verify: the Ed25519
         // half is unavailable here, and the HMAC below still gets its chance.

@@ -1,0 +1,1 @@
+import{at as e,o as t,ot as n}from"../chunks/BIY4tbHy.js";import"../chunks/xihTtKlq.js";import{c as r}from"../chunks/BnSW1fax.js";import"../chunks/DlOAuT6D.js";import{t as i}from"../chunks/CQAjV6WE.js";function a(a,o){n(o,!1);let s=(r.params.token??``).trim();t(),i(a,{get token(){return s}}),e()}export{a as component};

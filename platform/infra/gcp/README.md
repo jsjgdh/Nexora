@@ -1,0 +1,254 @@
+# NEXORA on Google Cloud — the deployment runbook
+
+The mesh runs on **Cloud Run**, the front door runs on **Vercel**, and the two
+meet at one HTTPS load balancer in front of the gateway. This file is the order
+of operations, and what has to be true before each step.
+
+The plan lives in [`plan.json`](plan.json) and is **data**: `plan.ts` checks it
+against the source tree, `deploy.ts` applies it. Run the check before you run
+anything else:
+
+```sh
+npm run build --workspace=@nexora/gcp-plan
+node infra/gcp/dist/plan-check.js
+```
+
+It refuses, with a named reason, when the plan and the code have drifted: a
+service that exists and is not deployed, an environment variable the service
+reads and the plan does not supply, a peer URL that points at nothing, a second
+public service, a secret written down in the plan, a dependency cycle. Those
+checks are the reason the plan is a file rather than a script: a script that
+calls `gcloud` can only be verified by running it against a real project with
+real credentials.
+
+---
+
+## The shape
+
+```
+                    Vercel                     Cloud Run
+                 nexora.dev          api.nexora.dev
+                      │                     │
+                      │  browser ──────────►│
+                      │                     ▼
+                      │            ┌──────────────────┐
+                      │            │  nexora-gateway  │  ← the only public service
+                      │            └────────┬─────────┘
+                      │                     │  mesh (INTERNAL_API_KEY)
+                      │     ┌───────────────┼───────────────┬──────────────┐
+                      │     ▼               ▼               ▼              ▼
+                      │  nexora-auth  nexora-curriculum nexora-execution nexora-billing
+                      │     │                                               │
+                      │     └──────────────► billing ◄─────────────────────┘
+                      │                                                     │
+                      ▼                                                     ▼
+              Cloud SQL ── authdb, billingdb                        Dodo Payments
+```
+
+- **One public surface.** The gateway is the only service with an external
+  ingress. The other four are `internal`, which on Cloud Run means reachable
+  only by other Cloud Run services — not by the internet.
+- **The mesh key is the boundary.** Every internal call carries
+  `INTERNAL_API_KEY`. A service that cannot authenticate its mesh refuses to
+  start, in every environment.
+- **Two databases, one instance.** `authdb` belongs to `auth`, `billingdb` to
+  `billing`. Neither can read the other's tables without asking.
+- **The receipt key lives in two services** — `auth` and `execution` — because
+  both mint receipts, and in nowhere else.
+
+## Before you start
+
+| Thing | Why | Where |
+|---|---|---|
+| A GCP project | everything lives in it | `plan.json` → `project` |
+| Billing enabled on it | Cloud Run and Cloud SQL are not free | GCP console |
+| A domain on Cloudflare | the load balancer needs a cert for it | `plan.json` → `loadBalancer.domain` |
+| `gcloud` authenticated | every command below | `gcloud auth login` |
+| Docker, building locally | the image is built here and pushed | `docker build` |
+
+Two facts about the current product that decide the order:
+
+- **`nexora.dev` is parked.** The legal pages answer HTTP 200 with a redirect
+  stub and no statement, and `SECURITY.md` still carries a placeholder contact.
+  Nothing may be published until both are real. This is checked by
+  `build/nexora/legal-verify.ts --publishable` in the IDE repository.
+- **The platform's deploy procedure has never been run against a real host.**
+  The first deploy is a drill, with the rollback step performed on purpose.
+
+---
+
+## The order of operations
+
+### 1. Provision the database
+
+```sh
+node infra/gcp/dist/deploy.js --print     # shows the commands without running them
+```
+
+The instance, the two databases, and the Secret Manager entries are created
+first, because everything else needs them to exist.
+
+- Cloud SQL is created **without a public IP** (`--no-assign-ip`). The services
+  reach it through the **Cloud SQL Auth Proxy** sidecar, which Cloud Run
+  supports natively. That is the difference between a database that is only
+  reachable from inside Google and one that is on the internet.
+- The `nexora` role's password is generated and stored in Secret Manager as
+  `nexora-db-password`. It is never written into a file, an image, or the plan.
+
+### 2. Generate the secrets
+
+| Secret | How |
+|---|---|
+| `nexora-internal-api-key` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `nexora-auth-jwt-secret` | same |
+| `nexora-db-password` | same |
+| `nexora-receipt-ed25519-key` | `node -e "console.log(require('node:crypto').generateKeyPairSync('ed25519').privateKey.export({type:'pkcs8',format:'pem'}))"` — one line, newlines as `\n` |
+| `nexora-resend-api-key` | from Resend |
+| `nexora-dodo-api-key` | from Dodo Payments |
+| `nexora-dodo-webhook-secret` | from Dodo → Developer → Webhooks |
+
+**The receipt key is the one that matters most.** Its public half is published
+at `GET /api/execute/verify-key` so a stranger can re-derive a verdict without
+asking the platform. A leaked one would let a caller mint receipts. It lives
+in the environment of `auth` and `execution` and nowhere else — never in the
+image, never in the repository, never in a log.
+
+### 3. Build and push the image
+
+One image, five services, selected by `--build-arg SERVICE=`:
+
+```sh
+docker build --build-arg SERVICE=gateway -t \
+  us-central1-docker.pkg.dev/nexora-prod/nexora/mesh:latest .
+docker push us-central1-docker.pkg.dev/nexora-prod/nexora/mesh:latest
+```
+
+The image carries the Go toolchain and a prewarmed standard-library cache, so
+the execution image is the big one. The others share the same layers.
+
+### 4. Deploy, in two passes
+
+```sh
+node infra/gcp/dist/deploy.js --apply
+```
+
+The deploy is two passes because a Cloud Run URL carries a hash that does not
+exist until the service does:
+
+1. The services that depend on nobody are deployed first.
+2. Their URLs are read back from the API.
+3. The services that depend on others are deployed with those URLs filled in.
+
+So the first run of a fresh project leaves the gateway pointing at nothing it
+can reach, and the second run completes it. **Run it twice** on a new project,
+or run it once and re-run the dependents.
+
+### 5. The load balancer
+
+The gateway is deployed with `--ingress internal-and-cloud-load-balancing`, so
+it is reachable from a load balancer and from other Cloud Run services, and not
+from the internet. In front of it:
+
+- a **Serverless NEG** pointing at the gateway,
+- an **external HTTPS Application Load Balancer** on `api.nexora.dev`,
+- a **Google-managed certificate** for that name.
+
+`TRUST_PROXY=1` is set in the plan, because the load balancer writes
+`X-Forwarded-For` and the gateway's rate limits key on the client IP. Without
+it, a client could choose its own rate-limit bucket. It is refused as a
+blanket `true` — the value is a hop count, not a boolean.
+
+### 6. The front door on Vercel
+
+The site is a SvelteKit app; Vercel builds it with `@sveltejs/adapter-vercel`,
+which `svelte.config.js` selects when the build environment sets `VERCEL`. The
+same source still builds as a standalone `node build` for the compose stack and
+for any self-hosted deployment, because the adapter is chosen by the
+environment rather than by a branch.
+
+| Variable | Which | Value |
+|---|---|---|
+| `PUBLIC_API_URL` | public, inlined at build | `https://api.nexora.dev` |
+| `GATEWAY_URL` | private, runtime | `https://api.nexora.dev` |
+| `PUBLIC_SITE_URL` | public | `https://nexora.dev` |
+| `RESEND_API_KEY` | private | the Resend key |
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | public | only if `AUTH_MODE=clerk` |
+
+`GATEWAY_URL` and `PUBLIC_API_URL` are both the gateway's address, and they
+are separate variables on purpose: the browser's route to the gateway and the
+app server's own route are different callers, and the server-side one is what
+holds the refresh token in an HttpOnly cookie. Getting it wrong fails sign-in
+alone, with "the sign-in service did not answer", while every other page looks
+healthy.
+
+**The region matters.** Vercel and Cloud Run are in different providers, so
+every API call crosses the network twice. Put the Cloud Run region as close as
+possible to the Vercel region (`iad1` in the plan's `vercel.json`), and prefer
+a region near the learners. The front door and the gateway are on opposite
+sides of that distance, which is the price of splitting them.
+
+### 7. Point the IDE at it
+
+Three settings, all empty by default — the free course works with all three
+empty, which is the honest default for a product that has not shipped.
+
+| Setting | What it is |
+|---|---|
+| `nexora.platformUrl` | the gateway, for sign-in and the paid phases |
+| `nexora.siteUrl` | the site the sign-in browser opens — the IDE never sees a password |
+| `nexora.attestationUrl` | `<gateway>/api/execute/attest`, for the "verified" tier |
+
+---
+
+## What to verify after the deploy
+
+In order, because each one tells you which step failed:
+
+1. **Every service answers `/health/live`.**
+   `curl https://nexora-auth-<hash>.run.app/health/live` — but the internal
+   services are not reachable from outside. Check them from the gateway:
+   `curl https://api.nexora.dev/health/deep`, which probes every mesh member
+   and reports each one.
+2. **`/health/deep` says `ready`**, every mesh check is `ok`, and
+   `revocations.authService` is not `unreachable`. `unknown` means no token
+   has been presented since boot, which is not a fault. `degraded` means
+   requests are still flowing on a bounded stale answer.
+3. **The synthetic journey**: sign in, open a paid phase, run code, and confirm
+   a signed receipt verifies at `/api/execute/verify`. The compose e2e journey
+   is the script for the first three; the last one is a URL a stranger can
+   check.
+4. **The receipts verify offline** — the front door's `/verify` re-derives a
+   verdict in the browser against the published key. If that fails, the
+   `RECEIPT_ED25519_KEY` is not the one whose public half is published.
+
+## Rollback
+
+Every service keeps the previous image, and a rollback is a redeploy of the
+previous tag:
+
+```sh
+gcloud run services update nexora-gateway --image …/mesh:<previous-tag>
+```
+
+Migrations are forward-only, so a rollback never un-runs one. A change that
+needs a destructive migration is two deploys — expand, then contract —
+reviewed as such.
+
+## What is not done yet, and is not a plan's job to hide
+
+- **No backups and no restore drill.** Cloud SQL's automated backups are on;
+  the restore drill has not been performed. Do it before any learner data the
+  team cannot afford to lose exists.
+- **No alerting.** The gateway's `/health/deep` is the thing worth alerting on,
+  and `npm run healthcheck` is a crontab-shaped command that exits 0/1/2. What
+  is missing is a monitor that pages anyone.
+- **Rate limits and quotas are in-memory** and per-instance, so they are
+  correct on one instance and wrong on two. Scale the gateway past one instance
+  and the limits need a shared store.
+- **The `docker` runner is refused in production** unless
+  `EXECUTION_RUNNER=docker` is set, which the plan does. On Cloud Run there is
+  no Docker daemon, so the general hosted-run path (`/execute`, a learner's
+  whole workspace) does not work there — the attested path does, because it
+  judges the platform's own canonical suite against a small submitted file.
+  That path needs a runner that submits a job to a per-job container; see
+  `runners/` in the execution service.

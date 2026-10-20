@@ -33,8 +33,18 @@ const allRoutes = [
   "/pricing",
   "/employers",
   "/universities",
+  // The cohort surface. A lecturer and a student arrive here, and both pages
+  // have to be usable with a screen reader whether or not the visitor is
+  // signed in, so both are scanned like any other page.
+  "/teach",
+  "/teach/join",
   "/auth",
   "/auth/ide",
+  // The operator's console, scanned the way a visitor without a session sees
+  // it: the refusal. The console behind a sign-in is the platform's job to
+  // guard, and the part a screen reader can reach without a session is this
+  // one.
+  "/admin",
   "/profile",
   "/verify",
   "/download",

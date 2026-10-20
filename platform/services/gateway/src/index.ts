@@ -6,7 +6,7 @@ import { loadConfig, type RouteConfig } from "./config.js";
 import { bearerIdentity, clerkVerifier, localVerifier, type TokenVerifier } from "./auth.js";
 import { FixedWindow } from "./limits.js";
 import { MAX_BODY_BYTES, forward, matchRoute, buildForwardHeaders, upstreamPathFor } from "./proxy.js";
-import { EntitlementCache, billingLookup } from "./entitlement.js";
+import { EntitlementCache, billingLookup, combinedEntitlementLookup, seatLookup } from "./entitlement.js";
 import { RevocationCache, revocationLookup } from "./revocation.js";
 
 /* Public edge: CORS, JWT authentication, rate limits, request tracing, and
@@ -27,12 +27,17 @@ const verifier: TokenVerifier =
 const globalLimiter = new FixedWindow(config.globalLimit.windowMs, config.globalLimit.max);
 const routeLimiters = new Map(config.routes.map((r) => [r.prefix, new FixedWindow(r.limit.windowMs, r.limit.max)]));
 
-// Entitlement for paid curriculum routes: one cache, resolved against billing,
-// short-lived so a cancellation bites within the TTL and invalidated on the
-// webhook path so a new subscription bites at once. See entitlement.ts.
+// Entitlement for paid curriculum routes: one cache, resolved against billing
+// and against the cohort seats, short-lived so a cancellation bites within the
+// TTL and invalidated on the webhook path so a new subscription bites at once.
+// Either answer grants entitlement, and a failure in either is "unknown",
+// never a denial. See entitlement.ts.
 const entitlement = new EntitlementCache(
   config.entitlementTtlMs,
-  billingLookup({ url: config.billingUrl, internalKey: config.internalKey, timeoutMs: 5_000 })
+  combinedEntitlementLookup({
+    subscription: billingLookup({ url: config.billingUrl, internalKey: config.internalKey, timeoutMs: 5_000 }),
+    seat: seatLookup({ url: config.authUrl, internalKey: config.internalKey, timeoutMs: 5_000 }),
+  })
 );
 
 // Revocation: sign-out must end the token in hand, not just the family it renews
@@ -216,6 +221,18 @@ app.route({
       throw new ApiError(404, "not_found", `No route for ${path}.`);
     }
 
+    /* The mesh's internal routes are not proxied.
+     *
+     * The gateway injects the mesh key on everything it forwards, so a route
+     * under /internal/ would otherwise be reachable by any client that can
+     * reach the public surface — and the key it would carry is the real one.
+     * The internal routes are the mesh's: the seat check and the revocation
+     * check are asked directly, over the mesh, by this edge. A path that names
+     * one is not a route the public surface has. */
+    if (path.includes("/internal/")) {
+      throw new ApiError(404, "not_found", `No route for ${path}.`);
+    }
+
     if (!globalLimiter.take(`g:${req.ip}`)) {
       reply.header("Retry-After", "60");
       throw new ApiError(429, "rate_limited", "Too many requests.");
@@ -295,22 +312,32 @@ app.route({
 
     /* Paid curriculum: a token is mandatory — the optional-auth branch above
        leaves userId null when none is presented, which is fine for a public
-       prefix but not for content behind the paywall — and billing must confirm
-       the subscription before a byte is forwarded. Three distinct answers so the
-       extension can tell "sign in" (401) from "subscribe" (402) from "we can't
-       check right now" (503); none of them may read as a failed check. */
+       prefix but not for content behind the paywall — and entitlement must be
+       confirmed before a byte is forwarded. Two questions are asked now, and
+       either one grants: does billing have a subscription for this learner,
+       and does the auth service say this learner holds a seat in an active
+       cohort (and in which course). Four distinct answers so the extension
+       can tell "sign in" (401) from "subscribe" (402) from "we can't check
+       right now" (503) from "that course is not on your licence" (402, from
+       the service that owns the phase-to-course map); none of them may read
+       as a failed check. */
     const paidPath = isPaidPath(route, path);
     let entitled = false;
+    let entitledCourses: string[] | null = null;
     if (paidPath) {
       if (!userId) throw new ApiError(401, "unauthorized", "Sign in to access the paid curriculum.");
-      const verdict = await entitlement.get(userId);
-      if (verdict === "unknown") {
+      const answer = await entitlement.get(userId);
+      if (answer.status === "unknown") {
         throw new ApiError(503, "entitlement_unavailable", "We can't confirm your subscription right now. Try again shortly.");
       }
-      if (verdict !== "entitled") {
+      if (answer.status !== "entitled") {
         throw new ApiError(402, "entitlement_required", "This content is part of the paid curriculum. Subscribe to unlock it.");
       }
       entitled = true;
+      // A subscription covers every course (null); a seat covers the course the
+      // institution bought. The service that owns the phase-to-course map
+      // decides whether the phase asked for is one of them.
+      entitledCourses = answer.courses;
     }
 
     let body: Buffer | null = null;
@@ -329,6 +356,7 @@ app.route({
       internalKey: config.internalKey,
       requestId: req.id,
       entitled,
+      entitledCourses,
       // req.ip here is our own view of the caller (trustProxy-aware, and the
       // client's X-Forwarded-For was stripped above), so downstream limiters
       // can key on a real client instead of on this proxy's address.

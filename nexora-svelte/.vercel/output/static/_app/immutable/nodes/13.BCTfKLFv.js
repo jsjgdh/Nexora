@@ -1,0 +1,1 @@
+import{at as e,o as t,ot as n}from"../chunks/BIY4tbHy.js";import"../chunks/xihTtKlq.js";import{c as r}from"../chunks/BnSW1fax.js";import"../chunks/DlOAuT6D.js";import{t as i}from"../chunks/DiUpsJuy.js";function a(a,o){n(o,!1);let s=(r.url.searchParams.get(`token`)??``).trim();t(),i(a,{get token(){return s},canonical:`/auth/verify-email/confirm`}),e()}export{a as component};

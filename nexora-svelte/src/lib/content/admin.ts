@@ -37,6 +37,7 @@ export const ADMIN = {
   },
   overview: {
     accounts: "Accounts",
+    verifiedAddresses: "Addresses verified",
     activeSessions: "Live sessions",
     proofs: "Verified proofs",
     operators: "Operators",
@@ -60,6 +61,9 @@ export const ADMIN = {
     cohortsAvailable: "Cohorts",
     cohortsOn: "This build has cohorts",
     cohortsOff: "This build has no cohorts",
+    ledgerAvailable: "Verified ledger",
+    ledgerOn: "Held by the identity service, and read here",
+    ledgerOff: "Held elsewhere in this build, so the console cannot show it here",
     note: "A flag says whether something is configured. A key is never shown here, and never leaves the service that holds it.",
   },
   accounts: {
@@ -84,6 +88,7 @@ export const ADMIN = {
       cohorts: "Its cohorts",
       noSessions: "No session has ever been opened for this account.",
       noProofs: "Nothing has been verified for this account yet. The work is judged in the IDE and syncs when the learner syncs it.",
+      noProofsHere: "The verified ledger is not held by the service this console reads, so it cannot show that work here.",
       noConsents: "This account has accepted no document.",
       noRequests: "This account has filed no data request.",
       noCohorts: "This account is in no cohort.",

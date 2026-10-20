@@ -1,0 +1,243 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/**
+ * Apply the Google Cloud plan.
+ *
+ * This is the thin thing: it resolves what `plan.ts` has already checked and
+ * hands it to `gcloud`. The order matters and is the reason the deploy is two
+ * passes:
+ *
+ *   1. The services that depend on nothing are deployed first.
+ *   2. Their URLs are read back from the Cloud Run API — a Cloud Run URL
+ *      carries a hash that does not exist until the service does.
+ *   3. The services that depend on others are deployed with those URLs filled
+ *      in.
+ *
+ * Nothing here is destructive by default. `--apply` is required to touch a
+ * project, and the plan is validated (against the source tree) before any
+ * command runs, so a plan that has drifted fails before it can deploy a
+ * half-right thing.
+ *
+ * Run:  node infra/gcp/deploy.ts --print     # show the commands, change nothing
+ *       node infra/gcp/deploy.ts --apply     # apply the plan to the project
+ *       node infra/gcp/deploy.ts --check     # validate the plan and exit
+ */
+
+import { execFileSync, execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+import { fillPlan, planBlockers, readPlan, PLATFORM_ROOT, type IPlan, type IPlannedService } from './plan.js';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+
+/** What a single gcloud invocation looks like, as data. */
+export interface ICommand {
+	readonly label: string;
+	readonly args: readonly string[];
+}
+
+/**
+ * The gcloud commands that deploy one service.
+ *
+ * Pure: the caller supplies the image and the plan, and gets back the list.
+ * A unit test can read it without a project, a credential, or a network.
+ */
+export function deployCommands(
+	planned: IPlannedService,
+	image: string,
+	region: string,
+	project: string
+): ICommand[] {
+	const envPairs = Object.entries(planned.env).map(([k, v]) => `${k}=${v}`);
+	const secretPairs = planned.secrets.map(s => `${s.env}=${s.secret}:latest`);
+	const commands: ICommand[] = [
+		{
+			label: `deploy ${planned.name}`,
+			args: [
+				'run', 'deploy', planned.name,
+				'--image', image,
+				'--region', region,
+				'--project', project,
+				'--platform', 'managed',
+				'--allow-unauthenticated',
+				'--ingress', planned.ingress,
+				'--min-instances', String(planned.minInstances),
+				'--max-instances', String(planned.maxInstances),
+				'--cpu', planned.cpu,
+				'--memory', planned.memory,
+				'--timeout', `${planned.timeoutSeconds}s`,
+				'--port', '8080',
+				'--set-env-vars', envPairs.join(','),
+			],
+		},
+	];
+	if (secretPairs.length > 0) {
+		commands.push({
+			label: `mount secrets for ${planned.name}`,
+			args: [
+				'run', 'services', 'update', planned.name,
+				'--region', region,
+				'--project', project,
+				'--set-secrets', secretPairs.join(','),
+			],
+		});
+	}
+	return commands;
+}
+
+/** The gcloud command that creates the Cloud SQL instance and its databases. */
+export function databaseCommands(plan: IPlan): ICommand[] {
+	const commands: ICommand[] = [
+		{
+			label: `create the instance ${plan.database.instance}`,
+			args: [
+				'sql', 'instances', 'create', plan.database.instance,
+				'--database-version', plan.database.engineVersion,
+				'--tier', plan.database.tier,
+				'--availability-type', plan.database.availability,
+				'--region', plan.region,
+				'--project', plan.project,
+				'--no-assign-ip',
+			],
+		},
+	];
+	for (const database of plan.database.databases) {
+		commands.push({
+			label: `create the database ${database}`,
+			args: [
+				'sql', 'databases', 'create', database,
+				'--instance', plan.database.instance,
+				'--project', plan.project,
+			],
+		});
+	}
+	return commands;
+}
+
+/** The gcloud command that creates a Secret Manager entry. */
+export function secretCommand(name: string, project: string): ICommand {
+	return {
+		label: `create the secret ${name}`,
+		args: ['secrets', 'create', name, '--replication-policy', 'automatic', '--project', project],
+	};
+}
+
+/** The gcloud command that creates the Artifact Registry repository. */
+export function registryCommand(plan: IPlan): ICommand {
+	return {
+		label: `create the repository ${plan.artifactRegistry}`,
+		args: [
+			'artifacts', 'repositories', 'create', plan.artifactRegistry,
+			'--repository-format', 'docker',
+			'--location', plan.region,
+			'--project', plan.project,
+		],
+	};
+}
+
+/** The URL a deployed service answers on, read back from the API. */
+export function serviceUrl(name: string, region: string, project: string): string {
+	const out = execFileSync(
+		'gcloud',
+		['run', 'services', 'describe', name, '--region', region, '--project', project, '--format', 'value(status.url)'],
+		{ encoding: 'utf8' }
+	);
+	return out.trim();
+}
+
+/** The Cloud SQL instance's public or proxy address, as the connection string wants it. */
+export function databaseHost(instance: string, project: string): string {
+	const out = execFileSync(
+		'gcloud',
+		['sql', 'instances', 'describe', instance, '--project', project, '--format', 'value(ipAddresses[0].ipAddress)'],
+		{ encoding: 'utf8' }
+	);
+	return out.trim();
+}
+
+/** The Cloud SQL connection name, which the services connect through. */
+export function databaseConnectionName(instance: string, region: string, project: string): string {
+	return `${project}:${region}:${instance}`;
+}
+
+function main(): void {
+	const args = process.argv.slice(2);
+	const plan = readPlan();
+
+	const blockers = planBlockers(plan);
+	if (blockers.length > 0) {
+		console.error('REFUSING TO DEPLOY: the plan does not match the code it claims to deploy.');
+		for (const reason of blockers) {
+			console.error(`  - ${reason}`);
+		}
+		process.exit(1);
+	}
+	console.log(`plan ok: ${plan.services.length} services, ${plan.secrets.length} secrets, ${plan.database.databases.length} databases.`);
+
+	if (args.includes('--check')) {
+		return;
+	}
+
+	const image = `${plan.region}-docker.pkg.dev/${plan.project}/${plan.artifactRegistry}/mesh:latest`;
+	const project = plan.project;
+	const region = plan.region;
+
+	if (args.includes('--print')) {
+		for (const command of [registryCommand(plan), ...databaseCommands(plan), ...plan.secrets.map(s => secretCommand(s.name, project))]) {
+			console.log(`gcloud ${command.args.join(' ')}`);
+		}
+		return;
+	}
+
+	if (!args.includes('--apply')) {
+		console.log('Nothing to do: pass --print to see the commands, --check to only validate, or --apply to deploy.');
+		return;
+	}
+
+	console.log(`\ndeploying to ${project} (${region})…\n`);
+
+	// Pass one: the services that depend on nobody. They are the ones whose
+	// URLs the others need, so they have to exist before anything can point at
+	// them.
+	const independents = plan.services.filter(s => s.dependsOn.length === 0).sort((a, b) => a.order - b.order);
+	for (const planned of independents) {
+		console.log(`— ${planned.name}`);
+		for (const command of deployCommands(planned, image, region, project)) {
+			console.log(`  gcloud ${command.args.join(' ')}`);
+			execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+		}
+	}
+
+	// Read the URLs back. A Cloud Run URL carries a hash that is not knowable
+	// before the service exists, so this is the only way to learn it.
+	const peerUrls: Record<string, string> = {};
+	for (const planned of independents) {
+		peerUrls[planned.service] = serviceUrl(planned.name, region, project);
+		console.log(`  ${planned.service} → ${peerUrls[planned.service]}`);
+	}
+
+	// Pass two: everything else, with the URLs it calls filled in.
+	const dependents = plan.services.filter(s => s.dependsOn.length > 0).sort((a, b) => a.order - b.order);
+	for (const planned of dependents) {
+		const known = Object.fromEntries(
+			Object.entries(peerUrls).filter(([, url]) => !url.includes('{{'))
+		);
+		const filled = fillPlan(plan, known, { host: '{{db_host}}', password: '{{db_password}}' });
+		const target = filled.services.find(s => s.name === planned.name)!;
+		console.log(`— ${planned.name}`);
+		for (const command of deployCommands(target, image, region, project)) {
+			console.log(`  gcloud ${command.args.join(' ')}`);
+			execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+		}
+		peerUrls[planned.service] = serviceUrl(planned.name, region, project);
+	}
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]).endsWith('deploy.ts')) {
+	main();
+}

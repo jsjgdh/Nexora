@@ -1,7 +1,8 @@
 <script lang="ts">
   import { apiConfigured, session } from "$lib/session.svelte";
   import { authMessage } from "$lib/auth-errors";
-  import { ACCOUNT_HOME, FREE_TIER_POINTS } from "$lib/content/site";
+  import { ACCOUNT_HOME, COHORT_ACCOUNT, FREE_TIER_POINTS } from "$lib/content/site";
+  import { courseTitle, type Cohort } from "$lib/cohorts";
   import Button from "$lib/components/Button.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
   import Headline from "$lib/components/Headline.svelte";
@@ -84,6 +85,18 @@
   let proofs = $state<{ competencyId: string; level: string; kind: string; issuedAt: string }[]>([]);
   let proofsLoading = $state(false);
   let proofsError = $state<string | null>(null);
+
+  /**
+   * The cohort this account is in, if it is in one.
+   *
+   * Read on its own latch, because a platform that cannot answer the cohort
+   * question must not hide the plan or the evidence. When there is no cohort
+   * the page says nothing about one, and when the platform did not answer it
+   * says that instead of showing an empty block that reads like a fact.
+   */
+  let cohorts = $state<Cohort[]>([]);
+  let cohortsLoading = $state(false);
+  let cohortsError = $state<string | null>(null);
 
   let kind = $state<string>(RIGHT_KINDS[1].id);
   let detail = $state("");
@@ -169,6 +182,36 @@
 
   $effect(() => {
     if (session.loggedIn) void load();
+  });
+
+  /**
+   * The cohort, read once per identity.
+   *
+   * The same epoch boundary as the plan and the evidence, and its own latch,
+   * so a platform that cannot answer the cohort question leaves the rest of
+   * the account page exactly as it was.
+   */
+  let cohortsLoadedFor = $state(-1);
+  $effect(() => {
+    const epoch = session.epoch;
+    if (!apiConfigured || !session.loggedIn) return;
+    if (epoch !== cohortsLoadedFor) {
+      cohortsLoadedFor = epoch;
+      cohortsLoading = true;
+      cohortsError = null;
+      session
+        .myCohorts()
+        .then((c) => {
+          cohorts = c;
+        })
+        .catch(() => {
+          cohorts = [];
+          cohortsError = COHORT_ACCOUNT.unknown;
+        })
+        .finally(() => {
+          cohortsLoading = false;
+        });
+    }
   });
 
   /**
@@ -420,6 +463,59 @@
         </p>
       </Plate>
     </section>
+
+    <!-- 2b. The cohort, when there is one. Nothing is said about a cohort
+         when there is none, because a learner who is not in one has no
+         cohort to read about. -->
+    {#if cohorts.length > 0}
+      <section class="mt-8" aria-label={COHORT_ACCOUNT.label}>
+        <Plate>
+          <p class="stamp text-[11px] text-faint">{COHORT_ACCOUNT.label}</p>
+          <h2 class="mt-3 text-[19px] text-ink">{COHORT_ACCOUNT.title}</h2>
+          {#each cohorts as cohort (cohort.id)}
+            <div class="mt-4 border-t border-rule pt-4">
+              <dl class="text-[13.5px]">
+                <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule py-3">
+                  <dt class="stamp text-faint">{COHORT_ACCOUNT.course}</dt>
+                  <dd class="text-ink">{courseTitle(cohort.courseId)}</dd>
+                </div>
+                <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule py-3">
+                  <dt class="stamp text-faint">{COHORT_ACCOUNT.institution}</dt>
+                  <dd class="text-ink">{cohort.institution}</dd>
+                </div>
+                <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule py-3">
+                  <dt class="stamp text-faint">{COHORT_ACCOUNT.term}</dt>
+                  <dd class="text-ink">{cohort.term}</dd>
+                </div>
+              </dl>
+              <p class="mt-3 max-w-[56ch] text-[13.5px] leading-relaxed text-muted">
+                {#if cohort.status === "active"}
+                  {COHORT_ACCOUNT.active}
+                {:else if cohort.status === "ended"}
+                  {COHORT_ACCOUNT.ended}
+                {:else}
+                  {COHORT_ACCOUNT.pending}
+                {/if}
+              </p>
+            </div>
+          {/each}
+        </Plate>
+      </section>
+    {:else if cohortsError}
+      <section class="mt-8" aria-label="Your account">
+        <Plate>
+          <p class="stamp text-[11px] text-faint">your account</p>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-muted" role="alert">{cohortsError}</p>
+        </Plate>
+      </section>
+    {:else if cohortsLoading}
+      <section class="mt-8" aria-label="Your account">
+        <Plate>
+          <p class="stamp text-[11px] text-faint">your account</p>
+          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">{COHORT_ACCOUNT.reading}</p>
+        </Plate>
+      </section>
+    {/if}
 
     <!-- 3. What you have actually proved. -->
     <section class="mt-8" aria-label="Your evidence">

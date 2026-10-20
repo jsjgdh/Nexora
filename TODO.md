@@ -55,9 +55,15 @@ Pro do not exist.
 - [ ] Backups: automated Postgres dumps for all databases + a restore
   drill, not just a job. Forward-only reviewed migrations, run before
   dependent code.
-- [ ] Observability: structured logs with request ids somewhere greppable;
+- [ ] Observability: structured logs with request ids somewhere greppable
+  (shipped 2026-10-20: one id rides edge→service — the gateway mints it,
+  services keep it instead of minting their own, unsafe values refused —
+  so `x-request-id` on a failed reply greps every service's logs);
   error reporting for web app + every service; per-service health plus a
-  synthetic login→mission→run check; dashboards (signup→first run,
+  synthetic login→mission→run check (shipped 2026-10-20: `npm run
+  synthetic`, exit 0/1/2 like healthcheck, canary account via
+  `--provision`, hourly cron + quota arithmetic in DEPLOYMENT.md);
+  dashboards (signup→first run,
   completions, execution failures by language, sync errors); alerts (error
   rate, queue depth, connections, disk).
 - [ ] Secrets: rotated away from every example; authoritative env-var

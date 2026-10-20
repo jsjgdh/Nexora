@@ -7235,3 +7235,192 @@ describe("gateway global breaker (P0)", () => {
     assert.equal(stubHits, LIMIT, "only the allowed requests were proxied upstream");
   });
 });
+
+/* ------------------------------------------------------------------ GCP plan
+ *
+ * The Google Cloud deployment plan is DATA, and this is the gate that keeps
+ * it true of the code it claims to deploy. A plan is only useful if it cannot
+ * quietly stop describing reality — a service renamed, a variable the service
+ * started reading, a peer URL pointing at something that is not deployed —
+ * because each of those is invisible until a deployment fails in production.
+ *
+ * So the plan is checked against the source tree, and the checks are
+ * falsifiable: every one of them is proved here by breaking the plan on
+ * purpose and asserting that exactly the right reason fires.
+ */
+describe("the Google Cloud plan matches the code it deploys", () => {
+  const planModule = gcpPlan;
+  const deployModule = gcpDeploy;
+  const plan = planModule.readPlan();
+  const clone = () => structuredClone(plan);
+
+  it("the plan has no blockers against the real source tree", () => {
+    assert.deepEqual(planModule.planBlockers(plan), [], "the plan and the code agree");
+  });
+
+  it("a service the repository does not have is caught", () => {
+    const broken = clone();
+    broken.services[0].service = "not-a-service";
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("not a service in this repository")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a service the repository has but the plan omits is caught", () => {
+    const broken = clone();
+    broken.services = broken.services.filter((s) => s.service !== "billing");
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("does not deploy")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a port Cloud Run cannot serve is caught", () => {
+    const broken = clone();
+    broken.services[0].env.PORT = "8101";
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("Cloud Run serves one port")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a variable the service reads and the plan does not supply is caught", () => {
+    const broken = clone();
+    const gateway = broken.services.find((s) => s.service === "gateway");
+    delete gateway.env.FRONTEND_URL;
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("FRONTEND_URL")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a variable left unset without a reason is caught", () => {
+    const broken = clone();
+    const execution = broken.services.find((s) => s.service === "execution");
+    delete execution.optionalEnv.EXECUTION_ALLOW_SUBPROCESS;
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("EXECUTION_ALLOW_SUBPROCESS")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+    // And the real plan — which DOES explain every one of them — is clean.
+    assert.deepEqual(planModule.planBlockers(plan), []);
+  });
+
+  it("a secret written down in the plan is caught", () => {
+    const broken = clone();
+    const auth = broken.services.find((s) => s.service === "auth");
+    auth.env.AUTH_JWT_SECRET = "hunter2";
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("belongs in Secret Manager")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a second public service is caught", () => {
+    const broken = clone();
+    broken.services.find((s) => s.service === "curriculum").public = true;
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("exactly one service is public")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a peer URL that points at nothing is caught", () => {
+    const broken = clone();
+    broken.services.find((s) => s.service === "gateway").env.AUTH_URL = "https://{{nosuchservice}}";
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("not a service in the plan")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a dependency cycle is caught", () => {
+    const broken = clone();
+    const curriculum = broken.services.find((s) => s.service === "curriculum");
+    const gateway = broken.services.find((s) => s.service === "gateway");
+    curriculum.dependsOn = [gateway.name];
+    gateway.dependsOn = [curriculum.name];
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("cycle")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a dependency that deploys after its dependent is caught", () => {
+    const broken = clone();
+    const auth = broken.services.find((s) => s.service === "auth");
+    const billing = broken.services.find((s) => s.service === "billing");
+    auth.order = 5;
+    billing.order = 20;
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("the dependency must come first")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("two services sharing one database is caught", () => {
+    const broken = clone();
+    const billing = broken.services.find((s) => s.service === "billing");
+    billing.env.DATABASE_URL = "postgres://nexora:{{db_password}}@{{db_host}}:5432/authdb";
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("share the database")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a service holding the minting key without minting is caught", () => {
+    const broken = clone();
+    const auth = broken.services.find((s) => s.service === "auth");
+    auth.secrets.push({ env: "RECEIPT_ED25519_KEY", secret: "nexora-receipt-ed25519-key" });
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("receipt PRIVATE key")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("the store of evidence holds no key that can mint evidence", () => {
+    // The auth service verifies receipts as they are synced; it must not be
+    // able to sign one. The public half is enough, and the plan says so.
+    const auth = plan.services.find((s) => s.service === "auth");
+    assert.ok(
+      auth.secrets.some((m) => m.env === "RECEIPT_ED25519_PUBLIC_KEY"),
+      "the auth service verifies receipts and needs the public half"
+    );
+    assert.ok(
+      !auth.secrets.some((m) => m.env === "RECEIPT_ED25519_KEY"),
+      "the auth service must not hold the key that can mint a receipt"
+    );
+  });
+
+  it("the deploy commands are the ones the plan says they are", () => {
+    const gateway = plan.services.find((s) => s.service === "gateway");
+    const commands = deployModule.deployCommands(gateway, "img:1", "us-central1", "p");
+    const deploy = commands.find((c) => c.label === "deploy nexora-gateway");
+    assert.ok(deploy, "there is a deploy command");
+    assert.ok(deploy.args.includes("--ingress"));
+    assert.equal(deploy.args[deploy.args.indexOf("--ingress") + 1], "internal-and-cloud-load-balancing");
+    assert.equal(deploy.args[deploy.args.indexOf("--port") + 1], "8080");
+    assert.ok(deploy.args.some((a) => a.includes("FRONTEND_URL=https://nexora.dev")));
+    const secrets = commands.find((c) => c.label === "mount secrets for nexora-gateway");
+    assert.ok(secrets, "the secrets are mounted in their own step");
+    assert.ok(secrets.args.some((a) => a.includes("INTERNAL_API_KEY=nexora-internal-api-key:latest")));
+  });
+
+  it("the peer URLs are filled in, and only the ones that are known", () => {
+    const filled = planModule.fillPlan(plan, { auth: "a.run.app" }, { host: "db", password: "pw" });
+    const gateway = filled.services.find((s) => s.service === "gateway");
+    assert.equal(gateway.env.AUTH_URL, "https://a.run.app");
+    // A peer that was not resolved keep

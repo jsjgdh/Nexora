@@ -7,6 +7,7 @@ import {
   tokenExpiryMs,
   type SessionUser,
 } from "./session-core";
+import type { Cohort, CohortDetail, CohortJoin } from "./cohorts";
 
 export type { SessionUser } from "./session-core";
 
@@ -748,6 +749,98 @@ class SessionStore {
       }
     }
     throw last instanceof Error ? last : new Error("Could not load verified proof.");
+  }
+
+  /* ---- the cohort surface ----
+   *
+   * A cohort is a group of learners, in one course, in one term, under one
+   * licence. The routes are the contract's, and the bearer is the same short
+   * lived token every other call uses: the refresh token stays in its
+   * HttpOnly cookie, and the page never holds a credential of its own.
+   *
+   * The calls are here rather than in the pages for the reason the other
+   * calls are: the page renders state, the store owns the bearer, and the
+   * suite can then check that no page talks to the platform directly. */
+
+  /** The cohorts the caller teaches. */
+  async listCohorts(): Promise<Cohort[]> {
+    const reply = await this.request<{ cohorts: Cohort[] }>("/api/auth/cohorts", {
+      token: await this.resolveToken(),
+    });
+    return reply.cohorts ?? [];
+  }
+
+  /** The cohorts the caller is in. */
+  async myCohorts(): Promise<Cohort[]> {
+    const reply = await this.request<{ cohorts: Cohort[] }>("/api/auth/cohorts/mine", {
+      token: await this.resolveToken(),
+    });
+    return reply.cohorts ?? [];
+  }
+
+  /** Create a cohort. The platform creates it in the pending state. */
+  async createCohort(input: {
+    name: string;
+    institution: string;
+    courseId: string;
+    term: string;
+    seats: number;
+  }): Promise<Cohort> {
+    const reply = await this.request<{ cohort: Cohort }>("/api/auth/cohorts", {
+      method: "POST",
+      token: await this.resolveToken(),
+      body: input,
+    });
+    return reply.cohort;
+  }
+
+  /** A cohort, with its roster and what the platform has verified. */
+  async cohortDetail(id: string): Promise<CohortDetail> {
+    return this.request<CohortDetail>(`/api/auth/cohorts/${encodeURIComponent(id)}`, {
+      token: await this.resolveToken(),
+    });
+  }
+
+  /** End a licence, so no new entitlement is granted. */
+  async endCohort(id: string): Promise<void> {
+    await this.request<{ ok: boolean }>(
+      `/api/auth/cohorts/${encodeURIComponent(id)}/end`,
+      { method: "POST", token: await this.resolveToken() }
+    );
+  }
+
+  /** Join a cohort with the code on the slide. */
+  async joinCohort(joinCode: string): Promise<CohortJoin> {
+    return this.request<CohortJoin>("/api/auth/cohorts/join", {
+      method: "POST",
+      token: await this.resolveToken(),
+      body: { joinCode },
+    });
+  }
+
+  /**
+   * The file of what the platform judged, as the CSV the platform sent it.
+   *
+   * Fetched as text rather than through `request()`, because `request()`
+   * reads every answer as JSON and this one is a file. The bearer is the
+   * same one, and it is still only in memory.
+   */
+  async cohortExport(id: string): Promise<string> {
+    const token = await this.resolveToken();
+    const response = await fetch(
+      `${BASE}/api/auth/cohorts/${encodeURIComponent(id)}/export`,
+      { headers: token ? { authorization: `Bearer ${token}` } : {} }
+    );
+    if (!response.ok) {
+      const error = new Error(`The file could not be fetched (${response.status})`) as Error & {
+        status: number;
+        code: string;
+      };
+      error.status = response.status;
+      error.code = "request_failed";
+      throw error;
+    }
+    return response.text();
   }
 }
 

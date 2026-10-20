@@ -100,12 +100,15 @@ export interface AdminAccountDetail {
     resolution: string | null;
   }[];
   cohorts: { id: string; name: string; courseId: string; term: string; status: string }[];
+  /** Whether the verified ledger is in the service the console reads. */
+  proofsAvailable: boolean;
 }
 
 export interface AdminOverview {
   operator: { id: string; email: string | null; name: string | null };
   counts: {
     accounts: number;
+    verifiedAddresses: number;
     activeSessions: number;
     proofs: number;
     operators: number;
@@ -118,6 +121,7 @@ export interface AdminOverview {
     mailConfigured: boolean;
     meshKeyPresent: boolean;
     cohortsAvailable: boolean;
+    proofsAvailable: boolean;
   };
   recentActions: { id: string; action: string; target: string | null; detail: string | null; createdAt: string | null }[];
 }

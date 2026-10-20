@@ -7,6 +7,7 @@
   import { pageTitle } from "$lib/seo";
   import {
     ALL_PHASES,
+    COHORT_SURFACE,
     FACTS,
     TEACHING_CONTACT,
     TEACHING_ENQUIRY,
@@ -48,7 +49,7 @@
   path="/universities"
 />
 
-<div class="onepager mx-auto max-w-[1320px] px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
+<div class="onepager onepager-teaching mx-auto max-w-[1320px] px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
   <!-- ===================== The pitch ===================== -->
   <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-16">
     <div>
@@ -113,11 +114,29 @@
           <p class="reading max-w-[60ch] text-[15px] leading-relaxed text-muted">{check.evidence}</p>
         </li>
       {/each}
+      <!-- The cohort surface, in the same list, because it is the same kind of
+           claim: a thing a lecturer can check today, with the artefact
+           behind it. -->
+      <li class="border-b border-rule py-4">
+        <p class="stamp text-[11px] text-faint">{COHORT_SURFACE.label}</p>
+        <p class="mt-1 text-[13.5px] leading-relaxed text-muted">{COHORT_SURFACE.lede}</p>
+      </li>
+      {#each COHORT_SURFACE.built as thing (thing.id)}
+        <li class="grid gap-3 border-b border-rule py-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-12">
+          <p class="text-[15.5px] font-semibold text-ink">{thing.claim}</p>
+          <p class="reading max-w-[60ch] text-[15px] leading-relaxed text-muted">{thing.evidence}</p>
+        </li>
+      {/each}
     </ul>
+    <div class="mt-8">
+      <ActionLink href={COHORT_SURFACE.link.href} variant="ghost" island>
+        {COHORT_SURFACE.link.label}
+      </ActionLink>
+    </div>
   </section>
 
   <!-- ===================== The limits ===================== -->
-  <section class="mt-20 grid gap-10 border-t border-rule pt-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+  <section class="onepager-limits mt-20 grid gap-10 border-t border-rule pt-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
     <div>
       <h2 class="display max-w-[16ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
         What is not built yet.

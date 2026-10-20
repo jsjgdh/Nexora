@@ -748,6 +748,34 @@ details.nexora-details > summary::-webkit-details-marker {
   .onepager .onepager-gaps {
     gap: 0.5rem !important;
   }
+  /* The teaching page's list of gaps is longer than the hiring page's, and a
+     list of gaps in one column runs the teaching sheet past its second page.
+     On paper the section goes full width and the gaps go to two columns: the
+     rules still rule, and the sheet is still one sheet. */
+  .onepager .onepager-limits {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .onepager .onepager-limits .onepager-gaps {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+  /* The list is the longest run of rows on the sheet, so its type is set
+     for paper: the rules still rule, and every gap is still a whole
+     sentence. */
+  .onepager .onepager-limits .onepager-gaps li {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+  /* The teaching sheet carries a list of gaps and a list of what a lecturer
+     can check, so its type is set for paper rather than for a screen: the
+     rules still rule, and every claim is still a whole sentence. */
+  .onepager-teaching .onepager-checks p {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+  .onepager-teaching .onepager-checks li {
+    padding-top: 0.1rem !important;
+    padding-bottom: 0.1rem !important;
+  }
   /* The air above a list is for the screen. On paper the rules do the
      separating, so the margins come down a step. */
   .onepager .mt-10 {

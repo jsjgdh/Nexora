@@ -189,6 +189,10 @@ describe("the operator's console (real database)", () => {
     assert.equal(body.sessions[0].active, true);
     assert.equal(body.consents[0].document, "terms");
     assert.equal(body.requests[0].kind, "access");
+    // The console says where the verified ledger is, so an empty list is never
+    // read as "this learner has done nothing".
+    assert.equal(typeof body.proofsAvailable, "boolean");
+    assert.ok(Array.isArray(body.proofs));
   });
 
   it("an account that does not exist is a 404, not an empty page", async () => {

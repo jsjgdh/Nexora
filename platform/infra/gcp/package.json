@@ -1,0 +1,12 @@
+{
+  "name": "@nexora/gcp-plan",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/plan.js",
+  "types": "dist/plan.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "node dist/plan-check.js"
+  }
+}

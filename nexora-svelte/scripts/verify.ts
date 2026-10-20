@@ -182,6 +182,8 @@ console.log("== the front door describes the real product ==");
           "/cookies",
           "/download",
           "/employers",
+          "/teach",
+          "/teach/join",
           "/universities",
           "/pricing",
           "/privacy",
@@ -2315,13 +2317,22 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
   );
 
   // 5. The gaps. They are the half of the promise, and a reader who finds
-  //    one of them later stops trusting the rest of the page.
+  //    one of them later stops trusting the rest of the page. The list is
+  //    the truth of the day, so the assertions below are about that truth and
+  //    not about the words: a gap that has been built has to leave the list,
+  //    and the list is checked against the platform in the cohort section.
   const gaps = COPY.UNIVERSITY.notYet.map((gap) => gap.text);
   ok(
-    "the page says what is not built yet: no LMS, no roster, no gradebook, no certificate, no credit",
-    ["No LMS integration", "No roster", "No gradebook", "No certificates", "No credit"].every((gap) =>
+    "the page says what is still not built: no LTI, no grade passback, no certificate, no credit",
+    ["No LTI", "No grade passback", "No certificates", "No credit"].every((gap) =>
       gaps.some((text) => text.includes(gap))
     ) && universitiesSrc.includes("UNIVERSITY.notYet")
+  );
+  ok(
+    "and it says there is no attendance, no timetable, no marks and no transcript",
+    ["No attendance", "No timetable", "No marks", "No transcripts"].every((gap) =>
+      gaps.some((text) => text.includes(gap))
+    )
   );
   ok(
     "and it says there is no outcome data, because no cohort has been taught",
@@ -2450,6 +2461,285 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
           .replace(/<!--[\s\S]*?-->/g, "")
       )
       .some((src) => /\$[0-9]/.test(src))
+  );
+}
+
+console.log("\n== the cohort surface: a front door for a lecturer, and the truth of the day ==");
+{
+  // The cohort surface is the newest thing on the site, and it is the thing
+  // most likely to drift: a page that claims a roster the platform does not
+  // serve, a pending licence that reads like a paid course, a file described
+  // in words the file does not use. Every assertion below is one of those
+  // failures, and each one is written so that it fails when the drift
+  // happens rather than when the page is redesigned.
+  const teachDir = join(routesDir, "teach");
+  const teachSrc = existsSync(join(teachDir, "+page.svelte"))
+    ? readFileSync(join(teachDir, "+page.svelte"), "utf8")
+    : "";
+  const joinSrc = existsSync(join(teachDir, "join", "+page.svelte"))
+    ? readFileSync(join(teachDir, "join", "+page.svelte"), "utf8")
+    : "";
+  const joinServerSrc = existsSync(join(teachDir, "join", "+page.server.ts"))
+    ? readFileSync(join(teachDir, "join", "+page.server.ts"), "utf8")
+    : "";
+  const accountSrc = readFileSync(
+    new URL("../src/routes/account/+page.svelte", import.meta.url),
+    "utf8"
+  );
+  const sessionSrc = readFileSync(
+    new URL("../src/lib/session.svelte.ts", import.meta.url),
+    "utf8"
+  );
+  const cohortsSrc = readFileSync(new URL("../src/lib/cohorts.ts", import.meta.url), "utf8");
+  const universitiesSrc = readFileSync(
+    join(routesDir, "universities", "+page.svelte"),
+    "utf8"
+  );
+  const a11ySrc = readFileSync(new URL("./verify-a11y.ts", import.meta.url), "utf8");
+  const copyFlat = readFileSync(new URL("../src/lib/content/site.ts", import.meta.url), "utf8").replace(
+    /\s+/g,
+    " "
+  );
+
+  // 1. The two routes exist, and a reader can reach them.
+  ok(
+    "the instructor's page exists at /teach, and the join page at /teach/join",
+    teachSrc !== "" && joinSrc !== "" && joinServerSrc !== ""
+  );
+  ok(
+    "and both are in the sitemap and in the accessibility sweep",
+    sitemapPaths().includes("/teach") &&
+      sitemapPaths().includes("/teach/join") &&
+      a11ySrc.includes('"/teach"') &&
+      a11ySrc.includes('"/teach/join"')
+  );
+  ok(
+    "and the join page is reachable from the instructor's page, which prints the code a student types",
+    teachSrc.includes("/teach/join") && teachSrc.includes("cohort.joinCode")
+  );
+  ok(
+    "and the instructor's page is reachable from the teaching one-pager",
+    copyFlat.includes('href: "/teach"') && universitiesSrc.includes("COHORT_SURFACE.link.href")
+  );
+  ok(
+    "and the join page takes the code from the link, on the server, so it is never typed twice",
+    joinServerSrc.includes("searchParams.get(\"code\")") && joinSrc.includes("seededFor")
+  );
+
+  // 2. The state that matters: a pending licence grants nothing.
+  ok(
+    "the page renders the cohort's state from the copy module, and the copy has all three states",
+    teachSrc.includes("COHORT_STATUS") &&
+      ["pending", "active", "ended"].every(
+        (status) =>
+          COPY.COHORT_STATUS[status as keyof typeof COPY.COHORT_STATUS].label.length > 0 &&
+          COPY.COHORT_STATUS[status as keyof typeof COPY.COHORT_STATUS].body.length > 20
+      )
+  );
+  ok(
+    "a pending licence says the students get the nine free phases and do not have the paid course",
+    COPY.COHORT_STATUS.pending.body.includes("nine free phases") &&
+      COPY.COHORT_STATUS.pending.body.includes("do not have the paid course") &&
+      // And it never says the thing that belongs to an active licence.
+      !COPY.COHORT_STATUS.pending.body.includes("can open the paid phases")
+  );
+  ok(
+    "and the page prints the active licence's sentence only for a cohort that is active",
+    teachSrc.includes('cohort.status === "active"') && teachSrc.includes("COHORT_STATUS.active.body")
+  );
+  ok(
+    "and a state the site has no words for is treated as pending, because pending grants nothing",
+    teachSrc.includes("COHORT_STATUS.pending") && cohortsSrc.includes("CohortStatus")
+  );
+
+  // 3. The join page says what joining gives, before a code is typed.
+  ok(
+    "the join page says what joining gives: the paid course of that cohort, and nothing else",
+    COPY.COHORT_JOIN.gives.includes("the paid course of that cohort, and nothing else") &&
+      joinSrc.includes("COHORT_JOIN.gives")
+  );
+  ok(
+    "and it says what a pending licence gives, which is the free phases and nothing more",
+    COPY.COHORT_JOIN.pending.includes("nine free phases and nothing more") &&
+      joinSrc.includes("COHORT_JOIN.pending")
+  );
+  ok(
+    "and it refuses an unknown, an expired, an ended and a full code in plain sentences",
+    ["unknown", "expired", "ended", "full"].every(
+      (kind) => COPY.COHORT_JOIN.errors[kind as keyof typeof COPY.COHORT_JOIN.errors].length > 20
+    ) && joinSrc.includes("joinFailure")
+  );
+  ok(
+    "and a platform that did not answer is reported as a platform that did not answer, not as a refusal",
+    COPY.COHORT_JOIN.errors.platform.includes("The platform did not answer") &&
+      cohortsSrc.includes("joinFailure")
+  );
+
+  // 4. The export, described in the words the file's own header uses.
+  ok(
+    "the export is described in the words the file's own header uses",
+    COPY.COHORT_EXPORT.columns.every((column) => COPY.COHORT_EXPORT.description.includes(column)) &&
+      teachSrc.includes("COHORT_EXPORT.description") &&
+      teachSrc.includes("COHORT_EXPORT.header")
+  );
+  ok(
+    "and the page says what the file is not, in the file's own words",
+    COPY.COHORT_EXPORT.whatItIsNot.includes("It is not a grade.") &&
+      COPY.COHORT_EXPORT.whatItIsNot.includes("It is not a certificate.") &&
+      COPY.COHORT_EXPORT.whatItIsNot.includes("It is not a transcript.") &&
+      COPY.COHORT_EXPORT.whatItIsNot.includes("It carries no credit and it is not accredited.")
+  );
+
+  // 5. The account home names the cohort the learner is in.
+  ok(
+    "the account home reads the cohort the learner is in, and says nothing about one when there is none",
+    accountSrc.includes("myCohorts()") &&
+      accountSrc.includes("COHORT_ACCOUNT") &&
+      // The block is behind a length check, so an empty list prints nothing.
+      accountSrc.includes("cohorts.length > 0")
+  );
+  ok(
+    "and it names the course, the institution and the term, and what the cohort gives",
+    accountSrc.includes("COHORT_ACCOUNT.course") &&
+      accountSrc.includes("COHORT_ACCOUNT.institution") &&
+      accountSrc.includes("COHORT_ACCOUNT.term") &&
+      COPY.COHORT_ACCOUNT.active.includes("the paid course of that cohort") &&
+      COPY.COHORT_ACCOUNT.pending.includes("nine free phases and nothing more")
+  );
+
+  // 6. The truth of the day: the page's list and the platform's routes.
+  const gapIds = COPY.TEACHING_GAPS.map((gap) => gap.id);
+  const builtIds: readonly string[] = COPY.COHORT_TRUTH.built.map((feature) => feature.id);
+  ok(
+    "the teaching page's list is exactly the gaps and the scope note, and nothing else",
+    JSON.stringify([...gapIds].sort()) ===
+      JSON.stringify([...COPY.COHORT_TRUTH.gaps, ...COPY.COHORT_TRUTH.notes].sort()) &&
+      JSON.stringify([...COPY.UNIVERSITY.notYet.map((gap) => gap.id)].sort()) ===
+        JSON.stringify([...gapIds].sort())
+  );
+  ok(
+    "and no thing is both a gap and a feature",
+    gapIds.every((id) => !builtIds.includes(id))
+  );
+  ok(
+    "and the page says the roster, the instructor's view and the export exist, with the artefact behind each",
+    ["roster", "instructor-view", "export"].every((id) =>
+      COPY.COHORT_SURFACE.built.some((thing) => thing.id === id)
+    ) &&
+      universitiesSrc.includes("COHORT_SURFACE.built") &&
+      COPY.COHORT_SURFACE.built.every((thing) => thing.evidence.length > 30)
+  );
+  ok(
+    "and the page no longer claims a gap that is not a gap: no roster, no instructor dashboard, no gradebook",
+    !COPY.UNIVERSITY.notYet.some((gap) => /no roster|no instructor dashboard|no gradebook/i.test(gap.text))
+  );
+  ok(
+    "and every feature the page claims is a call the front door makes",
+    COPY.COHORT_TRUTH.built.every((feature) => sessionSrc.includes(feature.call))
+  );
+  {
+    // The platform side of the same truth, read from the platform's own route
+    // table rather than from a list written here. The two have to agree: a
+    // feature the page claims needs a route behind it, and a gap the page
+    // lists must not have one.
+    const platformDir = new URL("../../platform/services/auth/src/", import.meta.url);
+    let cohortSource = "";
+    if (existsSync(platformDir)) {
+      for (const entry of readdirSync(fileURLToPath(platformDir), { withFileTypes: true })) {
+        if (!entry.isFile() || !entry.name.endsWith(".ts")) continue;
+        const source = readFileSync(join(fileURLToPath(platformDir), entry.name), "utf8");
+        if (source.includes("/cohorts")) cohortSource += source + "\n";
+      }
+    }
+    if (cohortSource === "") {
+      console.log("  ~ skipped the platform cohort-route assertions (the platform has no cohort routes yet)");
+    } else {
+      const routes = [
+        ...cohortSource.matchAll(/app\.(?:get|post|put|patch|delete)\("([^"]+)"/g),
+      ].map((match) => match[1] ?? "");
+      ok(
+        "every feature the page claims is a route the platform serves",
+        COPY.COHORT_TRUTH.built.every((feature) => routes.includes(feature.platform)),
+        `the platform serves: ${routes.join(", ")}`
+      );
+      ok(
+        "and no gap the page lists is a route the platform serves",
+        COPY.COHORT_TRUTH.gapRoutes.every(
+          (word) => !routes.some((route) => route.toLowerCase().includes(word))
+        ),
+        `a gap has a route: ${COPY.COHORT_TRUTH.gapRoutes.filter((word) =>
+          routes.some((route) => route.toLowerCase().includes(word))
+        ).join(", ")}`
+      );
+      ok(
+        "and the export's columns are the platform's own, in the platform's order",
+        new RegExp(
+          COPY.COHORT_EXPORT.columns.map((column) => `"${column}"`).join(",\\s*")
+        ).test(cohortSource),
+        `the front door's header is ${COPY.COHORT_EXPORT.header}`
+      );
+    }
+  }
+
+  // 7. The courses a cohort can be for come from the copy module.
+  ok(
+    "every course a cohort can be for is a course the site ships, and the list is read from the copy module",
+    JSON.stringify(COPY.COHORT_COURSE_OPTIONS.map((course) => course.id)) ===
+      JSON.stringify(COPY.COURSES.map((course) => course.slug)) &&
+      teachSrc.includes("COHORT_COURSE_OPTIONS") &&
+      // The page names no course of its own.
+      !COPY.COURSES.some((course) => teachSrc.includes(`"${course.slug}"`))
+  );
+  ok(
+    "and the course's title is the site's title, never the platform's",
+    cohortsSrc.includes("COURSES") &&
+      cohortsSrc.includes("courseTitle") &&
+      teachSrc.includes("courseTitle")
+  );
+
+  // 8. The numbers come from the copy module or from the platform.
+  ok(
+    "the page writes no price of its own, and no seat count of its own",
+    !/\$[0-9]/.test(teachSrc) &&
+      !/seats\s*[:=]\s*[0-9]/.test(teachSrc) &&
+      teachSrc.includes("CAMPUS.minStudents")
+  );
+  ok(
+    "and the member count and the seat count are the platform's",
+    teachSrc.includes("cohort.memberCount") && teachSrc.includes("cohort.seats")
+  );
+  ok(
+    "and the price of a seat is the decided one, in the copy module",
+    COPY.CAMPUS.perStudent === 19 &&
+      COPY.CAMPUS.minStudents === 20 &&
+      COPY.COHORT_TEACH.create.seatsHint.includes(COPY.money(COPY.CAMPUS.perStudent)) &&
+      COPY.COHORT_TEACH.create.seatsHint.includes(String(COPY.CAMPUS.minStudents))
+  );
+
+  // 9. The platform did not answer is not a fact about a cohort.
+  ok(
+    "the page says the platform did not answer, and it never claims a cohort the platform did not say so",
+    COPY.COHORT_TEACH.platformDown.includes("The platform did not answer") &&
+      teachSrc.includes("COHORT_TEACH.platformDown") &&
+      // The list is only ever assigned from the platform's own answer.
+      teachSrc.includes("cohorts = await session.listCohorts()")
+  );
+  ok(
+    "and the instructor's typing survives a platform that does not answer",
+    teachSrc.includes("COHORT_TEACH.create.failed") &&
+      COPY.COHORT_TEACH.create.failed.includes("what you typed is still here")
+  );
+  ok(
+    "and the roster says why it is empty: the work is judged in the IDE and syncs when the learner syncs it",
+    COPY.COHORT_TEACH.roster.noProofs.includes("judged in the IDE") &&
+      COPY.COHORT_TEACH.roster.noProofs.includes("syncs when the learner syncs it") &&
+      teachSrc.includes("COHORT_TEACH.roster.noProofs")
+  );
+  ok(
+    "and ending the licence says what it does: no new entitlement, and the receipts stay",
+    COPY.COHORT_TEACH.end.body.includes("No new student is given a seat") &&
+      COPY.COHORT_TEACH.end.body.includes("keep the receipts they already have") &&
+      teachSrc.includes("COHORT_TEACH.end.body")
   );
 }
 

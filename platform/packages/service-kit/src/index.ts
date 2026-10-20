@@ -153,6 +153,34 @@ export function clientIp(req: {
   return trimmed || req.ip || "unknown";
 }
 
+/* ---------- request id ---------- */
+
+/**
+ * The id the edge already chose, and this service should keep.
+ *
+ * The gateway mints one trace id per request, returns it to the client as
+ * `x-request-id`, and forwards it here. Adopting it is the difference between
+ * one greppable id and two: without it the client quotes the gateway's id, the
+ * gateway logs the gateway's id, and the service logs an id only it has ever
+ * seen — so "somewhere greppable" (TODO 5.2) is quietly false the moment a
+ * request crosses more than one process, which is every request there is.
+ *
+ * The value is still input. It arrives over the wire, a log line is a file,
+ * and an id with a newline in it is two lines — so anything that is not a
+ * plain token (length floor and ceiling, no whitespace) is answered with a
+ * freshly minted id rather than written out. The gateway strips any
+ * client-supplied copy before this sees it; the shape check is what is left
+ * for callers the gateway does not front, and for defence in depth behind it.
+ */
+export const REQUEST_ID_HEADER = "x-request-id";
+
+const REQUEST_ID_SHAPE = /^[A-Za-z0-9._-]{8,128}$/;
+
+export function traceIdFromHeader(value: unknown): string | null {
+  const id = Array.isArray(value) ? value[0] : value;
+  return typeof id === "string" && REQUEST_ID_SHAPE.test(id) ? id : null;
+}
+
 export class ApiError extends Error {
   status: number;
   code: string;
@@ -198,7 +226,9 @@ export async function createService(name: string, opts: ServiceOptions = {}): Pr
       level: process.env.LOG_LEVEL ?? "info",
       base: { service: name },
     },
-    genReqId: () => randomUUID(),
+    // The edge's id when it sent one we are willing to log, a fresh one
+    // otherwise: see traceIdFromHeader for why both halves exist.
+    genReqId: (req) => traceIdFromHeader(req.headers[REQUEST_ID_HEADER]) ?? randomUUID(),
     trustProxy: true,
   });
 
