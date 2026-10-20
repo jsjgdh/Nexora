@@ -167,14 +167,19 @@ not connected" where the sign-in form should have been.
   because an account row is not proof that anybody owns that address). The
   first operator is granted by the operator's tooling on the machine. A
   forged identity header is refused at the edge, and the suite proves it.
-- [ ] Reads of a learner's data in the console are not logged, so "who looked
-  at this account" cannot be answered. An operator's read is processing, and
-  the product's own data-rights page promises a record of processing.
-- [ ] The site's content security policy is still report-only, so a script
-  injected on any page could reach the browser's bearer and drive the
-  console's actions. Promoting it to enforcing with a nonce is a
-  verification pass over every page on the site, not a change to one
-  surface, and the hooks file says so.
+- [x] Reads of a learner's data in the console are written to the log (2026-10-20):
+  who looked, and at what, never the data itself, so "who looked at this
+  account" has an answer. An operator's read is processing, and the product's
+  own data-rights page promises a record of processing.
+- [x] The site's content security policy is enforced (2026-10-20): a hash on a
+  prerendered page, a nonce on a page rendered at request time, and no
+  'unsafe-inline' in script-src in production. The one inline script in the
+  shell carries the nonce. The report-only header is gone. The font host is
+  named in the policy and in the list of subprocessors, because the site asks
+  it for the typefaces.
+- [ ] Self-host the typefaces, so the front door makes no third-party request
+  at all. It is the better answer than naming the font host in the policy, and
+  it is a change to the build rather than to a header.
 - [x] Subscription management: "Manage subscription" opens a Dodo customer
   portal session (new backend endpoint minting the session for the stored
   `dodo_customer_id`; frontend redirects). Cancel, card update, and invoice

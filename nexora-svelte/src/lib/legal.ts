@@ -104,6 +104,12 @@ export const SUBPROCESSORS = [
     data: "The code and prompts the learner sends to the assistant",
     location: "United States",
   },
+  {
+    name: "Google (Google Fonts)",
+    purpose: "Serving the typefaces the front door uses, when a page is opened",
+    data: "The visitor's address and browser, and nothing from an account: the request asks for a stylesheet and says nothing about who is reading it",
+    location: "Global edge network",
+  },
 ] as const;
 
 /**

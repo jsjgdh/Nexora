@@ -244,6 +244,31 @@ describe("the operator's console (real database)", () => {
     }
   });
 
+  it("a read of a learner's record is written down, because a read is processing", async () => {
+    const before = await pool.query(
+      "SELECT count(*) FROM admin_actions WHERE action = 'account.viewed' AND target = 'u-learner'"
+    );
+    const res = await app.inject({ method: "GET", url: "/admin/accounts/u-learner", headers: asUser("u-op") });
+    assert.equal(res.statusCode, 200);
+    const after = await pool.query(
+      "SELECT count(*) FROM admin_actions WHERE action = 'account.viewed' AND target = 'u-learner'"
+    );
+    assert.equal(
+      Number(after.rows[0]?.count ?? 0),
+      Number(before.rows[0]?.count ?? 0) + 1,
+      "the read is in the log"
+    );
+    const who = await pool.query(
+      "SELECT operator_id FROM admin_actions WHERE action = 'account.viewed' AND target = 'u-learner' ORDER BY created_at DESC LIMIT 1"
+    );
+    assert.equal(who.rows[0].operator_id, "u-op", "and the log names who read it");
+
+    const listed = await pool.query(
+      "SELECT count(*) FROM admin_actions WHERE action = 'accounts.listed'"
+    );
+    assert.ok(Number(listed.rows[0].count) >= 1, "and so is a search over the accounts");
+  });
+
   it("an account that does not exist is a 404, not an empty page", async () => {
     const res = await app.inject({ method: "GET", url: "/admin/accounts/u-nobody", headers: asUser("u-op") });
     assert.equal(res.statusCode, 404);

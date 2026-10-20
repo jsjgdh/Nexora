@@ -18,11 +18,72 @@ import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
  */
 const adapter = process.env.VERCEL ? adapterVercel() : adapterNode();
 
+/*
+ * The content security policy, enforced.
+ *
+ * It used to be a report-only header set by hand in the hooks file, which
+ * meant the browser collected violations nobody read, and the browser's
+ * access token was reachable by any script that could run on the origin. The
+ * operator's console made that worth fixing: its actions are driven by that
+ * token, so a script that could reach it could grant itself the console.
+ *
+ * SvelteKit builds the header, and it hashes the scripts it renders (a
+ * prerendered page) or gives them a nonce (a page rendered at request
+ * time), so the policy is exact rather than a hand-written guess. The one
+ * inline script in the shell carries the nonce placeholder, which is what
+ * makes it allowed.
+ *
+ * The development server is the exception, and it has to be: Vite's client
+ * injects an inline module preamble, so a strict policy would break hot
+ * reload on every machine that develops the site. Development therefore
+ * allows inline script, and production does not. The distinction is decided
+ * here, at build time, and the built server carries the strict policy.
+ *
+ * `style-src` keeps 'unsafe-inline' in production, because the site sets
+ * custom properties on elements with style attributes, and a style attribute
+ * cannot be hashed. That is a real limit, and it is a limit on style, not on
+ * script: the token is in script.
+ */
+const development = process.env.NODE_ENV !== "production";
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter,
+    csp: {
+      // 'auto' means hashes on a prerendered page and a nonce on a page
+      // rendered at request time, which is what SvelteKit supports without
+      // the page having to know which it is.
+      mode: "auto",
+      directives: {
+        "default-src": ["self"],
+        "script-src": development ? ["self", "unsafe-inline"] : ["self"],
+        // The site sets custom properties on elements, and a style attribute
+        // cannot be hashed, so inline style stays allowed.
+        //
+        // The font host is named here on purpose. The site loads Archivo, IBM
+        // Plex Mono and Newsreader from Google Fonts, and the policy blocked
+        // the stylesheet, so the site had been rendering in fallback faces
+        // without anybody noticing: a report-only policy collects violations
+        // nobody reads. Naming the host makes the request visible, and the
+        // subprocessors page says where the request goes. Self-hosting the
+        // faces would remove the third party altogether, and it is the better
+        // answer, but it is a change to the build rather than to a header.
+        "style-src": ["self", "unsafe-inline", "https://fonts.googleapis.com"],
+        "img-src": ["self", "data:", "blob:"],
+        "font-src": ["self", "data:", "https://fonts.gstatic.com"],
+        // The platform's gateway, the font host, and (in development) Vite's
+        // hot reload socket.
+        "connect-src": development ? ["self", "https:", "ws:"] : ["self", "https:"],
+        "frame-src": ["self", "https:"],
+        "worker-src": ["self", "blob:"],
+        "object-src": ["none"],
+        "base-uri": ["self"],
+        "form-action": ["self"],
+        "frame-ancestors": ["none"],
+      },
+    },
   },
 };
 

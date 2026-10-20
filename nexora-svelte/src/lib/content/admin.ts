@@ -13,7 +13,7 @@
 
 export const ADMIN = {
   title: "The console",
-  lede: "What the platform holds, and what an operator can do about it. Every action here is written to the operator's log, with the name of the person who did it.",
+  lede: "What the platform holds, and what an operator can do about it. Every action here is written to the operator's log, with the name of the person who did it, and so is every read of a learner's record: an operator's read is processing of somebody's data, and that record has to exist.",
   notAnOperator: {
     title: "This console is for operators.",
     body: "Your account is signed in and it is not one of ours, so there is nothing here to see. If you run the studio and you need this, the flag is granted on the machine, with the operator's tooling.",
@@ -136,6 +136,7 @@ export const ADMIN = {
   },
   activity: {
     empty: "Nothing has been done yet.",
+    note: "A read is in this log too. An operator who opens an account, runs a search, reads the ledger or reads the counts has read a learner's data, and that is processing of it, so the row says who looked, which route was called, which account it was, and the request id it ran under. The log never carries what was read.",
     columns: {
       when: "When",
       what: "What",

@@ -127,6 +127,11 @@ const copyPath = "lib/content/admin.ts";
   );
 
   ok(
+    "the console says that reads are written down too, because an operator's read is processing",
+    ADMIN.lede.includes("read")
+  );
+
+  ok(
     "the one destructive action says what it does before it does it",
     ADMIN.accounts.detail.endSessionsNote.includes("sign in again") &&
       ADMIN.accounts.detail.endSessionsNote.includes("untouched")

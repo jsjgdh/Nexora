@@ -113,18 +113,47 @@ async function requireSuper(
   return operator;
 }
 
-/** Write the operator's log. */
+/** Write the operator's log.
+ *
+ * An operator's action is a thing somebody did to somebody's data, so it is
+ * written down: who, what, to whom, and when. It is not a security control
+ * (the service log already has the request), it is the record an operator
+ * can be asked about six months later.
+ *
+ * A read belongs in the same log, because a read is processing: the operator
+ * opened a learner's record and read their sessions, their consents and their
+ * verified work, and that is processing of somebody's data. The product's own
+ * data-rights page promises a record of processing, so "who looked at this
+ * account" has to have an answer.
+ *
+ * So the row also carries the route that was called and the request id that
+ * made it. The request id is the one the gateway minted and every service
+ * logs, so a row can be tied to the request's own log lines rather than
+ * floating free of them. What is written down is who looked and at what:
+ * never the data itself. */
 async function record(
   pool: Pool,
+  req: FastifyRequest,
   operatorId: string,
   action: string,
   target: string | null,
   detail: string | null
 ): Promise<void> {
   await pool.query(
-    "INSERT INTO admin_actions (id, operator_id, action, target, detail) VALUES ($1, $2, $3, $4, $5)",
-    [newId(), operatorId, action, target, detail]
+    "INSERT INTO admin_actions (id, operator_id, action, target, detail, route, request_id) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    [newId(), operatorId, action, target, detail, routeOf(req), requestIdOf(req)]
   );
+}
+
+/** The endpoint that was called, as the route names it. */
+function routeOf(req: FastifyRequest): string {
+  const pattern = (req.routeOptions?.url as string | undefined) ?? "";
+  return (pattern || req.url || "").slice(0, 120);
+}
+
+/** The id of this request: the gateway's when it sent one, ours otherwise. */
+function requestIdOf(req: FastifyRequest): string {
+  return String(req.id ?? "").slice(0, 128);
 }
 
 /**
@@ -191,6 +220,11 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
     ]);
     const row = counts.rows[0] ?? {};
     const proofs = proofsHere ? await pool.query("SELECT count(*) FROM proofs") : { rows: [{ count: 0 }] };
+    /* The console's first screen is a read too: it counts the learners on the
+     * platform and names the operators. It is written down for the same reason
+     * the rest is, so the log answers "who looked" for the overview as well
+     * as for an account. */
+    await record(pool, req, operator.id, "overview.viewed", null, "the console's counts");
     return {
       operator: {
         id: operatorId,
@@ -232,9 +266,15 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
    * case, and the result carries the counts that answer the questions: how
    * many live sessions, how much verified work, and how many open requests.
    * The counts are counts on purpose: an operator reading a roster does not
-   * need the contents of every proof, and the detail is one click away. */
+   * need the contents of every proof, and the detail is one click away.
+   *
+   * The read is written to the log. An operator's read of a learner's record
+   * is processing of that learner's data, and the product's own data-rights
+   * page promises a record of processing, so "who looked at this account"
+   * has to have an answer. What is written down is who looked and at what:
+   * never the data itself. */
   app.get("/admin/accounts", async (req) => {
-    await requireOperator(pool, req);
+    const operator = await requireOperator(pool, req);
     const query = (req.query as { q?: string }) ?? {};
     const q = (query.q ?? "").trim();
     const pattern = `%${q.toLowerCase()}%`;
@@ -247,6 +287,14 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         "WHERE ($1 = '%%' OR lower(u.email) LIKE $1 OR lower(u.id) LIKE $1) " +
         "ORDER BY u.created_at DESC LIMIT $2",
       [pattern, PAGE_SIZE]
+    );
+    await record(
+      pool,
+      req,
+      operator.id,
+      "accounts.listed",
+      null,
+      q === "" ? "the whole list" : `a search for ${q.slice(0, 80)}`
     );
     return {
       accounts: rows.map((r: Record<string, unknown>) => ({
@@ -267,7 +315,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
      accepted and when, and the requests it has filed. This is the screen
      an operator opens when somebody writes to them about a learner. */
   app.get("/admin/accounts/:id", async (req) => {
-    await requireOperator(pool, req);
+    const operator = await requireOperator(pool, req);
     const id = (req.params as { id: string }).id;
     const proofsHere = await hasTable(pool, "proofs");
     const [account, sessions, proofs, consents, requests, cohorts] = await Promise.all([
@@ -304,6 +352,14 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
     ]);
     const user = account.rows[0];
     if (!user) throw new ApiError(404, "not_found", "No account with that id.");
+    await record(
+      pool,
+      req,
+      operator.id,
+      "account.viewed",
+      id,
+      "the account, its sessions, its consents and its requests"
+    );
     return {
       account: {
         id: user.id,
@@ -372,7 +428,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
       [id]
     );
     await revokeAccountBefore(pool, id, at);
-    await record(pool, operatorId, "sessions.revoked", id, `${sessions.rowCount ?? 0} sessions ended`);
+    await record(pool, req, operatorId, "sessions.revoked", id, `${sessions.rowCount ?? 0} sessions ended`);
     req.log.info({ operatorId, target: id, ended: sessions.rowCount ?? 0 }, "operator ended every session of an account");
     return { ok: true, sessions: sessions.rowCount ?? 0 };
   });
@@ -385,7 +441,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
      the same reason: an unactioned row is visible instead of being a claim
      in a document. */
   app.get("/admin/rights", async (req) => {
-    await requireOperator(pool, req);
+    const operator = await requireOperator(pool, req);
     const [requests, erasures, processors] = await Promise.all([
       pool.query(
         "SELECT r.id, r.kind, r.status, r.detail, r.created_at, r.due_at, r.resolved_at, r.resolution, u.email " +
@@ -396,6 +452,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         "SELECT id, provider, user_email, completed_at, note FROM processor_deletions ORDER BY completed_at NULLS FIRST"
       ),
     ]);
+    await record(pool, req, operator.id, "rights.viewed", null, "the data-request ledger");
     return {
       requests: requests.rows.map((r: Record<string, unknown>) => ({
         id: r.id,
@@ -425,10 +482,11 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
 
   /* The operators. */
   app.get("/admin/operators", async (req) => {
-    await requireOperator(pool, req);
+    const operator = await requireOperator(pool, req);
     const { rows } = await pool.query(
       "SELECT o.user_id, o.role, o.granted_at, o.granted_by, o.expires_at, u.email, u.name FROM operators o JOIN users u ON u.id = o.user_id ORDER BY o.granted_at"
     );
+    await record(pool, req, operator.id, "operators.viewed", null, "the operator list");
     return {
       operators: rows.map((r: Record<string, unknown>) => ({
         id: r.user_id,
@@ -494,6 +552,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
     }
     await record(
       pool,
+      req,
       operator.id,
       "operator.granted",
       target.id,
@@ -539,16 +598,48 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
     if (removed.rowCount === 0) {
       throw new ApiError(404, "not_an_operator", "That account does not hold the flag.");
     }
-    await record(pool, operator.id, "operator.revoked", target.id, email);
+    await record(pool, req, operator.id, "operator.revoked", target.id, email);
     req.log.info({ operatorId: operator.id, target: target.id }, "operator took the operator flag away");
     return { ok: true, removed: removed.rowCount ?? 0 };
   });
 
-  /* The operator's own log, for the record. */
+  /* The operator's own log, for the record.
+   *
+   * The question the log is asked most often is "who looked at this account",
+   * so it can be asked in one line: `?target=<account id>` names the rows
+   * about one learner, and `?reads=1` narrows the answer to the reads. Both
+   * come out of the same rows, because a read and an action are the same kind
+   * of fact: somebody did something with somebody's data.
+   *
+   * Each row carries who did it, what was done, which account it was done to,
+   * the route that was called, the request id it ran under, and when. What it
+   * never carries is the data itself: the log says that somebody looked, not
+   * what they saw.
+   *
+   * It is an operator's route and only an operator's. The log names which
+   * operators have been looking at the platform, and a learner who could read
+   * it would learn that. */
   app.get("/admin/actions", async (req) => {
     await requireOperator(pool, req);
+    const query = (req.query ?? {}) as { target?: string; reads?: string };
+    const target = (query.target ?? "").trim();
+    const readsOnly = query.reads === "1" || query.reads === "true";
+    const params: unknown[] = [];
+    const clauses: string[] = [];
+    if (target) {
+      params.push(target);
+      clauses.push(`target = $${params.length}`);
+    }
+    if (readsOnly) {
+      clauses.push(
+        "action IN ('account.viewed', 'accounts.listed', 'rights.viewed', 'overview.viewed', 'operators.viewed')"
+      );
+    }
+    const where = clauses.length ? ` WHERE ${clauses.join(" AND ")}` : "";
     const { rows } = await pool.query(
-      "SELECT id, operator_id, action, target, detail, created_at FROM admin_actions ORDER BY created_at DESC LIMIT 200"
+      "SELECT id, operator_id, action, target, detail, route, request_id, created_at " +
+        `FROM admin_actions${where} ORDER BY created_at DESC LIMIT 200`,
+      params
     );
     return {
       actions: rows.map((r: Record<string, unknown>) => ({
@@ -557,6 +648,8 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         action: r.action,
         target: r.target,
         detail: r.detail,
+        route: r.route ?? null,
+        requestId: r.request_id ?? null,
         createdAt: iso(r.created_at),
       })),
     };

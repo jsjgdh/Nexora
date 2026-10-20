@@ -2243,7 +2243,7 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
   const headerSrc = readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8");
   const footerSrc = readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8");
   const pricingSrc = readFileSync(new URL("../src/routes/pricing/+page.svelte", import.meta.url), "utf8");
-  const a11ySrc = readFileSync(new URL("./verify-a11y.ts", import.meta.url), "utf8");
+  const sweepRoutesSrc = readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
   const css = readFileSync(new URL("../src/app.css", import.meta.url), "utf8");
   // The copy module with its whitespace collapsed, so a sentence can be
   // looked for across the lines a formatter broke it into.
@@ -2275,7 +2275,7 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
   );
   ok(
     "and it is in the sitemap, and in the accessibility sweep",
-    sitemapPaths().includes("/universities") && a11ySrc.includes('"/universities"')
+    sitemapPaths().includes("/universities") && sweepRoutesSrc.includes('"/universities"')
   );
 
   // 2. The page is a document, like the hiring one: the same wrapper, the
@@ -2495,7 +2495,7 @@ console.log("\n== the cohort surface: a front door for a lecturer, and the truth
     join(routesDir, "universities", "+page.svelte"),
     "utf8"
   );
-  const a11ySrc = readFileSync(new URL("./verify-a11y.ts", import.meta.url), "utf8");
+  const sweepRoutesSrc = readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
   const copyFlat = readFileSync(new URL("../src/lib/content/site.ts", import.meta.url), "utf8").replace(
     /\s+/g,
     " "
@@ -2510,8 +2510,8 @@ console.log("\n== the cohort surface: a front door for a lecturer, and the truth
     "and both are in the sitemap and in the accessibility sweep",
     sitemapPaths().includes("/teach") &&
       sitemapPaths().includes("/teach/join") &&
-      a11ySrc.includes('"/teach"') &&
-      a11ySrc.includes('"/teach/join"')
+      sweepRoutesSrc.includes('"/teach"') &&
+      sweepRoutesSrc.includes('"/teach/join"')
   );
   ok(
     "and the join page is reachable from the instructor's page, which prints the code a student types",
@@ -2740,6 +2740,35 @@ console.log("\n== the cohort surface: a front door for a lecturer, and the truth
     COPY.COHORT_TEACH.end.body.includes("No new student is given a seat") &&
       COPY.COHORT_TEACH.end.body.includes("keep the receipts they already have") &&
       teachSrc.includes("COHORT_TEACH.end.body")
+  );
+}
+
+console.log("== the front door's own security posture ==");
+{
+  const configSrc = readFileSync(fileURLToPath(new URL("../svelte.config.js", import.meta.url)), "utf8");
+  const shellSrc = readFileSync(fileURLToPath(new URL("../src/app.html", import.meta.url)), "utf8");
+  const hooksSrc = readFileSync(fileURLToPath(new URL("../src/hooks.server.ts", import.meta.url)), "utf8");
+
+  ok(
+    "the content security policy is enforced, not reported",
+    !hooksSrc.includes("content-security-policy-report-only") && configSrc.includes("csp:")
+  );
+  ok(
+    "and in production it does not allow an inline script",
+    /"script-src":\s*development\s*\?\s*\[[^\]]*"unsafe-inline"[^\]]*\]\s*:\s*\[[^\]]*\]/.test(configSrc),
+    "the development server may allow inline script, because Vite needs it, and production may not"
+  );
+  ok(
+    "the one inline script in the shell carries the nonce that lets it run",
+    /<script nonce="%sveltekit\.nonce%">/.test(shellSrc)
+  );
+  ok(
+    "and the font host is named, because the site asks it for the typefaces",
+    configSrc.includes("https://fonts.googleapis.com") && configSrc.includes("https://fonts.gstatic.com")
+  );
+  ok(
+    "and the subprocessors page says where that request goes",
+    LEGAL.SUBPROCESSORS.some((s) => /Google/i.test(s.name) && /typeface/i.test(s.purpose))
   );
 }
 

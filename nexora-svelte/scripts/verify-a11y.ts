@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { createRequire } from "node:module";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright";
+import { allRoutes as sharedRoutes } from "./routes";
 
 /* Accessibility over the front door only: the download, the account, the
    tier, and the proof. There is one way to learn — the desktop IDE — so no
@@ -28,53 +30,9 @@ declare global {
 
 const require = createRequire(import.meta.url);
 const axePath = require.resolve("axe-core/axe.min.js");
-const allRoutes = [
-  "/",
-  "/pricing",
-  "/employers",
-  "/universities",
-  // The cohort surface. A lecturer and a student arrive here, and both pages
-  // have to be usable with a screen reader whether or not the visitor is
-  // signed in, so both are scanned like any other page.
-  "/teach",
-  "/teach/join",
-  "/auth",
-  "/auth/ide",
-  // The operator's console, scanned the way a visitor without a session sees
-  // it: the refusal. The console behind a sign-in is the platform's job to
-  // guard, and the part a screen reader can reach without a session is this
-  // one.
-  "/admin",
-  "/profile",
-  "/verify",
-  "/download",
-  // The legal documents are public pages like any other, so they are scanned
-  // like any other. A policy nobody can read with a screen reader is not a
-  // policy that was published.
-  "/privacy",
-  "/privacy-choices",
-  "/ai",
-  "/terms",
-  "/cookies",
-  "/subprocessors",
-  "/dpa",
-  "/security",
-  "/accessibility",
-  // The data-rights hub, scanned signed-out: this is the page where a control
-  // that only exists behind a sign-in would be invisible to anyone who needs it
-  // (and California forbids making a request conditional on an account), so the
-  // signed-out state is the one that has to be usable.
-  "/account",
-  // The account flows. They are pages a learner meets when something has gone
-  // wrong, so they are scanned like any other page: a form nobody can use with
-  // a screen reader is a form nobody can use.
-  "/auth/password-reset",
-  "/auth/password-reset/confirm",
-  "/auth/password-reset/some-token",
-  "/auth/verify",
-  "/auth/verify-email/confirm",
-  "/route-that-does-not-exist",
-];
+/* The route list is shared with the content security policy pass, so the two
+   sweeps cannot drift: see scripts/routes.ts. */
+const allRoutes = sharedRoutes;
 const routes = process.env.AXE_ROUTES
   ? process.env.AXE_ROUTES.split(",").map((route) => route.trim()).filter(Boolean)
   : allRoutes;
@@ -134,7 +92,16 @@ try {
         failures.push(`${route}: HTTP ${response?.status() ?? "no response"}`);
         continue;
       }
-      await page.addScriptTag({ path: axePath });
+      // The instrument goes in by evaluation, not by an inline script tag.
+      //
+      // The front door enforces a content security policy with no
+      // 'unsafe-inline' in script-src, and that is the point: an injected
+      // script must not be able to run. A test harness that added its own
+      // script tag would be refused by the very policy it is meant to check,
+      // so the harness runs in the page's own context instead, which is not
+      // an inline script and is not subject to the policy. Weakening the
+      // policy for the sweep would mean never shipping it.
+      await page.evaluate(readFileSync(axePath, "utf8"));
       const result = await page.evaluate(async () => {
         return window.axe.run(document, {
           runOnly: {

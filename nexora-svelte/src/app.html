@@ -7,7 +7,7 @@
          the first paint, so the stylesheet can hide a heading only when the
          script that brings it back is running. Without JavaScript the class
          stays `no-js` and every heading is simply there. -->
-    <script>
+    <script nonce="%sveltekit.nonce%">
       document.documentElement.classList.replace("no-js", "js");
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
