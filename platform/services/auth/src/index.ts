@@ -2,6 +2,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPool, createService, migrate, start } from "@nexora/service-kit";
 import { registerAuthRoutes } from "./routes.js";
+import { registerAdminRoutes } from "./admin.js";
 import { pruneDeletedSubjectRevocations, pruneRevokedTokens } from "./revocation-store.js";
 import { pruneRetention } from "./rights.js";
 
@@ -19,6 +20,11 @@ const applied = await migrate(pool, join(dirname(fileURLToPath(import.meta.url))
 if (applied.length > 0) app.log.info({ applied }, "migrations applied");
 
 registerAuthRoutes(app, pool);
+/* The operator's console. Registered here, next to the identity routes, so
+   the whole public surface of this service is in one place to be read. The
+   routes carry the operator check themselves: a signed-in learner without
+   the flag gets a 403 from every one of them. */
+registerAdminRoutes(app, pool);
 
 /* Housekeeping for the access-token denylist.
  *
