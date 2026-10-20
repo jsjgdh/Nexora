@@ -5,7 +5,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
   "title": "Rust fundamentals",
   "description": "The Rust language, in the order the book teaches it: the tools, then values and control flow, then ownership and borrowing, then structs, enums, errors and modules, then collections, traits and lifetimes, then testing, then the threads and the futures the language gives you, and a money type of your own design at the end.",
   "version": 1,
-  "freePhases": 4,
+  "freePhases": 1,
   "phases": [
     {
       "id": "rust-values",

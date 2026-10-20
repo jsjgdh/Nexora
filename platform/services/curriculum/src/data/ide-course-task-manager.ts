@@ -5,6 +5,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
   "title": "Task Manager",
   "description": "One JavaScript app, built phase by phase. You set up the tools, learn the words every later phase uses, build the interface, add the behavior, manage the data, debug what breaks, use Git, connect an API, serve one yourself, test the work, review it, and finish with a feature of your own. One phase leaves the app to read a codebase you did not write. Every phase is Learn, then Solve, then Review.",
   "version": 47,
+  "freePhases": 1,
   "phases": [
     {
       "id": "setup",

@@ -21,7 +21,7 @@ export const IDE_MANIFEST_TASK_MANAGER: unknown = {
       "title": "Programming fundamentals",
       "goal": "The words every later phase uses as if you already knew them — a value, a variable, a function, a list, a loop — each defined in plain language and run in a two-line program, so the next phase is reading, not guessing.",
       "level": 1,
-      "tier": "free",
+      "tier": "pro",
       "authored": true,
       "activityCount": 5
     },

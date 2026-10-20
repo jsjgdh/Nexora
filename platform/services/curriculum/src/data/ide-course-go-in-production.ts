@@ -5,7 +5,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
   "title": "Go in production",
   "description": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, pipelines, JSON in and out, an HTTP server with its deadlines, routes, middleware, authentication, tests, performance, storage, a database, caching, resilience, operations, logging, dependencies, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
   "version": 2,
-  "freePhases": 0,
+  "freePhases": 1,
   "phases": [
     {
       "id": "go-goroutines",

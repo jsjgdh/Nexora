@@ -5,7 +5,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
   "title": "Rust in production",
   "description": "The ledger as a service. It opens with a program that reads code and reports what it finds, and then it builds the service: the runtime and its tasks, the channels between them, the router and its extractors, the state it shares, the layers around it, the stop at the end of it, the failures that become answers, the database, the configuration, the log, the tests, and a release you can defend.",
   "version": 1,
-  "freePhases": 0,
+  "freePhases": 1,
   "phases": [
     {
       "id": "rust-checker",
@@ -650,7 +650,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "tests": [
             "the program says what it cannot decide"
           ],
-          "feedback": "The program prints the limits of what it read beside the report. A program that prints findings and no limits is a program that sounds certain about everything.",
+          "feedback": "The program names the files it could not judge instead of staying quiet about them. A checker that reports only what it understood sounds as certain about the rest as it is about the part it read.",
           "edge": true
         }
       ],

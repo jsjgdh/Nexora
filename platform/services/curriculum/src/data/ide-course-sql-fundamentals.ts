@@ -3,9 +3,9 @@
 export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
   "id": "sql-fundamentals",
   "title": "SQL fundamentals",
-  "description": "SQL as SQLite really accepts it, on the ledger the Go and Rust courses already build: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
+  "description": "SQL as SQLite really accepts it, on the ledger the Go and Rust courses already build: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. It teaches the SQL of SQLite 3.54.1, the version that was current on 2026-10-21, and says so where SQLite and the SQL standard differ. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
   "version": 1,
-  "freePhases": 0,
+  "freePhases": 1,
   "phases": [
     {
       "id": "sql-first-database",
@@ -230,12 +230,20 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         {
           "label": "SQLite: the command line shell",
           "url": "https://sqlite.org/cli.html"
+        },
+        {
+          "label": "SQLite: the release history, where the version is named",
+          "url": "https://sqlite.org/changes.html"
         }
       ],
       "lesson": [
         {
           "kind": "prose",
           "body": "A database is a file. SQLite is the engine that reads it: there is no server to start, nothing to install beyond the driver, and no network. The file is the project, and a copy of the file is a copy of the data."
+        },
+        {
+          "kind": "prose",
+          "body": "The SQL in this course is the SQL SQLite really accepts. It was written against SQLite 3.54.1, the version that was current when the course was written on 2026-10-21. SQLite understands most of the standard language and leaves out a few parts of it, so where the two come apart, the lesson that meets the difference says which of the two is being taught."
         },
         {
           "kind": "prose",
@@ -263,7 +271,8 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
             "The database is one file.",
             "No server and no network.",
             "A table is a shape and rows.",
-            "The driver runs the same SQL."
+            "The driver runs the same SQL.",
+            "The SQL is SQLite 3.54.1, read 2026-10-21."
           ]
         },
         {

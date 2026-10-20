@@ -21,7 +21,7 @@ export const IDE_MANIFEST_RUST_FUNDAMENTALS: unknown = {
       "title": "One owner at a time",
       "goal": "Moves, copies and returns: how a value changes hands without two owners freeing it.",
       "level": 1,
-      "tier": "free",
+      "tier": "pro",
       "authored": true,
       "activityCount": 4
     },
@@ -30,7 +30,7 @@ export const IDE_MANIFEST_RUST_FUNDAMENTALS: unknown = {
       "title": "Look without taking",
       "goal": "Read with a shared borrow, change with a mutable one, and hand back a slice safely.",
       "level": 1,
-      "tier": "free",
+      "tier": "pro",
       "authored": true,
       "activityCount": 4
     },
@@ -39,7 +39,7 @@ export const IDE_MANIFEST_RUST_FUNDAMENTALS: unknown = {
       "title": "One door into the type",
       "goal": "Private fields, a constructor that refuses bad data, and derives that earn their place.",
       "level": 1,
-      "tier": "free",
+      "tier": "pro",
       "authored": true,
       "activityCount": 4
     },

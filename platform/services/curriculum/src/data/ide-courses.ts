@@ -6,6 +6,8 @@ import { IDE_COURSE_GO_FUNDAMENTALS } from "./ide-course-go-fundamentals.js";
 import { IDE_MANIFEST_GO_FUNDAMENTALS } from "./ide-manifest-go-fundamentals.js";
 import { IDE_COURSE_GO_IN_PRODUCTION } from "./ide-course-go-in-production.js";
 import { IDE_MANIFEST_GO_IN_PRODUCTION } from "./ide-manifest-go-in-production.js";
+import { IDE_COURSE_OCAML_FUNDAMENTALS } from "./ide-course-ocaml-fundamentals.js";
+import { IDE_MANIFEST_OCAML_FUNDAMENTALS } from "./ide-manifest-ocaml-fundamentals.js";
 import { IDE_COURSE_RUST_FUNDAMENTALS } from "./ide-course-rust-fundamentals.js";
 import { IDE_MANIFEST_RUST_FUNDAMENTALS } from "./ide-manifest-rust-fundamentals.js";
 import { IDE_COURSE_RUST_IN_PRODUCTION } from "./ide-course-rust-in-production.js";
@@ -14,6 +16,8 @@ import { IDE_COURSE_SQL_FUNDAMENTALS } from "./ide-course-sql-fundamentals.js";
 import { IDE_MANIFEST_SQL_FUNDAMENTALS } from "./ide-manifest-sql-fundamentals.js";
 import { IDE_COURSE_TASK_MANAGER } from "./ide-course-task-manager.js";
 import { IDE_MANIFEST_TASK_MANAGER } from "./ide-manifest-task-manager.js";
+import { IDE_COURSE_ZIG_FUNDAMENTALS } from "./ide-course-zig-fundamentals.js";
+import { IDE_MANIFEST_ZIG_FUNDAMENTALS } from "./ide-manifest-zig-fundamentals.js";
 
 /** The course a fresh install opens, as the IDE's catalogue says. */
 export const IDE_DEFAULT_COURSE = "task-manager";
@@ -23,8 +27,10 @@ export const IDE_COURSES: Record<string, { manifest: unknown; document: unknown 
   "api-basics": { manifest: IDE_MANIFEST_API_BASICS, document: IDE_COURSE_API_BASICS },
   "go-fundamentals": { manifest: IDE_MANIFEST_GO_FUNDAMENTALS, document: IDE_COURSE_GO_FUNDAMENTALS },
   "go-in-production": { manifest: IDE_MANIFEST_GO_IN_PRODUCTION, document: IDE_COURSE_GO_IN_PRODUCTION },
+  "ocaml-fundamentals": { manifest: IDE_MANIFEST_OCAML_FUNDAMENTALS, document: IDE_COURSE_OCAML_FUNDAMENTALS },
   "rust-fundamentals": { manifest: IDE_MANIFEST_RUST_FUNDAMENTALS, document: IDE_COURSE_RUST_FUNDAMENTALS },
   "rust-in-production": { manifest: IDE_MANIFEST_RUST_IN_PRODUCTION, document: IDE_COURSE_RUST_IN_PRODUCTION },
   "sql-fundamentals": { manifest: IDE_MANIFEST_SQL_FUNDAMENTALS, document: IDE_COURSE_SQL_FUNDAMENTALS },
   "task-manager": { manifest: IDE_MANIFEST_TASK_MANAGER, document: IDE_COURSE_TASK_MANAGER },
+  "zig-fundamentals": { manifest: IDE_MANIFEST_ZIG_FUNDAMENTALS, document: IDE_COURSE_ZIG_FUNDAMENTALS },
 };

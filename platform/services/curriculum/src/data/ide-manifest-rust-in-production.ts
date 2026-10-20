@@ -12,7 +12,7 @@ export const IDE_MANIFEST_RUST_IN_PRODUCTION: unknown = {
       "title": "A checker reads code and reports what it finds",
       "goal": "Learn what a tool can establish about code, and how to report a finding a reader can judge.",
       "level": 3,
-      "tier": "pro",
+      "tier": "free",
       "authored": true,
       "activityCount": 4
     },

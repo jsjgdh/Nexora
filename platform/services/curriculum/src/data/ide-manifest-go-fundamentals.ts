@@ -12,7 +12,7 @@ export const IDE_MANIFEST_GO_FUNDAMENTALS: unknown = {
       "title": "Go program",
       "goal": "A Go program is a package main with a func main: the package clause, the entry point, and the two commands that run and build it.",
       "level": 2,
-      "tier": "pro",
+      "tier": "free",
       "authored": true,
       "activityCount": 4
     },

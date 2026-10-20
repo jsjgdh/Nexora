@@ -12,7 +12,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
       "title": "Goroutines and channels",
       "goal": "A goroutine is a function running on its own; a channel is the only thing they should share. Communicate by passing values down a channel instead of touching the same memory from two places at once.",
       "level": 3,
-      "tier": "pro",
+      "tier": "free",
       "authored": true,
       "activityCount": 4
     },

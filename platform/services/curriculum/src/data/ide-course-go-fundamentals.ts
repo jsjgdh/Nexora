@@ -5,7 +5,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
   "title": "Go fundamentals",
   "description": "Go itself, from the first value to a module. Zero values and integers, control flow, functions, structs, methods, interfaces, packages, collections, pointers, embedding, errors, defer and panic, generics, and modules. The phases build one small ledger service, and each is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review.",
   "version": 1,
-  "freePhases": 0,
+  "freePhases": 1,
   "phases": [
     {
       "id": "go-program",
