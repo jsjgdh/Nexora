@@ -59,6 +59,29 @@ export interface GatewayConfig {
    */
   trustProxy: boolean | ((addr: string, index: number) => boolean);
   globalLimit: RouteLimit;
+  /**
+   * The cap on traffic with no verified identity.
+   *
+   * Anonymous traffic is the traffic a flood looks like: one address, no
+   * account, no cost to the caller. It gets its own, tighter cap, applied
+   * after the gateway has looked at the credential it was given, so a
+   * signed-in learner is never counted here and an anonymous caller cannot
+   * spend the whole platform's budget on a script.
+   */
+  anonymousLimit: RouteLimit;
+  /**
+   * The whole-platform request budget, and the breaker that enforces it.
+   *
+   * One budget for every request the gateway answers. A per-address cap
+   * cannot see a flood spread over many addresses, and this is the cap for
+   * that. Zero disables it.
+   */
+  edgeBudget: RouteLimit;
+  /**
+   * When a dependency stops answering, how many failures in a row open its
+   * breaker, and how long the breaker waits before it lets one probe through.
+   */
+  breaker: { failuresToOpen: number; cooldownMs: number };
   routes: RouteConfig[];
   /** Billing service base URL, used to resolve entitlement directly (the
       gateway calls billing over the mesh rather than through its own proxy). */
@@ -200,6 +223,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   // service, and a check that asked a different host than login would be a
   // denylist reader that is always one deploy behind.
   const authUrl = url(env, "AUTH_URL", "http://localhost:8101");
+  // The same window for every cap: one knob, one meaning, and no way for the
+  // global cap and the route caps to roll over at different moments.
+  const limitWindowMs = num(env, "GATEWAY_LIMIT_WINDOW_MS", 60_000);
   return {
     port: firstNum(env, ["GATEWAY_PORT", "PORT"], 8080),
     frontendUrl,
@@ -211,7 +237,18 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     clerkAuthorizedParties: parties.length > 0 ? parties : [frontendUrl],
     internalKey,
     trustProxy: parseTrustProxy(env),
-    globalLimit: { windowMs: 60_000, max: num(env, "GATEWAY_GLOBAL_LIMIT", 600) },
+    globalLimit: { windowMs: limitWindowMs, max: num(env, "GATEWAY_GLOBAL_LIMIT", 600) },
+    // Tighter than the global cap on purpose: the global cap is the floor
+    // every caller sits on, and anonymous traffic is the traffic that costs
+    // the platform the most for the least.
+    anonymousLimit: { windowMs: limitWindowMs, max: num(env, "GATEWAY_ANON_LIMIT", 60) },
+    // A whole-platform budget, so a flood spread over many addresses is
+    // stopped even though no single address is over its own cap.
+    edgeBudget: { windowMs: limitWindowMs, max: num(env, "GATEWAY_EDGE_LIMIT", 20_000) },
+    breaker: {
+      failuresToOpen: Math.max(1, Math.floor(num(env, "GATEWAY_BREAKER_FAILURES", 3))),
+      cooldownMs: Math.max(0, Math.floor(num(env, "GATEWAY_BREAKER_COOLDOWN_MS", 15_000))),
+    },
     billingUrl,
     entitlementTtlMs: num(env, "ENTITLEMENT_CACHE_TTL_MS", 30_000),
     authUrl,
@@ -246,6 +283,17 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
         // The verified ledger lives in the auth service beside the users it
         // belongs to. Both directions require the learner's own JWT: syncing
         // someone else's proof, or reading it, is 401 by construction.
+      },
+      {
+        prefix: "/api/progress",
+        target: authUrl,
+        auth: true,
+        timeoutMs: 10_000,
+        limit: { windowMs: 60_000, max: 120 },
+        // The learner's own work: drafts, attempts, completions, streak and
+        // placement. The identity service owns it (it owns the account the
+        // work belongs to), so the prefix is translated rather than stripped.
+        upstreamPrefix: "/progress",
       },
       {
         prefix: "/api/curriculum",

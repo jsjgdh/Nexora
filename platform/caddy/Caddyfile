@@ -1,0 +1,225 @@
+# NEXORA edge configuration for Caddy.
+#
+# Caddy runs on the host, in front of the compose stack. It is the only thing
+# listening on the public interface. The compose file binds the gateway and
+# the frontend to 127.0.0.1, and Postgres to nothing at all, so this file is
+# the only route into the platform from the internet.
+#
+# Two hosts, two upstreams, no wildcard anywhere:
+#
+#   {$API_HOST}   the API. Everything on it goes to the gateway on
+#                 127.0.0.1:8080. The gateway is the only public API surface,
+#                 and the four services behind it (auth, curriculum,
+#                 execution, billing) are reachable only over the compose
+#                 network.
+#   {$SITE_HOST}  the site. Everything on it goes to the frontend on
+#                 127.0.0.1:3000.
+#
+# The site and the API are on different hosts, so a browser call from the page
+# to the API is cross-origin, and the CORS set below is what makes it
+# possible. It is one exact origin.
+#
+# ENVIRONMENT
+#
+#   API_HOST        the API hostname, for example api.nexora.dev
+#   SITE_HOST       the site hostname, for example nexora.dev
+#   FRONTEND_URL    the site's exact origin, for example https://nexora.dev
+#   ACME_EMAIL      the address the certificate account is created with
+#
+# Caddy does not read a .env file. These have to be in the Caddy process's
+# own environment. With the systemd unit in DEPLOY-RUNBOOK.md they are read
+# from /etc/caddy/nexora.env.
+#
+# Every one of them has a default that is visibly wrong rather than silently
+# empty, so a missing variable shows up in the configuration and in the
+# certificate request rather than turning into an origin that matches
+# nothing. The defaults are:
+#
+#   API_HOST   api.nexora.dev
+#   SITE_HOST  nexora.dev
+#   FRONTEND_URL   __FRONTEND_URL_IS_NOT_SET__
+#
+# FRONTEND_URL has no usable default on purpose. An unset FRONTEND_URL makes
+# the CORS set match a literal placeholder string, so every real request is
+# refused by the browser rather than allowed by accident. Check for it:
+#
+#   grep -R "IS_NOT_SET" /etc/caddy/ && echo "fix the environment"
+#
+# WHAT THIS FILE DOES NOT DO
+#
+#   It does not rate limit. The platform's limits are in the gateway and in
+#   each service, and they are in memory and per instance. A second limiter
+#   here would be a different limit with a different configuration and no
+#   shared store behind it. What this file does do is make the gateway's
+#   rate-limit headers readable by the browser, which is the part that is
+#   otherwise lost.
+#
+#   It does not set a Content-Security-Policy on the site host. The site sets
+#   its own: SvelteKit's `kit.csp` configuration, with a hash on a prerendered
+#   page and a nonce on a page rendered at request time. A second policy here
+#   would intersect with it, and the stricter of the two would win, so a
+#   hand-written policy at the edge would have to guess the nonce and would
+#   break the site. The API host does have one, because the API answers with
+#   JSON and nothing else.
+#
+#   It does not set Cross-Origin-Opener-Policy on the site host. Clerk
+#   sign-in opens a popup, and a strict opener policy severs the relationship
+#   the popup needs to hand the session back. It is set on the API host,
+#   where there is no popup.
+#
+#   It was not executed. This was written on a machine with no Caddy binary
+#   and no deployment to point it at. The syntax follows the Caddyfile
+#   reference for the directives used here, and the Caddyfile parses as a
+#   balanced set of blocks, but `caddy validate --config` has not been run
+#   against it and no request has been made through it.
+
+{
+	# The address the ACME account is created with, so the expiry notice for
+	# the certificate reaches a person. Left empty, Caddy creates the
+	# account without an address and sends no notice.
+	email {$ACME_EMAIL}
+
+	# The admin API listens on localhost:2019. Nothing in this deployment
+	# uses it, and turning it off removes a control surface.
+	admin off
+
+	servers {
+		# The client address comes from the socket, not from a header a
+		# client could write. The platform is reached directly, with no CDN
+		# in front of it, so the private ranges are the only proxies whose
+		# forwarded headers are believed.
+		trusted_proxies static private_ranges
+	}
+}
+
+# ---------------------------------------------------------------------------
+# The API host.
+# ---------------------------------------------------------------------------
+{$API_HOST:api.nexora.dev} {
+	# The request body limit.
+	#
+	# The gateway's own limit is 256000 bytes, and it answers an oversized
+	# body with a 413 and a JSON envelope naming the request id. This limit
+	# sits above it on purpose: a body the gateway would accept is not
+	# refused at the edge, and a body the gateway would refuse still gets the
+	# gateway's answer, which is the one a client can act on. A body far
+	# past this is refused here, before it is buffered.
+	#
+	# The directive needs Caddy 2.10.0 or later, where it is still marked
+	# experimental. On an older Caddy, remove the block and the gateway's
+	# limit is the only one.
+	request_body {
+		max_size 1MB
+	}
+
+	# The CORS set: one exact origin, and nothing else.
+	#
+	# The gateway has its own exact-origin CORS and both layers must agree:
+	# FRONTEND_URL in the gateway's environment and FRONTEND_URL in the
+	# Caddy process's environment are the same value. The upstream's
+	# headers are deleted before the edge's are set, because two
+	# Access-Control-Allow-Origin headers in one response is a browser error
+	# rather than a laxer policy.
+	#
+	# There is no wildcard and no prefix match, and there is no second
+	# origin. A request from any other origin gets no CORS header at all
+	# from either layer, and the browser refuses it.
+	@siteOrigin header Origin {$FRONTEND_URL:__FRONTEND_URL_IS_NOT_SET__}
+	header @siteOrigin {
+		-Access-Control-Allow-Origin
+		-Access-Control-Allow-Methods
+		-Access-Control-Allow-Headers
+		-Access-Control-Max-Age
+		-Access-Control-Allow-Credentials
+		-Access-Control-Expose-Headers
+		Access-Control-Allow-Origin "{$FRONTEND_URL:__FRONTEND_URL_IS_NOT_SET__}"
+		Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+		Access-Control-Allow-Headers "Authorization, Content-Type, X-Request-Id"
+		# The headers the browser has to be able to read.
+		#
+		# Retry-After is what the gateway sends with a 429 and what the
+		# execution service sends when the daily quota refuses a run.
+		# X-Execution-Daily-Remaining is how a page knows how many runs are
+		# left today. X-Request-Id is the one id that finds a request in
+		# every service's log. A browser hides a response header from the
+		# page unless the page is told it may read it, and the gateway's own
+		# exposed list does not include Retry-After, so without this line
+		# the page cannot tell the learner when to try again.
+		Access-Control-Expose-Headers "X-Request-Id, X-Execution-Daily-Remaining, Retry-After"
+		Access-Control-Max-Age "600"
+		Vary "Origin"
+	}
+
+	# The security headers.
+	#
+	# The API answers with JSON and is never rendered as a document, so
+	# `default-src 'none'` is the whole policy: nothing on this host may
+	# load or execute anything. Cross-Origin-Resource-Policy is cross-origin
+	# here, because the site reads this host from another origin and the
+	# policy must not contradict the CORS set above.
+	header {
+		-Server
+		-X-Powered-By
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "cross-origin"
+		Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+		Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+	}
+
+	# The gateway. It is bound to loopback by the production compose
+	# override, so this is the only path to it.
+	reverse_proxy 127.0.0.1:8080 {
+		# The client address. Caddy overwrites X-Forwarded-For with the
+		# address it resolved, and the gateway strips any client-supplied
+		# copy before it uses the value, so a caller cannot choose their own
+		# rate-limit bucket by writing the header.
+		#
+		# This is why TRUST_PROXY is 1 in the deployment's .env: exactly one
+		# proxy (this one) sits in front of the gateway. With TRUST_PROXY=0
+		# every request is keyed on the docker bridge address and the whole
+		# platform shares one rate-limit bucket.
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# ---------------------------------------------------------------------------
+# The site host.
+# ---------------------------------------------------------------------------
+{$SITE_HOST:nexora.dev} {
+	request_body {
+		max_size 1MB
+	}
+
+	# The security headers.
+	#
+	# No Content-Security-Policy and no Cross-Origin-Opener-Policy here, and
+	# the reasons are in the header of this file.
+	header {
+		-Server
+		-X-Powered-By
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+	}
+
+	# The site. The frontend container is bound to loopback by the
+	# production compose override.
+	#
+	# The site's own server-side routes, including the ones that hold the
+	# refresh token in an HttpOnly cookie, are served by this same
+	# container. The container reaches the gateway over the compose network
+	# at http://gateway:8080, which is GATEWAY_URL, so the site's server is
+	# not a second public API surface.
+	reverse_proxy 127.0.0.1:3000 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

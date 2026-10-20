@@ -4,7 +4,8 @@ import { randomUUID } from "node:crypto";
 import { ApiError } from "@nexora/service-kit";
 import { loadConfig, type RouteConfig } from "./config.js";
 import { bearerIdentity, clerkVerifier, localVerifier, type TokenVerifier } from "./auth.js";
-import { FixedWindow } from "./limits.js";
+import { FixedWindow, EdgeBudget } from "./limits.js";
+import { DependencyBreaker } from "./breaker.js";
 import { MAX_BODY_BYTES, forward, matchRoute, buildForwardHeaders, upstreamPathFor } from "./proxy.js";
 import {
   EntitlementCache,
@@ -32,6 +33,13 @@ const verifier: TokenVerifier =
     : localVerifier(config.jwtSecret);
 const globalLimiter = new FixedWindow(config.globalLimit.windowMs, config.globalLimit.max);
 const routeLimiters = new Map(config.routes.map((r) => [r.prefix, new FixedWindow(r.limit.windowMs, r.limit.max)]));
+/* The anonymous cap, the whole-platform budget, and the breaker.
+   All three live in this one process, and the platform runs one gateway
+   (see LIMITS.md), so their counters are the product's counters and not one
+   gateway's share of them. */
+const anonymousLimiter = new FixedWindow(config.anonymousLimit.windowMs, config.anonymousLimit.max);
+const edgeBudget = new EdgeBudget(config.edgeBudget.windowMs, config.edgeBudget.max);
+const breaker = new DependencyBreaker(config.breaker.failuresToOpen, config.breaker.cooldownMs);
 
 /* Entitlement for paid curriculum routes.
  *
@@ -244,7 +252,40 @@ app.get("/health/deep", async () => {
   const allOk = checks.every((c) => c.ok);
   const revocations = revocation.health();
   const revocationsOk = revocations.authService !== "unreachable";
-  return { status: allOk && revocationsOk ? "ready" : "degraded", checks, revocations };
+  /* The limiters' own state, so an operator can see what the edge is doing
+     without reading its logs: what the caps are, how much of the platform
+     budget is spent, and which dependencies are shut. The decision this
+     state rests on — one gateway process, so the caps are the product's
+     caps — is written out here rather than only in a document. */
+  const limits = {
+    scope: "single-process",
+    decision:
+      "One gateway process holds every counter, and the platform runs one gateway, so the caps below are the whole product's caps. A second gateway instance would multiply them.",
+    global: { windowMs: config.globalLimit.windowMs, max: config.globalLimit.max, refusals: globalLimiter.refusals },
+    anonymous: {
+      windowMs: config.anonymousLimit.windowMs,
+      max: config.anonymousLimit.max,
+      refusals: anonymousLimiter.refusals,
+    },
+    routes: Object.fromEntries(
+      config.routes.map((r) => [
+        r.prefix,
+        { windowMs: r.limit.windowMs, max: r.limit.max, refusals: routeLimiters.get(r.prefix)?.refusals ?? 0 },
+      ])
+    ),
+    edge: {
+      windowMs: config.edgeBudget.windowMs,
+      max: config.edgeBudget.max,
+      used: edgeBudget.usedNow,
+      refusals: edgeBudget.refusals,
+    },
+  };
+  const breakerState = {
+    failuresToOpen: config.breaker.failuresToOpen,
+    cooldownMs: config.breaker.cooldownMs,
+    dependencies: breaker.snapshotAll(),
+  };
+  return { status: allOk && revocationsOk ? "ready" : "degraded", checks, revocations, limits, breaker: breakerState };
 });
 
 app.route({
@@ -252,6 +293,27 @@ app.route({
   url: "/api/*",
   handler: async (req, reply) => {
     const path = (req.params as { "*": string })["*"] ? `/api/${(req.params as { "*": string })["*"]}` : "/api";
+
+    /* The caps come before the routing, so that every path under the public
+       surface is counted: a path that matches no route is answered with a
+       404, and a flood of paths that match no route is exactly what an
+       attacker sends. The health probes are not counted: a limit that can
+       refuse a health check would let a flood mark the platform unhealthy.
+
+       The per-address cap is the floor every caller sits on. The
+       whole-platform budget is the cap a per-address cap cannot see, because
+       a flood spread over many addresses never puts any one address over
+       its own ceiling. */
+    if (!globalLimiter.take(`g:${req.ip}`)) {
+      const waitS = Math.max(1, Math.ceil(globalLimiter.retryAfterMs(`g:${req.ip}`) / 1000));
+      reply.header("Retry-After", String(waitS));
+      throw new ApiError(429, "rate_limited", "Too many requests.");
+    }
+    if (!edgeBudget.take()) {
+      reply.header("Retry-After", String(Math.max(1, Math.ceil(edgeBudget.retryAfterMs() / 1000))));
+      throw new ApiError(429, "edge_overloaded", "The platform is busy right now. Try again shortly.");
+    }
+
     const route = matchRoute(path, config.routes);
     if (!route) {
       throw new ApiError(404, "not_found", `No route for ${path}.`);
@@ -269,10 +331,6 @@ app.route({
       throw new ApiError(404, "not_found", `No route for ${path}.`);
     }
 
-    if (!globalLimiter.take(`g:${req.ip}`)) {
-      reply.header("Retry-After", "60");
-      throw new ApiError(429, "rate_limited", "Too many requests.");
-    }
     const limiter = routeLimiters.get(route.prefix)!;
     if (!limiter.take(`r:${route.prefix}:${req.ip}`)) {
       const waitS = Math.ceil(limiter.retryAfterMs(`r:${route.prefix}:${req.ip}`) / 1000);
@@ -285,15 +343,32 @@ app.route({
     const publicPath = route.publicPaths?.includes(path) ?? false;
     if (route.auth && !publicPath) {
       identity = await bearerIdentity(req.headers.authorization, verifier);
-      if (!identity) throw new ApiError(401, "unauthorized", "Valid access token required.");
-      userId = identity.userId;
+      userId = identity?.userId ?? null;
     } else if (!publicPath && req.headers.authorization) {
       // Optional-auth routes (e.g. /api/auth/me): a presented token is still
       // verified and forwarded as identity, so account-scoped handlers work
       // on public prefixes. A bad token is rejected — never silently dropped.
       identity = await bearerIdentity(req.headers.authorization, verifier);
-      if (!identity) throw new ApiError(401, "unauthorized", "Invalid access token.");
-      userId = identity.userId;
+      userId = identity?.userId ?? null;
+    }
+
+    /* The anonymous cap, counted after the credential was read and before
+       anything is refused for it: this is exactly the traffic with no
+       verified identity. A signed-in learner is never charged for it, and an
+       anonymous caller gets its own, tighter ceiling — the traffic a flood
+       looks like is the traffic that costs the platform the most and pays
+       the least. */
+    if (!userId && !anonymousLimiter.take(`a:${req.ip}`)) {
+      const waitS = Math.max(1, Math.ceil(anonymousLimiter.retryAfterMs(`a:${req.ip}`) / 1000));
+      reply.header("Retry-After", String(waitS));
+      throw new ApiError(429, "anonymous_rate_limited", "Too many requests without an account. Try again later.");
+    }
+
+    if (route.auth && !publicPath && !identity) {
+      throw new ApiError(401, "unauthorized", "Valid access token required.");
+    }
+    if (!publicPath && req.headers.authorization && !identity) {
+      throw new ApiError(401, "unauthorized", "Invalid access token.");
     }
 
     /* Sign-out has to end the credential, not just the session's ability to
@@ -402,6 +477,16 @@ app.route({
     // parsers downstream reject an empty payload with content-type set.
     if (body === null) delete headers["content-type"];
 
+    /* The dependency breaker, before the request is forwarded.
+       A dependency that is down must not cost the caller a timeout, and must
+       not receive a flood of requests that are going to fail anyway. While
+       the breaker is open the answer is a refusal with a retry hint: nothing
+       is forwarded, nothing is faked, and the request does not hang. */
+    if (!breaker.allow(route.prefix)) {
+      reply.header("Retry-After", String(Math.max(1, Math.ceil(config.breaker.cooldownMs / 1000))));
+      throw new ApiError(503, "dependency_unavailable", "This service is not answering right now. Try again shortly.");
+    }
+
     try {
       const upstream = await forward({
         target: route.target,
@@ -412,6 +497,9 @@ app.route({
         body,
         timeoutMs: route.timeoutMs,
       });
+      // The dependency answered: the breaker closes and the failure count
+      // resets, so one bad minute does not keep the route shut.
+      breaker.success(route.prefix);
       // A billing webhook just changed subscription state. It carries no user id
       // we recognise (Dodo's, not ours), so drop every cached verdict; the next
       // paid request re-asks billing and sees the new state at once instead of
@@ -423,6 +511,9 @@ app.route({
       reply.header("X-Request-Id", req.id);
       return reply.code(upstream.status).send(upstream.body);
     } catch (err: unknown) {
+      // The upstream did not answer. That is the signal the breaker counts:
+      // after a few in a row the route is treated as down.
+      breaker.failure(route.prefix);
       const status =
         err instanceof Error && "status" in err && typeof (err as { status?: unknown }).status === "number"
           ? (err as { status: number }).status

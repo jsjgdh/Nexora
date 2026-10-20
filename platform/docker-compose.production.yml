@@ -1,0 +1,364 @@
+# NEXORA production override for platform/docker-compose.yml
+#
+#   docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+#
+# WHAT THIS FILE IS
+#
+# The base compose file is the platform's shape: seven services, two job
+# profiles, health checks, resource caps. This file is the deployment posture
+# around that shape. It changes no service name, no port, no environment
+# variable and no image content. It changes how the services are bound, what
+# they are allowed to do to the machine, and what happens to them when they
+# stop.
+#
+# It was written against the base file in this repository (the service names,
+# the ports 8080, 3000, 8101, 8102, 8104, 8106, the health check paths and the
+# resource caps all come from there). Every service named below exists in
+# platform/docker-compose.yml.
+#
+# REQUIREMENTS
+#
+#   Docker Compose 2.24.4 or later. The `!override` tag is used to replace the
+#   base file's published ports rather than append to them. Compose merges
+#   `ports` on the unique key {ip, target, published, protocol}, so the base
+#   file's "8080:8080" and this file's "127.0.0.1:8080:8080" are two
+#   different keys and would be published together, binding the same container
+#   port twice. `!override` replaces the list. Check with:
+#
+#       docker compose version
+#
+#   A release id in NEXORA_RELEASE. Every image this file builds is tagged
+#   with it, so a rollback is a change of one variable and the old image is
+#   still on the host. Export it before every compose command:
+#
+#       export NEXORA_RELEASE=$(git rev-parse --short HEAD)
+#
+#   The compose file refuses to run without it, which is the point: an
+#   untagged "latest" image is not a deployment.
+#
+# WHAT THIS FILE DOES NOT COVER, AND WHY
+#
+#   1. The base images the two Dockerfiles build FROM are `node:22-alpine`,
+#      which is a moving minor tag. The digest that tag resolved to on
+#      2026-10-20 is
+#      sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402.
+#      Pinning it is a one-line change in platform/Dockerfile and
+#      nexora-svelte/Dockerfile, which are not this file's to change. Until
+#      that is done, a rebuild can pick up a different Node patch release
+#      under the same tag. The digest here pins the only image compose
+#      pulls.
+#
+#   2. The `postgres` service keeps five Linux capabilities. Dropping all of
+#      them breaks the official image's entrypoint, which chowns its data
+#      directory and its socket directory as root before dropping to the
+#      postgres user. The other six services drop every capability and add
+#      none, because they run as a non-root user and never need one.
+#
+#   3. Nothing here was executed. This was written on a machine with the
+#      Docker CLI and no Docker daemon. The structure was checked against the
+#      base compose file by parsing both and comparing service names, ports
+#      and health check paths. The runtime behaviour of every directive below
+#      is unverified.
+#
+# The gateway is the only public API surface, and it is bound to loopback.
+# The frontend is bound to loopback too, because the site is served by the
+# reverse proxy in front of it. Postgres is on an internal network with no
+# published port, and the four services that need outbound internet
+# (auth for mail, billing for the payment provider) are on both networks so
+# they keep their egress while the database keeps none.
+
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    # The digest above is the multi-architecture index for postgres:17-alpine,
+    # resolved from the Docker Hub registry on 2026-10-20. The linux/amd64
+    # manifest under it is
+    # sha256:aa90e97ee862e558111d34cfb8b2c4bec768c2b039fb791341686928560263b3.
+    # Pinning the index keeps the file portable across architectures and stops
+    # a rebuild from picking up a different build of the same tag.
+    restart: unless-stopped
+    networks:
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      # The official image's entrypoint runs as root, chowns PGDATA and the
+      # socket directory, then drops to the postgres user with gosu. These are
+      # the five capabilities that needs and no more.
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    read_only: true
+    tmpfs:
+      # The socket directory, created and chmod-ed by the entrypoint.
+      - /var/run/postgresql:rw,nosuid,nodev,size=16m,mode=3775
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    mem_limit: 1g
+    cpus: "1.0"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora -d authdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+
+  auth:
+    image: nexora/auth:${NEXORA_RELEASE:?set NEXORA_RELEASE to the release id}
+    restart: unless-stopped
+    networks:
+      - app
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    mem_limit: 256m
+    cpus: "0.5"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8101/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  curriculum:
+    image: nexora/curriculum:${NEXORA_RELEASE:?set NEXORA_RELEASE to the release id}
+    restart: unless-stopped
+    networks:
+      - app
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    mem_limit: 256m
+    cpus: "0.5"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8102/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  execution:
+    image: nexora/execution:${NEXORA_RELEASE:?set NEXORA_RELEASE to the release id}
+    restart: unless-stopped
+    networks:
+      - app
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=512m,mode=1777
+    volumes:
+      # The Go build cache. The image prewarms it at build time, and Docker
+      # copies the image's contents into a fresh named volume on first use,
+      # so the prewarm survives and the directory becomes writable for the
+      # `app` user. Without this mount the read-only root filesystem makes
+      # the subprocess runner's Go builds fail with a confusing cache error.
+      # Under EXECUTION_RUNNER=docker, which is the production posture, the
+      # runner image carries its own prewarmed cache and this volume is not
+      # used.
+      - gocache:/opt/gocache
+    mem_limit: 512m
+    cpus: "1.0"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8104/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  billing:
+    image: nexora/billing:${NEXORA_RELEASE:?set NEXORA_RELEASE to the release id}
+    restart: unless-stopped
+    networks:
+      - app
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    mem_limit: 256m
+    cpus: "0.5"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8106/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  gateway:
+    image: nexora/gateway:${NEXORA_RELEASE:?set NEXORA_RELEASE to the release id}
+    restart: unless-stopped
+    networks:
+      - app
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    ports: !override
+      # Loopback only. The reverse proxy on the host is the only thing that
+      # can reach the gateway, and the reverse proxy is the only thing
+      # listening on the public interface.
+      - "127.0.0.1:8080:8080"
+    mem_limit: 256m
+    cpus: "0.5"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+  frontend:
+    image: nexora/frontend:${NEXORA_RELEASE:?set NEXORA_RELEASE to the release id}
+    restart: unless-stopped
+    networks:
+      - app
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    ports: !override
+      # Loopback only, for the same reason as the gateway. The site is
+      # served by the reverse proxy; the container is not reachable from the
+      # internet.
+      - "127.0.0.1:3000:3000"
+    mem_limit: 256m
+    cpus: "0.5"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  backup:
+    image: nexora/gateway:${NEXORA_RELEASE:?set NEXORA_RELEASE to the release id}
+    # A job, not a service. It runs, it writes a dump, it exits. It has no
+    # health check because a health check on a container that is meant to
+    # exit would report the job as failed the moment it finished.
+    restart: "no"
+    networks:
+      - app
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    mem_limit: 512m
+    cpus: "1.0"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  drill:
+    image: nexora/gateway:${NEXORA_RELEASE:?set NEXORA_RELEASE to the release id}
+    # A job, for the same reason as the backup. The restore drill reads every
+    # table, writes the rows out, puts them back into a scratch schema,
+    # compares what came back with what went out, and drops the scratch
+    # schema.
+    restart: "no"
+    networks:
+      - app
+      - data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    mem_limit: 512m
+    cpus: "1.0"
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  # The network the services talk over. It has egress, because the auth
+  # service sends mail and the billing service calls the payment provider.
+  app:
+    driver: bridge
+  # The network the database lives on. `internal: true` means a container on
+  # this network has no route to the internet and no route to the host's
+  # public interface. Only postgres, the two services that own a database and
+  # the two job profiles are on it, and postgres is on nothing else.
+  data:
+    driver: bridge
+    internal: true
+
+volumes:
+  gocache:

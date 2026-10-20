@@ -1,9 +1,15 @@
 import { execFile, spawn } from "node:child_process";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExecuteResponse } from "@nexora/contracts";
 import type { ValidatedJob } from "../validate.js";
+import type { RunBound } from "./bounds.js";
+
+/** A run's answer, plus the bound that stopped it. */
+export interface DockerExecuteResponse extends ExecuteResponse {
+  bound: RunBound | null;
+}
 
 /* Docker runner (multi-tenant production tier): each job runs in a fresh
    `node:22-alpine` (or python)   container with cgroup limits, no network, a
@@ -42,7 +48,7 @@ export const EXEC_IMAGES: Record<string, string> = {
 };
 
 /** Pure arg construction — unit-tested without a daemon. */
-export function buildDockerArgs(job: ValidatedJob, workdir: string): string[] {
+export function buildDockerArgs(job: ValidatedJob, workdir: string, cidFile?: string): string[] {
   const image = EXEC_IMAGES[job.language];
   // Go compiles a binary and runs it, so /tmp must be writable AND executable;
   // interpreters execute from /work and need neither in /tmp.
@@ -82,6 +88,10 @@ export function buildDockerArgs(job: ValidatedJob, workdir: string): string[] {
     "--tmpfs",
     tmpfs,
     ...goEnv,
+    // The container's id, written where the runner can find it. Without it a
+    // timeout could only kill the docker client, and the container itself
+    // would keep running with the learner's program inside it.
+    ...(cidFile ? ["--cidfile", cidFile] : []),
     "-v",
     `${workdir}:/work:rw`,
     "-w",
@@ -104,7 +114,7 @@ export async function dockerAvailable(): Promise<boolean> {
   }
 }
 
-export async function runDocker(job: ValidatedJob): Promise<ExecuteResponse> {
+export async function runDocker(job: ValidatedJob): Promise<DockerExecuteResponse> {
   const started = Date.now();
   if (!(await dockerAvailable())) {
     throw Object.assign(new Error("Docker daemon unavailable for the docker runner."), {
@@ -113,6 +123,7 @@ export async function runDocker(job: ValidatedJob): Promise<ExecuteResponse> {
     });
   }
   const hostDir = await mkdtemp(join(tmpdir(), "nexora-dock-"));
+  const cidFile = join(hostDir, ".container-id");
   const cap = job.outputKb * 1024;
   let stdout = "";
   let stderr = "";
@@ -139,8 +150,8 @@ export async function runDocker(job: ValidatedJob): Promise<ExecuteResponse> {
       if (parts.length > 1) await mkdir(join(hostDir, ...parts.slice(0, -1)), { recursive: true });
       await writeFile(join(hostDir, f.path), f.content, "utf8");
     }
-    const result = await new Promise<{ code: number | null; timedOut: boolean }>((resolve) => {
-      const child = spawn("docker", buildDockerArgs(job, hostDir), {
+    const result = await new Promise<{ code: number | null; bound: RunBound | null }>((resolve) => {
+      const child = spawn("docker", buildDockerArgs(job, hostDir, cidFile), {
         stdio: ["pipe", "pipe", "pipe"],
         windowsHide: true,
       });
@@ -148,12 +159,18 @@ export async function runDocker(job: ValidatedJob): Promise<ExecuteResponse> {
       const timer = setTimeout(() => {
         if (!settled) {
           settled = true;
-          try {
-            child.kill("SIGKILL");
-          } catch {
-            /* gone */
-          }
-          resolve({ code: null, timedOut: true });
+          // The container is what has to die, not the client. The client is
+          // only the pipe to it, and killing the client leaves the container
+          // running with the learner's program inside it, burning the host's
+          // CPU after the request was answered.
+          void killContainer(cidFile).finally(() => {
+            try {
+              child.kill("SIGKILL");
+            } catch {
+              /* gone */
+            }
+            resolve({ code: null, bound: "wall" });
+          });
         }
       }, job.timeoutMs + 2000);
       timer.unref?.();
@@ -163,14 +180,14 @@ export async function runDocker(job: ValidatedJob): Promise<ExecuteResponse> {
         if (!settled) {
           settled = true;
           clearTimeout(timer);
-          resolve({ code: null, timedOut: false });
+          resolve({ code: null, bound: null });
         }
       });
       child.on("close", (code) => {
         if (!settled) {
           settled = true;
           clearTimeout(timer);
-          resolve({ code, timedOut: false });
+          resolve({ code, bound: null });
         }
       });
       try {
@@ -184,7 +201,8 @@ export async function runDocker(job: ValidatedJob): Promise<ExecuteResponse> {
       stdout,
       stderr,
       exitCode: result.code,
-      timedOut: result.timedOut,
+      timedOut: result.bound === "wall",
+      bound: result.bound,
       truncated,
       durationMs: Date.now() - started,
       runner: "docker",
@@ -192,4 +210,24 @@ export async function runDocker(job: ValidatedJob): Promise<ExecuteResponse> {
   } finally {
     await rm(hostDir, { recursive: true, force: true }).catch(() => undefined);
   }
+}
+
+/**
+ * Stop the container the client started, by the id the client wrote down.
+ *
+ * Best effort by design: if the id is not there (the container never
+ * started) there is nothing to kill, and the caller's own timeout still
+ * ends the request. What it must never do is leave the container running.
+ */
+async function killContainer(cidFile: string): Promise<void> {
+  let cid = "";
+  try {
+    cid = (await readFile(cidFile, "utf8")).trim();
+  } catch {
+    return;
+  }
+  if (!cid) return;
+  await new Promise<void>((resolve) => {
+    execFile("docker", ["kill", cid], { windowsHide: true }, () => resolve());
+  });
 }

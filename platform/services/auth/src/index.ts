@@ -4,6 +4,8 @@ import { createPool, createService, migrate, start } from "@nexora/service-kit";
 import { registerAuthRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./admin.js";
 import { registerCohortRoutes } from "./cohorts.js";
+import { registerLtiRoutes } from "./lti.js";
+import { registerProgressRoutes } from "./progress.js";
 import { pruneDeletedSubjectRevocations, pruneRevokedTokens } from "./revocation-store.js";
 import { pruneRetention } from "./rights.js";
 
@@ -42,6 +44,23 @@ registerAdminRoutes(app, pool);
  * scripts/verify.mjs, "the auth service's own entry point registers ..."), so
  * a module that exists but is never mounted fails the build. */
 registerCohortRoutes(app, pool);
+
+/* LTI 1.3: a course launched from an LMS (LTI.md). Mounted here for the same
+   reason as the cohort routes: the launch binds an LMS identity to a platform
+   account, takes a seat in a cohort and posts the verified work back to the
+   course, and all four of those live in this service's database. A module
+   that is written and never mounted is a 404 in production, so the suite
+   asserts this call is here. */
+await registerLtiRoutes(app, pool);
+
+/* The learner's own work: drafts, attempts, completions, streak and placement.
+ *
+ * Mounted here, beside the evidence ledger, because it is the same kind of
+ * record about the same learner and it lives in the same database with the
+ * same cascade: erasing the account takes the work with it. The routes take
+ * the identity from the header the edge verified and read nothing else, so
+ * one learner never sees another's work. */
+registerProgressRoutes(app, pool);
 
 /* Housekeeping for the access-token denylist.
  *

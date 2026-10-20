@@ -4,6 +4,7 @@
 export class FixedWindow {
   private hits = new Map<string, { count: number; reset: number }>();
   private lastSweep = 0;
+  private refused = 0;
 
   constructor(
     readonly windowMs: number,
@@ -19,13 +20,25 @@ export class FixedWindow {
       return true;
     }
     cur.count += 1;
-    return cur.count <= this.max;
+    const allowed = cur.count <= this.max;
+    if (!allowed) this.refused += 1;
+    return allowed;
   }
 
   retryAfterMs(key: string, now = Date.now()): number {
     const cur = this.hits.get(key);
     if (!cur || cur.reset <= now) return 0;
     return Math.max(0, cur.reset - now);
+  }
+
+  /** How many hits this limiter has turned away. */
+  get refusals(): number {
+    return this.refused;
+  }
+
+  /** How many keys are being counted right now. */
+  get size(): number {
+    return this.hits.size;
   }
 
   private sweep(now: number) {
@@ -39,5 +52,55 @@ export class FixedWindow {
     for (const [k, v] of this.hits) {
       if (v.reset <= now) this.hits.delete(k);
     }
+  }
+}
+
+/**
+ * The edge's whole-platform request budget.
+ *
+ * A per-address cap cannot see a flood that arrives from many addresses at
+ * once, which is the shape a distributed flood has. This is the cap for that:
+ * one budget for every request the gateway answers, and when it is spent the
+ * gateway stops accepting work instead of queueing it. It is a breaker, not a
+ * queue: the answer is a refusal with a retry hint, never a request held open
+ * until something upstream gives up.
+ *
+ * `max` of 0 disables it.
+ */
+export class EdgeBudget {
+  private windowStart = 0;
+  private used = 0;
+  private refused = 0;
+
+  constructor(
+    readonly windowMs: number,
+    readonly max: number
+  ) {}
+
+  /** True when the request is allowed (and counted). */
+  take(now = Date.now()): boolean {
+    if (this.max <= 0) return true;
+    if (now - this.windowStart >= this.windowMs) {
+      this.windowStart = now;
+      this.used = 0;
+    }
+    this.used += 1;
+    if (this.used <= this.max) return true;
+    this.refused += 1;
+    return false;
+  }
+
+  /** How long until the budget is whole again. */
+  retryAfterMs(now = Date.now()): number {
+    if (this.max <= 0) return 0;
+    return Math.max(0, this.windowStart + this.windowMs - now);
+  }
+
+  get refusals(): number {
+    return this.refused;
+  }
+
+  get usedNow(): number {
+    return this.used;
   }
 }
