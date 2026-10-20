@@ -353,7 +353,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         {
           "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
-          "code": "go run ./cmd/balance                                 # compile it and run it\ngo build ./cmd/balance                               # compile it and write a binary\ngo test ./...                                         # run every test in the module\nnode --test --test-reporter=tap test/program.test.mjs   # what the Run button calls"
+          "code": "go run ./cmd/balance   # compile it and run it\ngo build ./cmd/balance   # compile it and write a binary\ngo test ./...   # every test in the module\nnode --test --test-reporter=tap test/program.test.mjs   # what the Run button calls"
         },
         {
           "kind": "task",

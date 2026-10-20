@@ -3,8 +3,8 @@
 export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
   "id": "go-in-production",
   "title": "Go in production",
-  "description": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, JSON in and out, HTTP servers, routes, authentication, tests, performance, storage, a database, caching, operations, logging, dependencies, resilience, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
-  "version": 1,
+  "description": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, pipelines, JSON in and out, an HTTP server with its deadlines, routes, middleware, authentication, tests, performance, storage, a database, caching, resilience, operations, logging, dependencies, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
+  "version": 2,
   "freePhases": 0,
   "phases": [
     {
@@ -48,26 +48,6 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ]
     },
     {
-      "id": "go-context",
-      "title": "Contexts and cancellation",
-      "goal": "A context carries deadlines, cancellation, and values down a call tree. Blocking work selects on ctx.Done so it stops the moment the caller gives up, and any function downstream can read the deadline the context already holds.",
-      "level": 3,
-      "authored": true,
-      "project": "go-ledger",
-      "activities": [
-        "go-context-learn",
-        "go-context-do",
-        "go-context-ask",
-        "go-context-review"
-      ],
-      "interviewQuestions": [
-        "Why is context.Context conventionally the first parameter, and what does passing it down let a caller do?",
-        "How is cancellation signalled through a context, and why must the worker select on ctx.Done() to actually stop?",
-        "What is the difference between context.WithCancel and context.WithTimeout, and what does each leave in ctx.Err()?",
-        "Why should you always call the cancel function you get back, even when a timeout already fires?"
-      ]
-    },
-    {
       "id": "go-concur",
       "title": "Worker pools and fan-in",
       "goal": "Scale the channel pattern: fan work out to several workers reading one jobs channel, then fan their partial results back in. The sender owns the close, so the collected total is the same no matter how the scheduler runs.",
@@ -88,6 +68,46 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ]
     },
     {
+      "id": "go-context",
+      "title": "Contexts and cancellation",
+      "goal": "A context carries deadlines, cancellation, and values down a call tree. Blocking work selects on ctx.Done so it stops the moment the caller gives up, and any function downstream can read the deadline the context already holds.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-context-learn",
+        "go-context-do",
+        "go-context-ask",
+        "go-context-review"
+      ],
+      "interviewQuestions": [
+        "Why is context.Context conventionally the first parameter, and what does passing it down let a caller do?",
+        "How is cancellation signalled through a context, and why must the worker select on ctx.Done() to actually stop?",
+        "What is the difference between context.WithCancel and context.WithTimeout, and what does each leave in ctx.Err()?",
+        "Why should you always call the cancel function you get back, even when a timeout already fires?"
+      ]
+    },
+    {
+      "id": "go-pipeline",
+      "title": "Pipelines and cancelling the chain",
+      "goal": "A pipeline is a chain of stages, and every stage is a goroutine of its own. The stages hand the value to each other over a channel, and when the caller gives up the whole chain has to stop, not only the stage that noticed first.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-pipeline-learn",
+        "go-pipeline-do",
+        "go-pipeline-ask",
+        "go-pipeline-review"
+      ],
+      "interviewQuestions": [
+        "What is a pipeline in Go, and how is it different from a worker pool that fans out over many jobs?",
+        "How do the stages of a pipeline hand the value to each other, and who owns the closing of each channel?",
+        "When a request is cancelled halfway through a chain, how does every stage find out, and what happens to a stage that is still waiting for its input?",
+        "Why does a pipeline that ignores its context leak a goroutine for every request the caller gave up on?"
+      ]
+    },
+    {
       "id": "go-json",
       "title": "Go JSON",
       "goal": "Struct tags as wire format: marshal without depending on Go names, unmarshal without trusting the bytes.",
@@ -104,6 +124,26 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "What does a struct tag do, and what happens on the wire when one is misspelled?",
         "Why must a decode function return an error instead of a half-filled struct?",
         "What does encoding/json do with fields the target struct does not declare?"
+      ]
+    },
+    {
+      "id": "go-server",
+      "title": "The server: its deadlines and its last request",
+      "goal": "A server is more than a handler: it owns the connection, the deadlines and the goroutine that serves each request. Set the deadlines and one slow client cannot hold the service open; drain the server on the way out and the request in flight still gets its answer.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-server-learn",
+        "go-server-do",
+        "go-server-ask",
+        "go-server-review"
+      ],
+      "interviewQuestions": [
+        "What do the four timeouts on an http.Server actually bound, and what happens to a connection that passes none of them?",
+        "Why is a server with no read deadline a problem even when every handler is fast?",
+        "What is the difference between shutting a server down and closing it, and which one a deploy wants?",
+        "How does a graceful shutdown know when to stop waiting, and what does it do with a request that is still running?"
       ]
     },
     {
@@ -144,6 +184,26 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "How do you read a path value and a query parameter from a request, and why does pagination have to be decided by the server rather than the client?",
         "When is 405 the honest answer instead of 404 or 400, and what does each one actually tell the caller?",
         "What is a rate limiter protecting against, and why must it answer 429 and return before it ever calls the handler it wraps?"
+      ]
+    },
+    {
+      "id": "go-middleware",
+      "title": "Middleware: one concern around every route",
+      "goal": "Middleware is a function that takes a handler and returns a handler, so one concern can be applied to every route without every route repeating it. The order the middlewares are listed in is the order they run in, and a wrapper that forgets to call the handler it was given answers nothing at all.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-middleware-learn",
+        "go-middleware-do",
+        "go-middleware-ask",
+        "go-middleware-review"
+      ],
+      "interviewQuestions": [
+        "What is the shape of a middleware in net/http, and why does it make one concern cheap to apply everywhere?",
+        "When several middlewares are wrapped, which one sees the request first, and which one sees the answer last?",
+        "Why must a middleware call the handler it was given, and what does a wrapper that forgets look like from the client?",
+        "What does a middleware that catches a panic in the handler have to do with the panic value, and why?"
       ]
     },
     {
@@ -263,6 +323,26 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ]
     },
     {
+      "id": "go-resilience",
+      "title": "Resilience: retries, backoff, and failing fast",
+      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes — so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-resilience-learn",
+        "go-resilience-do",
+        "go-resilience-ask",
+        "go-resilience-review"
+      ],
+      "interviewQuestions": [
+        "Why is retrying a failed call unconditionally dangerous, and what two bounds turn it from an amplification attack into a sane recovery strategy?",
+        "Describe the difference between a transient failure that a retry can plausibly fix and a permanent one that should fail fast. How would you decide which you have?",
+        "What problem does exponential backoff solve for a single client, and what additional problem does jitter solve for a thousand clients sharing a dependency?",
+        "A retry helper that returns nil after exhausting its attempts is worse than one that returns the last error. Why, and what does the caller lose?"
+      ]
+    },
+    {
       "id": "go-ops",
       "title": "Operations: what the running service admits",
       "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest — the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
@@ -317,26 +397,6 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "What does go mod tidy decide, and which of the two module files can it rewrite?",
         "Why does a replaced local module leave no line in go.sum, and what does that prove about a checksum?",
         "A teammate hand-edits go.mod and the build now fetches something new. Which file catches that, and how?"
-      ]
-    },
-    {
-      "id": "go-resilience",
-      "title": "Resilience: retries, backoff, and failing fast",
-      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes — so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
-      "level": 3,
-      "authored": true,
-      "project": "go-ledger",
-      "activities": [
-        "go-resilience-learn",
-        "go-resilience-do",
-        "go-resilience-ask",
-        "go-resilience-review"
-      ],
-      "interviewQuestions": [
-        "Why is retrying a failed call unconditionally dangerous, and what two bounds turn it from an amplification attack into a sane recovery strategy?",
-        "Describe the difference between a transient failure that a retry can plausibly fix and a permanent one that should fail fast. How would you decide which you have?",
-        "What problem does exponential backoff solve for a single client, and what additional problem does jitter solve for a thousand clients sharing a dependency?",
-        "A retry helper that returns nil after exhausting its attempts is worse than one that returns the last error. Why, and what does the caller lose?"
       ]
     },
     {
@@ -873,194 +933,6 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ]
     },
-    "go-context-learn": {
-      "id": "go-context-learn",
-      "title": "Learn: giving work a way to stop",
-      "objectives": [
-        "Explain what a context carries and why it is passed as the first parameter.",
-        "Trace a select between ctx.Done and a timer and say which branch wins when a deadline passes.",
-        "Apply defer cancel even with WithTimeout, and name the error each stop reason leaves in ctx.Err."
-      ],
-      "kind": "lesson",
-      "mode": "learn",
-      "guidance": 1,
-      "competencyIds": [
-        "go-context"
-      ],
-      "resources": [
-        {
-          "label": "Go: context package",
-          "url": "https://pkg.go.dev/context"
-        }
-      ],
-      "lesson": [
-        {
-          "kind": "prose",
-          "body": "A goroutine that nobody can stop is a leak waiting to happen. Go passes a context.Context as the first argument to functions that might block, so the caller can say enough. The context carries a Done channel that closes the moment the caller cancels or a deadline passes, plus the deadline itself and any request-scoped values."
-        },
-        {
-          "kind": "example",
-          "body": "Build a timeout, then select on its Done channel:",
-          "code": "ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)\ndefer cancel()\n\nselect {\ncase <-ctx.Done():\n    return ctx.Err()      // cancelled or too late\ncase <-time.After(work):\n    return nil            // finished in time\n}"
-        },
-        {
-          "kind": "prose",
-          "body": "The select blocks until one branch is ready. When the deadline passes, ctx.Done closes first, WaitCtx returns ctx.Err, and the caller sees exactly why it stopped: context.Canceled for a manual cancel, context.DeadlineExceeded for a timeout. Because the work returns as soon as Done fires, a stalled goroutine cannot hang the program."
-        },
-        {
-          "kind": "keypoints",
-          "body": "Key Points",
-          "items": [
-            "A context flows as the first parameter, saying when to stop.",
-            "Select on ctx.Done to abandon blocking work; check ctx.Err for the cause.",
-            "Defer cancel even with WithTimeout, so parent resources are freed when you finish."
-          ]
-        },
-        {
-          "kind": "example",
-          "body": "ctxwork.go is where this phase works.",
-          "code": "// WaitCtx waits for d, but returns early with the context's error if ctx is\n// cancelled or its deadline passes first. It returns nil when d elapses first.\nfunc WaitCtx(ctx context.Context, d time.Duration) error {\n\tpanic(\"unimplemented\")\n}"
-        },
-        {
-          "kind": "example",
-          "body": "The command you run, and the one the Run button calls for you:",
-          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/ctxwork.test.mjs   # what the Run button calls for this phase"
-        },
-        {
-          "kind": "task",
-          "body": "In ctxwork.go, implement WaitCtx(ctx, d): return nil after waiting d, but if ctx is cancelled or its deadline passes first, return early with ctx.Err."
-        }
-      ],
-      "hints": [
-        "A cancelled or timed-out context closes its Done channel, so select on <-ctx.Done() against <-time.After(d). If go is command not found, run the environment check first.",
-        "Return ctx.Err() when Done wins and nil when the timer wins; the deadline case needs the real DeadlineExceeded error."
-      ],
-      "misconceptions": [
-        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
-        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
-      ]
-    },
-    "go-context-ask": {
-      "id": "go-context-ask",
-      "title": "Reason: which branch wins",
-      "kind": "question",
-      "mode": "review",
-      "guidance": 1,
-      "competencyIds": [
-        "go-context"
-      ],
-      "lesson": [
-        {
-          "kind": "prose",
-          "body": "You call WaitCtx with a context whose deadline is 1 millisecond away, asking it to wait 50 milliseconds. The 1 ms deadline passes long before the wait would finish. What does WaitCtx return?"
-        }
-      ],
-      "options": [
-        "A panic, because you asked a function to wait longer than its own deadline allows.",
-        "context.DeadlineExceeded: ctx.Done closes when the deadline passes, and select takes that branch.",
-        "nil, because the function still runs the full 50 ms and then reports success to its caller.",
-        "context.Canceled, because a deadline is just another name for a manual cancel of the same context."
-      ],
-      "answer": 1,
-      "explanation": "WithTimeout derives a context that cancels itself when the deadline passes, and that cancellation closes Done. WaitCtx selects on Done against the 50 ms timer, so after 1 ms the Done branch is ready first and it returns ctx.Err, which reads context.DeadlineExceeded rather than context.Canceled. The wait is abandoned early instead of running to completion; returning nil would ignore the caller giving up, and nothing panics because a deadline is perfectly ordinary.",
-      "hints": [
-        "A deadline is a timer that cancels the context for you; ctx.Err then reads DeadlineExceeded, not Canceled."
-      ],
-      "misconceptions": [
-        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
-        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
-      ]
-    },
-    "go-context-do": {
-      "id": "go-context-do",
-      "title": "Solve: a context-aware wait",
-      "kind": "challenge",
-      "mode": "solve",
-      "guidance": 2,
-      "competencyIds": [
-        "go-context"
-      ],
-      "files": [
-        "ctxwork.go"
-      ],
-      "testCommand": "node --test --test-reporter=tap test/ctxwork.test.mjs",
-      "checks": [
-        {
-          "id": "ctx-cancel",
-          "label": "A cancelled context stops the wait early",
-          "tests": [
-            "a cancelled context stops the wait early"
-          ],
-          "feedback": "Pass an already-cancelled context and WaitCtx must return a non-nil error at once instead of sleeping the full 50 ms. Select on ctx.Done and return ctx.Err."
-        },
-        {
-          "id": "ctx-intime",
-          "label": "Work that finishes in time returns no error",
-          "tests": [
-            "work that finishes in time returns no error"
-          ],
-          "feedback": "WaitCtx(context.Background(), 5ms) returns nil: nothing cancels the context, so the timer branch wins and you report success."
-        },
-        {
-          "id": "ctx-deadline",
-          "label": "A deadline that passes first becomes an error",
-          "tests": [
-            "a deadline that passes first becomes an error"
-          ],
-          "feedback": "A 1 ms deadline against a 50 ms wait means Done fires first, so the returned error must be context.DeadlineExceeded. Return ctx.Err, not nil.",
-          "edge": true
-        }
-      ],
-      "hints": [
-        "The file to change is ctxwork.go, which owns WaitCtx: it needs one blocking choice between the caller giving up and its own timer running out. Run go test ./... and read the name of the test that failed.",
-        "When <-ctx.Done() is ready, return ctx.Err() so the caller can tell cancel from timeout.",
-        "When <-time.After(d) is ready, the wait finished on schedule: return nil.",
-        "A pre-cancelled context makes Done fire immediately, so WaitCtx returns an error without waiting the full 50 ms.",
-        "With a 1 ms deadline against a 50 ms wait, the Done branch wins and ctx.Err() is context.DeadlineExceeded. If the suite cannot run because node is command not found, run the environment check first."
-      ],
-      "misconceptions": [
-        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
-        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
-      ]
-    },
-    "go-context-review": {
-      "id": "go-context-review",
-      "title": "Review: reading a deadline",
-      "kind": "retrieval",
-      "mode": "review",
-      "guidance": 2,
-      "competencyIds": [
-        "go-context"
-      ],
-      "files": [
-        "ctxprop.go"
-      ],
-      "testCommand": "node --test --test-reporter=tap test/ctxprop.test.mjs",
-      "checks": [
-        {
-          "id": "ctx-nodeadline",
-          "label": "A bare context carries no deadline",
-          "tests": [
-            "a bare context carries no deadline"
-          ],
-          "feedback": "DeadlineMs(context.Background()) must return -1. ctx.Deadline returns ok false when no deadline is set, so return the -1 sentinel instead of a zero time. If node is missing when the suite runs, the environment check names the install.",
-          "edge": true
-        },
-        {
-          "id": "ctx-hasdeadline",
-          "label": "A deadline is readable from anywhere downstream",
-          "tests": [
-            "a deadline is readable from anywhere downstream"
-          ],
-          "feedback": "DeadlineMs on a context built with WithDeadline returns that deadline in unix milliseconds. Read it from ctx.Deadline and convert with UnixMilli."
-        }
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Assuming every context has a deadline — context.Background carries none, so ctx.Deadline reports ok as false.",
-        "Reading the deadline time without checking the ok flag first — when there is no deadline the time is the zero value, not a real bound."
-      ]
-    },
     "go-concur-learn": {
       "id": "go-concur-learn",
       "title": "Learn: fanning out to many workers",
@@ -1323,6 +1195,434 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Ranging the shared channel forever because nobody closes it — without a close the collector blocks on the receive and never returns."
       ]
     },
+    "go-context-learn": {
+      "id": "go-context-learn",
+      "title": "Learn: giving work a way to stop",
+      "objectives": [
+        "Explain what a context carries and why it is passed as the first parameter.",
+        "Trace a select between ctx.Done and a timer and say which branch wins when a deadline passes.",
+        "Apply defer cancel even with WithTimeout, and name the error each stop reason leaves in ctx.Err."
+      ],
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-context"
+      ],
+      "resources": [
+        {
+          "label": "Go: context package",
+          "url": "https://pkg.go.dev/context"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A goroutine that nobody can stop is a leak waiting to happen. Go passes a context.Context as the first argument to functions that might block, so the caller can say enough. The context carries a Done channel that closes the moment the caller cancels or a deadline passes, plus the deadline itself and any request-scoped values."
+        },
+        {
+          "kind": "example",
+          "body": "Build a timeout, then select on its Done channel:",
+          "code": "ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)\ndefer cancel()\n\nselect {\ncase <-ctx.Done():\n    return ctx.Err()      // cancelled or too late\ncase <-time.After(work):\n    return nil            // finished in time\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "The select blocks until one branch is ready. When the deadline passes, ctx.Done closes first, WaitCtx returns ctx.Err, and the caller sees exactly why it stopped: context.Canceled for a manual cancel, context.DeadlineExceeded for a timeout. Because the work returns as soon as Done fires, a stalled goroutine cannot hang the program."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A context flows as the first parameter, saying when to stop.",
+            "Select on ctx.Done to abandon blocking work; check ctx.Err for the cause.",
+            "Defer cancel even with WithTimeout, so parent resources are freed when you finish."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "ctxwork.go is where this phase works.",
+          "code": "// WaitCtx waits for d, but returns early with the context's error if ctx is\n// cancelled or its deadline passes first. It returns nil when d elapses first.\nfunc WaitCtx(ctx context.Context, d time.Duration) error {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/ctxwork.test.mjs   # what the Run button calls for this phase"
+        },
+        {
+          "kind": "task",
+          "body": "In ctxwork.go, implement WaitCtx(ctx, d): return nil after waiting d, but if ctx is cancelled or its deadline passes first, return early with ctx.Err."
+        }
+      ],
+      "hints": [
+        "A cancelled or timed-out context closes its Done channel, so select on <-ctx.Done() against <-time.After(d). If go is command not found, run the environment check first.",
+        "Return ctx.Err() when Done wins and nil when the timer wins; the deadline case needs the real DeadlineExceeded error."
+      ],
+      "misconceptions": [
+        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+      ]
+    },
+    "go-context-ask": {
+      "id": "go-context-ask",
+      "title": "Reason: which branch wins",
+      "kind": "question",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "go-context"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "You call WaitCtx with a context whose deadline is 1 millisecond away, asking it to wait 50 milliseconds. The 1 ms deadline passes long before the wait would finish. What does WaitCtx return?"
+        }
+      ],
+      "options": [
+        "A panic, because you asked a function to wait longer than its own deadline allows.",
+        "context.DeadlineExceeded: ctx.Done closes when the deadline passes, and select takes that branch.",
+        "nil, because the function still runs the full 50 ms and then reports success to its caller.",
+        "context.Canceled, because a deadline is just another name for a manual cancel of the same context."
+      ],
+      "answer": 1,
+      "explanation": "WithTimeout derives a context that cancels itself when the deadline passes, and that cancellation closes Done. WaitCtx selects on Done against the 50 ms timer, so after 1 ms the Done branch is ready first and it returns ctx.Err, which reads context.DeadlineExceeded rather than context.Canceled. The wait is abandoned early instead of running to completion; returning nil would ignore the caller giving up, and nothing panics because a deadline is perfectly ordinary.",
+      "hints": [
+        "A deadline is a timer that cancels the context for you; ctx.Err then reads DeadlineExceeded, not Canceled."
+      ],
+      "misconceptions": [
+        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+      ]
+    },
+    "go-context-do": {
+      "id": "go-context-do",
+      "title": "Solve: a context-aware wait",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-context"
+      ],
+      "files": [
+        "ctxwork.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ctxwork.test.mjs",
+      "checks": [
+        {
+          "id": "ctx-cancel",
+          "label": "A cancelled context stops the wait early",
+          "tests": [
+            "a cancelled context stops the wait early"
+          ],
+          "feedback": "Pass an already-cancelled context and WaitCtx must return a non-nil error at once instead of sleeping the full 50 ms. Select on ctx.Done and return ctx.Err."
+        },
+        {
+          "id": "ctx-intime",
+          "label": "Work that finishes in time returns no error",
+          "tests": [
+            "work that finishes in time returns no error"
+          ],
+          "feedback": "WaitCtx(context.Background(), 5ms) returns nil: nothing cancels the context, so the timer branch wins and you report success."
+        },
+        {
+          "id": "ctx-deadline",
+          "label": "A deadline that passes first becomes an error",
+          "tests": [
+            "a deadline that passes first becomes an error"
+          ],
+          "feedback": "A 1 ms deadline against a 50 ms wait means Done fires first, so the returned error must be context.DeadlineExceeded. Return ctx.Err, not nil.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "The file to change is ctxwork.go, which owns WaitCtx: it needs one blocking choice between the caller giving up and its own timer running out. Run go test ./... and read the name of the test that failed.",
+        "When <-ctx.Done() is ready, return ctx.Err() so the caller can tell cancel from timeout.",
+        "When <-time.After(d) is ready, the wait finished on schedule: return nil.",
+        "A pre-cancelled context makes Done fire immediately, so WaitCtx returns an error without waiting the full 50 ms.",
+        "With a 1 ms deadline against a 50 ms wait, the Done branch wins and ctx.Err() is context.DeadlineExceeded. If the suite cannot run because node is command not found, run the environment check first."
+      ],
+      "misconceptions": [
+        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+      ]
+    },
+    "go-context-review": {
+      "id": "go-context-review",
+      "title": "Review: reading a deadline",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-context"
+      ],
+      "files": [
+        "ctxprop.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ctxprop.test.mjs",
+      "checks": [
+        {
+          "id": "ctx-nodeadline",
+          "label": "A bare context carries no deadline",
+          "tests": [
+            "a bare context carries no deadline"
+          ],
+          "feedback": "DeadlineMs(context.Background()) must return -1. ctx.Deadline returns ok false when no deadline is set, so return the -1 sentinel instead of a zero time. If node is missing when the suite runs, the environment check names the install.",
+          "edge": true
+        },
+        {
+          "id": "ctx-hasdeadline",
+          "label": "A deadline is readable from anywhere downstream",
+          "tests": [
+            "a deadline is readable from anywhere downstream"
+          ],
+          "feedback": "DeadlineMs on a context built with WithDeadline returns that deadline in unix milliseconds. Read it from ctx.Deadline and convert with UnixMilli."
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Assuming every context has a deadline — context.Background carries none, so ctx.Deadline reports ok as false.",
+        "Reading the deadline time without checking the ok flag first — when there is no deadline the time is the zero value, not a real bound."
+      ]
+    },
+    "go-pipeline-learn": {
+      "id": "go-pipeline-learn",
+      "title": "Learn: a chain of stages, and who stops it",
+      "objectives": [
+        "Explain how a stage hands its value to the next one and why no stage reads another stage's memory.",
+        "Trace what a cancelled context does to a stage that is still waiting for its input.",
+        "Implement a chain of stages that stops as soon as the caller gives up."
+      ],
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-concur"
+      ],
+      "resources": [
+        {
+          "label": "Go blog: Go Concurrency Patterns, Pipelines and Cancelling",
+          "url": "https://go.dev/blog/pipelines"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A pipeline is a chain of stages, and each stage is a goroutine of its own. The stages hand the value to each other over a channel, so no stage reads another stage's memory. The chain is only as good as its last stage, and every stage has to be told when the caller gives up."
+        },
+        {
+          "kind": "example",
+          "body": "stages.go is where this phase works. It is one of the ledger's own library files, so its package clause says `package ledger`.",
+          "code": "// Stage is one step of a pipeline. It takes the value the previous stage\n// produced and returns the value the next one is given.\ntype Stage func(int) int\n\n// RunPipeline sends n through every stage in order and returns what the last\n// stage produced. Each stage runs on its own goroutine and the stages hand\n// the value to each other over a channel, so no stage reads another one's\n// memory. With no stages the value passes through unchanged, so the result\n// is n.\nfunc RunPipeline(stages []Stage, n int) int {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "A stage that is still waiting for its input has to notice the cancellation too, or the chain leaks a goroutine for every request the caller gave up on. The wait is a choice between the value arriving and the context finishing, which is what select is for."
+        },
+        {
+          "kind": "example",
+          "body": "The wait that can be given up:",
+          "code": "select {\ncase value = <-out:\n    // the stage finished, carry on\ncase <-ctx.Done():\n    return 0, ctx.Err()   // the caller gave up, stop the chain\n}"
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "One goroutine per stage, one channel between them.",
+            "Nobody waits for a stage that has not started.",
+            "A cancelled context stops every stage, not one.",
+            "The chain reports the context error, not a zero."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/stages.test.mjs   # what the Run button calls for this phase"
+        },
+        {
+          "kind": "task",
+          "body": "In stages.go, make RunPipeline send n through every stage in order: one goroutine per stage, a channel between them, and the value the last stage produced at the end. With no stages, the value passes through unchanged."
+        }
+      ],
+      "hints": [
+        "Each stage gets its own channel: the goroutine sends its result on it and the next stage receives from it. If go is command not found, run the environment check first.",
+        "Start the goroutine for a stage, then read its result off the channel you gave it, and feed that result to the next stage."
+      ],
+      "misconceptions": [
+        "Passing the stages their result through a variable they all share, so one stage can read what another wrote. That is shared memory, and the value a stage reads may not even be written yet.",
+        "Running the stages one after another on the same goroutine and calling that a pipeline. It gives the same answer, but then a slow stage stops every stage behind it."
+      ],
+      "visualization": {
+        "type": "goroutine-timeline",
+        "spec": {
+          "lanes": [
+            "main",
+            "stage-1",
+            "stage-2"
+          ],
+          "events": [
+            {
+              "lane": "main",
+              "step": 0,
+              "label": "n := 5"
+            },
+            {
+              "lane": "stage-1",
+              "step": 1,
+              "label": "v := <-in"
+            },
+            {
+              "lane": "main",
+              "step": 1,
+              "label": "send 5"
+            },
+            {
+              "lane": "stage-1",
+              "step": 2,
+              "label": "out <- v * 2"
+            },
+            {
+              "lane": "stage-2",
+              "step": 3,
+              "label": "v := <-in"
+            }
+          ],
+          "links": [
+            {
+              "from": 1,
+              "to": 2,
+              "label": "10"
+            }
+          ]
+        }
+      }
+    },
+    "go-pipeline-ask": {
+      "id": "go-pipeline-ask",
+      "title": "Reason: who stops the chain",
+      "kind": "question",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "go-concur"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A chain of three stages is running. The caller cancels the request after the first stage has answered, while the second stage is still waiting for its input. What does the chain have to do, and what happens if it does not?"
+        }
+      ],
+      "options": [
+        "Nothing: the second stage is waiting on a channel, and a cancelled request does not close it.",
+        "It has to stop the second stage and report the cancellation, or the chain leaks a goroutine for a request nobody wants.",
+        "The third stage runs anyway, because a stage that has started cannot be taken back.",
+        "The whole chain is restarted from the first stage with a fresh value."
+      ],
+      "answer": 1,
+      "explanation": "A stage waiting on a channel has to wait on two things at once: the value it is waiting for and the context it belongs to. The select that carries both is what lets the stage give up when the caller does. A chain that only watches the value keeps a goroutine parked on a channel that will never be written to, and one such goroutine per cancelled request is how a service runs out of memory under load. The third stage never starts, because the stage before it never produced a value.",
+      "hints": [
+        "A stage that is waiting has to be able to stop waiting, so the wait has to name both the value and the context."
+      ],
+      "misconceptions": [
+        "Believing a cancelled request closes the channels the chain is using. Only the context finishes, and the stage has to be the one that notices.",
+        "Starting the next stage before the previous one finished, so the chain keeps moving even after the caller gave up."
+      ]
+    },
+    "go-pipeline-do": {
+      "id": "go-pipeline-do",
+      "title": "Solve: a chain of stages",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-concur"
+      ],
+      "files": [
+        "stages.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/stages.test.mjs",
+      "checks": [
+        {
+          "id": "pipeline-two",
+          "label": "Two stages carry the value through",
+          "tests": [
+            "a pipeline of two stages carries the value through"
+          ],
+          "feedback": "RunPipeline with a doubling stage and a stage that adds one must return 11 for the input 5. Each stage has to run and hand its result to the next one, so the stages cannot all read the same input."
+        },
+        {
+          "id": "pipeline-one",
+          "label": "One stage still runs",
+          "tests": [
+            "a pipeline of one stage still runs"
+          ],
+          "feedback": "A chain of one stage returns 10 for the input 5. The loop over the stages cannot assume there is a second one, so it cannot read past the end of the slice."
+        },
+        {
+          "id": "pipeline-none",
+          "label": "No stages pass the value through",
+          "tests": [
+            "a pipeline with no stages passes the value through"
+          ],
+          "feedback": "With no stages the value passes through unchanged, so the result is 5. A chain that starts nothing must not wait for a value that will never arrive. If node is missing when the suite runs, the environment check names the install.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "The file to change is stages.go, which owns RunPipeline: one goroutine per stage and one channel between them. Run go test ./... and read the name of the test that failed.",
+        "For each stage, make a channel, start a goroutine that sends the stage result on it, then receive that result and use it as the input of the next stage.",
+        "The stage function is called inside the goroutine, so the value it takes is the one the previous stage produced.",
+        "With no stages the loop never runs, so the input is returned as it came in."
+      ],
+      "misconceptions": [
+        "Calling every stage on the input instead of on the previous stage's result, so a chain of two stages returns the answer to one stage only.",
+        "Waiting for the stages in the wrong order, so a stage that never runs is waited for first and the chain hangs."
+      ]
+    },
+    "go-pipeline-review": {
+      "id": "go-pipeline-review",
+      "title": "Review: a chain that stops when the caller does",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-concur"
+      ],
+      "files": [
+        "ctxpipe.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/ctxpipe.test.mjs",
+      "checks": [
+        {
+          "id": "ctxpipe-run",
+          "label": "A live context runs the chain to the end",
+          "tests": [
+            "a live context runs the chain to the end"
+          ],
+          "feedback": "RunPipelineCtx with a context nobody cancelled must run the chain and return its result with a nil error. The context is only there to stop the work, not to change the answer."
+        },
+        {
+          "id": "ctxpipe-cancel",
+          "label": "A cancelled context stops the chain",
+          "tests": [
+            "a cancelled context stops the chain"
+          ],
+          "feedback": "A context that was cancelled before the call must come back with context.Canceled and no result. Waiting only for the stage means the call hangs on a value that will never arrive. If the suite cannot run because node is command not found, run the environment check first."
+        },
+        {
+          "id": "ctxpipe-deadline",
+          "label": "A deadline that passes first ends the wait",
+          "tests": [
+            "a deadline that passes first ends the wait"
+          ],
+          "feedback": "A stage that is still running when the deadline passes must not be waited for: the call returns context.DeadlineExceeded and gives up the stage. Waiting for the slow stage is the failure this check exists for.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Waiting for the stage and only then looking at the context, so a caller that gave up still waits for the whole chain.",
+        "Replacing the context error with a zero result, so the caller cannot tell a finished chain from an abandoned one."
+      ]
+    },
     "go-json-learn": {
       "id": "go-json-learn",
       "title": "Learn: the tag is the contract",
@@ -1528,6 +1828,200 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "misconceptions": [
         "Rejecting unknown fields for safety — strictness here breaks forward compatibility; the safe default ignores what it does not know.",
         "A bool always travels — false is a real value; only omitempty (absent here) would drop it."
+      ]
+    },
+    "go-server-learn": {
+      "id": "go-server-learn",
+      "title": "Learn: the deadlines a server sets",
+      "objectives": [
+        "Name the four deadlines an http.Server sets and say what each one bounds.",
+        "Explain why a server that sets no deadline lets one slow client hold a goroutine open.",
+        "Implement a server that falls back to a deadline when the caller names none."
+      ],
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-http"
+      ],
+      "resources": [
+        {
+          "label": "net/http: the Server type and its timeouts",
+          "url": "https://pkg.go.dev/net/http#Server"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A server is not just a handler. The http.Server holds the connection, the deadlines and the goroutine that serves each request, and every one of those can be set. The failure it prevents: a server with no deadlines is a server one slow client can hold open for as long as it likes."
+        },
+        {
+          "kind": "example",
+          "body": "server.go is where this phase works. It is one of the ledger's own library files, so its package clause says `package ledger`.",
+          "code": "// Timeouts are the deadlines one connection is given. A zero means the\n// caller did not choose that deadline, so the server falls back to the\n// default below. A server with no deadline at all is a server one slow\n// client can hold open for as long as it likes.\ntype Timeouts struct {\n\tReadHeader time.Duration\n\tRead       time.Duration\n\tWrite      time.Duration\n\tIdle       time.Duration\n}\n\n// NewServer returns the server that serves handler with the timeouts\n// applied. Every deadline the caller left at zero gets the default, so the\n// server never runs without one.\nfunc NewServer(handler http.Handler, t Timeouts) *http.Server {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "There are four of them, and each one bounds a different wait: the headers, the body, the answer, and an idle connection nobody is using. A server that sets none of them waits forever on every one of them, and each waiting connection is a goroutine the service cannot spend on real work."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "A client opens a connection and never sends its headers. What does a server with a read-header deadline do?",
+          "items": [
+            "It closes the connection after the deadline passes.",
+            "It waits, because the client may still be about to send them.",
+            "It answers 400 to a client that has sent nothing yet.",
+            "It keeps the connection and the goroutine until the client leaves."
+          ],
+          "answer": 0,
+          "explain": "A deadline is a promise the server makes to itself: after it passes, the server stops waiting and closes the connection instead of holding a goroutine for a client that may never speak. The goroutine serving that connection ends with it."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Four deadlines: headers, body, answer, idle.",
+            "A zero means the caller chose none, so the default applies.",
+            "A server with no deadline waits for a client forever.",
+            "Each waiting connection is a goroutine you cannot spend."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/server.test.mjs   # what the Run button calls for this phase"
+        },
+        {
+          "kind": "task",
+          "body": "In server.go, make NewServer return the server for the handler with the four deadlines applied, and fall back to the default for every deadline the caller left at zero."
+        }
+      ],
+      "hints": [
+        "The http.Server struct has a field for each deadline: ReadHeaderTimeout, ReadTimeout, WriteTimeout and IdleTimeout. If go is command not found, run the environment check first.",
+        "Compare each field of the Timeouts you were given with zero, and use the matching Default constant when it is zero."
+      ],
+      "misconceptions": [
+        "Leaving the deadlines at zero because the handler is quick. The deadline bounds the client, not the handler, and a client that sends nothing is slow whatever the handler does.",
+        "Setting one deadline and calling the server safe. A client that never finishes its headers is held by a different deadline than the one that never finishes its body."
+      ]
+    },
+    "go-server-ask": {
+      "id": "go-server-ask",
+      "title": "Reason: what the deadline is for",
+      "kind": "question",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "go-http"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A server is serving with no write deadline at all. A client asks for something slow, then stops reading the answer and goes away. What is the server doing while that happens?"
+        }
+      ],
+      "options": [
+        "It keeps the handler and the connection open for a client that will never read the answer.",
+        "It notices at once that the client is gone and frees the handler, because the write fails.",
+        "It gives the handler a deadline of its own and answers 408 to a client that stopped reading.",
+        "It closes every connection the server has, so one slow client cannot hold the others up."
+      ],
+      "answer": 0,
+      "explanation": "A write that nobody reads does not fail: the bytes go into the socket buffer and the server waits for room that the client will never make. Without a write deadline the handler, the goroutine and the connection stay held by a client that has gone, and a service that meets enough of those stops answering the clients that are still there. The deadline is what bounds the wait, and it bounds it for the client that misbehaves rather than for everyone else.",
+      "hints": [
+        "A write to a client that stopped reading does not fail straight away, so something else has to end the wait."
+      ],
+      "misconceptions": [
+        "Believing a broken connection is noticed at once. The server finds out when the write fails, and a write to a socket whose reader has gone can succeed for a long time.",
+        "Answering an error to a client that is not reading any more, so the error is written into the same socket the client abandoned."
+      ]
+    },
+    "go-server-do": {
+      "id": "go-server-do",
+      "title": "Solve: a server with deadlines",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-http"
+      ],
+      "files": [
+        "server.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/server.test.mjs",
+      "checks": [
+        {
+          "id": "server-timeouts",
+          "label": "The server carries every timeout",
+          "tests": [
+            "the server carries every timeout"
+          ],
+          "feedback": "The four deadlines the caller named have to be on the server: one second for the headers, two for the body, three for the answer and four for an idle connection. Each one has its own field on http.Server."
+        },
+        {
+          "id": "server-defaults",
+          "label": "A timeout the caller left out falls back to the default",
+          "tests": [
+            "a timeout the caller left out falls back to the default"
+          ],
+          "feedback": "A Timeouts with nothing in it must still produce a server with a deadline on every field: the DefaultReadHeader, DefaultRead, DefaultWrite and DefaultIdle constants. A server with no deadline is the failure this check exists for. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "The file to change is server.go, which owns NewServer: it returns an *http.Server, so build the struct and set its fields. Run go test ./... and read the name of the test that failed.",
+        "ReadHeaderTimeout takes the ReadHeader deadline, ReadTimeout takes Read, WriteTimeout takes Write and IdleTimeout takes Idle.",
+        "A deadline of zero means the caller chose none, so compare each one with zero and use the matching Default constant."
+      ],
+      "misconceptions": [
+        "Copying the four deadlines into the struct fields without looking at the zero case, so a caller who named nothing gets a server with no deadlines at all.",
+        "Setting the deadlines on the handler instead of on the server, where net/http never looks for them."
+      ]
+    },
+    "go-server-review": {
+      "id": "go-server-review",
+      "title": "Review: the last request before the process goes",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-http"
+      ],
+      "files": [
+        "shutdown.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/shutdown.test.mjs",
+      "checks": [
+        {
+          "id": "drain-idle",
+          "label": "A server that never ran drains cleanly",
+          "tests": [
+            "a server that never ran drains cleanly"
+          ],
+          "feedback": "Draining a server that never took a request must report no error. The drain stops the listener and waits for the requests in flight, and there are none."
+        },
+        {
+          "id": "drain-context",
+          "label": "A context that is already done ends the drain",
+          "tests": [
+            "a context that is already done ends the drain"
+          ],
+          "feedback": "When the context is already finished the drain must give up and return the context error, not wait for the requests in flight. A drain that waits for a stuck request is how a deploy hangs.",
+          "edge": true
+        },
+        {
+          "id": "drain-inflight",
+          "label": "The request in flight gets its answer",
+          "tests": [
+            "the request in flight gets its answer"
+          ],
+          "feedback": "A request that is running when the drain starts must still get its answer, and the drain must not return before it does. Closing the connections instead of draining them cuts the request off. If the suite cannot run because node is command not found, run the environment check first."
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Closing the server instead of draining it, so the request in flight is cut off and the client sees a broken connection.",
+        "Waiting for the requests in flight with no deadline at all, so one stuck request keeps the process alive for ever."
       ]
     },
     "go-http-learn": {
@@ -1956,6 +2450,196 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "feedback": "Once more than three requests have arrived, answer 429 Too Many Requests and return without calling next, so refused work never reaches the wrapped handler. If the suite cannot run because `node` is command not found, run the environment check first.",
           "edge": true
         }
+      ]
+    },
+    "go-middleware-learn": {
+      "id": "go-middleware-learn",
+      "title": "Learn: a handler that wraps a handler",
+      "objectives": [
+        "Explain what a middleware receives and what it has to hand back.",
+        "Trace the order two middlewares run in and say which one sees the answer last.",
+        "Implement a chain that wraps a handler with every middleware it was given."
+      ],
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-http"
+      ],
+      "resources": [
+        {
+          "label": "net/http: the Handler type and its middleware shape",
+          "url": "https://pkg.go.dev/net/http#Handler"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Middleware is a function that takes a handler and returns a handler. The wrapper does its own work and then calls the handler it was given, so the request still reaches the same code and the answer still comes back. The failure it prevents: a concern that belongs around every route ends up written inside every route, and the one handler somebody forgets is the one that ships without it."
+        },
+        {
+          "kind": "example",
+          "body": "chain.go is where this phase works. It is one of the ledger's own library files, so its package clause says `package ledger`.",
+          "code": "// Middleware wraps a handler in another handler.\ntype Middleware func(http.Handler) http.Handler\n\n// Chain wraps next with every middleware, the first one outermost: the first\n// middleware sees the request first and the answer last. With no middleware\n// at all, next is served on its own.\nfunc Chain(next http.Handler, middlewares ...Middleware) http.Handler {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "The order is the whole of the contract. The first middleware in the list is the outermost one, so it sees the request first and the answer last, and the handler itself sits at the centre. Wrap them the other way round and a middleware that reads the answer reads it before the one that wrote it."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A middleware takes a handler and returns a handler.",
+            "The first one in the list is the outermost.",
+            "The wrapper has to call the handler it was given.",
+            "One wrapper per concern, not one per route."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/chain.test.mjs   # what the Run button calls for this phase"
+        },
+        {
+          "kind": "task",
+          "body": "In chain.go, make Chain wrap next with every middleware it is given, the first one outermost, and serve next on its own when there is no middleware at all."
+        }
+      ],
+      "hints": [
+        "Wrapping is a loop: the handler you have so far becomes the inner handler of the next wrapper. If go is command not found, run the environment check first.",
+        "The first middleware in the list has to end up on the outside, so build the chain from the last one backwards."
+      ],
+      "misconceptions": [
+        "Wrapping the middlewares in the order they were listed, so the last one in the list ends up on the outside and sees the request first.",
+        "Returning a handler that never calls the one it was given, so the wrapper adds its header and the route answers nothing."
+      ]
+    },
+    "go-middleware-ask": {
+      "id": "go-middleware-ask",
+      "title": "Reason: what a panic does to a client",
+      "kind": "question",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "go-http"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A handler panics halfway through writing its answer, and there is no middleware around it. What reaches the client?"
+        }
+      ],
+      "options": [
+        "The client gets the answer, because net/http recovers the panic and finishes the response it was writing.",
+        "The client gets a 500, because net/http turns any panic into an error status.",
+        "The client sees the panic value, because that is the most useful thing to send.",
+        "The connection is cut and the panic is logged, so the client sees a broken connection."
+      ],
+      "answer": 3,
+      "explanation": "net/http recovers a panic in a handler so the process survives it, and it closes the connection rather than finishing a response that was never written. The client sees a broken connection, not a status, and the answer is lost. A middleware that catches the panic turns that into a 500 the client can read, and it decides what the body says: the panic value often carries a connection string or a token, so a wrapper that writes it out has published a secret to whoever asked.",
+      "hints": [
+        "A response that was never finished cannot be turned into a status code after the fact, so the client is left with a connection that ended early."
+      ],
+      "misconceptions": [
+        "Believing net/http answers 500 for a panicking handler. It has no status to send, because the response was never started.",
+        "Writing the panic value into the body so the client can see what went wrong, when the panic value is often a secret."
+      ]
+    },
+    "go-middleware-do": {
+      "id": "go-middleware-do",
+      "title": "Solve: a chain of middleware",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-http"
+      ],
+      "files": [
+        "chain.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/chain.test.mjs",
+      "checks": [
+        {
+          "id": "chain-order",
+          "label": "Every middleware runs, the first one outermost",
+          "tests": [
+            "every middleware runs, the first one outermost"
+          ],
+          "feedback": "With two middlewares the first one in the list has to run before the second, and the handler has to run last. Wrapping in the order the list was given puts the last one on the outside, so the order the client sees is reversed."
+        },
+        {
+          "id": "chain-one",
+          "label": "One middleware still reaches the handler",
+          "tests": [
+            "one middleware still reaches the handler"
+          ],
+          "feedback": "A chain of one middleware has to reach the handler and let its answer out, with the middleware's header on it. A wrapper that adds the header and forgets the handler answers nothing at all."
+        },
+        {
+          "id": "chain-none",
+          "label": "No middleware serves the handler on its own",
+          "tests": [
+            "no middleware serves the handler on its own"
+          ],
+          "feedback": "A chain with no middleware at all still serves the handler, so the answer comes back unchanged. If node is missing when the suite runs, the environment check names the install.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "The file to change is chain.go, which owns Chain: it takes the handler and a list of middlewares. Run go test ./... and read the name of the test that failed.",
+        "Start with next as the handler you have, and wrap it with one middleware at a time.",
+        "To make the first middleware in the list the outermost one, wrap from the last one backwards."
+      ],
+      "misconceptions": [
+        "Wrapping the middlewares in the order they were listed, so the last one in the list is the outermost and the client sees the order reversed.",
+        "Returning a new handler that drops the one it was given, so the route behind the chain is never reached."
+      ]
+    },
+    "go-middleware-review": {
+      "id": "go-middleware-review",
+      "title": "Review: a wrapper that catches a panic",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-http"
+      ],
+      "files": [
+        "recovery.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/recovery.test.mjs",
+      "checks": [
+        {
+          "id": "recovery-status",
+          "label": "A panic in the handler answers five hundred",
+          "tests": [
+            "a panic in the handler answers five hundred"
+          ],
+          "feedback": "A handler that panics must reach the client as a 500, not as a broken connection. The wrapper has to recover the panic and write the status itself, because the handler never got that far."
+        },
+        {
+          "id": "recovery-secret",
+          "label": "The panic value never reaches the body",
+          "tests": [
+            "the panic value never reaches the body"
+          ],
+          "feedback": "The body must not carry the panic value, because a panic often holds a connection string or a token. Say the request failed and nothing more. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        },
+        {
+          "id": "recovery-passthrough",
+          "label": "A real answer passes through untouched",
+          "tests": [
+            "a real answer passes through untouched"
+          ],
+          "feedback": "A handler that answers 201 with a body must still answer 201 with that body when the wrapper is around it. A wrapper that writes its own status on the way out replaces the answer the route produced."
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Writing the panic value into the body so the failure is easier to debug, when the panic value is often the secret the handler was holding.",
+        "Writing the status before calling the handler, so a handler that answers 201 has its status replaced by the wrapper's 200."
       ]
     },
     "go-auth-learn": {
@@ -3161,6 +3845,203 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Invalidating from inside Get — only the write path knows a write happened; a read has nothing to notice."
       ]
     },
+    "go-resilience-learn": {
+      "id": "go-resilience-learn",
+      "title": "Learn: failing well is a design goal, not an afterthought",
+      "objectives": [
+        "Explain why a retry must be bounded and what the error from the final attempt preserves.",
+        "Trace an operation that succeeds on its third attempt and say exactly how many calls it earns.",
+        "Apply backoff with jitter so a fleet does not retry in lockstep against a failing dependency."
+      ],
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "resilience"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Every call that leaves your process can fail in a way worth retrying: a reset, a timeout, a database mid-failover. A retry is the honest response: run the operation, and if it failed, run it again. But an unbounded loop against a down service is denial of service, not resilience. So cap the attempts, and on the last failure return its error, not a clean nil that lies."
+        },
+        {
+          "kind": "example",
+          "body": "A bounded retry that stops on the first success and reports the final error:",
+          "code": "func DoWithRetry(attempts int, op func() error) error {\n    var err error\n    for i := 0; i < attempts; i++ {\n        if err = op(); err == nil {\n            return nil // succeeded — stop calling it\n        }\n    }\n    return err // exhausted: hand back the last real failure\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "Read that shape: the loop is bounded by `attempts`, so a hard-down dependency cannot spin forever. The `return nil` inside it means you stop the moment a call succeeds, so no side effect gets duplicated. And the final `return err` keeps the identity of the last failure, so a caller can match it with `errors.Is`. It never sleeps, because waiting is its own decision, covered below."
+        },
+        {
+          "kind": "prose",
+          "body": "Backoff is the second half of the rule: wait before the next attempt, and make each wait longer than the last by doubling from a base delay and capping the growth. Jitter then scatters those waits, so a thousand callers that failed in the same second do not return as one synchronized wave."
+        },
+        {
+          "kind": "prose",
+          "body": "Not every failure earns a retry. A reset, a timeout, or a 503 may clear on its own; a 400, a missing key, or a malformed body will fail the same way on the tenth attempt. Retry only what is safe to repeat, and stop once the caller has no time left."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "Cap the attempts: a ceiling separates recovery from amplification.",
+            "Stop the moment the operation succeeds; never retry after success.",
+            "On exhaustion, return the last error, never nil.",
+            "Add backoff between attempts; jitter stops clients returning in lockstep."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "retry.go is where this phase works.",
+          "code": "// DoWithRetry runs op up to attempts times. It returns nil the moment op\n// succeeds, and if op never succeeds it returns the error from the final call.\n// It must call op at most attempts times and stop as soon as op returns nil.\nfunc DoWithRetry(attempts int, op func() error) error {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/retry.test.mjs   # what the Run button calls for this phase"
+        },
+        {
+          "kind": "task",
+          "body": "In retry.go, implement DoWithRetry(attempts int, op func() error) error: call op up to attempts times, return nil the moment op returns nil, and if op never succeeds return the error from the final call. It must call op at most attempts times. Run go test ./... to watch the starter fail."
+        }
+      ],
+      "hints": [
+        "A retry is a bounded loop: call the operation, return the moment it succeeds, and give up after a fixed number of attempts instead of looping forever or once. If go is command not found, run the environment check first.",
+        "Two rules make a retry safe: cap the attempts so a hard-down dependency cannot be hammered forever, and grow the delay between them (backoff) so you stop adding load to something already failing."
+      ],
+      "misconceptions": [
+        "Believing more retries make you more reliable — an unbounded retry loop turns one slow dependency into a pile-up of your own callers, and a fleet of clients retrying in lockstep can knock a recovering service flat again the instant it comes back.",
+        "Throwing away the last error when every attempt fails — returning nil on exhaustion tells the caller the work succeeded, which is the single most expensive lie a resilient helper can tell."
+      ],
+      "resources": [
+        {
+          "label": "Google SRE: handling overload",
+          "url": "https://sre.google/sre-book/handling-overload/"
+        }
+      ]
+    },
+    "go-resilience-ask": {
+      "id": "go-resilience-ask",
+      "title": "Reason: which retry helper do you actually trust",
+      "kind": "question",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "resilience"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Two engineers write a retry helper for a flaky call. Mine A loops with no bound until the operation succeeds, then returns nil. Mine B tries at most five times, returns nil on success, and the last error if all fail. Both look fine when it succeeds on try two; which do you trust behind an endpoint, and why does the difference only show when things go badly?"
+        }
+      ],
+      "options": [
+        "They are equivalent, because both return nil on success, and success is the only outcome an endpoint behind a flaky dependency really cares about.",
+        "Mine A — five attempts is an arbitrary ceiling that abandons a call which would have recovered on the sixth, so a helper that gives up early fails.",
+        "Mine B: it caps attempts, returns on success, and hands back the last error on exhaustion; Mine A loops until success, so it hangs with no failure path.",
+        "Mine A — retrying forever is strictly more resilient, because with enough attempts it eventually succeeds and the caller never writes a failure path at all."
+      ],
+      "answer": 2,
+      "explanation": "The two helpers are indistinguishable when the flaky call succeeds on try two, which is exactly why the screen recording proves nothing. They part company when the dependency is genuinely down. Mine A's unbounded loop never returns and never yields: against a service that will not recover, it is not a retry, it is a hung goroutine, and every caller of it piles up hammering the thing that is already failing — the amplification that turns one bad dependency into an outage of everything that depends on it. Mine B refuses that role: the cap on attempts bounds both the work and the pressure, the early return means it stops bothering the dependency the instant it answers, and returning the last error on exhaustion gives the caller something to log, alert on, or fall back from. That third property is the one people miss — a helper whose only exit is success has no way to lose, which means it cannot tell you it lost. A finite bound is not pessimism; five attempts is a deliberate choice, and the correct response to a call that would have recovered on six is to alert on the exhaustion rate, not to remove the ceiling.",
+      "hints": [
+        "A helper is only as good as the wrong outcomes it refuses — judge these by what each one does when the operation keeps failing, not when it works first time."
+      ],
+      "misconceptions": [
+        "Thinking a retry that runs forever is the most robust option — against a dependency that is hard down it is a loop that never yields and never reports, which is a hung request wearing the costume of resilience.",
+        "Believing that because an error is returned it will be handled — a helper that drops the last error on exhaustion hands the caller nothing to act on, so the failure becomes invisible."
+      ]
+    },
+    "go-resilience-do": {
+      "id": "go-resilience-do",
+      "title": "Solve: a retry that counts its calls and keeps its errors",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "resilience"
+      ],
+      "files": [
+        "retry.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/retry.test.mjs",
+      "checks": [
+        {
+          "id": "retry-stops-early",
+          "label": "A retry that succeeds first try stops there",
+          "tests": [
+            "a retry that succeeds first try stops there"
+          ],
+          "feedback": "When op returns nil on the very first call, DoWithRetry must return nil and stop — it may not call op again. A helper that loops a fixed number of times regardless of success calls op too many times. If node is missing when the suite runs, the environment check names the install."
+        },
+        {
+          "id": "retry-recovers",
+          "label": "A retry that recovers mid-way returns success",
+          "tests": [
+            "a retry that recovers mid-way returns success"
+          ],
+          "feedback": "If op fails twice and succeeds on the third call, DoWithRetry must return nil after exactly three calls. Keep trying while op returns an error, and return nil the moment one attempt clears it."
+        },
+        {
+          "id": "retry-exhausts",
+          "label": "An exhausted retry returns the last error",
+          "tests": [
+            "an exhausted retry returns the last error"
+          ],
+          "feedback": "When op fails on all attempts, DoWithRetry must call op exactly that many times and return the error from the final call — not nil. Return the stored last error after the loop so the failure survives.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "retry.go is the file you own, and DoWithRetry in it is what the suite calls. Keep the last error in a variable declared outside the loop, so that after the loop ends you still have the failure from the final attempt to return. Run go test ./... and read the name of the test that failed.",
+        "The loop runs at most as many times as the caller allowed, and the suite counts those calls: one more than that fails the count it keeps.",
+        "Inside the loop call op once, assign its result to your error variable, and if it is nil return nil immediately — do not call op again after it succeeded.",
+        "A suite calls op and counts the calls: success on try one must make exactly one call, and failure on all four of four attempts must make exactly four before you give up.",
+        "Solution review: the finished loop makes one attempt per pass, treats the caller's budget as its bound, keeps every failure in the error variable it declared, and returns non-nil the moment the attempts run out — the flake is contained, and no call is ever spent twice."
+      ],
+      "misconceptions": [
+        "Returning nil once attempts run out, so a caller that trusts the result thinks the flaky operation eventually succeeded when it never did.",
+        "Calling op a fixed number of times regardless of its result, so an operation that succeeded on the first try still gets retried — duplicating a side effect the caller expected to happen once."
+      ]
+    },
+    "go-resilience-review": {
+      "id": "go-resilience-review",
+      "title": "Review: backing off without burning wall-clock",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "resilience"
+      ],
+      "files": [
+        "backoff.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/backoff.test.mjs",
+      "checks": [
+        {
+          "id": "backoff-grows",
+          "label": "The delay grows exponentially",
+          "tests": [
+            "the delay grows exponentially"
+          ],
+          "feedback": "Backoff must double the wait each attempt: base at attempt 0, 2*base at attempt 1, 4*base at attempt 2. Compute it from the attempt count; a fixed or linear delay will not match."
+        },
+        {
+          "id": "backoff-capped",
+          "label": "The delay never exceeds the cap",
+          "tests": [
+            "the delay never exceeds the cap"
+          ],
+          "feedback": "However many doublings the attempt number implies, Backoff must return no more than limit. Clamp the grown value to the ceiling so a late attempt cannot produce an absurd wait. If the suite cannot run because node is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Letting the delay grow without an upper bound — after enough doublings the computed wait becomes absurd (days between retries), so a healthy cap keeps the backoff sane no matter how many attempts it has climbed through.",
+        "Thinking exponential backoff needs a real sleep to be worth anything — the delay is a pure function of the attempt number, so you can compute and test it instantly without ever waiting it out."
+      ]
+    },
     "go-ops-learn": {
       "id": "go-ops-learn",
       "title": "Learn: the machine reads the status, not the log",
@@ -3731,203 +4612,6 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "misconceptions": [
         "Reading go.sum as a cache it may delete — it is the record that makes the build reproducible.",
         "Thinking indirect means unimportant — an indirect requirement is still pinned and still checksummed."
-      ]
-    },
-    "go-resilience-learn": {
-      "id": "go-resilience-learn",
-      "title": "Learn: failing well is a design goal, not an afterthought",
-      "objectives": [
-        "Explain why a retry must be bounded and what the error from the final attempt preserves.",
-        "Trace an operation that succeeds on its third attempt and say exactly how many calls it earns.",
-        "Apply backoff with jitter so a fleet does not retry in lockstep against a failing dependency."
-      ],
-      "kind": "lesson",
-      "mode": "learn",
-      "guidance": 1,
-      "competencyIds": [
-        "resilience"
-      ],
-      "lesson": [
-        {
-          "kind": "prose",
-          "body": "Every call that leaves your process can fail in a way worth retrying: a reset, a timeout, a database mid-failover. A retry is the honest response: run the operation, and if it failed, run it again. But an unbounded loop against a down service is denial of service, not resilience. So cap the attempts, and on the last failure return its error, not a clean nil that lies."
-        },
-        {
-          "kind": "example",
-          "body": "A bounded retry that stops on the first success and reports the final error:",
-          "code": "func DoWithRetry(attempts int, op func() error) error {\n    var err error\n    for i := 0; i < attempts; i++ {\n        if err = op(); err == nil {\n            return nil // succeeded — stop calling it\n        }\n    }\n    return err // exhausted: hand back the last real failure\n}"
-        },
-        {
-          "kind": "prose",
-          "body": "Read that shape: the loop is bounded by `attempts`, so a hard-down dependency cannot spin forever. The `return nil` inside it means you stop the moment a call succeeds, so no side effect gets duplicated. And the final `return err` keeps the identity of the last failure, so a caller can match it with `errors.Is`. It never sleeps, because waiting is its own decision, covered below."
-        },
-        {
-          "kind": "prose",
-          "body": "Backoff is the second half of the rule: wait before the next attempt, and make each wait longer than the last by doubling from a base delay and capping the growth. Jitter then scatters those waits, so a thousand callers that failed in the same second do not return as one synchronized wave."
-        },
-        {
-          "kind": "prose",
-          "body": "Not every failure earns a retry. A reset, a timeout, or a 503 may clear on its own; a 400, a missing key, or a malformed body will fail the same way on the tenth attempt. Retry only what is safe to repeat, and stop once the caller has no time left."
-        },
-        {
-          "kind": "keypoints",
-          "body": "Key Points",
-          "items": [
-            "Cap the attempts: a ceiling separates recovery from amplification.",
-            "Stop the moment the operation succeeds; never retry after success.",
-            "On exhaustion, return the last error, never nil.",
-            "Add backoff between attempts; jitter stops clients returning in lockstep."
-          ]
-        },
-        {
-          "kind": "example",
-          "body": "retry.go is where this phase works.",
-          "code": "// DoWithRetry runs op up to attempts times. It returns nil the moment op\n// succeeds, and if op never succeeds it returns the error from the final call.\n// It must call op at most attempts times and stop as soon as op returns nil.\nfunc DoWithRetry(attempts int, op func() error) error {\n\tpanic(\"unimplemented\")\n}"
-        },
-        {
-          "kind": "example",
-          "body": "The command you run, and the one the Run button calls for you:",
-          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/retry.test.mjs   # what the Run button calls for this phase"
-        },
-        {
-          "kind": "task",
-          "body": "In retry.go, implement DoWithRetry(attempts int, op func() error) error: call op up to attempts times, return nil the moment op returns nil, and if op never succeeds return the error from the final call. It must call op at most attempts times. Run go test ./... to watch the starter fail."
-        }
-      ],
-      "hints": [
-        "A retry is a bounded loop: call the operation, return the moment it succeeds, and give up after a fixed number of attempts instead of looping forever or once. If go is command not found, run the environment check first.",
-        "Two rules make a retry safe: cap the attempts so a hard-down dependency cannot be hammered forever, and grow the delay between them (backoff) so you stop adding load to something already failing."
-      ],
-      "misconceptions": [
-        "Believing more retries make you more reliable — an unbounded retry loop turns one slow dependency into a pile-up of your own callers, and a fleet of clients retrying in lockstep can knock a recovering service flat again the instant it comes back.",
-        "Throwing away the last error when every attempt fails — returning nil on exhaustion tells the caller the work succeeded, which is the single most expensive lie a resilient helper can tell."
-      ],
-      "resources": [
-        {
-          "label": "Google SRE: handling overload",
-          "url": "https://sre.google/sre-book/handling-overload/"
-        }
-      ]
-    },
-    "go-resilience-ask": {
-      "id": "go-resilience-ask",
-      "title": "Reason: which retry helper do you actually trust",
-      "kind": "question",
-      "mode": "review",
-      "guidance": 1,
-      "competencyIds": [
-        "resilience"
-      ],
-      "lesson": [
-        {
-          "kind": "prose",
-          "body": "Two engineers write a retry helper for a flaky call. Mine A loops with no bound until the operation succeeds, then returns nil. Mine B tries at most five times, returns nil on success, and the last error if all fail. Both look fine when it succeeds on try two; which do you trust behind an endpoint, and why does the difference only show when things go badly?"
-        }
-      ],
-      "options": [
-        "They are equivalent, because both return nil on success, and success is the only outcome an endpoint behind a flaky dependency really cares about.",
-        "Mine A — five attempts is an arbitrary ceiling that abandons a call which would have recovered on the sixth, so a helper that gives up early fails.",
-        "Mine B: it caps attempts, returns on success, and hands back the last error on exhaustion; Mine A loops until success, so it hangs with no failure path.",
-        "Mine A — retrying forever is strictly more resilient, because with enough attempts it eventually succeeds and the caller never writes a failure path at all."
-      ],
-      "answer": 2,
-      "explanation": "The two helpers are indistinguishable when the flaky call succeeds on try two, which is exactly why the screen recording proves nothing. They part company when the dependency is genuinely down. Mine A's unbounded loop never returns and never yields: against a service that will not recover, it is not a retry, it is a hung goroutine, and every caller of it piles up hammering the thing that is already failing — the amplification that turns one bad dependency into an outage of everything that depends on it. Mine B refuses that role: the cap on attempts bounds both the work and the pressure, the early return means it stops bothering the dependency the instant it answers, and returning the last error on exhaustion gives the caller something to log, alert on, or fall back from. That third property is the one people miss — a helper whose only exit is success has no way to lose, which means it cannot tell you it lost. A finite bound is not pessimism; five attempts is a deliberate choice, and the correct response to a call that would have recovered on six is to alert on the exhaustion rate, not to remove the ceiling.",
-      "hints": [
-        "A helper is only as good as the wrong outcomes it refuses — judge these by what each one does when the operation keeps failing, not when it works first time."
-      ],
-      "misconceptions": [
-        "Thinking a retry that runs forever is the most robust option — against a dependency that is hard down it is a loop that never yields and never reports, which is a hung request wearing the costume of resilience.",
-        "Believing that because an error is returned it will be handled — a helper that drops the last error on exhaustion hands the caller nothing to act on, so the failure becomes invisible."
-      ]
-    },
-    "go-resilience-do": {
-      "id": "go-resilience-do",
-      "title": "Solve: a retry that counts its calls and keeps its errors",
-      "kind": "challenge",
-      "mode": "solve",
-      "guidance": 2,
-      "competencyIds": [
-        "resilience"
-      ],
-      "files": [
-        "retry.go"
-      ],
-      "testCommand": "node --test --test-reporter=tap test/retry.test.mjs",
-      "checks": [
-        {
-          "id": "retry-stops-early",
-          "label": "A retry that succeeds first try stops there",
-          "tests": [
-            "a retry that succeeds first try stops there"
-          ],
-          "feedback": "When op returns nil on the very first call, DoWithRetry must return nil and stop — it may not call op again. A helper that loops a fixed number of times regardless of success calls op too many times. If node is missing when the suite runs, the environment check names the install."
-        },
-        {
-          "id": "retry-recovers",
-          "label": "A retry that recovers mid-way returns success",
-          "tests": [
-            "a retry that recovers mid-way returns success"
-          ],
-          "feedback": "If op fails twice and succeeds on the third call, DoWithRetry must return nil after exactly three calls. Keep trying while op returns an error, and return nil the moment one attempt clears it."
-        },
-        {
-          "id": "retry-exhausts",
-          "label": "An exhausted retry returns the last error",
-          "tests": [
-            "an exhausted retry returns the last error"
-          ],
-          "feedback": "When op fails on all attempts, DoWithRetry must call op exactly that many times and return the error from the final call — not nil. Return the stored last error after the loop so the failure survives.",
-          "edge": true
-        }
-      ],
-      "hints": [
-        "retry.go is the file you own, and DoWithRetry in it is what the suite calls. Keep the last error in a variable declared outside the loop, so that after the loop ends you still have the failure from the final attempt to return. Run go test ./... and read the name of the test that failed.",
-        "The loop runs at most as many times as the caller allowed, and the suite counts those calls: one more than that fails the count it keeps.",
-        "Inside the loop call op once, assign its result to your error variable, and if it is nil return nil immediately — do not call op again after it succeeded.",
-        "A suite calls op and counts the calls: success on try one must make exactly one call, and failure on all four of four attempts must make exactly four before you give up.",
-        "Solution review: the finished loop makes one attempt per pass, treats the caller's budget as its bound, keeps every failure in the error variable it declared, and returns non-nil the moment the attempts run out — the flake is contained, and no call is ever spent twice."
-      ],
-      "misconceptions": [
-        "Returning nil once attempts run out, so a caller that trusts the result thinks the flaky operation eventually succeeded when it never did.",
-        "Calling op a fixed number of times regardless of its result, so an operation that succeeded on the first try still gets retried — duplicating a side effect the caller expected to happen once."
-      ]
-    },
-    "go-resilience-review": {
-      "id": "go-resilience-review",
-      "title": "Review: backing off without burning wall-clock",
-      "kind": "retrieval",
-      "mode": "review",
-      "guidance": 2,
-      "competencyIds": [
-        "resilience"
-      ],
-      "files": [
-        "backoff.go"
-      ],
-      "testCommand": "node --test --test-reporter=tap test/backoff.test.mjs",
-      "checks": [
-        {
-          "id": "backoff-grows",
-          "label": "The delay grows exponentially",
-          "tests": [
-            "the delay grows exponentially"
-          ],
-          "feedback": "Backoff must double the wait each attempt: base at attempt 0, 2*base at attempt 1, 4*base at attempt 2. Compute it from the attempt count; a fixed or linear delay will not match."
-        },
-        {
-          "id": "backoff-capped",
-          "label": "The delay never exceeds the cap",
-          "tests": [
-            "the delay never exceeds the cap"
-          ],
-          "feedback": "However many doublings the attempt number implies, Backoff must return no more than limit. Clamp the grown value to the ceiling so a late attempt cannot produce an absurd wait. If the suite cannot run because node is command not found, run the environment check first.",
-          "edge": true
-        }
-      ],
-      "hints": [],
-      "misconceptions": [
-        "Letting the delay grow without an upper bound — after enough doublings the computed wait becomes absurd (days between retries), so a healthy cap keeps the backoff sane no matter how many attempts it has climbed through.",
-        "Thinking exponential backoff needs a real sleep to be worth anything — the delay is a pure function of the attempt number, so you can compute and test it instantly without ever waiting it out."
       ]
     },
     "go-ship-learn": {

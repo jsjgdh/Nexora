@@ -3,8 +3,8 @@
 export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
   "id": "go-in-production",
   "title": "Go in production",
-  "description": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, JSON in and out, HTTP servers, routes, authentication, tests, performance, storage, a database, caching, operations, logging, dependencies, resilience, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
-  "version": 1,
+  "description": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, pipelines, JSON in and out, an HTTP server with its deadlines, routes, middleware, authentication, tests, performance, storage, a database, caching, resilience, operations, logging, dependencies, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
+  "version": 2,
   "role": "main",
   "phases": [
     {
@@ -26,6 +26,15 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
       "activityCount": 4
     },
     {
+      "id": "go-concur",
+      "title": "Worker pools and fan-in",
+      "goal": "Scale the channel pattern: fan work out to several workers reading one jobs channel, then fan their partial results back in. The sender owns the close, so the collected total is the same no matter how the scheduler runs.",
+      "level": 3,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
       "id": "go-context",
       "title": "Contexts and cancellation",
       "goal": "A context carries deadlines, cancellation, and values down a call tree. Blocking work selects on ctx.Done so it stops the moment the caller gives up, and any function downstream can read the deadline the context already holds.",
@@ -35,9 +44,9 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
       "activityCount": 4
     },
     {
-      "id": "go-concur",
-      "title": "Worker pools and fan-in",
-      "goal": "Scale the channel pattern: fan work out to several workers reading one jobs channel, then fan their partial results back in. The sender owns the close, so the collected total is the same no matter how the scheduler runs.",
+      "id": "go-pipeline",
+      "title": "Pipelines and cancelling the chain",
+      "goal": "A pipeline is a chain of stages, and every stage is a goroutine of its own. The stages hand the value to each other over a channel, and when the caller gives up the whole chain has to stop, not only the stage that noticed first.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -48,6 +57,15 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
       "title": "Go JSON",
       "goal": "Struct tags as wire format: marshal without depending on Go names, unmarshal without trusting the bytes.",
       "level": 2,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
+      "id": "go-server",
+      "title": "The server: its deadlines and its last request",
+      "goal": "A server is more than a handler: it owns the connection, the deadlines and the goroutine that serves each request. Set the deadlines and one slow client cannot hold the service open; drain the server on the way out and the request in flight still gets its answer.",
+      "level": 3,
       "tier": "pro",
       "authored": true,
       "activityCount": 4
@@ -65,6 +83,15 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
       "id": "go-routes",
       "title": "Routing, pagination, and a rate limit",
       "goal": "Give the API a real routing table: match a request by method and path pattern, pull an id out of the URL and a limit out of the query, answer each failure with the status it actually earned (404 for no such route, 405 for the wrong verb), and wrap the whole thing in a rate limiter that refuses the burst past its budget with 429 before the handler ever runs.",
+      "level": 3,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
+      "id": "go-middleware",
+      "title": "Middleware: one concern around every route",
+      "goal": "Middleware is a function that takes a handler and returns a handler, so one concern can be applied to every route without every route repeating it. The order the middlewares are listed in is the order they run in, and a wrapper that forgets to call the handler it was given answers nothing at all.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -125,6 +152,15 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
       "activityCount": 4
     },
     {
+      "id": "go-resilience",
+      "title": "Resilience: retries, backoff, and failing fast",
+      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes — so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
+      "level": 3,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
       "id": "go-ops",
       "title": "Operations: what the running service admits",
       "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest — the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
@@ -147,15 +183,6 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
       "title": "Go dependencies",
       "goal": "Read a module pair, and reconcile a dependency the code adopted but go.mod never declared.",
       "level": 2,
-      "tier": "pro",
-      "authored": true,
-      "activityCount": 4
-    },
-    {
-      "id": "go-resilience",
-      "title": "Resilience: retries, backoff, and failing fast",
-      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes — so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
-      "level": 3,
       "tier": "pro",
       "authored": true,
       "activityCount": 4
