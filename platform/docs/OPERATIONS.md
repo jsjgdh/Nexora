@@ -331,7 +331,8 @@ the runbook's dry-run checklist rather than in a document nobody reads.
 
 | Drill | Proves | How often | Performed? |
 |---|---|---|---|
-| Restore drill | a backup can be restored and the rows are there | monthly, and after any migration | **no** |
+| Row restore drill | the platform's restore path puts the data back | monthly, and after any migration | **no** |
+| Engine restore drill | the DATABASE can be restored, not just the rows | quarterly, and after any engine change | **no** |
 | Deploy rehearsal | the whole path works, rollback included | before every first release | **no** |
 | Key rotation | rotating a secret does not take the product down | before the first one is needed | **no** |
 | Capacity | the edge survives the traffic it is told to expect | before the first paying learner | **no** |
@@ -344,7 +345,44 @@ them down is that "we have backups" is not one of them.
 
 ---
 
-## 7. What this document does not claim
+## 7. Restoring the database, which is the drill that matters
+
+A backup nobody has restored is a hypothesis, and there are TWO hypotheses
+here, not one:
+
+- **the rows** — that the platform's own restore path puts the data back.
+  `npm run drill` proves this, in a scratch schema, against a real database.
+- **the database** — that the ENGINE's backup can be restored at all. A
+  Cloud SQL automated backup, a `pg_basebackup`, a disk snapshot: a different
+  mechanism, and it can fail in ways the row restore cannot see. The backup
+  was never taken. The backup is corrupt. The backup belongs to a different
+  instance. The credentials in it do not match what the application uses.
+
+So the engine drill is its own command, because it is its own proof:
+
+```sh
+npm run drill:engine -- --instance=nexora-postgres --project=nexora-prod --yes
+```
+
+It takes the **newest** automated backup, restores it into a **new**
+instance, waits for it to be ready, runs the row drill against the restored
+copy, and removes the scratch instance. It refuses to run without `--yes`,
+because it creates a real instance and spends real money for as long as that
+instance is alive.
+
+**This is the drill that closes the "no restore drill has been performed"
+line in §6, and it has not been performed.** What has been done is that it
+is now a command with a test on what it does (newest backup, new instance,
+removed afterwards, pointed at a database the plan creates) rather than a
+paragraph in a runbook.
+
+On the compose path the equivalent is a `pg_dump` of each database into the
+backups volume, and a restore into a scratch database. The row drill is the
+same command either way; only the source of the copy differs.
+
+---
+
+## 8. What this document does not claim
 
 - It does not claim the platform has run in production. It has not.
 - It does not claim the numbers in §1 and §5 are measured. They are the

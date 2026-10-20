@@ -16,6 +16,7 @@
    curriculum data dir) remain until the platform pass removes the services' classroom
    surface; this script no longer reads or writes them. */
 import { createHash } from "node:crypto";
+import { execSync } from "node:child_process";
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -224,4 +225,13 @@ if (check) {
     console.log(`removed stale ${file.slice(root.length + 1).split("\\").join("/")}`);
   }
   console.log(`curriculum synced (ide ${ideVersion}, ${IDE_COURSES.length} course(s)).`);
+  // The suite reads the BUILT artifact, not the source. A sync that leaves the
+  // build stale makes the next run fail for a reason that looks like drift —
+  // and it looks like drift in the WRONG direction, which is the worst kind of
+  // confusing. So the sync rebuilds what it changed.
+  //
+  // `execSync` and not `execFileSync`: on Windows the package manager is a
+  // `.cmd`, and spawning one without a shell is refused (it is how a command
+  // that works on a colleague's Linux fails on a colleague's Windows).
+  execSync("npm run build --workspace=@nexora/curriculum", { stdio: "inherit" });
 }

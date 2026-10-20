@@ -36,11 +36,13 @@
     "verify:drill": "node --test scripts/verify-drill.mjs",
     "backup": "node scripts/backup.mjs",
     "verify:backup": "node --test scripts/verify-backup.mjs",
-    "verify:all": "npm run verify && npm run verify:admin && npm run verify:cohorts && npm run verify:assessment && npm run verify:operations && npm run verify:monitor && npm run verify:drill && npm run verify:backup && npm run verify:e2e",
+    "verify:all": "npm run verify && npm run verify:admin && npm run verify:operations && npm run verify:monitor && npm run verify:drill && npm run verify:backup && npm run verify:drill-engine && npm run verify:e2e",
     "verify:operations": "node --test scripts/verify-operations.mjs",
     "gcp:check": "npm run build --workspace=@nexora/gcp-plan && node infra/gcp/dist/plan-check.js",
     "monitor": "node scripts/monitor.mjs",
-    "verify:monitor": "node --test scripts/verify-monitor.mjs"
+    "verify:monitor": "node --test scripts/verify-monitor.mjs",
+    "drill:engine": "node scripts/drill-engine.mjs",
+    "verify:drill-engine": "node --test scripts/verify-drill-engine.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.10",

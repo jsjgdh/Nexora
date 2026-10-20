@@ -42,6 +42,49 @@ The 2026-10-11 decision, kept for the record:
 > single-volume size); that revisit is a capacity decision with numbers,
 > not a fashion one.
 
+## What the managed plane buys, and what it does not
+
+The 2026-10-11 decision was a VPS. It was changed on 2026-10-20 because
+the cost of a VPS is not the server — it is everything the server carries
+with it, none of which is the product's actual work:
+
+**The machine itself.** Kernel and package patching. Unattended upgrades
+that are somebody's job. SSH hardening. A firewall. The intrusion noise —
+the fail2ban class of thing, where a host on the internet is a host that is
+being probed all day. Disk space, and the disk's own failure rate. The
+Docker daemon itself, which is software you now maintain on every host,
+not a thing the platform gives you.
+
+**The data.** Postgres on your box means the backups are your backups, the
+restore drills are your drills, and a disk failure is your problem rather
+than a provider's disk having a bad afternoon. On Cloud SQL the engine
+takes its own backups and its own point-in-time recovery, and the drill
+below is a command rather than a promise.
+
+**The edge.** TLS certificates are renewed for you (Caddy on a VPS, a
+Google-managed certificate on the load balancer). A bare VPS gets very
+little DDoS protection. The reverse proxy is configuration somebody
+maintains.
+
+**The 3am pager.** You are it. Everything the platform cannot do for
+itself — a restart, a certificate, a disk — is a person, and the people
+shipping this product have better uses for a night than a Postgres that
+will not start.
+
+What the managed plane does NOT buy, and this is the honest half:
+
+- **The isolation story is unchanged.** The sandbox that runs learner code
+  and signs what it observed is the same in both shapes. The plan keeps the
+  container model — one image, five Cloud Run services, the runner intact
+  wherever a Docker daemon exists — and states its own gap: there is no
+  daemon on Cloud Run, so hosted `/execute` runs work on the compose path
+  until `runners/` gains a runner that submits a job.
+- **The bill is not free.** It is a different bill, with a different
+  shape. The numbers are in OPERATIONS.md §5.
+- **The first deploy is still a drill.** Neither shape has ever been
+  rehearsed against a real host, and the rehearsal is where the plan
+  becomes true.
+
 ## What production is
 
 **On the GCP plan:** five Cloud Run services from one image (the gateway
@@ -86,6 +129,92 @@ the bullets below describe.
   `GATEWAY_URL` is what `/auth/session/*` uses to hold the learner's refresh
   token in an `HttpOnly` cookie. Get it wrong and sign-in alone fails, with
   "the sign-in service did not answer", while every other page looks healthy.
+
+## The pipeline
+
+Three workflows, and what each is for. The runbook below says what a deploy
+is; these are the parts that do it, and that can be repeated.
+
+### `verify.yml` — the gate
+
+Runs on every push, pull request and nightly: the site's type check,
+assertions, accessibility scan and UX sweep; the platform's build and suite;
+and a nightly compose end-to-end that boots the whole mesh. **A release tag
+runs it too**, and the deploy workflows wait for THAT run — so a tag cannot
+ship a tree the suite has not passed.
+
+### `deploy-platform.yml` — the mesh, to Google Cloud or to the fallback host
+
+One workflow, two targets, because the fallback is a *target* and not a
+second product: the same image, rolled the same way, verified the same way,
+rolled back the same way.
+
+- **gcp** (the decision of record): the plan is applied — the Cloud SQL
+  instance with its backups and deletion protection, the Secret Manager
+  entries, the five Cloud Run services (in two passes, because a Cloud Run URL
+  carries a hash that does not exist until the service does), and the load
+  balancer. The plan is `infra/gcp/plan.json` as data; `plan-check` refuses it
+  drifting from this tree.
+- **compose** (the fallback): the image is copied to one host and rolled with
+  `docker compose pull && up -d`.
+
+Then it **verifies itself, from outside**: `npm run healthcheck` and
+`npm run synthetic` against the DEPLOYED platform. Those are the same
+commands the operator runs, not a second set written for CI. And if either
+failed, the previous image is rolled back — so a red deploy ends with the
+platform on the last known-good image, and a human is paged by the fact that
+the run failed at all.
+
+It does not re-run the suite: it runs *after* `verify` has passed on that
+exact commit, so there is exactly one gate and it cannot drift.
+
+### `deploy-frontend.yml` — the site, to Vercel
+
+The same gates the `verify` workflow runs, in the same order, and then the
+deploy, and then a check that the site answers on the origin a learner will
+use. The deploy is the last step, not the only one: with Vercel's own git
+integration the site deploys whatever Vercel can build, and the gates become
+advice. In a workflow, a red suite means the site is not deployed at all.
+
+**One deploy path, not two.** A repository with a git integration AND this
+workflow can deploy twice, from two places, to the same URL, and the second
+one wins silently. If the Vercel project is connected to the repository,
+disconnect it or turn this workflow's deploy off.
+
+### A release
+
+```sh
+# in both repositories, with the SAME tag name — the platform's tag and the
+# site's tag are separate objects, and the name is what links them
+git tag platform-v0.1.0 && git push origin platform-v0.1.0
+```
+
+The tag runs `verify`; a green `verify` on that tag rolls the mesh and
+deploys the site; a red one does neither, and says which suite failed.
+
+### What the deploys need
+
+| Secret | Used by | Why |
+|---|---|---|
+| `GITHUB_TOKEN` (the workflow's own) | the mesh | to push the image to GHCR |
+| `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` | the site | to deploy |
+| `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` | the mesh, compose target only | the fallback host, and a way in |
+| `SYNTHETIC_EMAIL`, `SYNTHETIC_PASSWORD` | the mesh's post-deploy check | the canary account the journey check signs in with |
+
+| Variable | Used by | Why |
+|---|---|---|
+| `HEALTHCHECK_URL` | the mesh's post-deploy check | the deployed edge |
+| `SYNTHETIC_URL` | the mesh's post-deploy check | the deployed gateway |
+| `SITE_URL` | the site's post-deploy check | the origin a learner will use |
+| `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SERVICE_ACCOUNT` | the mesh, gcp target | Workload Identity Federation: a short-lived token, and no key in the repository and no key in a secret |
+
+The Vercel project's own environment holds the site's runtime variables:
+`PUBLIC_API_URL` (the browser's route to the gateway), `GATEWAY_URL` (the app
+server's own route), `PUBLIC_SITE_URL` and `RESEND_API_KEY`. The two gateway
+addresses are separate on purpose — inside a container `127.0.0.1` is the
+container rather than the host, and getting it wrong fails sign-in alone,
+with "the sign-in service did not answer", while every other page looks
+healthy.
 
 ## Deploy procedure — compose (the fallback; the GCP runbook's order of operations is [infra/gcp/README.md](../infra/gcp/README.md))
 

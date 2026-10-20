@@ -364,6 +364,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Use the Explorer, a file tab and Ctrl+` to open a file and show and hide the terminal.",
         "Explain why closing a tab leaves the file on disk, and what a red squiggle is telling you."
       ],
+      "observed": [
+        {
+          "kind": "ide",
+          "action": "file-opened"
+        },
+        {
+          "kind": "ide",
+          "action": "tab-closed"
+        }
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -371,7 +381,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "You can show or hide each region with a shortcut. This phase has 8 steps: 4 short reads, 2 quick questions, 1 hands-on Solve where you bring the project up, and 1 Review you do alone. Each read ends with Mark as Complete, which unlocks the next step."
+          "body": "You can show or hide each region with a shortcut. This phase has 8 steps: 4 short reads, 2 quick questions, 1 hands-on Solve where you bring the project up, and 1 Review you do alone. Each read ends with Mark as Complete, which unlocks the next step. A read that watches what you do finishes itself, and Mark as Complete is still there when you would rather say so."
         },
         {
           "kind": "example",
@@ -404,7 +414,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "The work folder opens by itself on first run: NEXORA/Task-Manager in your home directory. If the window is empty instead, run NEXORA: Setup Workspace from the palette and reopen there. Then expand one folder, click a file to open it, and press Ctrl+` to show the terminal, then again to hide it. You touched all three regions and changed nothing."
+          "body": "The work folder opens by itself on first run: NEXORA/Task-Manager in your home directory. If the window is empty instead, run NEXORA: Setup Workspace from the palette and reopen there. Then expand one folder, click a file to open it, press Ctrl+` to show the terminal and again to hide it, then close the tab you opened. You touched all three regions and changed nothing."
         }
       ],
       "hints": [
@@ -439,6 +449,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Explain which two programs this project needs before any code runs, and why each is there.",
         "Choose the LTS install for your operating system and prove it with node -v in a new terminal.",
         "Diagnose command-not-found as a terminal that started before the install, not a failed install."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node -v",
+          "expect": [
+            "v?(2[0-9]|[3-9][0-9])\\.[0-9]+\\.[0-9]+"
+          ],
+          "shows": "v20.11.0"
+        }
       ],
       "lesson": [
         {
