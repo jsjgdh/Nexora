@@ -21,7 +21,7 @@
       <p class="num text-[clamp(2rem,4.4vw,3rem)] leading-none font-bold text-ink" use:ticker>
         {fact.value}
       </p>
-      <p class="mt-3 max-w-[22ch] text-[12.5px] leading-snug text-muted">{fact.label}</p>
+      <p class="mt-3 max-w-[22ch] text-[13.5px] leading-snug text-muted">{fact.label}</p>
     </div>
   {/each}
 </div>

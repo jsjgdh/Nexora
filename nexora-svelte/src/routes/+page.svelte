@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { PageProps } from "./$types";
   import PageHead from "$lib/components/PageHead.svelte";
   import Headline from "$lib/components/Headline.svelte";
   import SectionHead from "$lib/components/SectionHead.svelte";
@@ -7,67 +8,77 @@
   import ProofRun from "$lib/components/ProofRun.svelte";
   import ProofChain from "$lib/components/ProofChain.svelte";
   import ScrollRail from "$lib/components/ScrollRail.svelte";
-  import DeviceCode from "$lib/components/DeviceCode.svelte";
   import PhaseMatrix from "$lib/components/PhaseMatrix.svelte";
   import PhaseField from "$lib/components/PhaseField.svelte";
-  import CourseLedger from "$lib/components/CourseLedger.svelte";
   import SpecSheet from "$lib/components/SpecSheet.svelte";
   import FactStrip from "$lib/components/FactStrip.svelte";
   import EmployerBoard from "$lib/components/EmployerBoard.svelte";
   import LaunchList from "$lib/components/LaunchList.svelte";
-  import MarketPanel from "$lib/components/MarketPanel.svelte";
   import PropositionStack from "$lib/components/PropositionStack.svelte";
-  import CategoryMap from "$lib/components/CategoryMap.svelte";
+  import PhasePanel from "$lib/components/PhasePanel.svelte";
+  import LearnCycle from "$lib/components/LearnCycle.svelte";
+  import BuildJourney from "$lib/components/BuildJourney.svelte";
+  import CoursePaths from "$lib/components/CoursePaths.svelte";
   import { inView, inViewStagger, reduced } from "$lib/motion";
   import { SITE_DESCRIPTION, SITE_TITLE } from "$lib/seo";
   import {
     HERO,
     HERO_VARIANTS,
     HIRING,
-    MARKET,
     LANDSCAPE,
     WEDGE,
-    STEPS,
     DISCLOSURE,
     NO_LIST,
     FAQ,
-    POSITIONING,
     CURRICULUM,
+    COURSES,
+    LEARN_CYCLE,
+    BUILD_JOURNEY,
+    CLOSING,
   } from "$lib/content/site";
 
-  /* The front door, as a bench.
+  /* The front door, told as a story.
    *
-   * One argument, told in order, and every section is a different shape on
-   * purpose: a poster and a live readout, three arguments read as columns, a
-   * datasheet, a ruled form, a demonstration, the manifest as a plate of
-   * lights, a chain scrubbed against the scroll, the hiring manager's bench,
-   * a set of limits, a plain list of questions, and a poster to close. The
-   * previous build said the same words with the same card three times over;
-   * this one gives each claim the layout it deserves — cards are the lazy
-   * container and there is not one on this page.
+   * The earlier build led with the argument: here is the market, here is the
+   * datasheet, here is what we refuse to do, and somewhere near the bottom the
+   * experience. A reader who had not yet understood the product was asked to
+   * agree with its principles before they had seen what it does.
    *
-   * Every number and every phase comes from `$lib/content/site`, the module
-   * the suite reads. Nothing here is invented: no testimonial, no customer
-   * logo, no download that does not exist, no price.
+   * This build is ordered the other way round, and the order is the whole
+   * change:
    *
-   * `downloadHref` is named once and used by every call on the page — the
-   * hero, the close, the bar — so a change of destination cannot leave one
-   * behind, and the suite can count them. */
+   *   1. what it is, and one action that is true today
+   *   2. what a phase actually is, shown with the shipped curriculum
+   *   3. the situation a learner is in, in their own words
+   *   4. what they end up holding
+   *   5. what makes the experience different
+   *   6. how a verdict earns trust, said once and said plainly
+   *   7. the curriculum, and the two other audiences
+   *
+   * The technical depth is not gone. It has moved down the page, to where a
+   * reader who has caught the idea can decide they want it, and the exhaustive
+   * phase list has moved to its own page, where the reader who came for the
+   * manifest can have all of it without the rest of the site in the way.
+   *
+   * Every number and every phase comes from `$lib/content/site` or from the
+   * shipped manifest, the modules the suite reads. Nothing here is invented:
+   * no testimonial, no customer logo, no download that does not exist, no
+   * price, and no phase named that the IDE does not ship. */
 
   const downloadHref = "/download";
   const pricingHref = "/pricing";
   const verifyHref = "/verify";
-  const coursesHref = "/#courses";
-  const employersHref = "/#employers";
+  const coursesHref = "/courses";
+  const employersHref = "/employers";
 
   const railSections = [
+    { id: "loop", label: "How" },
+    { id: "gap", label: "Gap" },
+    { id: "build", label: "Build" },
     { id: "why", label: "Why" },
-    { id: "market", label: "Market" },
-    { id: "buy", label: "Buying" },
-    { id: "measures", label: "Measures" },
+    { id: "proof", label: "Proof" },
     { id: "courses", label: "Courses" },
     { id: "employers", label: "Hiring" },
-    { id: "limits", label: "Limits" },
   ];
 
   /* The headline the server assigned.
@@ -77,7 +88,7 @@
    * variant and this page renders exactly that one. The other two are not in
    * the document: a page that renders every variant is a menu, and a menu
    * measures nothing. */
-  let { data }: { data: { headline: string } } = $props();
+  let { data }: PageProps = $props();
   const variant =
     HERO_VARIANTS.find((v) => v.id === data.headline) ?? HERO_VARIANTS[0];
 
@@ -95,15 +106,20 @@
   const active = $derived(audience === "employer" ? HIRING : learnerHero);
   const marks = $derived<Record<number, string>>(active.markOne ? { 0: active.markOne } : {});
 
-  /* The field picks a phase; the ledger shows the course. A click on a point
-     opens the drawer it belongs to and brings it into view, so the picture is
-     a way into the list rather than a picture of it. */
-  let focusedCourse = $state<string | null>(null);
+  /* The release state, decided on the server.
+   *
+   * It decides the label on the one action that matters, and it decides the
+   * sentence under it. A page that says "try it free" over a build that is not
+   * published is lying with a button, and the switch that flips it is the
+   * same switch the download page reads. */
+  const release = $derived(data.release);
+  const primaryLabel = $derived(audience === "employer" ? "See the evidence" : release.label);
+  const primaryHref = $derived(audience === "employer" ? employersHref : downloadHref);
 
+  /* The field picks a phase. The reader can then open the course it belongs
+     to on the courses page, where the whole list is printed. */
   function openCourse(pick: { courseSlug: string }): void {
-    focusedCourse = pick.courseSlug;
-    const head = document.getElementById(`course-head-${pick.courseSlug}`);
-    head?.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+    window.location.assign(`${coursesHref}#${pick.courseSlug}`);
   }
 
   /* The bar appears once the masthead is behind you and leaves at the footer.
@@ -134,381 +150,283 @@
 
 <ScrollRail sections={railSections} />
 
-<!-- = 1 · The front page =====================
-     A poster, and the instrument that produced the claim. The reader chooses
-     which question they arrived with, mine or my employer's, and the poster
-     answers it.
-
-     The hero carries four things and no more: the selector, the poster, the
-     lede, and the two actions. The offer line used to sit here as a line of
-     small print under the buttons, which is where a reader's eye does not
-     go; it lives in the door section instead, next to the step that explains
-     it.
-
-     The readout below is not an illustration: it is the product's own output,
-     running. It gets the full measure of the page rather than half a column,
-     because the receipt is a physical object with a shape, and a shape needs
-     room. A receipt squeezed into 250px is a receipt that wraps its own
-     labels. -->
-
+<!-- = 1 · The hero =====================
+     The aspiration, and one action that is true today. The headline, the lede
+     and the two actions are the whole poster; the state of the release is in
+     the strip below it, where a reader who wants the detail will look. -->
 <section class="relative overflow-x-clip" data-headline-variant={data.headline}>
   <div class="hero-block relative z-10 mx-auto max-w-[1320px] px-5 pt-8 pb-12 sm:px-8 sm:pt-10 sm:pb-14">
     <div class="relative z-10">
       <AudienceSwitch bind:value={audience} />
-
       <Headline
         as="h1"
         lines={[active.lineOne, active.lineTwo]}
-        {marks}
-        class="mt-8 text-[clamp(2.6rem,6.6vw,5.6rem)] text-ink"
+        marks={marks}
+        class="mt-6 text-[clamp(2.1rem,4.4vw,3.9rem)] text-ink"
       />
-
-      <div
-        class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16"
-      >
-        <!-- The lede is prose, so it is set in the reading face. Everything
-             that is a label, a reading or a control is not. -->
-        <p class="reading max-w-[54ch] text-[clamp(1.2rem,2.1vw,1.55rem)] leading-snug text-ink">
+      <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16">
+        <p class="reading max-w-[54ch] text-[clamp(1.15rem,1.9vw,1.45rem)] leading-snug text-ink">
           {active.lede}
         </p>
-
         <div class="hero-actions flex flex-wrap items-center gap-3 lg:justify-end">
-          {#if audience === "learner"}
-            <ActionLink href={downloadHref} island>{active.primary}</ActionLink>
-            <ActionLink href={coursesHref} variant="ghost">{active.secondary}</ActionLink>
-          {:else}
-            <ActionLink href={employersHref} island>{active.primary}</ActionLink>
-            <ActionLink href={downloadHref} variant="ghost">{HERO.primary}</ActionLink>
-          {/if}
+          <ActionLink href={primaryHref} island>{primaryLabel}</ActionLink>
+          <ActionLink href="#loop" variant="ghost">See how it works</ActionLink>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- The artefact band: the one thing on the page the bench actually
-       produces. Everything above is type; this is the object, and it is
-       printed live. The band is ruled to the millimetre, because that is what
-       a bench is: a surface you measure on, not a panel you look at. -->
-  <div id="hero-run" class="plot relative z-10 border-y border-rule bg-ground">
-    <div class="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 sm:py-16">
-      <div class="mb-8 max-w-[62ch]">
-        <h2 class="display text-[clamp(1.4rem,2.6vw,2.1rem)] text-ink">
-          A failure, its reason, and a receipt.
-        </h2>
-        <p class="reading mt-3 text-[15.5px] leading-relaxed text-muted">
-          The same check passing once the cause is fixed, and the sheet anyone can re-derive.
-        </p>
+  <!-- The strip under the poster: what state the product is in, and the three
+       facts about where it runs. A visitor should not have to read the page to
+       learn that the desktop build is not published yet. -->
+  <div class="relative z-10 border-t border-rule bg-panel">
+    <div class="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-12">
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+        <div class="min-w-0">
+          <h2 class="display max-w-[18ch] text-[clamp(1.4rem,2.6vw,2rem)] text-ink">
+            What this is, and where it stands.
+          </h2>
+          <p class="reading mt-4 max-w-[46ch] text-[17px] leading-relaxed text-muted">
+            {release.note}
+          </p>
+        </div>
+        <SpecSheet clusters={["where it runs"]} />
       </div>
-      <ProofRun />
     </div>
   </div>
 
-  <!-- The measurements, as a readout row. -->
-  <div class="relative z-10 mx-auto max-w-[1320px] px-5 py-14 sm:px-8 sm:py-16">
-    <FactStrip />
+  <!-- The product, near the top: a phase from the shipped course, read from
+       the manifest rather than drawn. -->
+  <div id="hero-run" class="relative z-10 mx-auto max-w-[1320px] px-5 pt-12 sm:px-8 sm:pt-16">
+    <PhasePanel />
   </div>
 </section>
 
-<!-- = 2 · The argument =====================
-     Three arguments, read as columns: a mono position, a claim, and the
-     reasoning under it. No cards, no borders around the content — the rules
-     do the dividing. -->
-<section id="why" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+<!-- = 2 · What a phase is =====================
+     The shipped manifest's own sentence, taken apart, and then the product
+     running: a check that fails, the reason, the file and the line, and the
+     receipt that follows. -->
+<section id="loop" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
+    <SectionHead title={LEARN_CYCLE.title} caption={LEARN_CYCLE.caption} wide />
+    <div class="mt-16">
+      <LearnCycle />
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-[1320px] px-5 pb-24 sm:px-8 sm:pb-36">
+    <ProofRun />
+  </div>
+</section>
+
+<!-- = 3 · The gap =====================
+     The situation a learner is in, before the page offers the answer. -->
+<section id="gap" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
     <SectionHead
-      title="The two things a video never produced."
-      caption="Two of the three things an interview asks for, that you can build and that you can prove it, are exactly the two a video never produced."
+      title="Most learning stops before the building starts."
+      caption="None of this is about intelligence or about the quality of a tutorial. It is about a gap between what a lesson can show you and what a project asks of you."
       wide
     />
-
     <div class="mt-14 grid gap-x-12 gap-y-10 lg:grid-cols-3" use:inViewStagger>
       {#each WEDGE as cell (cell.title)}
         <article class="fade-up border-t border-rule-strong pt-6" data-stagger-item>
           <h3 class="display max-w-[20ch] text-[clamp(1.3rem,2.2vw,1.7rem)] text-ink">
             {cell.title}
           </h3>
-          <p class="reading mt-3 max-w-[42ch] text-[15.5px] leading-relaxed text-muted">{cell.body}</p>
+          <p class="reading mt-3 max-w-[42ch] text-[17px] leading-relaxed text-muted">{cell.body}</p>
         </article>
       {/each}
     </div>
   </div>
 </section>
 
-<!-- = 3 · The market =====================
-     Four readings from the hiring research, each with the study it came from,
-     and the turn that connects them to the product. The sources are printed
-     because a number with no source is a rumour, and a rumour is what this
-     page is arguing against. -->
-<section id="market" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-    <SectionHead title={MARKET.title} caption={MARKET.caption} wide />
+<!-- = 4 · What you build =====================
+     One project, as a journey, and the other courses beneath it. -->
+<section id="build" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
+    <SectionHead title={BUILD_JOURNEY.title} caption={BUILD_JOURNEY.caption} wide />
     <div class="mt-14">
-      <MarketPanel />
+      <BuildJourney />
+    </div>
+  </div>
+
+  <div class="border-t border-rule">
+    <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+      <SectionHead
+        title="The other lines, once the first one is behind you."
+        caption="The JavaScript app is the way in. The Go language, the Go service, the Rust ledger and the API course are what an engineer does next, and they are shipped, not planned."
+        wide
+      />
+      <div class="mt-12">
+        <CoursePaths />
+      </div>
     </div>
   </div>
 </section>
 
-<!-- = 4 · The propositions =====================
-     What the reader is actually buying, in the voice of the audience they
-     chose at the top of the page. The switch in the hero speaks here too, so
-     a hiring manager is never handed a learner's promise. -->
-<section id="buy" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+<!-- = 5 · Why it is different =====================
+     The differentiators, as benefits rather than as a list of features. The
+     switch in the hero changes this list too, because a hiring manager being
+     read a learner's proposition is being read to. -->
+<section id="why" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
     <SectionHead
-      title="What you are actually buying."
-      caption="Three propositions, and they change with the audience you chose at the top of the page. The promise underneath is the same either way: the work, in the place you already work, judged by something you can check."
+      title="What makes the experience different."
+      caption="Four properties of the product that a learner feels in the first ten minutes, and a hiring manager can check in the first five."
       wide
     />
     <div class="mt-14">
       <PropositionStack {audience} />
     </div>
-  </div>
-</section>
-
-<!-- = 5 · The datasheet =====================
-     The competitor's claim, restated as measurements. Every row is a promise
-     the product can keep today, and every one of them can be checked. -->
-<section id="measures" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-    <SectionHead
-      title="What the bench measures."
-      caption="Eight readings, in three groups, and the value each one actually holds today. None of them is a badge, and none of them needs a sales call to check."
-      wide
-    />
-    <div class="mt-14">
-      <SpecSheet />
+    <div class="mt-16 border-l-2 border-accent pl-6">
+      <p class="reading max-w-[58ch] text-[clamp(1.1rem,1.8vw,1.35rem)] leading-relaxed text-ink">
+        {LANDSCAPE.ours}
+      </p>
     </div>
   </div>
 </section>
 
-<!-- = 6 · The market's shape =====================
-     Five kinds of product the reader could buy instead, and the line each one
-     stops at. The names are off: a category is a fair thing to describe, and
-     a competitor is not. -->
-<section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-    <SectionHead title={LANDSCAPE.title} caption={LANDSCAPE.caption} wide />
-    <div class="mt-14">
-      <CategoryMap />
-    </div>
-  </div>
-</section>
-
-<!-- = 7 · The door =====================
-     A ruled form: three steps on the left, their instructions on the right,
-     each step a full-width row under a heavy rule. Numbers are real here —
-     the order is the point — so they are allowed to be loud. -->
-<section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+<!-- = 6 · How a verdict earns trust =====================
+     Everything the product refuses to do, said once, here, after the reader
+     has seen what it does. The receipt chain, the datasheet, the disclosure
+     about what the platform can and cannot re-derive, and the three things
+     that are deliberately absent. -->
+<section id="proof" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
     <SectionHead
-      title="Download. Approve a code. Your tier opens the rest."
-      caption="Learning happens in the IDE. This site holds the download, the account and the proof. There is no second way to learn here, which is the point."
+      title="How a verdict earns trust."
+      caption="A pass is not a feeling and it is not a model's opinion. It is a rule engine deciding against your own files, and it leaves a record anybody can re-derive."
       wide
     />
 
-    <div class="mt-14 border-t-2 border-rule-strong">
-      {#each STEPS as step (step.id)}
-        {@const points = "points" in step ? step.points : step.steps}
-        <div class="grid gap-6 border-b border-rule-strong py-9 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
-          <div class="flex min-w-0 gap-6">
-            <span class="num pt-1 text-[clamp(1.8rem,3.4vw,2.5rem)] leading-none font-bold text-accent">
-              {step.n}
-            </span>
-            <h3 class="display max-w-[18ch] text-[clamp(1.4rem,2.6vw,2.1rem)] text-ink">
-              {step.title}
-            </h3>
-          </div>
-
-          <div class="min-w-0">
-            <p class="reading max-w-[58ch] text-[16px] leading-relaxed text-muted">{step.caption}</p>
-            <ul class="mt-6 grid gap-3">
-              {#each points as point, i (`${step.id}-${i}`)}
-                <li class="grid grid-cols-[auto_1fr] gap-4 text-[14.5px] leading-relaxed text-ink">
-                  <span class="num pt-0.5 text-[11px] text-faint">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span>{point}</span>
-                </li>
-              {/each}
-            </ul>
-            <div class="mt-6">
-              <ActionLink href={step.link.href} variant="quiet" size="sm">
-                {step.link.label} →
-              </ActionLink>
-            </div>
-          </div>
-        </div>
-      {/each}
-    </div>
-
-    <p class="reading mt-8 max-w-[68ch] text-[15.5px] leading-relaxed text-muted">
-      {HERO.note}
-    </p>
-  </div>
-</section>
-
-<!-- = 8 · The handshake =====================
-     A demonstration, not a paragraph: the two panes of the device-code
-     handshake, side by side, with the approve on this side. -->
-<section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-    <SectionHead
-      title="The IDE never asks for your password."
-      caption="It prints a short code and opens this site. You sign in here, approve the code, and the editor signs in by itself. Nothing to paste, nowhere to mistype. Try the two halves below."
-    />
-    <div class="mt-12">
-      <DeviceCode />
-    </div>
-  </div>
-</section>
-
-<!-- = 9 · The manifest =====================
-     The curriculum as a plate of lights and a ledger of phases. One square per
-     shipped phase, and the real names underneath. The heading names the
-     courses and the caption says how deep each one is; neither counts the
-     courses, because a count of courses reads as a count of videos. -->
-<section id="courses" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-    <SectionHead title={CURRICULUM.title} caption={CURRICULUM.caption} wide />
-
-    <div class="mt-14">
-      <PhaseField onselect={openCourse} />
-    </div>
-
-    <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
-      <div class="min-w-0">
-        <PhaseMatrix />
-        <p class="mt-5 text-[13px] leading-relaxed text-faint">
-          Phase names are the shipped manifest, not marketing copy: the build fails if this list and
-          the IDE disagree.
-        </p>
-      </div>
-      <div class="min-w-0">
-        <CourseLedger focus={focusedCourse} />
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- = 10 · The chain =====================
-     A full-bleed band, scrubbed against the scroll: the one section whose
-     shape is a machine running rather than a column of text. -->
-<section class="border-y border-rule-strong bg-panel">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-    <SectionHead
-      title="From your keyboard to someone else's browser."
-      caption="Scroll it. Each link only holds while the one before it does. A receipt that cannot be re-derived is a badge, and this site does not issue badges."
-    />
     <div class="mt-14">
       <ProofChain />
     </div>
+
+    <div class="mt-16">
+      <SpecSheet clusters={["what decides a verdict", "what you keep"]} />
+    </div>
+
+    <div class="mt-16 grid gap-px border border-rule bg-rule lg:grid-cols-2">
+      <div class="bg-panel p-6 sm:p-8">
+        <h3 class="display text-[clamp(1.2rem,2vw,1.6rem)] text-ink">{DISCLOSURE.title}</h3>
+        <p class="reading mt-3 max-w-[52ch] text-[16.5px] leading-relaxed text-muted">
+          {DISCLOSURE.caption}
+        </p>
+        <ul class="mt-7">
+          {#each DISCLOSURE.rows as row (row.kind)}
+            <li class="border-t border-rule py-4">
+              <p class="num text-[12.5px] text-ink">{row.label}</p>
+              <p class="reading mt-1.5 max-w-[52ch] text-[16px] leading-relaxed text-muted">
+                {row.body}
+              </p>
+            </li>
+          {/each}
+        </ul>
+      </div>
+
+      <div class="bg-panel p-6 sm:p-8">
+        <h3 class="display text-[clamp(1.2rem,2vw,1.6rem)] text-ink">
+          What this will never do.
+        </h3>
+        <ul class="mt-7 grid gap-6">
+          {#each NO_LIST as line, i (`no-${i}`)}
+            <li class="reading flex gap-4 text-[16.5px] leading-relaxed text-muted">
+              <span class="num shrink-0 text-[12px] text-removed" aria-hidden="true">no</span>
+              <span>{line}</span>
+            </li>
+          {/each}
+        </ul>
+        <div class="mt-8">
+          <ActionLink href={verifyHref} variant="ghost" island>Check a receipt yourself</ActionLink>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- = 11 · The hiring manager =====================
-     The other half of the market, and the other half of the promise. What is
-     true of a finished phase, and what is not built yet. -->
+<!-- = 7 · The curriculum =====================
+     The readings, the field, and the way into the full list. The eighty phase
+     names live on their own page, because a reader who wants the manifest
+     should not have to read the rest of the site to reach it. -->
+<section id="courses" class="border-t border-rule">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
+    <SectionHead title={CURRICULUM.title} caption={CURRICULUM.caption} wide />
+    <div class="mt-12">
+      <FactStrip />
+    </div>
+  </div>
+
+  <div class="relative z-10 mx-auto max-w-[1320px] px-5 pb-16 sm:px-8">
+    <PhaseField onselect={openCourse} />
+  </div>
+
+  <div class="mx-auto max-w-[1320px] px-5 pb-24 sm:px-8 sm:pb-36">
+    <div class="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+      <div class="min-w-0">
+        <PhaseMatrix />
+        <p class="mt-5 text-[13.5px] leading-relaxed text-faint">
+          One point per shipped phase. Every point is the same ink, because a public page does not
+          put a price on a phase.
+        </p>
+      </div>
+      <div class="min-w-0">
+        <ul class="border-t border-rule-strong">
+          {#each COURSES as course (course.slug)}
+            <li class="border-b border-rule-strong py-6">
+              <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <h3 class="display text-[clamp(1.3rem,2.3vw,1.8rem)] text-ink">{course.title}</h3>
+                <p class="num text-[13px] text-muted">{course.phases.length} phases</p>
+              </div>
+              <p class="reading mt-2 max-w-[58ch] text-[16.5px] leading-relaxed text-muted">
+                {course.sub}
+              </p>
+            </li>
+          {/each}
+        </ul>
+        <div class="mt-10 flex flex-wrap items-center gap-3">
+          <ActionLink href={coursesHref} island>Open the full curriculum</ActionLink>
+          <ActionLink href={downloadHref} variant="ghost">{release.label}</ActionLink>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- = 8 · For hiring =====================
+     The other reader, with a section of their own and a page of their own. -->
 <section id="employers" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
     <SectionHead
-      title="Juniors arrive with work, not with promises."
-      caption="Entry-level hiring has tightened, and the thing that survives it is evidence rather than a claim. Here is exactly what a finished phase leaves behind, and exactly what does not exist yet."
+      title="For the people who hire."
+      caption="A hiring manager arrives with a different question and a different standard of proof. This section answers it in the product's own terms."
       wide
     />
     <div class="mt-14">
       <EmployerBoard {verifyHref} />
     </div>
-
-    <!-- The hiring manager's own document: the whole list of gaps, the pilot,
-         and the pages. -->
-    <div class="mt-10 border-t border-rule pt-8">
-      <p class="reading max-w-[62ch] text-[16px] leading-relaxed text-muted">
-        The rest of that list, and how a pilot starts, is on the hiring manager's page.
-      </p>
-      <div class="mt-6">
-        <ActionLink href="/employers" variant="ghost" island>For hiring</ActionLink>
-      </div>
-    </div>
-
-    <!-- The lecturer, one line away. A university is not an employer, and the
-         page for one is not this page, so the line says who it is for and
-         where it is. -->
-    <div class="mt-8 border-t border-rule pt-8">
-      <p class="reading max-w-[62ch] text-[16px] leading-relaxed text-muted">
-        Teaching it? The same course, in your students' own editors, with a term licence for the
-        cohort.
-      </p>
-      <div class="mt-6">
-        <ActionLink href="/universities" variant="ghost" island>For teaching</ActionLink>
-      </div>
+    <div class="mt-10 flex flex-wrap items-center gap-3">
+      <ActionLink href={employersHref} variant="ghost" island>Read the hiring page</ActionLink>
     </div>
   </div>
 </section>
 
-<!-- = 12 · The limits =====================
-     The one place the page raises its voice: what the product will not do,
-     set on heavy rules, then exactly where its certainty stops. -->
-<section id="limits" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-    <h2 class="display max-w-[16ch] text-[clamp(2.2rem,5.2vw,3.8rem)] text-ink">
-      What NEXORA will not do.
-    </h2>
-
-    <ul class="mt-12 grid gap-8 border-t-2 border-rule-strong pt-8 lg:grid-cols-3 lg:gap-12">
-      {#each NO_LIST as line, i (`no-${i}`)}
-        <li class="reading text-[16px] leading-relaxed text-muted" use:inView>
-          <span class="num mb-3 block text-[12px] text-removed" aria-hidden="true">✗</span>
-          {line}
-        </li>
-      {/each}
-    </ul>
-
-    <div class="mt-20">
-      <SectionHead
-        title={DISCLOSURE.title}
-        caption={DISCLOSURE.caption}
-        wide
-      />
-      <div class="mt-10 grid gap-px border border-rule bg-rule lg:grid-cols-2">
-        {#each DISCLOSURE.rows as row (row.kind)}
-          <div class="bg-panel p-6 sm:p-8">
-            <p
-              class="stamp mb-4 border-t-2 pt-4 text-[11px] uppercase"
-              class:border-added={row.kind === "recomputed"}
-              class:border-review={row.kind === "self"}
-              class:text-added={row.kind === "recomputed"}
-              class:text-review={row.kind === "self"}
-            >
-              {row.label}
-            </p>
-            <p class="reading max-w-[52ch] text-[16px] leading-relaxed text-muted">{row.body}</p>
-          </div>
-        {/each}
-      </div>
-
-      <div class="mt-12">
-        <ActionLink href={verifyHref} variant="ghost" island>Check a receipt yourself</ActionLink>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- = 13 · The questions =====================
-     A plain ruled list; the answers are the content, so nothing frames them. -->
+<!-- = 9 · The questions ===================== -->
 <section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
     <SectionHead title="The questions, answered plainly." wide />
     <div class="mt-12 border-t border-rule">
       {#each FAQ as item, i (`q-${i}`)}
         <details class="nexora-details border-b border-rule">
           <summary
-            class="flex cursor-pointer items-baseline gap-5 py-5 text-[15.5px] font-semibold text-ink"
+            class="flex cursor-pointer items-start gap-5 py-5 text-left text-[clamp(1.05rem,1.7vw,1.35rem)] font-semibold text-ink"
           >
-            <span class="num shrink-0 text-[11px] text-faint">{String(i + 1).padStart(2, "0")}</span>
+            <span class="num shrink-0 pt-1 text-[11px] text-faint">{String(i + 1).padStart(2, "0")}</span>
             <span class="flex-1">{item.q}</span>
             <span class="stamp shrink-0 text-[14px] text-accent" aria-hidden="true">+</span>
           </summary>
-          <p class="reading max-w-[68ch] pb-6 pl-[2.6rem] text-[16px] leading-relaxed text-muted">
+          <p class="reading max-w-[68ch] pb-6 pl-[2.6rem] text-[17px] leading-relaxed text-muted">
             {item.a}
           </p>
         </details>
@@ -517,29 +435,29 @@
   </div>
 </section>
 
-<!-- = 14 · The close =====================
-     A poster to end on, and the one promise the whole page has been making. -->
+<!-- = 10 · The close =====================
+     One action again, and the way to be told when it changes. -->
 <section class="border-t-2 border-rule-strong">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
     <Headline
-      as="p"
-      lines={["You still have to build it.", "We just tell you when it works."]}
-      class="text-[clamp(2.2rem,6.4vw,5rem)] text-ink"
+      lines={["Learn by building.", "Then keep building."]}
+      class="max-w-[18ch] text-[clamp(2.2rem,5.4vw,4rem)] text-ink"
     />
     <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
       <p class="reading max-w-[48ch] text-[17px] leading-relaxed text-muted">
-        {POSITIONING}
+        {CLOSING}
       </p>
       <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <ActionLink href={downloadHref} island>{HERO.primary}</ActionLink>
-        <ActionLink href={pricingHref} variant="ghost">Compare tiers</ActionLink>
+        <ActionLink href={downloadHref} island>{release.label}</ActionLink>
+        <ActionLink href={pricingHref} variant="ghost">See pricing</ActionLink>
       </div>
     </div>
-
-    <!-- The build is not published yet, and a reader who is convinced at this
-         point needs somewhere to go. One field, one message, and a way out. -->
     <div class="mt-12 border-t border-rule pt-8">
-      <p class="stamp text-faint">or be told when the desktop build ships</p>
+      <p class="stamp text-faint">
+        {release.available
+          ? "The desktop build is published. The link above is the real file."
+          : "The desktop build is not published yet. Leave your address and we will tell you when it is."}
+      </p>
       <div class="mt-4">
         <LaunchList variant={data.headline} />
       </div>
@@ -549,83 +467,59 @@
 </section>
 
 {#if pastHero && !atFooter}
-  <aside class="ctabar" aria-label="Download the IDE">
-    <p class="stamp text-[11.5px] text-faint">
-      <span class="sm:hidden">Free</span>
-      <span class="hidden sm:inline">Free to download · nine phases included</span>
-    </p>
-    <ActionLink href={downloadHref} size="sm" island>{HERO.primaryShort}</ActionLink>
+  <aside class="ctabar" aria-label="Get the IDE">
+    <p class="stamp hidden text-[11.5px] text-faint sm:inline">{release.label}</p>
+    <ActionLink href={downloadHref} size="sm" island>{release.labelShort}</ActionLink>
   </aside>
 {/if}
 
 <style>
-  /* A light behind the poster.
-     The ground is not a flat sheet: a soft pool of light sits under the type,
-     the way a bench lamp sits over a bench. It is a gradient and not an
-     image, and it is the only depth the page has. */
+  /* The poster sits on a pool of light. The one soft edge on the page, and it
+     is under the type rather than around it, so the headline reads as lit
+     from below rather than as a panel. */
   .hero-block::before {
     content: "";
     position: absolute;
-    inset: -24% -12% auto -12%;
-    height: 150%;
-    background: radial-gradient(
-      56% 50% at 24% 32%,
-      color-mix(in srgb, var(--color-ink) 7%, transparent) 0%,
-      transparent 72%
-    );
+    inset: 0;
+    z-index: 0;
     pointer-events: none;
-    z-index: -1;
+    background:
+      radial-gradient(120% 78% at 12% 0%, color-mix(in srgb, var(--color-accent) 9%, transparent) 0%, transparent 62%),
+      radial-gradient(90% 60% at 92% 8%, color-mix(in srgb, var(--color-review) 7%, transparent) 0%, transparent 60%);
   }
 
+  /* The bar that follows the reader down the page. It is mounted rather than
+     hidden, so there is never a focusable element inside something the eye
+     cannot see. */
   .ctabar {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 40;
+    left: 50%;
+    bottom: var(--space-5);
+    z-index: var(--z-rail);
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--space-4);
-    padding: var(--space-3) clamp(var(--space-5), 4vw, var(--space-8));
+    transform: translateX(-50%);
+    border: 1px solid var(--color-rule-strong);
     background: var(--color-panel);
-    border-top: 1px solid var(--color-rule-strong);
-    box-shadow: 0 -18px 34px -30px rgb(0 0 0 / 0.9);
-    animation: ctabar-in 260ms var(--ease-out) both;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
   }
-  /* On the panel the type has to come from the ink ramp — the room's own dark
-     is the page's ground, and a label on it would disappear. */
   .ctabar :global(.stamp) {
-    color: var(--color-faint);
+    white-space: nowrap;
   }
-  @keyframes ctabar-in {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  /* The short sheet: a short viewport, whatever its width, because the
-     shortage is vertical. The bench sets its type to fit the page it is
-     printing on.
 
-     The only type that moves is the poster line's floor (2rem instead of
-     2.5rem). Above ~364px wide the clamp's middle term drives the size, so on
-     a short laptop window the headline is untouched and only the air
-     tightens; on a narrow phone the line itself sets smaller, which is the
-     case that needs it. */
+  /* On a short window the poster has to give up its air before it gives up
+     its type, or the action falls off the bottom of the screen. */
   @media (max-height: 660px) {
     .hero-block {
-      padding-top: var(--space-3);
+      padding-top: var(--space-6);
+      padding-bottom: var(--space-6);
     }
     .hero-block :global(h1) {
-      font-size: clamp(2rem, 6.6vw, 5.6rem);
+      font-size: clamp(1.9rem, 5vw, 3rem);
     }
     .hero-block .hero-actions {
-      margin-top: var(--space-5);
+      margin-top: var(--space-4);
     }
   }
 </style>

@@ -9,6 +9,7 @@
   import Headline from "$lib/components/Headline.svelte";
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
+  import { currentRelease } from "$lib/release-current";
   import { pageTitle } from "$lib/seo";
 
   /* The email verification screen.
@@ -43,6 +44,10 @@
     created = false,
     canonical = "/auth/verify",
   }: { token?: string; created?: boolean; canonical?: string } = $props();
+
+  /* The download action, labelled by the release state, so this page cannot
+     offer a build that is not published. */
+  const release = $derived(currentRelease());
 
   // The code is read once, from the link, and it is not a live value: a
   // second code in the URL is not something the page should react to. The
@@ -160,7 +165,9 @@
             free.
           </p>
           <div class="mt-5">
-            <ActionLink href="/download" variant="ghost" size="sm" island>Download the IDE</ActionLink>
+            <ActionLink href="/download" variant="ghost" size="sm" island>
+              {release.label}
+            </ActionLink>
           </div>
         </Plate>
       {:else if verified}

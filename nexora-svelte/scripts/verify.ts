@@ -14,7 +14,12 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { sitemapPaths } from "../src/lib/seo";
 import * as COPY from "../src/lib/content/site";
+import * as RELEASE from "../src/lib/release";
 import * as LEGAL from "../src/lib/legal";
+import {
+  PHASE_DETAIL,
+  COURSE_ACTIVITY_COUNTS,
+} from "../src/lib/content/phase-detail.generated";
 import { isExpiring, parseSessionStart, refreshDelayMs, tokenExpiryMs } from "../src/lib/session-core";
 
 let passed = 0;
@@ -38,29 +43,7 @@ const srcUrl = (rel: string): URL => new URL(`../src/${rel}`, import.meta.url);
  * check went quiet at exactly the moment it was needed. This derives the word
  * instead, so any count can be checked.
  */
-function numberWords(n: number): string | null {
-  if (!Number.isInteger(n) || n < 0 || n > 999) return null;
-  const ones = [
-    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-    "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
-    "seventeen", "eighteen", "nineteen",
-  ];
-  const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-  if (n < 20) return ones[n]!;
-  if (n < 100) {
-    const rest = n % 10;
-    return rest === 0 ? tens[Math.floor(n / 10)]! : `${tens[Math.floor(n / 10)]}-${ones[rest]}`;
-  }
-  const hundreds = ["one hundred", "two hundred", "three hundred", "four hundred", "five hundred",
-    "six hundred", "seven hundred", "eight hundred", "nine hundred"];
-  if (n < 1000) {
-    const rest = n % 100;
-    return rest === 0
-      ? hundreds[Math.floor(n / 100)]!
-      : `${hundreds[Math.floor(n / 100)]}, ${numberWords(rest)}`;
-  }
-  return null;
-}
+
 const srcFiles: string[] = []; const declaredFontFamilies = [...new Set([...readFileSync(new URL("../src/lib/fonts.css", import.meta.url), "utf8").matchAll(/font-family:\s*'([^']+)'/g)].map((m) => m[1]!))];
 {
   const walkSrc = (dir: string): void => {
@@ -98,7 +81,10 @@ console.log("== the front door describes the real product ==");
   );
   ok(
     "the page states that the free phases ship inside the download",
-    copy.includes("Nine phases ship inside the installer") && copy.includes("bundled")
+    COPY.RELEASE_NOTES.available
+      .toLowerCase()
+      .includes(`${COPY.numberWords(COPY.FREE_PHASE_COUNT)} phases ship inside the installer`) &&
+      copy.includes("bundled")
   );
   ok(
     "the page explains the browser sign-in: the IDE opens this site",
@@ -180,6 +166,7 @@ console.log("== the front door describes the real product ==");
           "/auth/ide",
           "/accessibility",
           "/cookies",
+          "/courses",
           "/download",
           "/employers",
           "/teach",
@@ -708,9 +695,13 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   // because that is where the promise is made to a learner.
   ok(
     "the free tier still promises the bundled free phases, free checks, and tier-unlocked courses",
-    copyFlat.includes("Nine phases bundled with the IDE") &&
-      copyFlat.includes("Every check and verdict, free forever") &&
-      copyFlat.includes("Further courses per your tier") &&
+    (COPY.FREE_TIER_POINTS[0] ?? "")
+      .toLowerCase()
+      .includes(
+        `${COPY.numberWords(COPY.FREE_PHASE_COUNT)} phases bundled with the IDE`.toLowerCase()
+      ) &&
+      COPY.FREE_TIER_POINTS.includes("Every check and verdict, free forever") &&
+      COPY.FREE_TIER_POINTS.some((point) => point.includes("Further courses per your tier")) &&
       pricingSrc.includes("PRICING_PLANS") &&
       (COPY.PRICING_PLANS.find((plan) => plan.id === "free")?.points ?? []).length ===
         COPY.FREE_TIER_POINTS.length
@@ -814,7 +805,8 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     id: string;
     title: string;
     role: string;
-    phases: { id: string; title: string; tier: string }[];
+    description: string;
+    phases: { id: string; title: string; tier: string; goal: string; activityCount: number }[];
   }[] = [];
   let registryMissing = false;
   try {
@@ -826,13 +818,21 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
         id: string;
         title: string;
         role: string;
-        phases: { id: string; title: string; tier: string }[];
+        description: string;
+        phases: { id: string; title: string; tier: string; goal: string; activityCount: number }[];
       };
       return {
         id: manifest.id,
         title: manifest.title,
         role: manifest.role ?? "main",
-        phases: manifest.phases,
+        description: manifest.description ?? "",
+        phases: manifest.phases.map((phase) => ({
+          id: phase.id,
+          title: phase.title,
+          tier: phase.tier,
+          goal: phase.goal ?? "",
+          activityCount: phase.activityCount ?? 0,
+        })),
       };
     });
     manifestIds = manifestCourses.flatMap((course) => course.phases.map((phase) => phase.id));
@@ -942,13 +942,65 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       COPY.PRICING.freePhases === shippedFree && COPY.PRICING.paidPhases === shippedPro
     );
 
+    // 4b. The goals the curriculum page prints are the shipped manifest's own
+    //     sentences, and the activity counts are the manifest's. A goal the
+    //     IDE does not ship is a sentence the site invented, so this compares
+    //     them one by one rather than only counting them.
+    {
+      const goalMismatches: string[] = [];
+      const countMismatches: string[] = [];
+      for (const course of manifestCourses) {
+        const site = PHASE_DETAIL[course.id];
+        if (!site) {
+          goalMismatches.push(`${course.id} (absent)`);
+          continue;
+        }
+        for (const phase of course.phases) {
+          const printed = site[phase.id];
+          if (!printed) {
+            goalMismatches.push(`${course.id}/${phase.id} (absent)`);
+            continue;
+          }
+          if (printed.goal !== phase.goal) {
+            goalMismatches.push(`${course.id}/${phase.id}`);
+          }
+          if (printed.activities !== phase.activityCount) {
+            countMismatches.push(`${course.id}/${phase.id}`);
+          }
+        }
+        const shippedCount = course.phases.reduce((n, p) => n + p.activityCount, 0);
+        if ((COURSE_ACTIVITY_COUNTS[course.id] ?? -1) !== shippedCount) {
+          countMismatches.push(`${course.id} (total)`);
+        }
+      }
+      ok(
+        "every phase goal on the site is the shipped manifest's own sentence",
+        goalMismatches.length === 0,
+        goalMismatches.slice(0, 5).join(", ")
+      );
+      ok(
+        "and every activity count is the shipped manifest's",
+        countMismatches.length === 0,
+        countMismatches.slice(0, 5).join(", ")
+      );
+      const shippedTotal = manifestCourses.reduce(
+        (n, course) => n + course.phases.reduce((m, p) => m + p.activityCount, 0),
+        0
+      );
+      ok(
+        "and the total the curriculum page prints is the shipped total",
+        Object.values(COURSE_ACTIVITY_COUNTS).reduce((n, c) => n + c, 0) === shippedTotal,
+        `${Object.values(COURSE_ACTIVITY_COUNTS).reduce((n, c) => n + c, 0)} on the site, ${shippedTotal} shipped`
+      );
+    }
+
     // 5. The headline count is prose, and prose drifts first. Turn the shipped
     //    total into its English word and require it — adding a phase without
     //    updating the headline fails here, not in a learner's screenshot.
-    const words = numberWords(manifestIds.length);
+    const words = COPY.numberWords(manifestIds.length);
     ok(
       "the count the page states matches the shipped total",
-      words !== null && copyFlat.toLowerCase().includes(`${words} phases`)
+      words !== null && COPY.CLOSING.toLowerCase().includes(`${words} phases`)
     );
 
     // The readings on the bench carry the counts too, and they drift the same
@@ -975,7 +1027,12 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     );
 
     // 6. The site never leads with a count of courses. It names them.
-    const courseCount = /(\b(?:one|two|three|four|five|six|seven|eight|nine|ten)\b|\d+)\s+courses?\b/i;
+    //    The count is banned in both orders: "five courses" and "course five".
+    //    The second one is the way a course number sneaks in, because it reads
+    //    like an ordering rather than like a statistic, and a course added
+    //    later makes the ordering wrong.
+    const courseCount =
+      /(\b(?:one|two|three|four|five|six|seven|eight|nine|ten)\b|\d+)\s+courses?\b|\bcourses?\s+(?:one|two|three|four|five|six|seven|eight|nine|ten|\d+)\b/i;
     const publicCopy = JSON.stringify([
       COPY.HERO,
       COPY.HIRING,
@@ -998,8 +1055,22 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       COPY.FOOTER_LINKS,
       COPY.POSITIONING,
       COPY.TAGLINE,
+      COPY.LEARN_CYCLE,
+      COPY.BUILD_JOURNEY,
+      COPY.COURSE_PATHS,
+      COPY.RELEASE_NOTES,
     ]);
     ok("the copy names the courses and never counts them", !courseCount.test(publicCopy));
+    {
+      // The same rule over the labels the curriculum page prints, because a
+      // label is where an ordering would live.
+      const numbered = COPY.COURSES.filter((course) => courseCount.test(course.label));
+      ok(
+        "and no course label carries an ordering either",
+        numbered.length === 0,
+        numbered.map((course) => course.label).join(", ")
+      );
+    }
     const routeCopy = srcFiles
       .filter((f) => f.includes("/routes/"))
       .map((f) =>
@@ -1450,9 +1521,40 @@ console.log("\n== a five-minute access token does not end a session: the renewal
   // unset, says so plainly instead of rendering a dead link. These assert that
   // honesty and that the surface is reachable from where the courses are shown.
   const downloadSrc = readFileSync(new URL("../src/routes/download/+page.svelte", import.meta.url), "utf8");
+  const releaseSrc = readFileSync(new URL("../src/lib/release.ts", import.meta.url), "utf8");
+  const layoutServerSrc = readFileSync(
+    new URL("../src/routes/+layout.server.ts", import.meta.url),
+    "utf8"
+  );
+  // The comments may name the switch; only the code may read it.
+  const code = (src: string): string =>
+    src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   ok(
-    "the download page reads the one switch that says a build exists",
-    downloadSrc.includes("PUBLIC_IDE_DOWNLOAD_URL")
+    "the release state is read from the one switch, and it is read on the server",
+    code(layoutServerSrc).includes("PUBLIC_IDE_DOWNLOAD_URL") &&
+      !code(releaseSrc).includes("PUBLIC_IDE_DOWNLOAD_URL") &&
+      releaseSrc.includes("export function releaseState")
+  );
+  // One reader of the switch. A second one would be a second answer, and the
+  // hero would be able to promise a build the download page has withdrawn.
+  {
+    const readers = srcFiles.filter(
+      (f) => f.endsWith(".ts") && code(readFileSync(f, "utf8")).includes("PUBLIC_IDE_DOWNLOAD_URL")
+    );
+    ok(
+      "and exactly one file reads that switch",
+      readers.length === 1 && readers[0]?.includes("+layout.server.ts") === true,
+      readers.map((f) => f.split("/src/").pop()).join(", ")
+    );
+  }
+  ok(
+    "and the download page renders that answer rather than reading the world itself",
+    // The page may name the switch in its markup, because an operator reading
+    // the build-status plate should be able to see which variable decides it.
+    // What it must not do is read the environment itself, because that would
+    // be a second answer.
+    code(downloadSrc).includes("data.release") &&
+      !downloadSrc.includes("$env/dynamic/public")
   );
   ok(
     "and names no browser fallback when no build is published — the IDE is the only way to learn",
@@ -1462,7 +1564,7 @@ console.log("\n== a five-minute access token does not end a session: the renewal
   );
   ok(
     "the real link comes from the configured URL, never a placeholder href",
-    downloadSrc.includes("href={downloadUrl}") && !downloadSrc.includes('href="#"')
+    downloadSrc.includes("href={release.downloadUrl}") && !downloadSrc.includes('href="#"')
   );
   ok(
     "the download is stated to be free, with later phases gated per entitlement",
@@ -1475,9 +1577,9 @@ console.log("\n== a five-minute access token does not end a session: the renewal
     headerSrc.includes('href="/download"')
   );
   ok(
-    "the shared nav names the courses on the homepage",
+    "the shared nav names the courses, on their own page",
     readFileSync(new URL("../src/lib/content/site.ts", import.meta.url), "utf8").includes(
-      '"/#courses"'
+      '"/courses"'
     )
   );
 
@@ -1488,7 +1590,10 @@ console.log("\n== a five-minute access token does not end a session: the renewal
     "the home footer links the IDE download",
     readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8").includes(
       "{link.href}"
-    ) && COPY.FOOTER_LINKS.some((l) => l.href === "/download")
+    ) &&
+      readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8").includes(
+        'href="/download"'
+      )
   );
 
   const pricingDlSrc = readFileSync(new URL("../src/routes/pricing/+page.svelte", import.meta.url), "utf8");
@@ -1985,9 +2090,15 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
       });
       ok(
         "one label per intent: the download is called the same thing everywhere",
-        COPY.HERO.primary === "Try it free" &&
-          COPY.FOOTER_LINKS[0]?.label === "Try it free" &&
-          COPY.STEPS[0]?.link.label === "Try it free" &&
+        RELEASE.DOWNLOAD_LABEL.available === "Download the IDE" &&
+          RELEASE.DOWNLOAD_LABEL.announced === "Get the IDE when it ships" &&
+          // and every surface that offers it takes the label from the one
+          // state, rather than writing a label of its own
+          [
+            landingSrc,
+            readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8"),
+            readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8"),
+          ].every((s) => !/Try it free/.test(s)) &&
           otherLabels.length === 0
       );
     }
@@ -2740,6 +2851,212 @@ console.log("\n== the cohort surface: a front door for a lecturer, and the truth
     COPY.COHORT_TEACH.end.body.includes("No new student is given a seat") &&
       COPY.COHORT_TEACH.end.body.includes("keep the receipts they already have") &&
       teachSrc.includes("COHORT_TEACH.end.body")
+  );
+}
+
+console.log("\n== the front door says what is true today, and says it once ==");
+{
+  const courseCountRe =
+    /(\b(?:one|two|three|four|five|six|seven|eight|nine|ten)\b|\d+)\s+courses?\b|\bcourses?\s+(?:one|two|three|four|five|six|seven|eight|nine|ten|\d+)\b/i;
+  const landingSrc = readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8");
+  const footerSrc = readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8");
+  const headerSrc = readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8");
+  const downloadSrc = readFileSync(new URL("../src/routes/download/+page.svelte", import.meta.url), "utf8");
+
+  // The two states of the world, and what the site says in each.
+  const announced = RELEASE.releaseState(undefined);
+  const available = RELEASE.releaseState("https://example.invalid/nexora-setup.exe");
+  ok(
+    "with no build configured, the site says the build is not published",
+    announced.available === false &&
+      announced.downloadUrl === "" &&
+      announced.label === "Get the IDE when it ships" &&
+      COPY.RELEASE_NOTES.announced.includes("not published yet")
+  );
+  ok(
+    "and with a build configured, it says the download is free and offline",
+    available.available === true &&
+      available.downloadUrl === "https://example.invalid/nexora-setup.exe" &&
+      available.label === "Download the IDE" &&
+      COPY.RELEASE_NOTES.available.includes("Free to download")
+  );
+  ok(
+    "an unset, empty or whitespace-only switch all mean the same thing",
+    RELEASE.releaseState(undefined).available === false &&
+      RELEASE.releaseState(null).available === false &&
+      RELEASE.releaseState("").available === false &&
+      RELEASE.releaseState("   ").available === false
+  );
+  ok(
+    "and the two notes are different sentences, so one cannot stand in for the other",
+    String(COPY.RELEASE_NOTES.available) !== String(COPY.RELEASE_NOTES.announced) &&
+      !COPY.RELEASE_NOTES.available.includes("not published")
+  );
+
+  // The action is the release state, on every surface that offers it.
+  ok(
+    "the hero's one action is the release state's label",
+    landingSrc.includes("release.label") && landingSrc.includes("primaryHref")
+  );
+  ok(
+    "and the header, the footer and the download page use the same label",
+    headerSrc.includes("release.labelShort") &&
+      footerSrc.includes("release.label") &&
+      downloadSrc.includes("release.label")
+  );
+  ok(
+    "and the homepage tells the reader the state of the release, under the poster",
+    landingSrc.includes("release.note") && COPY.RELEASE_NOTES.announced.length > 40
+  );
+
+  // The homepage is a story now: the experience before the argument, and the
+  // exhaustive manifest on its own page.
+  ok(
+    "the homepage leads with the experience and the build, and keeps the argument for later",
+    landingSrc.indexOf('id="loop"') < landingSrc.indexOf('id="proof"') &&
+      landingSrc.indexOf('id="gap"') < landingSrc.indexOf('id="build"') &&
+      landingSrc.indexOf('id="build"') < landingSrc.indexOf('id="why"')
+  );
+  ok(
+    "and the homepage does not print the exhaustive phase list",
+    !landingSrc.includes("<CourseLedger") && landingSrc.includes("<PhaseMatrix")
+  );
+  {
+    const coursesDir = join(routesDir, "courses");
+    const coursesSrc = readFileSync(join(coursesDir, "+page.svelte"), "utf8");
+    const ledgerSrc = readFileSync(
+      new URL("../src/lib/components/CourseLedger.svelte", import.meta.url),
+      "utf8"
+    );
+    const phaseRowSrc = readFileSync(
+      new URL("../src/lib/components/PhaseRow.svelte", import.meta.url),
+      "utf8"
+    );
+    ok(
+      "the exhaustive manifest lives on its own page, with every phase and its goal",
+      existsSync(join(coursesDir, "+page.svelte")) &&
+        coursesSrc.includes("<CourseLedger") &&
+        coursesSrc.includes("<PhaseMatrix") &&
+        // the goal of a phase is the manifest's own sentence, and it is read
+        // from the generated detail file rather than written on the page
+        ledgerSrc.includes("PHASE_DETAIL") &&
+        phaseRowSrc.includes("goal") &&
+        phaseRowSrc.includes("{goal}")
+    );
+    ok(
+      "and that page is in the sitemap and in the accessibility sweep",
+      sitemapPaths().includes("/courses") &&
+        readFileSync(new URL("../scripts/routes.ts", import.meta.url), "utf8").includes('"/courses"')
+    );
+  }
+
+  // The phase goals the page prints are the shipped manifest's own, and the
+  // generated file is regenerated from those manifests rather than written.
+  {
+    const generatedSrc = readFileSync(
+      new URL("../src/lib/content/phase-detail.generated.ts", import.meta.url),
+      "utf8"
+    );
+    const syncSrc = readFileSync(new URL("../scripts/sync-curriculum-copy.mjs", import.meta.url), "utf8");
+    ok(
+      "the phase goals are generated from the shipped manifests, not written by hand",
+      generatedSrc.includes("do not edit by hand") &&
+        syncSrc.includes("phase-detail.generated.ts") &&
+        syncSrc.includes("goal")
+    );
+    ok(
+      "and the sync rewrites every phase array, including the two Go courses",
+      ["TASK_MANAGER", "GO_FUNDAMENTALS", "GO_IN_PRODUCTION", "RUST_LEDGER", "API_BASICS"].every(
+        (name) => syncSrc.includes(`"${name}"`)
+      ) &&
+        syncSrc.includes("replaceArray")
+    );
+  }
+
+  // The learning cycle the page describes is the curriculum's own sentence.
+  ok(
+    "the page says what a phase is, in the shipped manifest's words",
+    COPY.LEARN_CYCLE.title === "Every phase is Learn, then Solve, then Review." &&
+      COPY.LEARN_CYCLE.steps.length === 4 &&
+      landingSrc.includes("LEARN_CYCLE")
+  );
+  ok(
+    "and the journey it offers names real phases",
+    COPY.BUILD_JOURNEY.beats.length >= 5 &&
+      COPY.BUILD_JOURNEY.beats.every(
+        (beat) =>
+          beat.phases.length > 0 &&
+          beat.phases.every((id) => COPY.ALL_PHASES.some(([phaseId]) => phaseId === id))
+      )
+  );
+
+  // A course added later has to reach the page without anybody coming back to
+  // write a number. So the things that carry a course are computed from the
+  // shipped list rather than typed in.
+  ok(
+    "the courses the page prints are the shipped list, not a list of courses",
+    COPY.COURSE_PATHS.length === COPY.COURSES.length - 1 &&
+      COPY.COURSE_PATHS.every((path) => COPY.COURSES.some((course) => course.slug === path.id))
+  );
+  ok(
+    "and every shipped course is named in the curriculum line",
+    COPY.COURSES.every((course) => COPY.COURSE_SENTENCES.includes(course.title)) &&
+      COPY.COURSE_SENTENCES.includes(`${COPY.ALL_PHASES.length} phases`) === false
+  );
+  ok(
+    "and the depths in it are the shipped depths",
+    COPY.COURSES.every((course) =>
+      COPY.COURSE_SENTENCES.includes(`${course.phases.length} phases`)
+    )
+  );
+  ok(
+    "the masthead's status line is computed from the list, and says the shipped numbers",
+    COPY.MASTHEAD.status.includes(`${COPY.ALL_PHASES.length} phases`) &&
+      COPY.MASTHEAD.status.includes(`${COPY.FREE_PHASE_COUNT} free`) &&
+      !courseCountRe.test(COPY.MASTHEAD.status)
+  );
+  ok(
+    "and the readings on the bench carry the same numbers",
+    COPY.FACTS[0]?.value === String(COPY.ALL_PHASES.length) &&
+      COPY.FACTS[1]?.value === String(COPY.FREE_PHASE_COUNT)
+  );
+  {
+    // A number that is typed into the copy is a number that goes stale when
+    // the curriculum changes, and nothing else catches it: a typed "80" is
+    // still the right answer on the day it is typed and the wrong answer the
+    // day after a course is added. So the copy module may not contain a
+    // literal count of phases or of courses at all. Every count is computed
+    // from the shipped list, and the only digits left are in the words.
+    const typed =
+      readFileSync(new URL("../src/lib/content/site.ts", import.meta.url), "utf8").match(
+        /\b\d+\s+(?:phases?|courses?)\b/gi
+      ) ?? [];
+    ok(
+      "and no count of phases or courses is typed into the copy at all",
+      typed.length === 0,
+      typed.join(", ")
+    );
+    // A bare figure in a reading is the same mistake wearing a different
+    // hat, so the two curriculum readings have to be computed. The zero and
+    // the one beside them are facts about the product rather than counts of
+    // the curriculum, and they stay.
+    {
+      const copySrc = readFileSync(new URL("../src/lib/content/site.ts", import.meta.url), "utf8");
+      ok(
+        "and the readings compute the two curriculum counts rather than typing them",
+        copySrc.includes("value: String(ALL_PHASES.length)") &&
+          copySrc.includes("value: String(FREE_PHASE_COUNT)")
+      );
+    }
+  }
+  ok(
+    "and the free-tier sentences state that same free count in words",
+    (COPY.STEPS[0]?.caption ?? "")
+      .toLowerCase()
+      .includes(`${COPY.numberWords(COPY.FREE_PHASE_COUNT)} phases`) &&
+      (COPY.FREE_TIER_POINTS[0] ?? "")
+        .toLowerCase()
+        .includes(`${COPY.numberWords(COPY.FREE_PHASE_COUNT)} phases`)
   );
 }
 

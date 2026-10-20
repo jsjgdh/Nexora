@@ -15,14 +15,20 @@
   type Props = {
     index: number;
     title: string;
+    /** The phase's goal, when the row is showing it.
+     *
+     *  The goal is the shipped manifest's own sentence about what the phase
+     *  is for. A list of eighty names tells a reader how much there is; the
+     *  goal tells them what they would be doing. */
+    goal?: string;
     /** The tier, when the row is showing it. The public ledger does not: the
-        front page is a syllabus, not a price list, and the tier is the
-        pricing page's business and the IDE's. */
+     *  front page is a syllabus, not a price list, and the tier is the
+     *  pricing page's business and the IDE's. */
     tier?: "free" | "pro";
     state?: "completed" | "recommended" | "available" | "locked";
   };
 
-  let { index, title, tier, state = "available" }: Props = $props();
+  let { index, title, goal, tier, state = "available" }: Props = $props();
 
   const position = $derived(String(index + 1).padStart(2, "0"));
   const mark = $derived(state === "completed" ? "✓" : state === "recommended" ? "→" : "·");
@@ -30,8 +36,13 @@
 
 <li class="phase-row" data-state={state}>
   <span class="row-mark" aria-hidden="true">{position} {mark}</span>
-  <span class="row-title min-w-0 truncate text-[13.5px] text-ink">{title}</span>
+  <span class="row-title min-w-0 truncate text-[14.5px] text-ink">{title}</span>
   {#if tier}
     <TierStamp {tier} />
+  {/if}
+  {#if goal}
+    <p class="reading col-span-full mt-1.5 max-w-[62ch] pl-[3.6rem] text-[15px] leading-relaxed text-muted">
+      {goal}
+    </p>
   {/if}
 </li>

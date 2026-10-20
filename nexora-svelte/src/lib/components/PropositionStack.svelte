@@ -29,7 +29,7 @@
         <h3 class="display max-w-[18ch] text-[clamp(1.3rem,2.2vw,1.7rem)] text-ink">
           {prop.title}
         </h3>
-        <p class="reading mt-3 max-w-[42ch] text-[15.5px] leading-relaxed text-muted">{prop.body}</p>
+        <p class="reading mt-3 max-w-[42ch] text-[17px] leading-relaxed text-muted">{prop.body}</p>
       </li>
     {/each}
   </ul>

@@ -1,9 +1,12 @@
 <script lang="ts">
+  import type { PageProps } from "./$types";
   import PageHead from "$lib/components/PageHead.svelte";
   import Headline from "$lib/components/Headline.svelte";
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import HiringEnquiry from "$lib/components/HiringEnquiry.svelte";
+  import MarketPanel from "$lib/components/MarketPanel.svelte";
+  import CategoryMap from "$lib/components/CategoryMap.svelte";
   import { pageTitle } from "$lib/seo";
   import { COURSES, EMPLOYER, FACTS, HIRING_CONTACT, HIRING_ENQUIRY, PROPS } from "$lib/content/site";
 
@@ -32,7 +35,7 @@
    * printed sheet drops is the form: a field a reader cannot fill in on
    * paper is not worth the space, and the address and the promise stay. */
 
-  let { data }: { data: { mailConfigured: boolean } } = $props();
+  let { data }: PageProps = $props();
 
   const total = COURSES.reduce((n, course) => n + course.phases.length, 0);
 </script>
@@ -91,6 +94,31 @@
         </li>
       {/each}
     </ul>
+  </section>
+
+  <!-- ===================== The market this product answers =====================
+       The hiring research, with each figure and the study it came from. It
+       lives here rather than on the homepage because a learner arriving to
+       learn to code has no use for a hiring market, and a hiring manager
+       arriving to compare vendors has exactly this use for it.
+
+       It is screen context, not part of the one-pager's argument, so it does
+       not print. The sheet on paper is still the one thing this page claims to
+       be: what a hire comes with, and how you check it. -->
+  <section
+    id="market"
+    class="screen-only mt-20 border-t border-rule pt-12"
+    aria-labelledby="employer-market"
+  >
+    <h2 id="employer-market" class="display max-w-[22ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
+      The market this answer is for.
+    </h2>
+    <div class="mt-10">
+      <MarketPanel />
+    </div>
+    <div class="mt-14">
+      <CategoryMap />
+    </div>
   </section>
 
   <!-- ===================== The evidence ===================== -->

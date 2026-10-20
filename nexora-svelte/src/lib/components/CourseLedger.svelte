@@ -1,5 +1,6 @@
 <script lang="ts">
   import { COURSES } from "$lib/content/site";
+  import { PHASE_DETAIL } from "$lib/content/phase-detail.generated";
   import PhaseRow from "./PhaseRow.svelte";
 
   /* The curriculum as a ledger, not a row of cards.
@@ -86,7 +87,7 @@
             </div>
             <ol class="border border-rule">
               {#each course.phases as [id, title], i (id)}
-                <PhaseRow index={i} {title} />
+                <PhaseRow index={i} {title} goal={PHASE_DETAIL[course.slug]?.[id]?.goal} />
               {/each}
             </ol>
           </div>

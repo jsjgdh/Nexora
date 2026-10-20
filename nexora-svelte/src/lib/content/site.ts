@@ -43,14 +43,39 @@
 export const BRAND = "NEXORA";
 
 /**
- * The two lines the chrome prints: what the product is, and where it stands
- * today. Both are facts rather than adjectives, because a masthead that
- * carries a claim has to be able to defend it.
+ * A number in English, for a sentence that has to say it in words.
+ *
+ * The site states the depth of the curriculum in prose rather than in digits,
+ * because a count written in words is a sentence and a count written in
+ * numerals is a label. The count itself is never written out: it is computed
+ * from the shipped phase list, and this only says what that count is called.
+ *
+ * The suite reads this same function, so the number in the copy and the number
+ * in the gate are the same number by construction.
  */
-export const MASTHEAD = {
-  descriptor: "the course that runs inside your editor",
-  status: "80 phases · 9 free · inside the editor",
-} as const;
+export function numberWords(n: number): string | null {
+  if (!Number.isInteger(n) || n < 0 || n > 999) return null;
+  const ones = [
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+    "seventeen", "eighteen", "nineteen",
+  ];
+  const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  if (n < 20) return ones[n]!;
+  if (n < 100) {
+    const rest = n % 10;
+    return rest === 0 ? tens[Math.floor(n / 10)]! : `${tens[Math.floor(n / 10)]}-${ones[rest]}`;
+  }
+  const hundreds = ["one hundred", "two hundred", "three hundred", "four hundred", "five hundred",
+    "six hundred", "seven hundred", "eight hundred", "nine hundred"];
+  if (n < 1000) {
+    const rest = n % 100;
+    return rest === 0
+      ? hundreds[Math.floor(n / 100)]!
+      : `${hundreds[Math.floor(n / 100)]}, ${numberWords(rest)}`;
+  }
+  return null;
+}
 
 /**
  * The one line, for a stranger. Both clauses. Source: `company/MARKET.md` §2.
@@ -69,52 +94,68 @@ export const TAGLINE =
  * The research's §5 asks for a headline split test, and a split test that
  * cannot be run is a wish. So the page assigns one of these server-side, from
  * a query string or a cookie, and writes the assignment into the document.
- * Each variant says the same true thing in a different way: the product is a
- * course that runs in the editor, it is checked rather than graded, and the
- * record of it can be re-derived by a stranger.
+ * Each variant says the same true thing in a different way.
+ *
+ * The three were rewritten when the page was rebuilt around the experience
+ * rather than around the argument. The earlier set led with what the product
+ * is not ("Not another quiz", "Not by answering"), which made the product read
+ * as a list of refusals before it had said what it does. These three lead with
+ * the learner's situation, because that is the question a stranger arrives
+ * with, and the differentiators are said once, later, where the reader has
+ * enough context to want them.
  */
 export const HERO_VARIANTS = [
   {
     id: "a",
-    lineOne: "Build real software.",
-    lineTwo: "Not another quiz.",
-    markOne: "real",
-    lede: "A course that runs inside your editor. Every phase is a working app in your own workspace, and every miss comes back with the reason, the file and the line.",
+    lineOne: "Learn to build software.",
+    lineTwo: "Learn to think like an engineer.",
+    markOne: "build",
+    lede: "Build real applications, debug real failures, and understand how software works, inside a development environment built for learning by doing.",
   },
   {
     id: "b",
-    lineOne: "One window, start to finish.",
-    lineTwo: "Lesson, editor and test together.",
-    markOne: "window",
-    lede: "Nothing to paste and no second app to keep in sync. The tutorial, the code and the check are one object, so the work never leaves the screen it started on.",
+    lineOne: "The tutorials end. The work begins.",
+    lineTwo: "Now build the thing.",
+    markOne: "work",
+    lede: "The hard part is rarely the syntax. It is the blank file, the test that fails, and the bug you have never seen before. This course works on that part.",
   },
   {
     id: "c",
-    lineOne: "Prove it by building.",
-    lineTwo: "Not by answering.",
-    markOne: "building",
-    lede: "A finished phase leaves a receipt anyone can re-derive: the command, the exit code, the file hash. No score, and nothing to collect.",
+    lineOne: "Every phase is real software.",
+    lineTwo: "In your own workspace.",
+    markOne: "real",
+    lede: "Write the code, run the checks, read the failure, fix the cause. A finished phase leaves a receipt anyone can re-derive, and there is no score inside it.",
   },
 ] as const;
 
 /**
  * The hero, for the person who is here to learn.
  *
- * The headline is a claim; the lede is the positioning line. The note is the
- * whole commercial offer, because the offer is small and should not need a
- * pricing page to be understood: it is free, the first course is in the box,
- * and no account stands between a visitor and their first verdict.
+ * The headline is a claim; the lede is the promise. The commercial offer is
+ * not here, because it is not the same in both states of the world: whether a
+ * desktop build is published is a fact about the product that changes, and
+ * copy that has to be rewritten when the product changes is copy that will be
+ * wrong on the day it matters. The offer is therefore a function of the
+ * release state, and it lives in `$lib/release`.
  */
 export const HERO = {
   lineOne: HERO_VARIANTS[0].lineOne,
   lineTwo: HERO_VARIANTS[0].lineTwo,
   markOne: HERO_VARIANTS[0].markOne,
   lede: HERO_VARIANTS[0].lede,
-  note: "Free to download. Nine phases ship inside the installer, and they run offline, so your first judged verdict is minutes away rather than an account away.",
-  primary: "Try it free",
-  primaryShort: "Try free",
-  secondary: "See the courses",
+  secondary: "See how it works",
 } as const;
+
+/**
+ * The hero, for the person who is here to learn.
+ *
+ * The headline is a claim; the lede is the promise. The commercial offer is
+ * not here, because it is not the same in both states of the world: whether a
+ * desktop build is published is a fact about the product that changes, and
+ * copy that has to be rewritten when the product changes is copy that will be
+ * wrong on the day it matters. The offer is therefore a function of the
+ * release state, and it lives in `$lib/release`.
+ */
 
 /**
  * The same hero, for the person who is here to hire.
@@ -276,13 +317,10 @@ export const LANDSCAPE = {
  * `MARKET.md` §3 asks for a claim about evidence; this is the evidence, as a
  * datasheet. Every row is a promise the product can keep today, and every row
  * is checkable by the reader without asking us anything.
+ *
+ * The two numbers are computed from the shipped phase list rather than
+ * written down.
  */
-export const FACTS = [
-  { value: "80", label: "phases, judged in the IDE" },
-  { value: "9", label: "of them free, no account" },
-  { value: "0", label: "badges, scores or streaks" },
-  { value: "1", label: "editor, with the course inside it" },
-] as const;
 
 export const SPEC = [
   {
@@ -410,64 +448,103 @@ export const EMPLOYER = {
  * perfectly and still cannot start. These three columns are that situation,
  * written out, so the reader meets the problem in their own words before the
  * page offers the answer.
+ *
+ * They were rewritten when the page was rebuilt. The earlier set ended on the
+ * hiring market ("An interview asks you to build, not to recite"), which put
+ * a job market in front of someone who came to learn to code. This set ends
+ * on the third thing that actually goes wrong, which is the bug.
  */
 export const WEDGE = [
   {
-    title: "You have followed a hundred tutorials.",
-    body: "Following is not building. The video ends, the file is empty, and the two are different skills. Only one of them was ever practised.",
+    title: "The tutorial ends.",
+    body: "The video stops, the file is empty, and the two are not the same skill. Following was practised. Building was not.",
   },
   {
-    title: "The blank file is where it happens.",
-    body: "Nobody freezes because the video was unclear. They freeze because nothing tells them what to type first, and the first line is the whole distance.",
+    title: "The blank file is the whole distance.",
+    body: "Nobody freezes because the explanation was unclear. They freeze because nothing says what to type first, and the first line is where all of it happens.",
   },
   {
-    title: "An interview asks you to build, not to recite.",
-    body: "So the record of what you built has to exist outside your own account of it. A mark of completion cannot be re-derived. A receipt can.",
+    title: "A bug is a question, not a wall.",
+    body: "A failing test tells you what was expected and what actually happened. Read that and the cause is usually one line away. The habit being built is reading the machine rather than guessing at it.",
   },
 ] as const;
 
-/** The three steps on the door. Numbers are prose, and they are true. */
-export const STEPS = [
-  {
-    n: "01",
-    id: "download",
-    title: "Download the IDE.",
-    caption:
-      "A desktop editor with nine phases of the course inside it. Install it, open it, and the first judged verdict is minutes away rather than an account away.",
-    points: [
-      "Nine phases, bundled. Work offline, no account",
-      "A real workspace: your files, your tests, your mistakes",
-      "A miss comes back with the reason, never a score",
-    ],
-    link: { href: "/download", label: "Try it free" },
+/**
+ * What a phase is, in the curriculum's own words.
+ *
+ * The sentence in the title is the shipped manifest's own, and it is quoted
+ * rather than paraphrased because it is the shape of every course in the
+ * product: Learn, then Solve, then Review. The four steps below are that
+ * sentence taken apart, and each one describes something the course data
+ * actually contains: a read with examples and key points, a question with an
+ * explanation, a hands-on task judged in the learner's own workspace, and a
+ * review the learner does alone.
+ */
+export const LEARN_CYCLE = {
+  title: "Every phase is Learn, then Solve, then Review.",
+  caption:
+    "That is the shipped manifest's own sentence, and it is true of every course in the product. Here is what each part is, so the reader knows what they are agreeing to before they install anything.",
+  steps: [
+    {
+      n: "01",
+      name: "Learn",
+      body: "A short read that names the idea in plain words, shows it running, and lists the points worth keeping. It says why the idea exists before it shows the syntax.",
+    },
+    {
+      n: "02",
+      name: "Check",
+      body: "A question with one right answer, and an explanation of why that answer is right. You find out what you understood rather than what you hoped.",
+    },
+    {
+      n: "03",
+      name: "Solve",
+      body: "A task in your own workspace, with the scaffolding it needs. The check runs against the code you wrote, in the files you own.",
+    },
+    {
+      n: "04",
+      name: "Review",
+      body: "A transfer task you do alone. Each activity carries a level of guidance, and the help thins out as you get better at it.",
+    },
+  ],
+  guidance: {
+    title: "The help runs out.",
+    body: "Every activity states how much of the answer it will give you. Early on, that is the shape of the answer. Later, it is the question and nothing else, and a phase that only works with the answer open is not a phase you passed.",
   },
-  {
-    n: "02",
-    id: "signin",
-    title: "Sign in through the browser.",
-    caption:
-      "The IDE never asks for your password. It shows a short code and opens this site. You sign in here, approve the code, and go back.",
-    steps: [
-      "The IDE shows a code like KQ7M-XR42 and opens your browser.",
-      "You sign in on this site and approve that code.",
-      "The IDE signs in by itself. Nothing to paste, nowhere to mistype.",
-    ],
-    link: { href: "/auth/ide", label: "Why it works this way" },
+} as const;
+
+
+/**
+ * What the learner ends up holding, per course.
+ *
+ * The order is the shipped order. Each line says what the course is for, not
+ * how big it is, and the count is carried by the course list beside it rather
+ * than repeated here.
+ *
+ * The lines are editorial: they are what we have to say about a course we
+ * know. A course we have nothing written about is still printed, using the
+ * shipped list's own line for it, so a course added in the IDE reaches the
+ * page without anybody having to come back and write a paragraph for it.
+ */
+export const COURSE_PATH_NOTES: Record<string, { title: string; body: string }> = {
+  "go-fundamentals": {
+    title: "Go, the language.",
+    body: "From the first value to a module. Values, control flow, functions, structs, methods, interfaces, packages, collections, pointers, embedding, errors, defer and panic, generics. Each phase is judged by code that will not compile without the idea it teaches.",
   },
-  {
-    n: "03",
-    id: "tier",
-    title: "Your tier opens the courses.",
-    caption:
-      "Those nine phases are free forever and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.",
-    points: [
-      "Free: nine phases, judged end to end",
-      "Pro: every further phase, fetched per entitlement",
-      "Assessment stays free. A verdict you have to pay for is not one you can trust",
-    ],
-    link: { href: "/pricing", label: "See pricing" },
+  "go-in-production": {
+    title: "Go, the service behind it.",
+    body: "Goroutines and synchronization, context and cancellation, HTTP servers, routes, authentication, tests, storage, a database, caching, resilience, and shipping. It closes with debugging labs and design labs.",
   },
-] as const;
+  "rust-ledger": {
+    title: "Rust, and a ledger that survives a restart.",
+    body: "The Go track's ledger, rebuilt in Rust and taken to a tested service. Ownership, borrowing and lifetimes are taught as one idea, and the compiler is the one that marks the work.",
+  },
+  "api-basics": {
+    title: "The API, from the outside.",
+    body: "What a request is, why an answer is not a yes, and why valid JSON is not valid data. It gates nothing, and you can leave it at any point.",
+  },
+};
+
+
 
 /**
  * The shipped curriculum, exactly as the manifest names it: id, printed title,
@@ -507,6 +584,7 @@ export const TASK_MANAGER: [string, string, "free" | "pro"][] = [
  * language, before the service and before the app it sits behind.
  */
 export const GO_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
+  ["go-program", "Go program", "pro"],
   ["go-values", "Go values", "pro"],
   ["go-control-flow", "Go control flow", "pro"],
   ["go-functions", "Go functions", "pro"],
@@ -554,29 +632,29 @@ export const GO_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
 ];
 
 export const RUST_LEDGER: [string, string, "free" | "pro"][] = [
-  ["rust-values", "Rust values", "free"],
-  ["rust-ownership", "Rust ownership", "free"],
-  ["rust-borrowing", "Rust borrowing", "free"],
-  ["rust-structs", "Rust structs", "free"],
-  ["rust-enums", "Rust enums", "pro"],
-  ["rust-errors", "Rust errors", "pro"],
-  ["rust-modules", "Rust modules", "pro"],
-  ["rust-traits", "Rust traits", "pro"],
-  ["rust-lifetimes", "Lifetimes", "pro"],
-  ["rust-collections", "Collections", "pro"],
-  ["rust-closures", "Closures", "pro"],
-  ["rust-tests", "Tests", "pro"],
-  ["rust-pointers", "Rust pointers", "pro"],
-  ["rust-threads", "Rust threads", "pro"],
-  ["rust-async", "Rust async", "pro"],
-  ["rust-tokio", "Tokio", "pro"],
+  ["rust-values", "Rust, cargo, and your first value", "free"],
+  ["rust-ownership", "One owner at a time", "free"],
+  ["rust-borrowing", "Look without taking", "free"],
+  ["rust-structs", "One door into the type", "free"],
+  ["rust-enums", "A value that is one of several shapes", "pro"],
+  ["rust-errors", "A failure is a value", "pro"],
+  ["rust-modules", "The public edge of a crate", "pro"],
+  ["rust-traits", "A contract a type signs", "pro"],
+  ["rust-lifetimes", "A borrow has a length", "pro"],
+  ["rust-collections", "Order, keys, and absence", "pro"],
+  ["rust-closures", "A function that carries values, and the iterators that walk a list", "pro"],
+  ["rust-tests", "A test is a named claim", "pro"],
+  ["rust-pointers", "One value, several owners", "pro"],
+  ["rust-threads", "Work on another thread", "pro"],
+  ["rust-async", "A future is a plan, not a run", "pro"],
+  ["rust-tokio", "A task the runtime owns", "pro"],
   ["rust-axum", "Axum: a typed door", "pro"],
   ["rust-http-errors", "HTTP errors that say the right thing", "pro"],
   ["rust-sqlx", "SQLx: the ledger survives a restart", "pro"],
   ["rust-service-tests", "Testing the service without a port", "pro"],
-  ["rust-observability", "Rust observability", "pro"],
+  ["rust-observability", "Configuration at the edge, redaction in the middle", "pro"],
   ["rust-ship", "Rust ship", "pro"],
-  ["rust-review", "Rust review", "pro"],
+  ["rust-review", "Read a library file the way a reviewer does", "pro"],
   ["rust-takehome", "Rust take-home", "pro"],
 ];
 
@@ -602,7 +680,7 @@ export const COURSES = [
   {
     slug: "task-manager",
     role: "main",
-    label: "course one · the JavaScript app",
+    label: "the JavaScript app",
     title: "Task Manager",
     sub: "the JavaScript app taken from the first terminal command to a reviewed pull request",
     phases: TASK_MANAGER,
@@ -610,7 +688,7 @@ export const COURSES = [
   {
     slug: "go-fundamentals",
     role: "main",
-    label: "course two · the Go language",
+    label: "the Go language",
     title: "Go fundamentals",
     sub: "the language itself, from values to modules",
     phases: GO_FUNDAMENTALS,
@@ -618,15 +696,15 @@ export const COURSES = [
   {
     slug: "go-in-production",
     role: "main",
-    label: "course three · the Go service",
+    label: "the Go service",
     title: "Go in production",
-    sub: "the service behind it, from goroutines and HTTP through storage, operations and the two labs that close it",
+    sub: "the service behind it, from goroutines and HTTP through storage, operations and the labs that close it",
     phases: GO_IN_PRODUCTION,
   },
   {
     slug: "rust-ledger",
     role: "main",
-    label: "course four · the ledger in Rust",
+    label: "the ledger in Rust",
     title: "Rust Ledger",
     sub: "the ledger rebuilt in Rust, taken to a tested Axum service",
     phases: RUST_LEDGER,
@@ -634,9 +712,9 @@ export const COURSES = [
   {
     slug: "api-basics",
     role: "side",
-    label: "course five · reading an API from the outside",
+    label: "reading an API from the outside",
     title: "APIs from the outside",
-    sub: "three phases on what a request is, and it gates nothing",
+    sub: "the knowledge the main line assumes the first time it calls a server, and it gates nothing",
     phases: API_BASICS,
   },
 ] as const;
@@ -656,19 +734,240 @@ export const FREE_PHASE_COUNT = ALL_PHASES.filter(([, , tier]) => tier === "free
 /** How many phases open with a paid tier, counted from the lists above. */
 export const PRO_PHASE_COUNT = ALL_PHASES.length - FREE_PHASE_COUNT;
 
+/** The free count, in words, because the sentences about it are sentences. */
+const FREE_PHASES_IN_WORDS = numberWords(FREE_PHASE_COUNT) ?? String(FREE_PHASE_COUNT);
+const FREE_PHASES_IN_WORDS_CAPITAL = FREE_PHASES_IN_WORDS.charAt(0).toUpperCase() + FREE_PHASES_IN_WORDS.slice(1);
+
+/**
+ * What is true of the offer today, in the two states the world can be in.
+ *
+ * The first line of the hero's note is the only sentence on the page that has
+ * to change when the product does, so it is written as a pair and the pair is
+ * read by `$lib/release`. The announced version says plainly that there is
+ * nothing to install, because a visitor who is told to "try it free" and then
+ * finds no download has been lied to, and the thing that follows that lie is
+ * a support request about a product they never received.
+ *
+ * The count in the first version is the shipped free count, not a number
+ * somebody remembered.
+ */
+export const RELEASE_NOTES = {
+  available: `Free to download. ${FREE_PHASES_IN_WORDS_CAPITAL} phases ship inside the installer and run offline, so your first judged verdict is minutes away rather than an account away.`,
+  announced:
+    "The desktop build is not published yet, so there is nothing to install today. Everything else here is already real: the curriculum, the way a verdict is decided, and the verifier for any receipt you already hold.",
+} as const;
+
+/* ------------------------------------------------------------------ *
+ * The counts, and the sentences that carry them.
+ *
+ * Everything in this block is computed from the phase lists above, which come
+ * from the shipped manifests. A course added in the IDE reaches the strip, the
+ * masthead, the curriculum line and the answers by way of the sync, and not
+ * by way of somebody remembering to edit a number.
+ *
+ * Nothing here counts the courses. The courses are named, because a count of
+ * courses reads as a count of videos, and because the number of them is a
+ * thing that changes. The phases are counted, because the depth of the
+ * curriculum is a thing a reader has to be able to check against the
+ * manifest.
+ * ------------------------------------------------------------------ */
+
+/**
+ * The two lines the chrome prints: what the product is, and where it stands
+ * today. Both are facts rather than adjectives, because a masthead that
+ * carries a claim has to be able to defend it.
+ *
+ * The status line is computed from the shipped list, so it cannot fall behind
+ * it.
+ */
+export const MASTHEAD = {
+  descriptor: "the course that runs inside your editor",
+  status: `${ALL_PHASES.length} phases · ${FREE_PHASE_COUNT} free · inside the editor`,
+} as const;
+
+/**
+ * The readings on the bench.
+ *
+ * `MARKET.md` §3 asks for a claim about evidence; this is the evidence, as a
+ * datasheet. Every row is a promise the product can keep today, and every row
+ * is checkable by the reader without asking us anything.
+ *
+ * The two numbers are computed from the shipped phase list rather than
+ * written down.
+ */
+export const FACTS = [
+  { value: String(ALL_PHASES.length), label: "phases, judged in the IDE" },
+  { value: String(FREE_PHASE_COUNT), label: "of them free, no account" },
+  { value: "0", label: "badges, scores or streaks" },
+  { value: "1", label: "editor, with the course inside it" },
+] as const;
+
+/**
+ * The other courses, in one line each.
+ *
+ * The list is the shipped list with the first course removed, because the
+ * first one is the way in and has a section of its own. A course we have
+ * written something about is printed with what we wrote; a course we have not
+ * is printed with the manifest's own description, so a course added in the IDE
+ * reaches the page without anybody having to come back and write a line for
+ * it.
+ */
+export const COURSE_PATHS = COURSES.slice(1).map((course) => {
+  const note = COURSE_PATH_NOTES[course.slug];
+  return {
+    id: course.slug,
+    title: note?.title ?? course.title,
+    body: note?.body ?? course.sub,
+  };
+});
+
+/** One sentence per course, for the answers that have to name all of them. */
+export const COURSE_SENTENCES = COURSES.map(
+  (course) => `${course.title}: ${course.phases.length} phases, ${course.sub}`
+).join(". ");
+
+/**
+ * The closing sentence, with the shipped total in it.
+ *
+ * The depth of the curriculum is a number the reader can check against the
+ * manifest, so it is computed from the manifest rather than written down. A
+ * course added later changes it, and the sentence changes with it.
+ */
+export const CLOSING = `${numberWords(ALL_PHASES.length)} phases, one editor, and a curriculum that goes as deep as the work does. ${FREE_PHASES_IN_WORDS_CAPITAL} of the phases ship inside the installer and need no account at all, and every check you will ever run is free.`;
+
+/** The free tier is, in the words the pricing page and the suite share. */
+export const FREE_TIER_POINTS = [
+  `${FREE_PHASES_IN_WORDS_CAPITAL} phases bundled with the IDE, offline, no account`,
+  "Every check and verdict, free forever",
+  "Further courses per your tier, inside the same IDE",
+  "Account with IDE sign-in through the browser",
+] as const;
+
+/** The three steps on the door. Numbers are prose, and they are true.
+ *
+ * The first step's action is deliberately absent. What the reader can do at
+ * step one depends on whether a desktop build is published, and that is a fact
+ * about the world rather than about this file, so the page renders that action
+ * from `$lib/release` and the other two are ordinary links. */
+export const STEPS = [
+  {
+    n: "01",
+    id: "download",
+    title: "Install the editor.",
+    caption: `A desktop editor with ${FREE_PHASES_IN_WORDS} phases of the course inside it. Install it, open it, and the first judged verdict is minutes away rather than an account away.`,
+    points: [
+      `${FREE_PHASES_IN_WORDS_CAPITAL} phases, bundled. Work offline, no account`,
+      "A real workspace: your files, your tests, your mistakes",
+      "A miss comes back with the reason, never a score",
+    ],
+  },
+  {
+    n: "02",
+    id: "signin",
+    title: "Sign in through the browser.",
+    caption:
+      "The IDE never asks for your password. It shows a short code and opens this site. You sign in here, approve the code, and go back.",
+    steps: [
+      "The IDE shows a code like KQ7M-XR42 and opens your browser.",
+      "You sign in on this site and approve that code.",
+      "The IDE signs in by itself. Nothing to paste, nowhere to mistype.",
+    ],
+    link: { href: "/auth/ide", label: "Why it works this way" },
+  },
+  {
+    n: "03",
+    id: "tier",
+    title: "Your tier opens the courses.",
+    caption:
+      "Those nine phases are free forever and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.",
+    points: [
+      "Free: nine phases, judged end to end",
+      "Pro: every further phase, fetched per entitlement",
+      "Assessment stays free. A verdict you have to pay for is not one you can trust",
+    ],
+    link: { href: "/pricing", label: "See pricing" },
+  },
+] as const;
+
+/**
+ * What the learner ends up holding.
+ *
+ * One project, told as the journey it actually is, with the phase ids that
+ * carry it. The ids are the shipped ones, so the journey can be checked
+ * against the manifest and a phase that moves breaks this list rather than
+ * quietly ageing on the page.
+ *
+ * This is the section that answers "what will I build", and it answers it with
+ * a thing rather than with a topic, because "a JavaScript application" is a
+ * category and "the app you deploy and then defend in review" is an outcome.
+ *
+ * It lives beside the phase lists because its caption states how deep the
+ * course is, and that number has to come from the same place as everything
+ * else rather than being written out here.
+ */
+export const BUILD_JOURNEY = {
+  title: "One app, from an empty folder to a reviewed pull request.",
+  caption: `The Task Manager course is ${TASK_MANAGER.length} phases of one JavaScript application. You open it, you break it, you ship it, and then you read somebody else's code.`,
+  beats: [
+    {
+      n: "01",
+      title: "Start with an empty folder.",
+      body: "You install the tools, learn the editor, and bring the project up. The words every later phase uses are defined here, in plain language, and each one runs as a two-line program.",
+      phases: ["setup", "fundamentals"],
+    },
+    {
+      n: "02",
+      title: "Give it an interface and a server.",
+      body: "Components that earn their keep, the behavior behind them, and then the HTTP that carries the data. The client and the server are both yours to write.",
+      phases: ["ui", "behavior", "web-basics", "api", "api-server"],
+    },
+    {
+      n: "03",
+      title: "Store the data, and refuse the bad data.",
+      body: "Create, read, update, delete, and the pattern that checks a field before it is allowed in. A ledger that keeps money in whole cents, because a float cannot be trusted with it.",
+      phases: ["crud-data", "data", "regex-validation"],
+    },
+    {
+      n: "04",
+      title: "Break it on purpose.",
+      body: "A phase whose job is a failing test. You read the failure, form a hypothesis about the cause, and change one line until it passes.",
+      phases: ["debug"],
+    },
+    {
+      n: "05",
+      title: "Read code you did not write.",
+      body: "One phase hands you a codebase with no instructions. Finding your way through it, and asking the right question of it, is the skill the interview never rehearses.",
+      phases: ["navigate"],
+    },
+    {
+      n: "06",
+      title: "Put it in Git, test it, deploy it.",
+      body: "Commits, branches, a test suite that fails when it should, and a review. Then you answer the review, which is a different skill from making the code.",
+      phases: ["git", "testing", "review", "pr-review"],
+    },
+    {
+      n: "07",
+      title: "Audit what a model wrote, then build a feature of your own.",
+      body: "You check generated code the way you check any other code: by what it does and what it fails to do. The last phase is a feature of your own, with nobody holding the answer.",
+      phases: ["ai-audit", "independent"],
+    },
+  ],
+} as const;
+
 /**
  * The curriculum, described on the front page: the courses by name, and how
  * deep each one is.
  *
  * The depths are counted from the phase lists above rather than written out,
- * so the sentence cannot drift away from the shipped phases. The page names
+ * so the sentence cannot drift away from the shipped phases, and the list of
+ * courses is the shipped list rather than a list of courses. The page names
  * the courses and never counts them: a count of courses reads as a count of
  * videos, and this is not that.
  */
 export const CURRICULUM = {
   title:
     "A JavaScript app, the Go language, the Go service behind it, a ledger in Rust, and an API from the outside.",
-  caption: `The JavaScript app is ${TASK_MANAGER.length} phases. The Go service is ${GO_FUNDAMENTALS.length + GO_IN_PRODUCTION.length}, across the language course and the production course. The Rust ledger is ${RUST_LEDGER.length}, and the side course is ${API_BASICS.length}. Everything below ships inside the IDE and is judged there.`,
+  caption: `${COURSES.map((course) => `${course.title}: ${course.phases.length} phases`).join(". ")}. Everything below ships inside the IDE and is judged there.`,
 } as const;
 
 /**
@@ -746,7 +1045,7 @@ export const FAQ = [
   },
   {
     q: "What is actually in the curriculum?",
-    a: `Task Manager is the JavaScript app, ${TASK_MANAGER.length} phases, from the first terminal command to a reviewed pull request. Go fundamentals is the language itself, ${GO_FUNDAMENTALS.length} phases, from values to modules. Go in production is the service behind it, ${GO_IN_PRODUCTION.length} phases, ending in the debugging and design labs. Rust Ledger is the ledger rebuilt in Rust, ${RUST_LEDGER.length} phases, taken to a tested Axum service. APIs from the outside is ${API_BASICS.length} phases on what a request is, and it gates nothing.`,
+    a: `The curriculum is ${COURSE_SENTENCES}. Every phase ships inside the IDE and is judged there.`,
   },
   {
     q: "Is there a mark of completion?",
@@ -787,13 +1086,7 @@ export function money(amount: number): string {
   return `$${amount}`;
 }
 
-/** The free tier is, in the words the pricing page and the suite share. */
-export const FREE_TIER_POINTS = [
-  "Nine phases bundled with the IDE, offline, no account",
-  "Every check and verdict, free forever",
-  "Further courses per your tier, inside the same IDE",
-  "Account with IDE sign-in through the browser",
-] as const;
+
 
 /**
  * The three lines, in the words the owner decided on.
@@ -945,21 +1238,21 @@ export const BILLING_COMMITMENTS = [
 
 /** The footer's one job: get back to the real surfaces. */
 export const FOOTER_LINKS = [
-  { href: "/download", label: "Try it free" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/courses", label: "Courses" },
   { href: "/verify", label: "Verify" },
   { href: "/auth", label: "Account" },
   { href: "/universities", label: "For teaching" },
 ] as const;
 
-/** The primary navigation. Still a front door: no classroom, no search. */
 export const NAV = [
+  { href: "/#loop", label: "How it works" },
+  { href: "/#build", label: "What you build" },
   { href: "/#why", label: "Why" },
-  { href: "/#measures", label: "Measures" },
-  { href: "/#courses", label: "Courses" },
+  { href: "/#proof", label: "Proof" },
+  { href: "/courses", label: "Courses" },
   { href: "/employers", label: "For hiring" },
   { href: "/universities", label: "For teaching" },
-  { href: "/#limits", label: "Limits" },
   { href: "/pricing", label: "Pricing" },
   { href: "/verify", label: "Verify" },
 ] as const;

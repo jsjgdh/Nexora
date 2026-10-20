@@ -9,6 +9,7 @@
   import Headline from "$lib/components/Headline.svelte";
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
+  import { currentRelease } from "$lib/release-current";
   import { pageTitle } from "$lib/seo";
 
   /* Setting a new password with the token from the link.
@@ -37,6 +38,10 @@
    * endpoint, which forwards it to the platform and never returns it. */
 
   let { token: initialToken = "" }: { token?: string } = $props();
+
+  /* The download action, labelled by the release state, so this page cannot
+     offer a build that is not published. */
+  const release = $derived(currentRelease());
 
   // The token is read once, from the link, and it is not a live value: a
   // second token in the URL is not something the page should react to. The
@@ -123,7 +128,9 @@
             phases in the IDE work without one, offline, and every check is free.
           </p>
           <div class="mt-5">
-            <ActionLink href="/download" variant="ghost" size="sm" island>Download the IDE</ActionLink>
+            <ActionLink href="/download" variant="ghost" size="sm" island>
+              {release.label}
+            </ActionLink>
           </div>
         </Plate>
       {:else if done}

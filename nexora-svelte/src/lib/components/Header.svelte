@@ -3,6 +3,7 @@
   import { page } from "$app/state";
   import { session } from "$lib/session.svelte";
   import { BRAND, MASTHEAD, NAV } from "$lib/content/site";
+  import type { ReleaseState } from "$lib/release";
 
   /* The instrument face.
    *
@@ -42,6 +43,13 @@
 
   const pathname = $derived(page.url.pathname);
   const hash = $derived(page.url.hash);
+
+  /* The download action, and what it is called.
+   *
+   * The label is the release state's, so the header can never offer a build
+   * that is not published. One switch decides it, the server decides it, and
+   * every surface reads the same answer. */
+  let { release }: { release: ReleaseState } = $props();
 
   const sectionIds = NAV.filter((item) => item.href.startsWith("/#")).map((item) =>
     item.href.slice(2)
@@ -174,7 +182,7 @@
             aria-current={pathname === "/download" ? "page" : undefined}
             class="inline-flex min-h-[44px] shrink-0 items-center border border-accent bg-accent px-3.5 text-[12.5px] font-bold whitespace-nowrap text-ground transition-[color,background-color,border-color] duration-200 hover:border-accent-bright hover:bg-accent-bright"
           >
-            Try it free
+            {release.labelShort}
           </a>
         {/if}
 

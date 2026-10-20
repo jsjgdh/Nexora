@@ -17,6 +17,7 @@
 export const allRoutes = [
   "/",
   "/pricing",
+  "/courses",
   "/employers",
   "/universities",
   // The cohort surface. A lecturer and a student arrive here, and both pages

@@ -5,13 +5,14 @@
   import "../app.css";
   import { afterNavigate, onNavigate } from "$app/navigation";
   import { onMount, type Snippet } from "svelte";
+  import type { LayoutData } from "./$types";
   import Header from "$lib/components/Header.svelte";
   import Footer from "$lib/components/Footer.svelte";
   import { session } from "$lib/session.svelte";
   import { reduced } from "$lib/motion";
   import { SITE_NAME } from "$lib/seo";
 
-  let { children }: { children: Snippet } = $props();
+  let { children, data }: { children: Snippet; data: LayoutData } = $props();
 
   /* The cut between two pages.
    *
@@ -84,10 +85,10 @@
   Skip to main content
 </a>
 
-<Header />
+<Header release={data.release} />
 
 <main id="main" tabindex="-1">
   {@render children()}
 </main>
 
-<Footer />
+<Footer release={data.release} />

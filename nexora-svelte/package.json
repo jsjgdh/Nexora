@@ -16,7 +16,8 @@
     "verify:csp": "tsx scripts/verify-csp.ts",
     "verify:platform": "tsx scripts/verify-platform.mjs",
     "verify:ux": "tsx scripts/verify-ux.ts",
-    "sync:copy": "node scripts/sync-curriculum-copy.mjs"
+    "sync:copy": "node scripts/sync-curriculum-copy.mjs",
+    "shoot": "tsx scripts/shoot.ts"
   },
   "dependencies": {
     "@clerk/clerk-js": "6.39.0",

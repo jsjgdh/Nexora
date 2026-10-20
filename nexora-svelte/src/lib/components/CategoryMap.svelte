@@ -17,8 +17,8 @@
     <ul>
       {#each LANDSCAPE.kinds as kind (kind.name)}
         <li class="border-t border-rule py-5 first:border-t-0 first:pt-0 last:pb-0">
-          <p class="text-[15px] font-semibold text-ink">{kind.name}</p>
-          <p class="mt-1.5 max-w-[52ch] text-[14.5px] leading-relaxed text-muted">{kind.leaves}</p>
+          <p class="text-[16px] font-semibold text-ink">{kind.name}</p>
+          <p class="mt-1.5 max-w-[52ch] text-[15.5px] leading-relaxed text-muted">{kind.leaves}</p>
         </li>
       {/each}
     </ul>

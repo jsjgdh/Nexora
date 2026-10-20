@@ -74,6 +74,7 @@ export function absoluteUrl(origin: string, path: string): string {
 const PUBLIC_PATHS = [
   "/",
   "/pricing",
+  "/courses",
   "/employers",
   "/universities",
   "/teach",

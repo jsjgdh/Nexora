@@ -7,3 +7,7 @@ node_modules/
 .env.*
 !.env.example
 .DS_Store
+
+# Screenshots from `npm run shoot`. They are a way of looking at a build, not
+# an artefact of it.
+shots/

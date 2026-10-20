@@ -18,16 +18,47 @@
    *
    * The cluster rules draw themselves in as the section arrives, which is the
    * one entrance in the build that belongs to the datasheet alone: the bench
-   * ruling a line under each group it is about to read. */
+   * ruling a line under each group it is about to read.
+   *
+   * `clusters` chooses which groups to print, and the page chooses: the one
+   * that says where the product runs belongs under the poster, and the two
+   * that say what decides a verdict belong with the assessment. One sheet,
+   * read in the two places a reader actually wants it. */
+
+  type Props = {
+    /** The cluster names to print. All of them when this is left out. */
+    clusters?: readonly string[];
+    /**
+     * The heading level of a cluster name.
+     *
+     * A cluster name is a heading, and a heading has to sit at the right level
+     * in the document or a screen reader is told to jump. Under the poster on
+     * the homepage there is no section heading above the sheet, so the cluster
+     * is the top-level heading of that strip and says so. Inside a section that
+     * has its own heading, the cluster is one step below it.
+     */
+    headingLevel?: 2 | 3;
+  };
+
+  let { clusters, headingLevel = 3 }: Props = $props();
+
+  const groups = $derived(
+    clusters ? SPEC.filter((group) => clusters.includes(group.cluster)) : SPEC
+  );
 </script>
 
 <div class="border-t border-b border-l border-rule" use:inViewStagger>
-  {#each SPEC as group, index (group.cluster)}
+  {#each groups as group, index (group.cluster)}
     {#if index > 0}
       <div class="draw col-span-full h-px w-full bg-rule-strong" aria-hidden="true"></div>
     {/if}
     <div class="border-r px-5 pb-5 pt-7 sm:px-6 sm:pb-6 sm:pt-9">
-      <h3 class="display text-[clamp(1.15rem,1.8vw,1.45rem)] text-ink">{group.cluster}</h3>
+      <svelte:element
+        this={headingLevel === 2 ? "h2" : "h3"}
+        class="display text-[clamp(1.15rem,1.8vw,1.45rem)] text-ink"
+      >
+        {group.cluster}
+      </svelte:element>
     </div>
     {#each group.rows as row (row.param)}
       <div
@@ -35,8 +66,8 @@
         data-stagger-item
       >
         <p class="text-[13.5px] text-faint">{row.param}</p>
-        <p class="text-[15.5px] font-semibold text-ink">{row.value}</p>
-        <p class="max-w-[46ch] text-[13.5px] leading-relaxed text-muted">{row.note}</p>
+        <p class="text-[16px] font-semibold text-ink">{row.value}</p>
+        <p class="max-w-[46ch] text-[14.5px] leading-relaxed text-muted">{row.note}</p>
       </div>
     {/each}
   {/each}

@@ -143,8 +143,8 @@ body {
   background: var(--color-ground);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-size: 15.5px;
-  line-height: 1.62;
+  font-size: 16.5px;
+  line-height: 1.66;
   overflow-x: clip;
 }
 
@@ -350,7 +350,7 @@ section[id] {
    casing, wide tracking, and never a colour on its own. */
 .stamp {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -727,6 +727,12 @@ details.nexora-details > summary::-webkit-details-marker {
     max-width: none !important;
     padding: 0 !important;
     zoom: 0.6;
+  }
+  /* Screen context, not the argument. The market readings and the categories
+     beside them are there for a reader on a screen, and the sheet on paper is
+     still the one thing this page claims to be. */
+  .onepager .screen-only {
+    display: none !important;
   }
   .onepager h1 {
     font-size: 19pt !important;

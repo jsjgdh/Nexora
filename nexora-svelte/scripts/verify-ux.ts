@@ -279,14 +279,6 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   // The tier toggle is gone: the front page no longer prices the curriculum
   // line by line, so there is nothing here to press.
 
-  const head = page.locator("button[id^='course-head-']").nth(1);
-  await head.focus();
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(300);
-  if ((await head.getAttribute("aria-expanded")) !== "true") {
-    note("keyboard", "a course drawer did not open with the keyboard");
-  }
-
   const summary = page.locator("details.nexora-details summary").first();
   await summary.focus();
   await page.keyboard.press("Enter");
@@ -296,6 +288,50 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     .first()
     .evaluate((d) => (d as HTMLDetailsElement).open);
   if (!open) note("keyboard", "an answer did not open with the keyboard");
+
+  const replay = page.locator("button", { hasText: "Run it again" }).first();
+  await replay.focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(900);
+  if ((await page.locator("text=Running").count()) === 0) {
+    note("keyboard", "the run did not replay with the keyboard");
+  }
+
+  await page.close();
+}
+
+/* The curriculum page has its own controls, and they are checked the same
+ * way. The exhaustive list moved off the homepage onto its own page, and the
+ * drawer that opens a course lives with it. */
+{
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await page.goto(`${ORIGIN}/courses`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(600);
+
+  const head = page.locator("button[id^='course-head-']").nth(1);
+  await head.focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(300);
+  if ((await head.getAttribute("aria-expanded")) !== "true") {
+    note("keyboard", "a course drawer did not open with the keyboard");
+  }
+
+  // The panel the drawer opens has to be reachable and has to be the one the
+  // button says it controls.
+  const panel = page.locator(`#course-panel-${(await head.getAttribute("aria-controls"))?.replace("course-panel-", "")}`);
+  if ((await panel.count()) === 0) {
+    note("keyboard", "the course drawer does not control the panel it names");
+  }
+
+  await page.close();
+}
+
+/* The sign-in code lives with the download, because that is where a reader
+ * who has decided to get the app meets it. */
+{
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await page.goto(`${ORIGIN}/download`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(600);
 
   // The device code asks the reader to confirm the code against the screen
   // before anything can be approved, so the keyboard has to reach the tick
@@ -315,14 +351,6 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     note("keyboard", "the device code did not approve with the keyboard");
   }
 
-  const replay = page.locator("button", { hasText: "Run it again" }).first();
-  await replay.focus();
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(900);
-  if ((await page.locator("text=Running").count()) === 0) {
-    note("keyboard", "the run did not replay with the keyboard");
-  }
-
   await page.close();
 }
 
@@ -334,7 +362,7 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.goto(ORIGIN, { waitUntil: "networkidle" });
   await page.addStyleTag({ content: SETTLE });
   await page.waitForTimeout(800);
-  for (const id of ["why", "measures", "courses", "employers", "limits"]) {
+  for (const id of ["loop", "gap", "build", "why", "proof", "courses", "employers"]) {
     await page.evaluate((target) => {
       document.documentElement.style.scrollBehavior = "auto";
       document.getElementById(target)?.scrollIntoView();
@@ -706,15 +734,17 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
 {
   const html = await (await fetch(ORIGIN)).text();
   for (const phrase of [
+    // The poster's second line is not the marked one, so it is one string in
+    // the document and can be looked for as it is read.
+    "Learn to think like an engineer",
     "Build real software",
-    "A course that runs inside your editor",
-    "The rung came off the ladder",
-    "What you are actually buying",
-    "Where the other products stop",
-    "What the bench measures",
-    "what is true of a finished phase",
-    "What NEXORA will not do",
-    "You still have to build it",
+    "What this is, and where it stands",
+    "Every phase is Learn, then Solve, then Review",
+    "Most learning stops before the building starts",
+    "One app, from an empty folder to a reviewed pull request",
+    "What makes the experience different",
+    "How a verdict earns trust",
+    "The questions, answered plainly",
   ]) {
     if (!html.includes(phrase)) {
       note("server render", `the document does not contain "${phrase}"`);
@@ -749,10 +779,11 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   const plain = (html: string): string =>
     html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ");
 
-  if (!plain(askedHtml).includes("One window, start to finish.")) {
+  if (!plain(askedHtml).includes("The tutorials end. The work begins.")) {
     note("headline test", "the variant that was asked for did not render");
   }
-  if (plain(defaultHtml).includes("One window, start to finish.")) {
+
+  if (plain(defaultHtml).includes("The tutorials end. The work begins.")) {
     note("headline test", "the default document renders more than one variant");
   }
 }
@@ -864,7 +895,7 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
  * ------------------------------------------------------------------ */
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  await page.goto(ORIGIN, { waitUntil: "networkidle" });
+  await page.goto(`${ORIGIN}/employers`, { waitUntil: "networkidle" });
   await page.waitForTimeout(500);
   const readings = await page.locator("#market [data-reading]").count();
   if (readings < 3) note("market", `the market section shows ${readings} readings`);

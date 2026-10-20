@@ -2,6 +2,7 @@
   import { FOOTER_LINKS, BRAND, MASTHEAD } from "$lib/content/site";
   import { LEGAL_LINKS } from "$lib/legal";
   import { inView } from "$lib/motion";
+  import type { ReleaseState } from "$lib/release";
 
   /* The title block.
    *
@@ -25,6 +26,14 @@
    * sitemap cannot disagree about which documents exist. */
 
   let year = new Date().getFullYear();
+
+  /* The download, and the label the release state gives it.
+   *
+   * The link is the first thing in the cell because it is the first thing a
+   * reader might want, and the label is the state's, so the footer cannot
+   * promise a build that is not published while the hero is telling the
+   * truth. */
+  let { release }: { release: ReleaseState } = $props();
 </script>
 
 <footer class="border-t border-rule">
@@ -39,7 +48,7 @@
     >
       <div class="border-r border-b border-rule p-6">
         <p class="display text-[clamp(1.5rem,3.2vw,2.1rem)] text-ink">{BRAND}</p>
-        <p class="mt-3 max-w-[26ch] text-[13px] leading-relaxed text-muted">
+        <p class="mt-3 max-w-[26ch] text-[14px] leading-relaxed text-muted">
           {MASTHEAD.descriptor}.
         </p>
         <p class="stamp mt-5 text-[11px] text-faint">signed receipts, not badges</p>
@@ -48,6 +57,14 @@
       <div class="border-r border-b border-rule p-6">
         <p class="stamp text-[11px] text-faint">the product</p>
         <ul class="mt-3">
+          <li>
+            <a
+              href="/download"
+              class="inline-flex min-h-[44px] items-center text-[14.5px] text-muted transition-[color,background-color,border-color] duration-200 hover:text-accent"
+            >
+            {release.label}
+          </a>
+          </li>
           {#each FOOTER_LINKS as link (link.href)}
             <!-- 44px tall like every other control here, and taller than the
                  line of type it prints: a row of 20px link text is a row of
@@ -56,7 +73,7 @@
             <li>
               <a
                 href={link.href}
-                class="inline-flex min-h-[44px] items-center text-[13.5px] text-muted transition-[color,background-color,border-color] duration-200 hover:text-accent"
+                class="inline-flex min-h-[44px] items-center text-[14.5px] text-muted transition-[color,background-color,border-color] duration-200 hover:text-accent"
               >
                 {link.label}
               </a>
@@ -72,7 +89,7 @@
             <li>
               <a
                 href={link.href}
-                class="inline-flex min-h-[44px] items-center text-[13.5px] text-muted transition-[color,background-color,border-color] duration-200 hover:text-accent"
+                class="inline-flex min-h-[44px] items-center text-[14.5px] text-muted transition-[color,background-color,border-color] duration-200 hover:text-accent"
               >
                 {link.label}
               </a>
