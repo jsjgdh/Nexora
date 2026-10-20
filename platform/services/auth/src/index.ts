@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { createPool, createService, migrate, start } from "@nexora/service-kit";
 import { registerAuthRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./admin.js";
+import { registerCohortRoutes } from "./cohorts.js";
 import { pruneDeletedSubjectRevocations, pruneRevokedTokens } from "./revocation-store.js";
 import { pruneRetention } from "./rights.js";
 
@@ -25,6 +26,22 @@ registerAuthRoutes(app, pool);
    routes carry the operator check themselves: a signed-in learner without
    the flag gets a 403 from every one of them. */
 registerAdminRoutes(app, pool);
+/* The institutional surface: cohorts, the join code, the roster, the export,
+   and the mesh-only seat check the edge asks.
+ *
+ * This call was MISSING, and the gap was invisible to the suite, because the
+ * suite registers the module itself on its own test app. The service, which
+ * is what actually runs, answered 404 for every cohort route, and the
+ * edge's seat lookup, which is how the paywall asks whether a learner holds
+ * a seat, got a 404 and read it as "we cannot check right now". So every
+ * paid phase request by somebody who had not subscribed answered 503
+ * "entitlement unavailable" instead of 402 "subscribe", forever, and the
+ * front door's teaching pages had nothing to talk to.
+ *
+ * The wiring is now asserted by the suite that boots the real service (see
+ * scripts/verify.mjs, "the auth service's own entry point registers ..."), so
+ * a module that exists but is never mounted fails the build. */
+registerCohortRoutes(app, pool);
 
 /* Housekeeping for the access-token denylist.
  *

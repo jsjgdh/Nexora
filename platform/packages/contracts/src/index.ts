@@ -1228,9 +1228,15 @@ export interface SeatCheckResponse {
  */
 export const cohortActivateSchema = z.object({
   joinCode: z.string().min(1).max(32),
-  /** Optional: the cohort's own seat count stands when the operator does not
-   *  say otherwise. An operator correcting a seat count says it. */
-  seats: z.number().int().min(1).max(1000).optional(),
+  /** How many seats were bought. Required, and the operator's number.
+   *
+   * It used to be optional, and the cohort's own declared count stood when the
+   * operator did not say otherwise. That made the quantity that carries money
+   * the instructor's claim: an instructor who declared a thousand seats and
+   * then confirmed the licence without naming a number got a thousand seats
+   * of paid entitlement against one purchase. The operator is the one who knows
+   * what was bought, so the operator says it, every time. */
+  seats: z.number().int().min(1).max(1000),
 });
 export type CohortActivateRequest = z.infer<typeof cohortActivateSchema>;
 

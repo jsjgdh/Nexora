@@ -66,7 +66,10 @@ function usage() {
     "  npm run cohort:activate -- <join-code> --seats <n>",
     "",
     "  <join-code>   the code on the slide, e.g. KQ7M-XR42. The dash is display-only.",
-    "  --seats <n>   how many seats were bought. The default is the cohort's own count.",
+    "  --seats <n>   how many seats were bought. Required: this is the number the",
+    "                licence carries, and the operator is the one who knows it.",
+    "                It used to default to the cohort's own count, which made the",
+    "                quantity that carries money the instructor's own claim.",
     "",
     "The environment it needs:",
     "  AUTH_URL           the auth service (default http://127.0.0.1:8101)",
@@ -102,7 +105,13 @@ async function main() {
     process.stderr.write("A join code is required.\n\n" + usage() + "\n");
     return 2;
   }
-  if (args.seats !== null && (!Number.isInteger(args.seats) || args.seats < 1)) {
+  if (args.seats === null) {
+    process.stderr.write(
+      "--seats is required. Say how many seats were bought: the licence carries that\nnumber, and the operator is the one who knows it.\n\n" + usage() + "\n"
+    );
+    return 2;
+  }
+  if (!Number.isInteger(args.seats) || args.seats < 1) {
     process.stderr.write("--seats must be a whole number of seats, at least one.\n");
     return 2;
   }
@@ -117,8 +126,7 @@ async function main() {
     return 2;
   }
 
-  const body = { joinCode: args.value };
-  if (args.seats !== null) body.seats = args.seats;
+  const body = { joinCode: args.value, seats: args.seats };
 
   let res;
   try {

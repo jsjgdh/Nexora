@@ -315,7 +315,14 @@ class SessionStore {
     const sameOrigin = path.startsWith(SESSION_BASE);
     if (!sameOrigin && !apiConfigured) throw new Error("API not configured");
     const send = (token: string | null | undefined): Promise<Response> => {
-      const headers: Record<string, string> = { "content-type": "application/json" };
+      // The content type belongs to a body. A POST with no body and a JSON
+      // content type is refused by the server ("Body cannot be empty when
+      // content-type is set to 'application/json'"), which is how the two
+      // bodyless actions in this app (ending a licence, ending every session)
+      // failed with a 400 that read like a broken request rather than a
+      // broken caller.
+      const headers: Record<string, string> = {};
+      if (opts.body !== undefined) headers["content-type"] = "application/json";
       if (token) headers.authorization = `Bearer ${token}`;
       return fetch((sameOrigin ? "" : BASE) + path, {
         method: opts.method ?? "GET",

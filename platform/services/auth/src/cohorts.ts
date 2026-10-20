@@ -577,12 +577,31 @@ export function registerCohortRoutes(app: FastifyInstance, pool: Pool): void {
     }
     const { rows: updated } = await pool.query(
       "UPDATE cohorts SET status = 'active', seats = $2 WHERE id = $1 RETURNING *",
-      [cohort.id, body.seats ?? cohort.seats]
+      [cohort.id, body.seats]
     );
     const row = updated[0] as CohortRow;
     const { rows: countRows } = await pool.query(
       "SELECT count(*)::int AS n FROM cohort_members WHERE cohort_id = $1",
       [cohort.id]
+    );
+    /* The record, because this is the moment money becomes entitlement.
+     *
+     * A licence that was confirmed leaves the same trace as a flag that was
+     * granted: what was bought, for which cohort, and when. Without it, the
+     * question "who gave this class a thousand seats" has no answer in the
+     * record, only in a log line that is not kept. */
+    await pool.query(
+      "INSERT INTO admin_actions (id, operator_id, action, target, detail) VALUES ($1, $2, $3, $4, $5)",
+      [
+        newId(),
+        // The caller is the operator's tooling, over the mesh: there is no
+        // operator account behind a machine credential, and the record says
+        // who it was.
+        "the-operator-tooling",
+        "cohort.licence_confirmed",
+        row.id,
+        `${row.seats} seats for ${row.course_id} in ${row.institution}, term ${row.term}`,
+      ]
     );
     req.log.info(
       { cohortId: row.id, seats: row.seats, courseId: row.course_id },

@@ -684,3 +684,111 @@ taught. It now says what it is, in its own header.
 4. **The limits, the quotas and the entitlement cache are per-process.**
    The first pass's missing control 5, unchanged, and still the one place to
    move when a second gateway appears.
+
+### F-6. The seat count at confirmation was the instructor's own claim (medium, fixed)
+
+**Vulnerable component:** `platform/services/auth/src/cohorts.ts`
+(`POST /internal/cohorts/activate`), `platform/packages/contracts/src/index.ts`
+(`cohortActivateSchema`), `platform/scripts/cohort-activate.mjs`.
+
+**Attack path.** A cohort is created with a seat count, and the count was the
+instructor's: any signed-in learner can create one and declare a thousand
+seats, and the cohort's own number was what the join's "full" check compared
+against. The confirmation route took the operator's `seats` when it was given
+and otherwise fell back to the cohort's own count, and the CLI's `--seats` was
+optional with the same default. So an operator who confirmed a licence
+without naming a number confirmed the instructor's number: a thousand seats
+of paid entitlement against one purchase, at $19 a student.
+
+**Impact.** The quantity that carries money was chosen by the party being
+invoiced. The course scoping held, so the seat opened that course and no
+other, and the money is real, but the number of seats was not what was bought.
+
+**Fix.** The seat count is required at confirmation, in the wire contract and
+in the route, and the CLI refuses to run without it. The operator says how
+many seats were bought, every time. The confirmation also writes an
+`admin_actions` row now, because a licence that was confirmed is the moment
+money becomes entitlement and it used to leave no record.
+
+### F-7. The contact endpoint was an unauthenticated, unthrottled, cross-site-postable relay (medium, fixed)
+
+**Vulnerable component:** `nexora-svelte/src/routes/api/mail/+server.ts`.
+
+**Attack path.** The route takes `{ kind, message, email }` and sends mail
+with the studio's own key. It had no session (by design: a stranger must be
+able to report a security problem), no rate limit, and no origin check,
+although every other POST route in the app uses `crossSiteRequest` from the
+session broker. A page on any origin could post to it, including with a
+simple cross-site request that needs no preflight. The reply went to the
+address the caller gave, from the studio's domain, with the studio's words.
+
+**Impact.** The studio's sending quota and its domain were a public relay:
+quota burned, the studio's mailbox filled, the launch list padded, and mail
+sent from nexora.dev to arbitrary third parties.
+
+**Fix.** A cross-site request is refused, the same way the broker's routes
+refuse one. A per-address budget holds the route: five sends in ten minutes
+and twenty a day, and the reply has its own budget, because the reply is the
+part that carries the studio's domain to somebody else's inbox. The budget is
+per process, which is the same honest limit the platform's own limits have
+and is stated as such in the code.
+
+### F-8. The cohort routes were written and never mounted (medium, fixed)
+
+**Vulnerable component:** `platform/services/auth/src/index.ts`.
+
+**Attack path.** None: this is a defect, not an attack, and it is here
+because it is the defect the audit was looking for. `cohorts.ts` exported a
+`registerCohortRoutes` function and the suite registered it on its own test
+app, so every test passed. The service's own entry point never called it, so
+the running service answered 404 for every cohort route, and the edge's seat
+lookup, which is how the paywall asks whether a learner holds a seat, got a
+404 and read it as "we cannot check right now". Every paid phase request by
+somebody who had not subscribed answered 503 "entitlement unavailable"
+instead of 402 "subscribe", and the front door's teaching pages had nothing
+to talk to.
+
+**Impact.** The paywall's error code was wrong for every non-subscriber, the
+institutional surface was dead in production, and the suite could not see
+either, because the suite builds its own app.
+
+**Fix.** The routes are mounted, and the suite now asserts the wiring twice
+over: every module in the identity service that exports a register function
+must be mounted by the service's entry point, and the path the edge asks for
+must be a path the identity service registers. A module that is written and
+not mounted now fails the build.
+
+### F-9. Two bodyless actions were refused by the server (low, fixed)
+
+**Vulnerable component:** `nexora-svelte/src/lib/session.svelte.ts`,
+`nexora-svelte/src/lib/admin-client.ts`.
+
+Both set `content-type: application/json` on every call, including the two
+that carry no body: ending a licence, and ending every session. The server
+refuses a bodyless request that claims a JSON body ("Body cannot be empty
+when content-type is set to 'application/json'"), so both actions failed with
+a 400 that read like a broken request rather than a broken caller. The
+content type now belongs to a body, and only to a body.
+
+### Missing controls, still open, with the reason
+
+- **A licence confirmation now leaves a record** (closed with F-6): an
+  `admin_actions` row naming the seats, the course and the institution.
+- **The operator's flag now has a scope, an end and a proof of the address**
+  (closed in the tree by the other session's change): only a super may
+  grant, every grant carries an expiry, and the target's address must be
+  verified, because an account row is not proof that anybody owns that
+  address.
+- **There is no join-attempt limiter.** A join is held by the shared
+  `/api/auth` bucket, with no per-code counter, no lockout and no delay. The
+  code is eight characters from a 31-character alphabet, so it is not
+  guessable, and the cost of guessing it is a rate-limited 404. The limiter
+  is still the right thing to have.
+- **The join code is passed to the CLI as an argument**, so it lands in the
+  operator's shell history, while the same script deliberately refuses to
+  take the mesh key that way. The code is a bearer credential for a paid
+  seat, so it belongs on standard input.
+- **The roster and the export show a member's proofs from any course.** The
+  identity service cannot map a competency to a course; the curriculum
+  service owns that map. Closing this needs the map to be reachable, and
+  until then the file says what it contains.

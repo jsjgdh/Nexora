@@ -713,7 +713,56 @@ describe("gateway pure units", () => {
   });
 });
 
-describe("gateway entitlement cache", () => {
+describe("the auth service mounts every route module it has", () => {
+  /* The gap this asserts is the one that cost a session: a module of routes
+   * existed, the suite registered it on its own test app, and the service
+   * never mounted it. So the suite was green and the service answered 404 for
+   * every route the module defined. The suite could not see it, because the
+   * suite builds its own app and calls the module itself.
+   *
+   * So the check is on the wiring, and it is the only kind of check that can
+   * see it: every module in the service's source that exports a register
+   * function must be mounted by the service's own entry point. A module that
+   * is written and not mounted fails the build.
+   *
+   * And the second half is the contract between two services: the path the
+   * edge asks for must be a path the identity service actually registers, so
+   * a rename on one side cannot leave the other asking for a route that is
+   * not there (which the edge reads as "we cannot check right now", and so
+   * answers 503 to every paid request instead of 402). */
+  const srcDir = join(root, "services", "auth", "src");
+  const entry = readFileSync(join(srcDir, "index.ts"), "utf8");
+  const modules = readdirSync(srcDir).filter((f) => f.endsWith(".ts") && f !== "index.ts");
+
+  it("every route module is mounted by the service's entry point", () => {
+    const unmounted = [];
+    for (const file of modules) {
+      const source = readFileSync(join(srcDir, file), "utf8");
+      const exported = [...source.matchAll(/export function (register\w+Routes)\s*\(/g)].map((m) => m[1]);
+      for (const name of exported) {
+        if (!new RegExp(`${name}\\s*\\(\\s*app\\s*,`).test(entry)) {
+          unmounted.push(`${file} exports ${name}, and index.ts never mounts it`);
+        }
+      }
+    }
+    assert.deepEqual(unmounted, [], "a route module that is written and not mounted is a 404 in production");
+  });
+
+  it("the path the edge asks the identity service for is a path it registers", () => {
+    const gateway = readFileSync(join(root, "services", "gateway", "src", "entitlement.ts"), "utf8");
+    const asked = gateway.match(/\/internal\/[a-z/-]+/)?.[0];
+    assert.ok(asked, "the edge asks the identity service for something");
+    const auth = readdirSync(srcDir)
+      .map((f) => readFileSync(join(srcDir, f), "utf8"))
+      .join("\n");
+    assert.ok(
+      auth.includes(`"${asked}"`),
+      `the edge asks for ${asked} and the identity service does not register it, so every paid request answers 503 instead of 402`
+    );
+  });
+});
+
+describe("the gateway entitlement cache", () => {
   it("caches a grant and lets it expire", async () => {
     let calls = 0;
     const cache = new gwEntitlement.EntitlementCache(1000, async () => {
