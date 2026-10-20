@@ -118,6 +118,13 @@ not connected" where the sign-in form should have been.
   $290 a year, in one place in the copy module, with the platform's plan
   configuration saying the same. The provider's dashboard has to match
   before checkout is switched on.
+- [x] A surface for the people who teach it (2026-10-20): `/universities`,
+  the one-pager a lecturer reads before deciding anything, with a campus
+  licence at $19 a student for a term, twenty students or more, invoiced and
+  not a checkout. It states what is not built (no LMS, no roster, no
+  gradebook, no certificate, no credit, no outcome data) and that the offer
+  is higher education and adult, not a school for under-16s. The contact is
+  `teaching@nexora.dev`, named in the privacy notice and the terms.
 - [x] Subscription management: "Manage subscription" opens a Dodo customer
   portal session (new backend endpoint minting the session for the stored
   `dodo_customer_id`; frontend redirects). Cancel, card update, and invoice
