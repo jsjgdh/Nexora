@@ -182,6 +182,7 @@ console.log("== the front door describes the real product ==");
           "/cookies",
           "/download",
           "/employers",
+          "/universities",
           "/pricing",
           "/privacy",
           "/privacy-choices",
@@ -1910,6 +1911,9 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
       COPY.NOT_SOLD,
       COPY.CURRICULUM,
       COPY.HIRING_ENQUIRY,
+      COPY.TEACHING_ENQUIRY,
+      COPY.UNIVERSITY,
+      COPY.CAMPUS,
       COPY.RUN_SCRIPT,
       COPY.RECEIPT,
       COPY.MASTHEAD,
@@ -2214,6 +2218,241 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
     );
   }
 
-  console.log(`\nALL ${passed} ASSERTIONS PASSED`);
+  console.log("\n== the teaching surface: a lecturer can check it, and a price that is decided ==");
+{
+  // The other reader in the room. The hiring page answers one question for a
+  // hiring manager; this is the same document for a lecturer, and the same
+  // rules apply to it: the claims name the artefact behind them, the gaps are
+  // printed with the same weight as the claims, and nothing is promised that
+  // a person cannot keep.
+  const universitiesDir = join(routesDir, "universities");
+  const universitiesSrc = existsSync(join(universitiesDir, "+page.svelte"))
+    ? readFileSync(join(universitiesDir, "+page.svelte"), "utf8")
+    : "";
+  const teachingEnquirySrc = existsSync(
+    new URL("../src/lib/components/TeachingEnquiry.svelte", import.meta.url)
+  )
+    ? readFileSync(new URL("../src/lib/components/TeachingEnquiry.svelte", import.meta.url), "utf8")
+    : "";
+  const mailEndpointSrc = readFileSync(
+    new URL("../src/routes/api/mail/+server.ts", import.meta.url),
+    "utf8"
+  );
+  const headerSrc = readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8");
+  const footerSrc = readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8");
+  const pricingSrc = readFileSync(new URL("../src/routes/pricing/+page.svelte", import.meta.url), "utf8");
+  const a11ySrc = readFileSync(new URL("./verify-a11y.ts", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../src/app.css", import.meta.url), "utf8");
+  // The copy module with its whitespace collapsed, so a sentence can be
+  // looked for across the lines a formatter broke it into.
+  const copyFlat = readFileSync(new URL("../src/lib/content/site.ts", import.meta.url), "utf8").replace(
+    /\s+/g,
+    " "
+  );
+  const routeFiles = srcFiles.filter((f) => f.includes("/routes/"));
+
+  // 1. The route exists, and it is reachable from the folio and the footer.
+  //    The two lists are the only place those links live, so the assertion
+  //    follows them to the components that render them: a link in a list that
+  //    nothing renders is not a link.
+  ok(
+    "the teaching page exists at /universities",
+    existsSync(join(universitiesDir, "+page.svelte")) &&
+      existsSync(join(universitiesDir, "+page.server.ts"))
+  );
+  ok(
+    "and the folio names it, from the one list the folio renders",
+    COPY.NAV.some((item) => item.href === "/universities" && item.label === "For teaching") &&
+      headerSrc.includes("{#each NAV as item (item.href)}")
+  );
+  ok(
+    "and the footer names it too",
+    COPY.FOOTER_LINKS.some((link) => link.href === "/universities") &&
+      footerSrc.includes("FOOTER_LINKS") &&
+      footerSrc.includes("{link.href}")
+  );
+  ok(
+    "and it is in the sitemap, and in the accessibility sweep",
+    sitemapPaths().includes("/universities") && a11ySrc.includes('"/universities"')
+  );
+
+  // 2. The page is a document, like the hiring one: the same wrapper, the
+  //    same print stylesheet, and the printed sheet drops the form and keeps
+  //    the address.
+  ok(
+    "it is a printable one-pager, and the print sheet keeps the address and drops the form",
+    universitiesSrc.includes('class="onepager') &&
+      css.includes("[data-teaching-enquiry]") &&
+      universitiesSrc.includes("mailto:{TEACHING_CONTACT}")
+  );
+
+  // 3. The counts and the course names come out of the copy module. A page
+  //    that types "80 phases" is a page that will be wrong the day a phase
+  //    is added, and a page that counts the courses reads as a count of
+  //    videos.
+  ok(
+    "the page names the courses and reads the phase count from the copy module",
+    universitiesSrc.includes("ALL_PHASES.length") &&
+      universitiesSrc.includes("UNIVERSITY.courses") &&
+      copyFlat.includes("${ALL_PHASES.length} phases") &&
+      !/\d+\s+phases/.test(universitiesSrc)
+  );
+  ok(
+    "and every course it names is the course the manifest ships",
+    COPY.COURSES.every((course) => COPY.UNIVERSITY.courses.includes(course.title)) &&
+      COPY.COURSES.length === 5
+  );
+
+  // 4. The take-home phase is the anti-cheat mechanism a course needs, and
+  //    the page names it by the manifest's own title.
+  ok(
+    "the take-home phase is named from the shipped phase list, not typed",
+    copyFlat.includes("rust-takehome") &&
+      COPY.ALL_PHASES.some(
+        ([id, title]) => id === "rust-takehome" && JSON.stringify(COPY.UNIVERSITY).includes(title)
+      ) &&
+      JSON.stringify(COPY.UNIVERSITY).includes("acceptance suite the student does not hold")
+  );
+
+  // 5. The gaps. They are the half of the promise, and a reader who finds
+  //    one of them later stops trusting the rest of the page.
+  const gaps = COPY.UNIVERSITY.notYet.map((gap) => gap.text);
+  ok(
+    "the page says what is not built yet: no LMS, no roster, no gradebook, no certificate, no credit",
+    ["No LMS integration", "No roster", "No gradebook", "No certificates", "No credit"].every((gap) =>
+      gaps.some((text) => text.includes(gap))
+    ) && universitiesSrc.includes("UNIVERSITY.notYet")
+  );
+  ok(
+    "and it says there is no outcome data, because no cohort has been taught",
+    gaps.some((text) => text.includes("No outcome data")) &&
+      gaps.some((text) => text.includes("no institution to name"))
+  );
+  ok(
+    "and it says the offer is for higher education and adults, not for a school",
+    gaps.some((text) => text.includes("higher education and adult offer"))
+  );
+  ok(
+    "and it links the accessibility statement instead of restating it, without claiming conformance",
+    COPY.UNIVERSITY.accessibility.href === "/accessibility" &&
+      universitiesSrc.includes("UNIVERSITY.accessibility.href") &&
+      COPY.UNIVERSITY.accessibility.text.includes("do not claim full conformance")
+  );
+
+  // The claims on the teaching page are scanned for the words the brand
+  // forbids, exactly like the rest of the copy. The gaps are not, for the
+  // same reason NOT_SOLD is not: "no certificates" is a refusal of a claim,
+  // not a claim, and a list that says what is not built is allowed to name
+  // the thing it is not.
+  ok(
+    "and the teaching claims use none of the words the brand forbids",
+    COPY.FORBIDDEN_WORDS.filter((word) =>
+      JSON.stringify([
+        COPY.TEACHING_ENQUIRY,
+        COPY.UNIVERSITY.propositions,
+        COPY.UNIVERSITY.checks,
+        COPY.UNIVERSITY.pilot,
+        COPY.UNIVERSITY.close,
+      ])
+        .toLowerCase()
+        .includes(word.toLowerCase())
+    ).length === 0
+  );
+
+  // 6. The enquiry. One real way to reach a person, through the same
+  //    endpoint, with its own kind and its own mailbox.
+  ok(
+    "the teaching form asks for a name, a work email, and what they teach",
+    teachingEnquirySrc.includes('id="teaching-name"') &&
+      teachingEnquirySrc.includes('id="teaching-email"') &&
+      teachingEnquirySrc.includes('id="teaching-need"')
+  );
+  ok(
+    "and it posts to /api/mail as the teaching kind, to the teaching address",
+    teachingEnquirySrc.includes('kind: "teaching"') &&
+      teachingEnquirySrc.includes('fetch("/api/mail"') &&
+      mailEndpointSrc.includes('kind !== "teaching"') &&
+      mailEndpointSrc.includes("TEACHING_CONTACT") &&
+      COPY.TEACHING_CONTACT === "teaching@nexora.dev"
+  );
+  ok(
+    "and the endpoint acknowledges it, in the same shape as the hiring one",
+    mailEndpointSrc.includes("NEXORA: your teaching enquiry was received") &&
+      mailEndpointSrc.includes("A person reads this mailbox, and every enquiry is answered")
+  );
+  ok(
+    "and the privacy treatment says what is collected, what it is used for, and when it is deleted",
+    COPY.TEACHING_ENQUIRY.privacy.includes("not added to a list") &&
+      COPY.TEACHING_ENQUIRY.privacy.includes("deleted when the thread is over") &&
+      COPY.TEACHING_ENQUIRY.privacy.includes("teaching mailbox")
+  );
+  ok(
+    "and the privacy notice and the terms name the teaching mailbox, as they name the hiring one",
+    readFileSync(new URL("../src/routes/privacy/+page.svelte", import.meta.url), "utf8").includes(
+      "teaching mailbox"
+    ) &&
+      readFileSync(new URL("../src/routes/terms/+page.svelte", import.meta.url), "utf8").includes(
+        "TEACHING_CONTACT"
+      )
+  );
+  ok(
+    "and it says plainly when the mail provider is not configured",
+    teachingEnquirySrc.includes("notConfigured") &&
+      universitiesSrc.includes("mailConfigured") &&
+      COPY.TEACHING_ENQUIRY.notConfigured.includes("no mail provider configured")
+  );
+
+  // 7. No response time is promised. A time a reader can hold the studio to
+  //    is a claim about a person reading a mailbox, so the copy states what
+  //    is true of the mechanism instead, and this fails if a time creeps in.
+  ok(
+    "no response time is promised on the teaching page",
+    !/\b(?:working days|hours|minutes|24 hours|48 hours|within a day|same day)\b/.test(
+      `${JSON.stringify(COPY.UNIVERSITY)} ${JSON.stringify(COPY.TEACHING_ENQUIRY)}`
+    ) &&
+      COPY.TEACHING_ENQUIRY.lead.includes(COPY.TEACHING_ENQUIRY.replyTime)
+  );
+
+  // 8. The campus licence is the fourth line, and it is a decided number
+  //    that lives in the copy module.
+  ok(
+    "the campus price is decided, and it lives in the copy module",
+    COPY.CAMPUS.perStudent === 19 &&
+      COPY.CAMPUS.minStudents === 20 &&
+      COPY.CAMPUS.plan.price === COPY.money(COPY.CAMPUS.perStudent) &&
+      COPY.CAMPUS.plan.priceNote.includes(`${COPY.CAMPUS.minStudents} students or more`)
+  );
+  ok(
+    "and the pricing page prints four lines, the campus one among them",
+    pricingSrc.includes("[...PRICING_PLANS, CAMPUS.plan]") && pricingSrc.includes("CAMPUS")
+  );
+  ok(
+    "and the campus licence is invoiced, not a checkout",
+    COPY.CAMPUS.plan.points.some((point) => point.includes("Invoiced, not a checkout")) &&
+      COPY.CAMPUS.plan.points.some((point) => point.includes("One invoice, no card per student")) &&
+      COPY.CAMPUS.checkout.includes("not on sale yet") &&
+      pricingSrc.includes("The plan is priced and it is not on sale yet")
+  );
+  ok(
+    "and the discount is visible: the monthly price of Pro beside the price of a term",
+    COPY.CAMPUS.note.includes(COPY.money(COPY.PRICING.monthly)) &&
+      COPY.CAMPUS.note.includes(COPY.money(COPY.CAMPUS.perStudent)) &&
+      // No invented list price, and no local price that is higher for anyone.
+      !/list price/i.test(COPY.CAMPUS.note) &&
+      COPY.CAMPUS.note.includes("a discount you can see")
+  );
+  ok(
+    "and no page carries a literal price, so the copy module stays the one place a price lives",
+    !routeFiles
+      .map((file) =>
+        readFileSync(file, "utf8")
+          .replace(/\/\*[\s\S]*?\*\//g, "")
+          .replace(/<!--[\s\S]*?-->/g, "")
+      )
+      .some((src) => /\$[0-9]/.test(src))
+  );
+}
+
+console.log(`\nALL ${passed} ASSERTIONS PASSED`);
 
 

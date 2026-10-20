@@ -32,6 +32,7 @@ const allRoutes = [
   "/",
   "/pricing",
   "/employers",
+  "/universities",
   "/auth",
   "/auth/ide",
   "/profile",

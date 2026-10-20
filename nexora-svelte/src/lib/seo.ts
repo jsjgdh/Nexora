@@ -65,6 +65,7 @@ const PUBLIC_PATHS = [
   "/",
   "/pricing",
   "/employers",
+  "/universities",
   "/auth",
   "/auth/ide",
   "/verify",

@@ -836,6 +836,49 @@ export const PRICING_PLANS = [
   },
 ] as const;
 
+/* ===========================================================================
+ * ADDED BY THE TEACHING-SURFACE WORKER, 2026-10-20.
+ *
+ * The campus licence: the same Pro, sold to a cohort, on one invoice.
+ *
+ * The number lives here, next to the prices above, because this file is the
+ * one place a price lives. The page prints it and the suite reads it, and no
+ * page writes an amount of its own.
+ *
+ * It is invoiced rather than bought at a checkout, exactly like the teams
+ * line: there is no provider product for it, and the pricing page keeps
+ * saying that checkout is not on sale yet.
+ *
+ * The discount is visible. The line may say that Pro on its own is the
+ * monthly price, and that a term licence is the per-student price, and it
+ * must never invent a list price nobody pays or present this as a higher
+ * local price for anyone. That is the billing commitment below, applied.
+ * ======================================================================== */
+
+const CAMPUS_PER_STUDENT = 19;
+const CAMPUS_MIN_STUDENTS = 20;
+
+export const CAMPUS = {
+  perStudent: CAMPUS_PER_STUDENT,
+  minStudents: CAMPUS_MIN_STUDENTS,
+  plan: {
+    id: "campus",
+    name: "Campus",
+    price: money(CAMPUS_PER_STUDENT),
+    priceNote: `a student for a term, ${CAMPUS_MIN_STUDENTS} students or more`,
+    points: [
+      "The same Pro your students get",
+      "One invoice, no card per student",
+      "Invoiced, not a checkout",
+      "One term, and the students you name",
+    ],
+  },
+  note: `Pro on its own is ${money(PRICING.monthly)} a month. A term licence is ${money(CAMPUS_PER_STUDENT)} a student, and that is a discount you can see rather than a higher price for anyone.`,
+  checkout:
+    "The licence is invoiced, not checked out, and checkout is not on sale yet.",
+  link: { href: "/universities#contact", label: "Ask about a campus licence" },
+} as const;
+
 /**
  * What is not sold.
  *
@@ -900,12 +943,13 @@ export const BILLING_COMMITMENTS = [
   },
 ] as const;
 
-/** The footer's one job: get back to the four real surfaces. */
+/** The footer's one job: get back to the real surfaces. */
 export const FOOTER_LINKS = [
   { href: "/download", label: "Try it free" },
   { href: "/pricing", label: "Pricing" },
   { href: "/verify", label: "Verify" },
   { href: "/auth", label: "Account" },
+  { href: "/universities", label: "For teaching" },
 ] as const;
 
 /** The primary navigation. Still a front door: no classroom, no search. */
@@ -914,6 +958,7 @@ export const NAV = [
   { href: "/#measures", label: "Measures" },
   { href: "/#courses", label: "Courses" },
   { href: "/employers", label: "For hiring" },
+  { href: "/universities", label: "For teaching" },
   { href: "/#limits", label: "Limits" },
   { href: "/pricing", label: "Pricing" },
   { href: "/verify", label: "Verify" },
@@ -1111,5 +1156,194 @@ export const VERIFY_EMAIL = {
   resent:
     "If that address has an account, a verification code is on its way. If it has not, nothing is sent and no account is created.",
   addressField: "email address",
+} as const;
+
+/* ===========================================================================
+ * ADDED BY THE TEACHING-SURFACE WORKER, 2026-10-20.
+ *
+ * The teaching half of the front door.
+ *
+ * The site had a hiring page and nothing for the other person in the room: a
+ * lecturer, or a department head, who wants to put the course in front of
+ * students. This block is that page's copy, and it is written to the same
+ * rules as the hiring one:
+ *
+ *   - Every claim names the artefact behind it, or it is not a claim.
+ *   - What is not built yet is said in the same place and with the same
+ *     weight as what is. A reader who finds the gap themselves stops trusting
+ *     the part that does exist.
+ *   - No response time is promised. A time a reader can hold the studio to is
+ *     a claim about a person reading a mailbox, so the copy states what is
+ *     true of the mechanism instead: a person reads it, and every enquiry is
+ *     answered.
+ *   - No em dash and no en dash in a visible string.
+ *
+ * The counts are read from the lists above rather than typed, so a phase
+ * added to the curriculum cannot leave a stale number on the page.
+ * ======================================================================== */
+
+/** The address a lecturer writes to. A person reads this mailbox. */
+export const TEACHING_CONTACT = "teaching@nexora.dev";
+
+/**
+ * The take-home phase, read out of the shipped phase list.
+ *
+ * It is the one phase whose work is judged by an acceptance suite the
+ * student does not hold, which is the anti-cheat mechanism a course needs.
+ * The title is the list's own, so a rename in the curriculum cannot leave a
+ * stale name on the page.
+ */
+const TAKE_HOME_ID = "rust-takehome";
+const takeHomeTitle = ALL_PHASES.find(([id]) => id === TAKE_HOME_ID)?.[1] ?? "";
+
+/** The courses, named. The page never counts them: a count of courses reads
+    as a count of videos, and this is not that. */
+const courseNames = COURSES.map((course) => course.title).join(", ");
+
+export const UNIVERSITY = {
+  /** The label the folio carries. One label per intent, everywhere. */
+  navLabel: "For teaching",
+  title: "For teaching",
+  headline: ["A course a lecturer can read", "before deciding anything."],
+  lede: "Every phase runs in the student's own editor, on the student's own machine, and a finished phase leaves a receipt anybody can re-derive.",
+  /** The courses, named. A lecturer can read the whole syllabus first. */
+  courses: courseNames,
+  /** The three propositions, in the product's own terms. */
+  propositions: [
+    {
+      id: "manifest",
+      title: "The syllabus is public.",
+      body: "Every phase has a name, an order and a tier, and the manifest is public.",
+    },
+    {
+      id: "machine",
+      title: "It runs on the student's own machine.",
+      body: "The student installs the editor and does the work. No server to install for a class, no lab image to hand out.",
+    },
+    {
+      id: "judged",
+      title: "The work is judged, not scored.",
+      body: "A deterministic rule engine decides every pass and every failure. A few checks come from the student's own client.",
+    },
+  ],
+  /** What a lecturer can check today, each one with the artefact behind it. */
+  checks: [
+    {
+      claim: "That the syllabus is knowable, and that the work runs on the student's own machine.",
+      evidence: `The curriculum is a public manifest: ${ALL_PHASES.length} phases, each with a name, an order and a tier. Every phase runs in the student's own editor.`,
+    },
+    {
+      claim: "That the verdict is not a model's opinion.",
+      evidence:
+        "A deterministic rule engine over the student's own code decides every pass and every failure. A few checks come from the student's own client, and the phase says which is which.",
+    },
+    {
+      claim: "That the work can be checked by a stranger.",
+      evidence:
+        "A finished phase leaves a signed receipt. Anyone can re-derive it at /verify, with no account and no call.",
+    },
+    {
+      claim: "That the take-home work cannot be handed back.",
+      evidence: `The take-home phase, ${takeHomeTitle}, is judged by an acceptance suite the student does not hold.`,
+    },
+    {
+      claim: "That a seminar can start with nothing.",
+      evidence: `${FREE_PHASE_COUNT} phases are free forever, offline, with no account and no card. No procurement, no institution account, no budget.`,
+    },
+    {
+      claim: "That the licence is a number you can read.",
+      evidence: `Pro is ${money(PRICING.monthly)} a month or ${money(PRICING.annual)} a year. A campus licence is the invoiced line for a cohort: ${money(CAMPUS.perStudent)} a student for a term.`,
+    },
+  ],
+  /**
+   * What is not built yet.
+   *
+   * The same rule as the hiring page, and the same weight. This list is not a
+   * disclaimer at the bottom of a page: a lecturer who finds out in week three
+   * that the thing they were sold does not exist stops trusting the part that
+   * does.
+   */
+  notYet: [
+    {
+      text: "No LMS integration: nothing connects to Moodle, Canvas, Blackboard or Gradescope, and no grade is written back.",
+      scope: "teaching",
+    },
+    {
+      text: "No roster and no instructor dashboard: a lecturer cannot watch a cohort from one screen. The receipts are per student, and a student shares a receipt or syncs it to their own account.",
+      scope: "teaching",
+    },
+    {
+      text: "No gradebook export: a receipt records one phase's judged work. It is not a grade, and there is no spreadsheet of a class.",
+      scope: "teaching",
+    },
+    {
+      text: "No certificates and no transcript: a receipt is not a certificate, and nothing here is issued, framed and signed.",
+      scope: "teaching",
+    },
+    {
+      text: "No credit and no accreditation: a phase is not a credit, and a degree body cannot count one.",
+      scope: "teaching",
+    },
+    {
+      text: "No outcome data: no cohort has been taught, so there is no pass rate, no completion figure and no institution to name.",
+      scope: "teaching",
+    },
+    {
+      text: "This is a higher education and adult offer. A school for under-16s is not what this is, and we would rather say so than hold a school's students' data badly.",
+      scope: "teaching",
+    },
+  ],
+  /**
+   * The accessibility statement.
+   *
+   * It is linked rather than restated, and full conformance is not claimed.
+   * The statement names its own gaps, and a summary of it here would be a
+   * summary that hid them.
+   */
+  accessibility: {
+    text: "The accessibility statement is on this site, and it names its own gaps. We do not claim full conformance.",
+    label: "Read the accessibility statement",
+    href: "/accessibility",
+  },
+  /** How a pilot starts, in the spirit of the hiring page's pilot. */
+  pilot: {
+    title: "How a pilot starts.",
+    body: "Pick one phase. Ask the students to finish it in the first week, then open the receipt at /verify. If the work is not there, a conversation will not produce it. Run the first phase yourself before you teach it.",
+    licence: "A licence covers one term, and the students you name. It is an invoice, not a card per student.",
+  },
+  /** The close, in the same plain voice as the rest of the page. */
+  close: {
+    title: "No cohort has been taught yet.",
+    body: "There is no pass rate and no institution to name, because nobody has run a cohort. What is here is the mechanism, and anybody can re-derive a receipt at /verify.",
+  },
+} as const;
+
+/**
+ * The teaching enquiry, in the same words as the hiring one.
+ *
+ * The same treatment: what is collected, what it is used for, that it is not
+ * added to a list, and that it is deleted when the thread is over or on
+ * request. The page and the endpoint say the same thing, and the suite checks
+ * that both places still say it.
+ */
+export const TEACHING_ENQUIRY = {
+  title: "Tell us what you teach.",
+  lead: "One form, and a person reads it. Every enquiry is answered.",
+  next: "What happens next: we read it, we reply to the address you gave, and we say plainly if this is not something we can serve.",
+  privacy:
+    "Your name, your work email and what you teach go to the studio's teaching mailbox. They are used to answer you and for nothing else, they are not added to a list, and the message is deleted when the thread is over or when you ask us to delete it.",
+  /* No response time is promised here, for the same reason the hiring page
+     promises none: a time a reader can hold the studio to is a commitment
+     about a person answering a mailbox, and the honest thing the site can
+     say is what is true of the mechanism. */
+  replyTime: "Every enquiry is answered",
+  notConfigured:
+    "This build has no mail provider configured, so the form cannot send. Write to the address on this page instead, and it reaches the same person.",
+  name: "your name",
+  email: "your work email",
+  need: "what you teach and how many students",
+  submit: "Send it",
+  sent: "Your message is with us. A person reads this mailbox, and every enquiry is answered.",
+  failed: `That did not go through. Try again, or write to ${TEACHING_CONTACT}.`,
 } as const;
 

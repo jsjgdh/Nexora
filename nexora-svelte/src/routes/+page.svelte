@@ -429,6 +429,19 @@
         <ActionLink href="/employers" variant="ghost" island>For hiring</ActionLink>
       </div>
     </div>
+
+    <!-- The lecturer, one line away. A university is not an employer, and the
+         page for one is not this page, so the line says who it is for and
+         where it is. -->
+    <div class="mt-8 border-t border-rule pt-8">
+      <p class="reading max-w-[62ch] text-[16px] leading-relaxed text-muted">
+        Teaching it? The same course, in your students' own editors, with a term licence for the
+        cohort.
+      </p>
+      <div class="mt-6">
+        <ActionLink href="/universities" variant="ghost" island>For teaching</ActionLink>
+      </div>
+    </div>
   </div>
 </section>
 

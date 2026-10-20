@@ -7,7 +7,7 @@
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
-  import { BILLING_COMMITMENTS, NOT_SOLD, PRICING, PRICING_PLANS, money } from "$lib/content/site";
+  import { BILLING_COMMITMENTS, CAMPUS, NOT_SOLD, PRICING, PRICING_PLANS, money } from "$lib/content/site";
   import { SUBSCRIPTION_TERMS } from "$lib/legal";
 
   /* The price, printed. One number in one place, and the same number in the
@@ -15,6 +15,12 @@
      prints the copy module, and the suite reads the same export. */
   const price = money(PRICING.monthly);
   const annual = money(PRICING.annual);
+
+  /* The four lines. The campus licence is the fourth: the same Pro, sold to a
+     cohort, on one invoice. It is invoiced rather than bought at a checkout,
+     so there is no provider product for it and the page keeps saying that
+     checkout is not on sale yet. */
+  const priceLines = [...PRICING_PLANS, CAMPUS.plan];
 
   /* Pricing backed by the real plans feed — never hardcoded copy. The API
      names plans only (no amounts travel through it), so prices live where
@@ -94,11 +100,11 @@
 </div>
 
 <div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
-  <!-- The three plans. Every line of them is printed from the copy module, so
+  <!-- The four plans. Every line of them is printed from the copy module, so
        the page cannot describe one offer three ways, and the number the
        provider is configured with is the number a reader sees here. -->
-  <div class="grid gap-6 lg:grid-cols-3">
-    {#each PRICING_PLANS as plan (plan.id)}
+  <div class="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
+    {#each priceLines as plan (plan.id)}
       <Plate crosshair label="{plan.name} plan">
         <div class="flex items-baseline justify-between gap-4">
           <h2 class="display text-[clamp(1.3rem,2.4vw,1.9rem)] text-ink">{plan.name}</h2>
@@ -179,9 +185,25 @@
               </p>
             {/if}
           </div>
-        {:else}
+        {:else if plan.id === "teams"}
           <div class="mt-7">
             <ActionLink href="/employers#contact" variant="ghost">Ask about a team plan</ActionLink>
+          </div>
+        {:else}
+          <!-- The campus licence. It is invoiced, so there is no checkout for
+               it and no card per student, and the discount is printed rather
+               than implied: the monthly price of Pro beside the per-student
+               price of a term. -->
+          <div class="mt-7">
+            <p class="text-[13px] leading-relaxed text-muted">
+              {CAMPUS.note}
+            </p>
+            <p class="mt-3 text-[12.5px] leading-relaxed text-faint">
+              {CAMPUS.checkout}
+            </p>
+            <div class="mt-5">
+              <ActionLink href={CAMPUS.link.href} variant="ghost">{CAMPUS.link.label}</ActionLink>
+            </div>
           </div>
         {/if}
       </Plate>

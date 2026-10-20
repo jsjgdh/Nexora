@@ -726,7 +726,7 @@ details.nexora-details > summary::-webkit-details-marker {
   .onepager {
     max-width: none !important;
     padding: 0 !important;
-    zoom: 0.62;
+    zoom: 0.6;
   }
   .onepager h1 {
     font-size: 19pt !important;
@@ -736,19 +736,39 @@ details.nexora-details > summary::-webkit-details-marker {
     font-size: 11.5pt !important;
   }
   .onepager section {
-    margin-top: 0.9rem !important;
-    padding-top: 0.6rem !important;
+    margin-top: 0.7rem !important;
+    padding-top: 0.45rem !important;
   }
   .onepager li {
-    padding-top: 0.35rem !important;
-    padding-bottom: 0.35rem !important;
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+  }
+  /* The list of gaps is the longest run of rows on the sheet, so the air
+     between them goes first: the rules still rule. */
+  .onepager .onepager-gaps {
+    gap: 0.5rem !important;
+  }
+  /* The air above a list is for the screen. On paper the rules do the
+     separating, so the margins come down a step. */
+  .onepager .mt-10 {
+    margin-top: 1.25rem !important;
+  }
+  .onepager .mt-8 {
+    margin-top: 1rem !important;
   }
 
-  /* The hiring form is for the screen. A field a reader cannot fill in on
-     paper is not worth the space on a one-pager, and the address and the
-     promise beside it are what the printed sheet needs. */
-  .onepager [data-hiring-enquiry] {
+  /* The hiring and teaching forms are for the screen. A field a reader cannot
+     fill in on paper is not worth the space on a one-pager, and the address
+     and the promise beside it are what the printed sheet needs. */
+  .onepager [data-hiring-enquiry],
+  .onepager [data-teaching-enquiry] {
     display: none !important;
+  }
+
+  /* With the form gone from the sheet, its column goes to the words: the
+     address, and the promise beside it, get the width they need. */
+  .onepager .onepager-contact {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
   /* A printed link is useless without its address. Internal links keep their

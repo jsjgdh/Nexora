@@ -5,7 +5,7 @@
   import DocStatus from "$lib/components/DocStatus.svelte";
   import { pageTitle } from "$lib/seo";
   import { LEGAL_ENTITY, PRIVACY_CONTACT, GOVERNING_LAW } from "$lib/legal";
-  import { HIRING_CONTACT } from "$lib/content/site";
+  import { HIRING_CONTACT, TEACHING_CONTACT } from "$lib/content/site";
 
   /* The terms of service, written to be true rather than to be reassuring.
    *
@@ -265,8 +265,9 @@
           <p class="mt-3">
             Questions about these terms, or a notice under them, go to
             <span class="text-ink">{PRIVACY_CONTACT}</span>. Enquiries about hiring for a role go
-            to <span class="text-ink">{HIRING_CONTACT}</span>: the same privacy notice covers what
-            we hold there, and it is used to answer you and for nothing else.
+            to <span class="text-ink">{HIRING_CONTACT}</span>, and enquiries about teaching the
+            course go to <span class="text-ink">{TEACHING_CONTACT}</span>: the same privacy notice
+            covers what we hold there, and it is used to answer you and for nothing else.
           </p>
         </section>
       </div>

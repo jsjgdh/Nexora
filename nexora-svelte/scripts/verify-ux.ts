@@ -363,6 +363,7 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
 {
   const routes = [
     "/pricing",
+    "/universities",
     "/download",
     "/verify",
     "/auth",
@@ -426,6 +427,7 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   const routes = [
     "/",
     "/pricing",
+    "/universities",
     "/download",
     "/verify",
     "/auth",
@@ -797,6 +799,57 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   }
   if (printed.ground === "rgb(11, 14, 18)") {
     note("employers", "the printed page is still the dark sheet");
+  }
+  await page.close();
+}
+
+/* ------------------------------------------------------------------ *
+ * 10b. The teaching one-pager. It is a document as well, so it has to
+ *      be one sheet, and it has to survive a phone.
+ * ------------------------------------------------------------------ */
+{
+  const page = await browser.newPage({ viewport: { width: 360, height: 800 } });
+  await page.goto(ORIGIN + "/universities", { waitUntil: "networkidle" });
+  await page.addStyleTag({ content: SETTLE });
+  await page.waitForTimeout(600);
+
+  const sideways = await page.evaluate(() => {
+    const doc = document.documentElement;
+    return doc.scrollWidth - doc.clientWidth;
+  });
+  if (sideways > 1) {
+    note("universities", `the page scrolls sideways by ${sideways}px at 360`);
+  }
+  for (const phrase of [
+    "A course a lecturer can read",
+    "What a lecturer can check today",
+    "What is not built yet",
+    "No cohort has been taught yet",
+  ]) {
+    if ((await page.locator(`text=${phrase}`).count()) === 0) {
+      note("universities", `the page is missing "${phrase}"`);
+    }
+  }
+
+  // The printed page. It calls itself a one-pager, so it has to be one, and
+  // the one thing it drops is the form: a reader holding paper cannot fill
+  // one in, so the address has to stay.
+  await page.setViewportSize({ width: 1024, height: 1400 });
+  await page.emulateMedia({ media: "print" });
+  await page.waitForTimeout(200);
+  const printed = await page.evaluate(() => ({
+    height: Math.round(document.body.getBoundingClientRect().height),
+    ground: getComputedStyle(document.body).backgroundColor,
+    text: document.body.innerText,
+  }));
+  if (printed.height > 1180) {
+    note("universities", `the printed page runs to ${printed.height}px, which is more than one sheet`);
+  }
+  if (printed.ground === "rgb(11, 14, 18)") {
+    note("universities", "the printed page is still the dark sheet");
+  }
+  if (!printed.text.includes("teaching@nexora.dev")) {
+    note("universities", "the printed sheet dropped the address");
   }
   await page.close();
 }

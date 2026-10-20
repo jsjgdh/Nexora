@@ -63,6 +63,10 @@
       what: "Your name, your work email and what you are hiring for, if you write to us about a role",
       why: "To answer your enquiry. It goes to the studio's hiring mailbox, where a person reads it, and it is used to answer you and for nothing else. It is never added to a list, and it is deleted when the thread is over or when you ask us to delete it.",
     },
+    {
+      what: "Your name, your work email and what you teach, if you write to us about teaching the course",
+      why: "To answer your enquiry. It goes to the studio's teaching mailbox, where a person reads it, and it is used to answer you and for nothing else. It is never added to a list, and it is deleted when the thread is over or when you ask us to delete it.",
+    },
   ];
 </script>
 
