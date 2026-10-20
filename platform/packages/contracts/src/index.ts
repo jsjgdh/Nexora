@@ -1237,6 +1237,20 @@ export const cohortActivateSchema = z.object({
    * of paid entitlement against one purchase. The operator is the one who knows
    * what was bought, so the operator says it, every time. */
   seats: z.number().int().min(1).max(1000),
+  /** What one seat was quoted at, in cents. Optional in the schema, required in
+   * practice.
+   *
+   * A licence is quoted rather than listed: the price depends on the cohort,
+   * the term, the courses and whether one lecturer or a whole institution is
+   * buying. So there is no price until the studio has quoted one, and the
+   * operator states it at the moment the licence is confirmed, exactly as they
+   * state the seat count.
+   *
+   * It is optional in the schema only so that the refusal is the route's own
+   * and says what is missing, rather than a schema error that says the shape
+   * is wrong. The route refuses a confirmation that carries no price: a
+   * confirmed licence with no price would be a licence nobody paid for. */
+  perStudentCents: z.number().int().min(1).max(1_000_000).optional(),
 });
 export type CohortActivateRequest = z.infer<typeof cohortActivateSchema>;
 

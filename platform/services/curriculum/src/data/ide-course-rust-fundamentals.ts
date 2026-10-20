@@ -4266,7 +4266,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
       ],
       "objectives": [
         "Explain what a newtype over a number buys the code that uses it.",
-        "Decide what the money type should refuse, and what it should return when it refuses.",
+        "Choose what the money type should refuse, and what it should return when it refuses.",
         "Choose the label a person reads, and write it so it is unambiguous."
       ],
       "observed": [
@@ -4375,7 +4375,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "Because the compiler then refuses to mix money with a plain count.",
-        "Because the integer cannot hold a negative amount.",
+        "Because the integer cannot hold a negative amount of money at all.",
         "Because the type is faster than the integer it wraps.",
         "Because the label of an amount has to be stored with it."
       ],

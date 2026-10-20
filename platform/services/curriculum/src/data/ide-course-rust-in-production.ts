@@ -441,7 +441,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-checker"
       ],
       "objectives": [
-        "Decide which questions about code a tool can answer as fact.",
+        "Identify which questions about code a tool can answer as fact.",
         "Explain why a finding has to name the line it is about and how bad it is.",
         "Design a report a reader can judge without reading the source again."
       ],
@@ -478,8 +478,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "kind": "quickcheck",
           "body": "A checker reports that a function is never called. What has it established?",
           "items": [
-            "That nothing in the file it read calls the function",
-            "That nothing in the program calls the function",
+            "That nothing in the file calls the function",
+            "That nothing in the whole program calls the function",
             "That the function does nothing useful",
             "That the function is safe to delete"
           ],
@@ -550,8 +550,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "That nothing in the file it read calls the function.",
-        "That nothing in the program calls the function.",
+        "That nothing in the file calls the function.",
+        "That nothing in the whole program calls the function.",
         "That the function does nothing worth doing.",
         "That the function can safely be deleted."
       ],
@@ -645,12 +645,13 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "edge": true
         },
         {
-          "id": "edge-missing",
-          "label": "The program refuses a file it cannot read",
+          "id": "edge-limits",
+          "label": "The program says what it cannot decide",
           "tests": [
-            "the program refuses a file it cannot read"
+            "the program says what it cannot decide"
           ],
-          "feedback": "A file that is not there is an error the program reports, not a report of no findings. A program that answers a missing file with an empty report is a program that says nothing when it should have said something."
+          "feedback": "The program prints the limits of what it read beside the report. A program that prints findings and no limits is a program that sounds certain about everything.",
+          "edge": true
         }
       ],
       "hints": [],
@@ -671,8 +672,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       ],
       "objectives": [
         "Choose the rules a checker runs and say what each one can establish.",
-        "Decide what severity means for the person who reads the report.",
-        "Write a report that states what the tool proved and what it could not."
+        "Define what severity means for the person who reads the report.",
+        "Write a report that names the findings and states the limits of what the tool read."
       ],
       "observed": [
         {
@@ -705,10 +706,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "quickcheck",
-          "body": "A checker reports a function that nothing calls, and the file is one of forty in the crate. What does the report have to say?",
+          "body": "A checker reports a function that nothing calls, in a file of forty. What does the report have to say?",
           "items": [
-            "That nothing in the file it read calls it, and what it cannot see",
-            "That the function is dead code and can be deleted",
+            "That nothing in the file calls it, and what it cannot see",
+            "That the function is dead code and can be deleted with confidence",
             "That the crate does not use the function at all",
             "That the function is wrong and should be rewritten"
           ],
@@ -873,12 +874,12 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "feedback": "The program reads the file it was given and prints what it found, so the reader sees the findings and not only the count."
         },
         {
-          "id": "edge-missing",
-          "label": "The program refuses a file it cannot read",
+          "id": "edge-limits",
+          "label": "The program says what it cannot decide",
           "tests": [
-            "the program refuses a file it cannot read"
+            "the program says what it cannot decide"
           ],
-          "feedback": "A file that is not there is an error the program reports, not a report of no findings.",
+          "feedback": "The program prints the limits of what it read beside the report.",
           "edge": true
         }
       ],
@@ -1201,7 +1202,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "body": "A queue holds four messages and the sender tries a fifth. What happens?",
           "items": [
             "The fifth message is refused and the sender waits",
-            "The queue grows to five and the sender moves on",
+            "The queue grows to five and the sender moves on to the next one",
             "The fifth message replaces the oldest one",
             "The sender gets an error and the queue closes"
           ],
@@ -1450,7 +1451,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
             "They are dropped, and any work they had started is abandoned",
             "They keep running until they finish on their own",
             "They are retried the next time the select! runs",
-            "They are turned into errors the caller has to handle"
+            "They are turned into errors the caller has to handle afterwards"
           ],
           "answer": 0,
           "explain": "The macro returns at the first branch that is ready, and the others are dropped where they stand. A dropped future stops at its last await, so the work it had started is abandoned rather than reported."
@@ -1737,9 +1738,9 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "A stream holds only what it has produced, so a reader pays for the values it uses.",
+        "A stream holds only what it has produced, so a reader pays for what it uses.",
         "A stream always arrives in order, so a reader can rely on the sequence.",
-        "A stream can be read from several places at once, so a reader can share it.",
+        "A stream can be read from several places at once, so two readers can share the same one.",
         "A stream never has to wait, so a reader is never blocked by the producer."
       ],
       "answer": 0,
@@ -1782,7 +1783,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "tests": [
             "taking stops at the count"
           ],
-          "feedback": "Taking a count pulls that many values and leaves the rest of the sequence where it was. A take that empties the sequence takes more than it was asked for."
+          "feedback": "Taking a count pulls that many values and leaves the rest of the sequence where it was. A take that empties the sequence takes more than it was asked for.",
+          "edge": true
         }
       ],
       "hints": [
@@ -2020,7 +2022,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "tests": [
             "the blocking work runs off the runtime"
           ],
-          "feedback": "The work goes to spawn_blocking, so the runtime keeps running other tasks while it sleeps. A work that runs on the runtime stops everything on that thread."
+          "feedback": "The work goes to spawn_blocking, so the runtime keeps running other tasks while it sleeps. A work that runs on the runtime stops everything on that thread.",
+          "edge": true
         }
       ],
       "hints": [
@@ -2087,7 +2090,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       ],
       "objectives": [
         "Explain what a timeout does to the future it wraps and what it reports.",
-        "Decide whether a piece of work is safe to drop when the deadline passes.",
+        "Judge whether a piece of work is safe to drop when the deadline passes.",
         "Design a stop path that ends the service and reports what it did."
       ],
       "observed": [
@@ -2196,14 +2199,14 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       ],
       "options": [
         "An error about the delay, and the part of the work that was done stays done.",
-        "An error from the work itself, and the part is rolled back for it.",
+        "An error from the work itself, and the part that was done is rolled back for it.",
         "The value the work produced, because the work ran to the end anyway.",
         "An error about the delay, and the work is retried from the start."
       ],
       "answer": 0,
       "explanation": "The timeout drops the future inside it, so the work stops where it was, and the timeout reports the delay in its own words. Nothing is rolled back, because a dropped future has no way to undo what it already did. The work that has to survive a deadline belongs behind a type that can finish it or undo it.",
       "hints": [
-        "Ask what a dropped future does with the work it had already done."
+        "Ask what a dropped future leaves behind, and who has to undo it."
       ],
       "misconceptions": [
         "Thinking a timeout reports the error of the work inside it, when it reports the delay in its own words.",
@@ -2353,7 +2356,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "body": "A route serves GET /accounts, and a POST arrives for the same path. What does the router answer?",
           "items": [
             "405, because the path exists but the method does not",
-            "404, because no route matches the request",
+            "404, because no route of the router matches the request",
             "200, because the router ignores the method",
             "500, because the handler cannot read the body"
           ],
@@ -2661,7 +2664,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       "answer": 3,
       "explanation": "The path extractor builds the captures the route pattern declares, in order, and deserializes each into the type the handler asked for. The query extractor reads only the part after the question mark, the body extractor reads the payload, and the state extractor holds the values the service shares. Choosing the path extractor is not a shortcut: it is the one whose type matches the part of the request the owner was written in.",
       "hints": [
-        "Ask which part of a request a path segment belongs to, and which extractor is typed for it."
+        "Ask which part of the request the owner was written in, and which extractor reads that part."
       ],
       "misconceptions": [
         "Thinking the query extractor reads the path, when it reads the part after the question mark.",
@@ -2775,7 +2778,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       "objectives": [
         "Explain what the state extractor hands to a handler and where the value came from.",
         "Predict what two routers built from different state answer for the same request.",
-        "Decide whether a value belongs in the shared state or in the request."
+        "Choose whether a value belongs in the shared state or in the request."
       ],
       "observed": [
         {
@@ -2810,7 +2813,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "kind": "quickcheck",
           "body": "Two routers are built from two different states, and both answer the same request. What do they return?",
           "items": [
-            "Two different answers, because each router holds the state it was given",
+            "Two answers, because each router holds its own state",
             "The same answer, because the state is shared by the process",
             "An error, because a state may only be used once",
             "The same answer, because the state is cloned when it is built"
@@ -2884,7 +2887,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       "options": [
         "Because the state is cloned for every request, and cloning a handle is cheap.",
         "Because a handle stops two tasks from changing the map at the same time.",
-        "Because a map cannot be stored in a struct that the router holds.",
+        "Because a map cannot be stored in a struct that the router holds and clones for every request.",
         "Because the handle is what lets the router find the map again."
       ],
       "answer": 0,
@@ -3034,7 +3037,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
             "The tracing layer, because the last layer added is the outermost",
             "The counting layer, because it counts the request first",
             "Neither, because the router runs them together",
-            "The counting layer, because the router runs the layers in order"
+            "The counting layer, because the router runs the layers in the order they were added"
           ],
           "answer": 0,
           "explain": "The last layer added is the outermost one, so it sees the request first and the response last. That is why the tracing layer is usually added last: it is then the one that sees the whole exchange, from the request that arrived to the response that went back."
@@ -3701,9 +3704,9 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-http-errors"
       ],
       "objectives": [
-        "Decide which status each failure earns, and say who is to blame in each case.",
+        "Choose which status each failure earns, and say who is to blame in each case.",
         "Choose the public words a client reads for a failure.",
-        "Shape the body of an error so a client can read it without a special case."
+        "Design the body of an error so a client can read it without a special case."
       ],
       "observed": [
         {
@@ -4190,8 +4193,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       ],
       "objectives": [
         "Explain why configuration is parsed into a typed value before the service serves anything.",
-        "Decide what a missing value and a malformed value should each do.",
-        "Mask the secret in a connection string without hiding the rest of it."
+        "Choose what a missing value and a malformed value should each do.",
+        "Apply a mask to a connection string without hiding the rest of it."
       ],
       "observed": [
         {
@@ -4229,7 +4232,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
             "Refuse to start, naming the bad value",
             "Panic before the listener starts",
             "Start, and fail on the first request",
-            "Fall back to 8080 and log a warning"
+            "Fall back to 8080 and log a warning about the value"
           ],
           "answer": 0,
           "explain": "A value that cannot be used is a startup error, and the message names the value that failed. Falling back would hide the typo until something else looks wrong, and a panic names no value at all."
@@ -4418,7 +4421,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-observability"
       ],
       "objectives": [
-        "Decide what a log line has to carry for the person who reads it later.",
+        "Choose what a log line has to carry for the person who reads it later.",
         "Explain why a secret is masked in the string rather than in the logger.",
         "Write a line that names the request without naming the secret."
       ],
@@ -4455,7 +4458,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "kind": "quickcheck",
           "body": "A request line is written with the password still in the URL. What is wrong with it?",
           "items": [
-            "The secret is in the log, where anybody who reads it can see it",
+            "The secret is in the log",
             "The line is too long to be read",
             "The status is missing from the line",
             "The method is written after the path"
@@ -4528,7 +4531,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       ],
       "options": [
         "The method, the path and the status, so the reader knows what happened.",
-        "The whole request, so the reader can see everything about it.",
+        "The whole request, so the reader can see everything about it, body and all.",
         "A message the developer wrote, so the reader knows what it meant.",
         "The identifier of the request, so the reader can find the rest of it."
       ],

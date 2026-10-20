@@ -392,7 +392,7 @@ async function createCohort({ seats, courseId = "task-manager" }) {
   const activate = await fetch(`${BASE}/internal/cohorts/activate`, {
     method: "POST",
     headers: { "content-type": "application/json", ...asMesh() },
-    body: JSON.stringify({ joinCode: cohort.joinCode, seats }),
+    body: JSON.stringify({ joinCode: cohort.joinCode, seats, perStudentCents: 1200 }),
   });
   assert.equal(activate.status, 200, "the operator confirms the licence");
   return cohort;

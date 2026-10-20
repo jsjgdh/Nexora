@@ -1589,7 +1589,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "The file to change is stages.go, which owns RunPipeline: one goroutine per stage and one channel between them. Run go test ./... and read the name of the test that failed.",
         "For each stage, make a channel, start a goroutine that sends the stage result on it, then receive that result and use it as the input of the next stage.",
         "The stage function is called inside the goroutine, so the value it takes is the one the previous stage produced.",
-        "With no stages the loop never runs, so the input is returned as it came in."
+        "With no stages the loop never runs, so the input is returned as it came in.",
+        "Two stages in a row means two channels and two goroutines, and the result of the first is the input of the second rather than the number the chain started with."
       ],
       "misconceptions": [
         "Calling every stage on the input instead of on the previous stage's result, so a chain of two stages returns the answer to one stage only.",
@@ -1998,7 +1999,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "hints": [
         "The file to change is server.go, which owns NewServer: it returns an *http.Server, so build the struct and set its fields. Run go test ./... and read the name of the test that failed.",
         "ReadHeaderTimeout takes the ReadHeader deadline, ReadTimeout takes Read, WriteTimeout takes Write and IdleTimeout takes Idle.",
-        "A deadline of zero means the caller chose none, so compare each one with zero and use the matching Default constant."
+        "A deadline of zero means the caller chose none, so compare each one with zero and use the matching Default constant.",
+        "The handler is not optional: a server with no handler serves nothing, so the handler you were given goes on the Handler field.",
+        "Solution review: copy the four deadlines onto the server, replacing a zero with its default, and hand the struct back. The suite reads the fields of the server, not what it does with them."
       ],
       "misconceptions": [
         "Copying the four deadlines into the struct fields without looking at the zero case, so a caller who named nothing gets a server with no deadlines at all.",
@@ -2628,7 +2631,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "hints": [
         "The file to change is chain.go, which owns Chain: it takes the handler and a list of middlewares. Run go test ./... and read the name of the test that failed.",
         "Start with next as the handler you have, and wrap it with one middleware at a time.",
-        "To make the first middleware in the list the outermost one, wrap from the last one backwards."
+        "To make the first middleware in the list the outermost one, wrap from the last one backwards.",
+        "A middleware is a function from a handler to a handler, so applying one is one call: the wrapper you get back is the handler the next wrapper takes.",
+        "Solution review: fold the list from the last middleware to the first, each one wrapping the handler you have so far, and return what is left. With no middleware at all, return next."
       ],
       "misconceptions": [
         "Wrapping the middlewares in the order they were listed, so the last one in the list is the outermost and the client sees the order reversed.",

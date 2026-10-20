@@ -2,14 +2,18 @@
 /* Confirm a cohort's licence, as the operator.
  *
  *   cd platform
- *   npm run cohort:activate -- KQ7M-XR42 --seats 20
+ *   npm run cohort:activate -- KQ7M-XR42 --seats 20 --price 1200
  *
  * The licence is the commercial object and it is the operator's, not the
  * instructor's: an instructor creates a cohort, the cohort sits in `pending`
  * and entitles nobody, and this is the one thing that makes it real. The
  * platform records the licence so that entitlement can be real; it does not
- * take the money (the price is $19 a student for a term, twenty students or
- * more, invoiced).
+ * take the money.
+ *
+ * The money is a QUOTE, and the operator states it here, at the moment the
+ * licence is confirmed, because a licence is priced for the cohort it covers
+ * and the operator is the one who quoted it. The cohort carries no price
+ * before this: there is no price until there is a quote.
  *
  * Why a script and not a button: the confirmation is a commercial decision
  * about somebody else's invoice, and it has to leave a record that an operator
@@ -63,13 +67,18 @@ function localEnv() {
 function usage() {
   return [
     "Usage:",
-    "  npm run cohort:activate -- <join-code> --seats <n>",
+    "  npm run cohort:activate -- <join-code> --seats <n> --price <cents>",
     "",
     "  <join-code>   the code on the slide, e.g. KQ7M-XR42. The dash is display-only.",
     "  --seats <n>   how many seats were bought. Required: this is the number the",
     "                licence carries, and the operator is the one who knows it.",
     "                It used to default to the cohort's own count, which made the",
     "                quantity that carries money the instructor's own claim.",
+    "  --price <c>   what one seat was quoted at, in cents. Required, and the",
+    "                operator's number. A licence is quoted rather than listed:",
+    "                the price depends on the cohort, the term and the courses, so",
+    "                there is no price on the cohort until the studio quotes one,",
+    "                and the operator states it when the licence is confirmed.",
     "",
     "The environment it needs:",
     "  AUTH_URL           the auth service (default http://127.0.0.1:8101)",
@@ -79,13 +88,17 @@ function usage() {
 
 /** The arguments, read leniently: the code may come with or without its dash. */
 function parseArgs(argv) {
-  const code = { value: "", seats: null };
+  const code = { value: "", seats: null, price: null };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--seats") {
       code.seats = Number(argv[++i]);
     } else if (arg.startsWith("--seats=")) {
       code.seats = Number(arg.slice("--seats=".length));
+    } else if (arg === "--price") {
+      code.price = Number(argv[++i]);
+    } else if (arg.startsWith("--price=")) {
+      code.price = Number(arg.slice("--price=".length));
     } else if (arg === "--help" || arg === "-h") {
       code.help = true;
     } else if (!arg.startsWith("-") && !code.value) {
@@ -115,6 +128,16 @@ async function main() {
     process.stderr.write("--seats must be a whole number of seats, at least one.\n");
     return 2;
   }
+  if (args.price === null) {
+    process.stderr.write(
+      "--price is required. Say what one seat was quoted at, in cents: the licence\ncarries the quote, and the operator is the one who knows it.\n\n" + usage() + "\n"
+    );
+    return 2;
+  }
+  if (!Number.isInteger(args.price) || args.price < 1) {
+    process.stderr.write("--price must be a whole number of cents, at least one.\n");
+    return 2;
+  }
 
   const env = { ...localEnv(), ...process.env };
   const base = (env.AUTH_URL ?? "http://127.0.0.1:8101").replace(/\/$/, "");
@@ -126,7 +149,7 @@ async function main() {
     return 2;
   }
 
-  const body = { joinCode: args.value, seats: args.seats };
+  const body = { joinCode: args.value, seats: args.seats, perStudentCents: args.price };
 
   let res;
   try {

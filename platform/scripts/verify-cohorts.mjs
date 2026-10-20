@@ -179,12 +179,12 @@ async function endCohort(cohortId) {
 /* The operator's confirmation, over the mesh. The seat count is optional
    here on purpose: the test that says it is required has to be able to leave
    it out. */
-async function activate(joinCode, seats) {
+async function activate(joinCode, seats, perStudentCents = 1200) {
   return app.inject({
     method: "POST",
     url: "/internal/cohorts/activate",
     headers: asMesh(),
-    payload: seats === undefined ? { joinCode } : { joinCode, seats },
+    payload: seats === undefined ? { joinCode } : { joinCode, seats, perStudentCents },
   });
 }
 
@@ -236,7 +236,11 @@ describe("the cohort surface (real database)", () => {
       "and no character in it is one a student reads wrong"
     );
     assert.equal(cohort.seats, 20);
-    assert.equal(cohort.perStudentCents, 1900, "the platform records the price, it does not take the money");
+    assert.equal(
+      cohort.perStudentCents,
+      0,
+      "a pending licence carries no price, because there has been no quote yet"
+    );
     assert.equal(cohort.memberCount, 0);
 
     const { rows } = await pool.query("SELECT status FROM cohorts WHERE id = $1", [cohort.id]);
@@ -328,8 +332,39 @@ describe("the cohort surface (real database)", () => {
     assert.equal(confirmed.statusCode, 200);
     assert.equal(confirmed.json().cohort.status, "active");
     assert.equal(confirmed.json().cohort.seats, 30, "the operator's number is the one that stands");
-    const { rows: after } = await pool.query("SELECT seats FROM cohorts WHERE id = $1", [cohort.id]);
+    assert.equal(
+      confirmed.json().cohort.perStudentCents,
+      1200,
+      "and so does the quote they stated"
+    );
+    const { rows: after } = await pool.query(
+      "SELECT seats, per_student_cents FROM cohorts WHERE id = $1",
+      [cohort.id]
+    );
     assert.equal(after[0].seats, 30, "and it is the number in the database too");
+    assert.equal(after[0].per_student_cents, 1200, "and so is the quote");
+  });
+
+  it("a confirmation without a quote is refused, because a licence needs a price", async () => {
+    // The price is a quote, and a quote is made when the studio quotes it.
+    // A confirmed licence with no price would be a licence nobody paid for,
+    // and the record is the only place that would have said so.
+    const cohort = await createCohort({ seats: 12 });
+    const noPrice = await app.inject({
+      method: "POST",
+      url: "/internal/cohorts/activate",
+      headers: asMesh(),
+      payload: { joinCode: cohort.joinCode, seats: 12 },
+    });
+    assert.equal(noPrice.statusCode, 400, "a confirmation without a quote is refused");
+    assert.equal(noPrice.json().error.code, "bad_request");
+
+    const { rows } = await pool.query(
+      "SELECT status, per_student_cents FROM cohorts WHERE id = $1",
+      [cohort.id]
+    );
+    assert.equal(rows[0].status, "pending", "and the licence is not confirmed");
+    assert.equal(rows[0].per_student_cents, 0, "and it still carries no price");
   });
 
   it("a seat covers its own course and no other", async () => {

@@ -3618,11 +3618,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open cmd/check/main.go. It prints a placeholder; what it has to do is read a file and report on it. Run go test ./cmd/check/... and read the failure first. If go is command not found, run the environment check first.",
-        "The file is text: os.ReadFile gives you the whole source, strings.Split gives you the lines, and a line that starts with \"func \" declares a function.",
-        "The name is the second word on that line, without the parentheses: strings.Fields(line)[1], and then trim the \"()\" off the end.",
-        "A function is called if its name appears with a parenthesis somewhere else in the file: strings.Count(source, name+\"(\") is 2 when the code calls it and 1 when it does not.",
-        "Print one line per function nothing calls, naming the function. Nothing else: no severity, no summary, and no verdict on what the code should have been."
+        "The file you own is cmd/check/main.go, and the suite that judges it is test/check.test.mjs. Run go test ./cmd/check/... and read the failure before you change anything. If go is command not found, run the environment check first.",
+        "Read the whole file as text first: os.ReadFile gives you the source, and a line that starts with \"func \" declares a function.",
+        "Then decide, for each declared name, whether the file calls it. A declaration is one appearance of the name with a parenthesis, so a name that appears once is a function nothing calls.",
+        "Print one line per function nothing calls, naming the function, and stop there. The suite reads what the tool claims, so a verdict, a severity or a summary is a claim it cannot check.",
+        "The report is about the file the tool was given, not about the project: a function the file declares and never calls is a finding, whatever the rest of the repository does with it."
       ],
       "misconceptions": [
         "Reporting that a function does the wrong thing. That is not a fact, and a checker that states it is lying about what it can see.",

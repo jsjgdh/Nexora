@@ -10,6 +10,8 @@ import { IDE_COURSE_RUST_FUNDAMENTALS } from "./ide-course-rust-fundamentals.js"
 import { IDE_MANIFEST_RUST_FUNDAMENTALS } from "./ide-manifest-rust-fundamentals.js";
 import { IDE_COURSE_RUST_IN_PRODUCTION } from "./ide-course-rust-in-production.js";
 import { IDE_MANIFEST_RUST_IN_PRODUCTION } from "./ide-manifest-rust-in-production.js";
+import { IDE_COURSE_SQL_FUNDAMENTALS } from "./ide-course-sql-fundamentals.js";
+import { IDE_MANIFEST_SQL_FUNDAMENTALS } from "./ide-manifest-sql-fundamentals.js";
 import { IDE_COURSE_TASK_MANAGER } from "./ide-course-task-manager.js";
 import { IDE_MANIFEST_TASK_MANAGER } from "./ide-manifest-task-manager.js";
 
@@ -23,5 +25,6 @@ export const IDE_COURSES: Record<string, { manifest: unknown; document: unknown 
   "go-in-production": { manifest: IDE_MANIFEST_GO_IN_PRODUCTION, document: IDE_COURSE_GO_IN_PRODUCTION },
   "rust-fundamentals": { manifest: IDE_MANIFEST_RUST_FUNDAMENTALS, document: IDE_COURSE_RUST_FUNDAMENTALS },
   "rust-in-production": { manifest: IDE_MANIFEST_RUST_IN_PRODUCTION, document: IDE_COURSE_RUST_IN_PRODUCTION },
+  "sql-fundamentals": { manifest: IDE_MANIFEST_SQL_FUNDAMENTALS, document: IDE_COURSE_SQL_FUNDAMENTALS },
   "task-manager": { manifest: IDE_MANIFEST_TASK_MANAGER, document: IDE_COURSE_TASK_MANAGER },
 };

@@ -75,8 +75,18 @@ export const SHIPPED_COURSE_IDS = [
  */
 const JOIN_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
-/** What one seat costs, in cents, for a term. The platform records it; it does not take it. */
-const PER_STUDENT_CENTS = 1900;
+/** What one seat costs, in cents, for a term. The platform records it; it does not take it.
+ *
+ * This used to be a fixed list price of $19, written into every cohort row at
+ * the moment it was created. That was a price nobody had agreed to: a licence
+ * is QUOTED, because the number depends on the cohort, the term, the courses
+ * and whether one lecturer or a whole institution is buying, and the studio
+ * quotes it when the licence is confirmed.
+ *
+ * So a cohort carries no price until it is confirmed, and the operator states
+ * the quoted price at the same moment they state the seat count. Zero means
+ * "not yet quoted", and it is the only value a pending cohort can hold. */
+const PER_STUDENT_CENTS = 0;
 
 /**
  * How many times a code is regenerated when the database says one is taken.
@@ -589,9 +599,19 @@ export function registerCohortRoutes(app: FastifyInstance, pool: Pool): void {
     if (cohort.status === "ended") {
       throw new ApiError(409, "conflict", "That licence has ended and cannot be confirmed again.");
     }
+    // The quote, or nothing. A confirmed licence with no price would be a
+    // licence nobody paid for, and the record is the only place that would
+    // have said so.
+    if (body.perStudentCents === undefined) {
+      throw new ApiError(
+        400,
+        "bad_request",
+        "Say what one seat was quoted at, in cents. A licence is quoted rather than listed, and the quote is what the record carries."
+      );
+    }
     const { rows: updated } = await pool.query(
-      "UPDATE cohorts SET status = 'active', seats = $2 WHERE id = $1 RETURNING *",
-      [cohort.id, body.seats]
+      "UPDATE cohorts SET status = 'active', seats = $2, per_student_cents = $3 WHERE id = $1 RETURNING *",
+      [cohort.id, body.seats, body.perStudentCents]
     );
     const row = updated[0] as CohortRow;
     const { rows: countRows } = await pool.query(
@@ -619,7 +639,7 @@ export function registerCohortRoutes(app: FastifyInstance, pool: Pool): void {
         "the-operator-tooling",
         "cohort.licence_confirmed",
         row.id,
-        `${row.seats} seats for ${row.course_id} in ${row.institution}, term ${row.term}`,
+        `${row.seats} seats at ${row.per_student_cents} cents each for ${row.course_id} in ${row.institution}, term ${row.term}`,
       ]
     );
     req.log.info(
