@@ -484,6 +484,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Implement FanSum with n goroutines and exactly n receives, and explain why the count is the wait."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -584,6 +585,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-goroutines-ask",
       "title": "Reason: why the handoff is safe",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -615,6 +617,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-goroutines-do",
       "title": "Solve: fan out and sum",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -667,6 +670,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-goroutines-review",
       "title": "Review: merge two senders",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -710,6 +714,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Diagnose why defer wg.Done() inside a loop hangs Wait, and place it so it fires per goroutine."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -816,6 +821,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-sync-ask",
       "title": "Reason: what makes the count short",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -847,6 +853,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-sync-do",
       "title": "Solve: a race-free counter",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -899,6 +906,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-sync-review",
       "title": "Review: an atomic tally",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -942,6 +950,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Implement a fan-out and fan-in with a results channel closed only after every worker finishes."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1070,6 +1079,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-concur-ask",
       "title": "Reason: why the total never moves",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1101,6 +1111,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-concur-do",
       "title": "Solve: a summing worker pool",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1153,6 +1164,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-concur-review",
       "title": "Review: two producers, one total",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1204,6 +1216,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Apply defer cancel even with WithTimeout, and name the error each stop reason leaves in ctx.Err."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1266,6 +1279,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-context-ask",
       "title": "Reason: which branch wins",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1297,6 +1311,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-context-do",
       "title": "Solve: a context-aware wait",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1349,6 +1364,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-context-review",
       "title": "Review: reading a deadline",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1392,6 +1408,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Implement a chain of stages that stops as soon as the caller gives up."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1499,6 +1516,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-pipeline-ask",
       "title": "Reason: who stops the chain",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1511,8 +1529,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "Nothing: the second stage is waiting on a channel, and a cancelled request does not close it.",
-        "It has to stop the second stage and report the cancellation, or the chain leaks a goroutine for a request nobody wants.",
+        "Nothing happens: the second stage is waiting on a channel, and a cancelled request does not close that channel for it.",
+        "It has to stop the second stage and report the cancellation, or the chain leaks a goroutine.",
         "The third stage runs anyway, because a stage that has started cannot be taken back.",
         "The whole chain is restarted from the first stage with a fresh value."
       ],
@@ -1530,6 +1548,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-pipeline-do",
       "title": "Solve: a chain of stages",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1581,6 +1600,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-pipeline-review",
       "title": "Review: a chain that stops when the caller does",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1632,6 +1652,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Apply omitempty deliberately and turn malformed input into an error, never a half-filled struct."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1707,6 +1728,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-json-ask",
       "title": "Reason: whose names travel",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1743,6 +1765,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-json-do",
       "title": "Solve: Encode and Decode",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1796,6 +1819,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-json-review",
       "title": "Review: Memo codec",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1839,6 +1863,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Implement a server that falls back to a deadline when the caller names none."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1909,6 +1934,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-server-ask",
       "title": "Reason: what the deadline is for",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1940,6 +1966,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-server-do",
       "title": "Solve: a server with deadlines",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1982,6 +2009,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-server-review",
       "title": "Review: the last request before the process goes",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2033,6 +2061,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Implement a mux-backed handler that answers GET and POST at one path and lets the mux return 404."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2147,6 +2176,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-http-ask",
       "title": "Reason: refuse before you store",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2178,6 +2208,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-http-do",
       "title": "Solve: the task API",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2230,6 +2261,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-http-review",
       "title": "Review: middleware that tags every response",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2279,6 +2311,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Implement server-side pagination that parses ?limit=, clamps it, and slices the list before encoding."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2335,6 +2368,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-routes-ask",
       "title": "Reason: the status that names the real mistake",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2366,6 +2400,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-routes-do",
       "title": "Solve: the routing table",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2418,6 +2453,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-routes-review",
       "title": "Review: a rate limiter that refuses before running",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2461,6 +2497,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Implement a chain that wraps a handler with every middleware it was given."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2475,7 +2512,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Middleware is a function that takes a handler and returns a handler. The wrapper does its own work and then calls the handler it was given, so the request still reaches the same code and the answer still comes back. The failure it prevents: a concern that belongs around every route ends up written inside every route, and the one handler somebody forgets is the one that ships without it."
+          "body": "Middleware is a function that takes a handler and returns a handler. The wrapper does its own work and then calls the handler it was given, so the request still reaches the same code and the answer still comes back. The failure it prevents: a concern that belongs around every route ends up written inside every route, and the one handler somebody forgets ships without it."
         },
         {
           "kind": "example",
@@ -2519,6 +2556,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-middleware-ask",
       "title": "Reason: what a panic does to a client",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2550,6 +2588,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-middleware-do",
       "title": "Solve: a chain of middleware",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2600,6 +2639,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-middleware-review",
       "title": "Review: a wrapper that catches a panic",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2651,6 +2691,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Apply CompareHashAndPassword and an expiry check so a refused token never yields a subject."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2718,6 +2759,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-auth-ask",
       "title": "Reason: whose trust is misplaced",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2754,6 +2796,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-auth-do",
       "title": "Solve: Hash and Issue",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2824,6 +2867,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-auth-review",
       "title": "Review: RequireAuth",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2874,6 +2918,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Explain why coverage records what ran, never what the suite actually asserted."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2931,6 +2976,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-tests-ask",
       "title": "Reason: two green suites, one real difference",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2962,6 +3008,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-tests-do",
       "title": "Solve: a grader the whole table trusts",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -3014,6 +3061,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-tests-review",
       "title": "Review: a handler httptest can drive",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -3057,6 +3105,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Measure the difference with a benchmark or AllocsPerRun instead of trusting a hunch."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -3120,6 +3169,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-perf-ask",
       "title": "Reason: same answer, very different work",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -3151,6 +3201,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-perf-do",
       "title": "Solve: a join that costs what it should",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -3195,6 +3246,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-perf-review",
       "title": "Review: size what you already know",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -3238,6 +3290,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Implement Add so every guard runs before the append and a refused entry changes nothing."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -3301,6 +3354,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-store-ask",
       "title": "Reason: where the rule lives",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -3332,6 +3386,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-store-do",
       "title": "Solve: refuse what the ledger cannot hold",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -3385,6 +3440,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-store-review",
       "title": "Review: a report is a model too",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -3428,6 +3484,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Apply parameterized Exec and QueryRow, close the handle, and check absence with errors.Is."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -3507,6 +3564,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-db-ask",
       "title": "Reason: whose syntax is it",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -3543,6 +3601,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-db-do",
       "title": "Solve: Save and Load",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -3604,6 +3663,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-db-review",
       "title": "Review: Report",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -3647,6 +3707,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Design Memo's state so one expired key has a single in-flight fetch and a failed load is never stored."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -3714,6 +3775,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-cache-ask",
       "title": "Reason: who let the stale entry live",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -3750,6 +3812,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-cache-do",
       "title": "Solve: Memo",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -3811,6 +3874,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-cache-review",
       "title": "Review: the cached report",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -3854,6 +3918,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Apply backoff with jitter so a fleet does not retry in lockstep against a failing dependency."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -3925,6 +3990,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-resilience-ask",
       "title": "Reason: which retry helper do you actually trust",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -3956,6 +4022,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-resilience-do",
       "title": "Solve: a retry that counts its calls and keeps its errors",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -4008,6 +4075,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-resilience-review",
       "title": "Review: backing off without burning wall-clock",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -4051,6 +4119,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Design exit codes so each failure class is distinct and an unlisted failure still exits nonzero."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -4114,6 +4183,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-ops-ask",
       "title": "Reason: what a helpful health endpoint actually routes",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -4145,6 +4215,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-ops-do",
       "title": "Solve: a readiness answer an operator can trust",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -4198,6 +4269,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-ops-review",
       "title": "Review: the exit code is the whole verdict",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -4241,6 +4313,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Design a request logger that falls back on nil and never publishes a token."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -4304,6 +4377,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-logging-ask",
       "title": "Reason: whose secret is it",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -4335,6 +4409,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-logging-do",
       "title": "Solve: RequestLog",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -4380,6 +4455,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-logging-review",
       "title": "Review: Scrub",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -4423,6 +4499,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Read the pair and name the requirement and checksum lines a new import needs."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -4493,6 +4570,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-deps-ask",
       "title": "Reason: what does tidy add to the pair",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -4524,6 +4602,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-deps-do",
       "title": "Solve: reconcile the dependency the code adopted",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -4578,6 +4657,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-deps-review",
       "title": "Review: read the pair unaided",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -4623,6 +4703,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Read a Dockerfile and say what the runtime stage must not carry, and which line fixes its user."
       ],
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -4694,6 +4775,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-ship-ask",
       "title": "Reason: an image that builds is not an image that ships",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -4725,6 +4807,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-ship-do",
       "title": "Solve: a Dockerfile that ships the artifact, and a pipeline that proves it",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -4802,6 +4885,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "lab-journal-loss",
       "title": "Investigate: the journal that loses the last entry",
       "kind": "incident",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 3,
       "competencyIds": [

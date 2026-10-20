@@ -6,8 +6,10 @@ import { IDE_COURSE_GO_FUNDAMENTALS } from "./ide-course-go-fundamentals.js";
 import { IDE_MANIFEST_GO_FUNDAMENTALS } from "./ide-manifest-go-fundamentals.js";
 import { IDE_COURSE_GO_IN_PRODUCTION } from "./ide-course-go-in-production.js";
 import { IDE_MANIFEST_GO_IN_PRODUCTION } from "./ide-manifest-go-in-production.js";
-import { IDE_COURSE_RUST_LEDGER } from "./ide-course-rust-ledger.js";
-import { IDE_MANIFEST_RUST_LEDGER } from "./ide-manifest-rust-ledger.js";
+import { IDE_COURSE_RUST_FUNDAMENTALS } from "./ide-course-rust-fundamentals.js";
+import { IDE_MANIFEST_RUST_FUNDAMENTALS } from "./ide-manifest-rust-fundamentals.js";
+import { IDE_COURSE_RUST_IN_PRODUCTION } from "./ide-course-rust-in-production.js";
+import { IDE_MANIFEST_RUST_IN_PRODUCTION } from "./ide-manifest-rust-in-production.js";
 import { IDE_COURSE_TASK_MANAGER } from "./ide-course-task-manager.js";
 import { IDE_MANIFEST_TASK_MANAGER } from "./ide-manifest-task-manager.js";
 
@@ -19,6 +21,7 @@ export const IDE_COURSES: Record<string, { manifest: unknown; document: unknown 
   "api-basics": { manifest: IDE_MANIFEST_API_BASICS, document: IDE_COURSE_API_BASICS },
   "go-fundamentals": { manifest: IDE_MANIFEST_GO_FUNDAMENTALS, document: IDE_COURSE_GO_FUNDAMENTALS },
   "go-in-production": { manifest: IDE_MANIFEST_GO_IN_PRODUCTION, document: IDE_COURSE_GO_IN_PRODUCTION },
-  "rust-ledger": { manifest: IDE_MANIFEST_RUST_LEDGER, document: IDE_COURSE_RUST_LEDGER },
+  "rust-fundamentals": { manifest: IDE_MANIFEST_RUST_FUNDAMENTALS, document: IDE_COURSE_RUST_FUNDAMENTALS },
+  "rust-in-production": { manifest: IDE_MANIFEST_RUST_IN_PRODUCTION, document: IDE_COURSE_RUST_IN_PRODUCTION },
   "task-manager": { manifest: IDE_MANIFEST_TASK_MANAGER, document: IDE_COURSE_TASK_MANAGER },
 };

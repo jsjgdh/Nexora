@@ -57,6 +57,24 @@ const srcFiles: string[] = []; const declaredFontFamilies = [...new Set([...read
 }
 const routesDir = fileURLToPath(new URL("../src/routes", import.meta.url));
 
+/**
+ * What the IDE's shipped manifests say, once the curriculum block has read them.
+ *
+ * These live at the top level because more than one block needs them, and
+ * because a course count is a thing that CHANGES: the Rust course was split
+ * into two while this suite was being written. A count written down anywhere
+ * is a number somebody has to remember to edit, so the number is read from the
+ * manifest and the comparison is by name.
+ */
+let manifestIds: string[] | null = null;
+let manifestCourses: {
+  id: string;
+  title: string;
+  role: string;
+  description: string;
+  phases: { id: string; title: string; tier: string; goal: string; activityCount: number }[];
+}[] = [];
+
 console.log("== the front door describes the real product ==");
 {
   // The pivot: there is one way to learn, and it is the desktop IDE. The root
@@ -800,14 +818,8 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     import.meta.url
   );
   const registry = new URL("index.json", shippedDir);
-  let manifestIds: string[] | null = null;
-  let manifestCourses: {
-    id: string;
-    title: string;
-    role: string;
-    description: string;
-    phases: { id: string; title: string; tier: string; goal: string; activityCount: number }[];
-  }[] = [];
+  manifestIds = null;
+  manifestCourses = [];
   let registryMissing = false;
   try {
     const index = JSON.parse(readFileSync(registry, "utf8")) as {
@@ -2412,8 +2424,17 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
   );
   ok(
     "and every course it names is the course the manifest ships",
+    // The courses are named, never counted. A count written down is a number
+    // that has to be edited the day a course is added, and a number nobody
+    // remembers to edit is the whole problem. So the comparison is by name,
+    // against the manifest, and the count that is checked is the manifest's.
     COPY.COURSES.every((course) => COPY.UNIVERSITY.courses.includes(course.title)) &&
-      COPY.COURSES.length === 5
+      (manifestIds === null
+        ? COPY.COURSES.length > 0
+        : COPY.COURSES.length === manifestCourses.length &&
+          manifestCourses.every((shipped) =>
+            COPY.COURSES.some((site) => site.title === shipped.title)
+          ))
   );
 
   // 4. The take-home phase is the anti-cheat mechanism a course needs, and
@@ -2964,13 +2985,26 @@ console.log("\n== the front door says what is true today, and says it once ==");
         syncSrc.includes("phase-detail.generated.ts") &&
         syncSrc.includes("goal")
     );
-    ok(
-      "and the sync rewrites every phase array, including the two Go courses",
-      ["TASK_MANAGER", "GO_FUNDAMENTALS", "GO_IN_PRODUCTION", "RUST_LEDGER", "API_BASICS"].every(
-        (name) => syncSrc.includes(`"${name}"`)
-      ) &&
-        syncSrc.includes("replaceArray")
-    );
+    {
+      // The arrays the sync rewrites and the arrays the site declares are
+      // compared to each other, not to a list written here. A list written
+      // here is a list that has to be edited the day a course is split, and
+      // the Rust course was split while this suite was being written — which
+      // is exactly how a stale list gets committed and the new course never
+      // reaches the page.
+      const synced = [...syncSrc.matchAll(/\["[a-z0-9-]+",\s*"([A-Z_]+)"\]/g)].map((m) => m[1]!);
+      const copySource = readFileSync(new URL("../src/lib/content/site.ts", import.meta.url), "utf8");
+      // The arrays a COURSE points at, which is the same thing as the arrays
+      // that hold one course's phases — and not the aggregate of them all.
+      const declared = [...copySource.matchAll(/phases:\s*([A-Z_]+),/g)].map((m) => m[1]!);
+      ok(
+        "and the sync rewrites every phase array the site declares, and no others",
+        synced.length === declared.length &&
+          synced.every((name) => declared.includes(name)) &&
+          declared.every((name) => synced.includes(name)) &&
+          syncSrc.includes("replaceArray")
+      );
+    }
   }
 
   // The learning cycle the page describes is the curriculum's own sentence.

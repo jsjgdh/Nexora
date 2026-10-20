@@ -534,9 +534,13 @@ export const COURSE_PATH_NOTES: Record<string, { title: string; body: string }> 
     title: "Go, the service behind it.",
     body: "Goroutines and synchronization, context and cancellation, HTTP servers, routes, authentication, tests, storage, a database, caching, resilience, and shipping. It closes with debugging labs and design labs.",
   },
-  "rust-ledger": {
-    title: "Rust, and a ledger that survives a restart.",
-    body: "The Go track's ledger, rebuilt in Rust and taken to a tested service. Ownership, borrowing and lifetimes are taught as one idea, and the compiler is the one that marks the work.",
+  "rust-fundamentals": {
+    title: "Rust, the language.",
+    body: "The tools, then values and control flow, then ownership and borrowing, then structs, enums, errors and modules, then collections, traits and lifetimes, then testing, then the threads and the futures the language gives you, and a money type of your own design at the end.",
+  },
+  "rust-in-production": {
+    title: "Rust, the service behind it.",
+    body: "The runtime and its tasks, the channels between them, the router and its extractors, the state it shares, the failures that become answers, the database, the configuration, the log, the tests, and a release you can defend.",
   },
   "api-basics": {
     title: "The API, from the outside.",
@@ -599,6 +603,7 @@ export const GO_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
   ["go-lifecycle", "Go cleanup and panic", "pro"],
   ["go-generics", "Go generics", "pro"],
   ["go-modules", "Go modules", "pro"],
+  ["go-checker", "Go checker", "pro"],
 ];
 
 /**
@@ -634,7 +639,16 @@ export const GO_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
   ["design-labs", "Design labs", "pro"],
 ];
 
-export const RUST_LEDGER: [string, string, "free" | "pro"][] = [
+/**
+ * The Rust language, in the order the book teaches it.
+ *
+ * The language on its own, before the service it runs in: the tools, then
+ * values and control flow, then ownership and borrowing, then structs, enums,
+ * errors and modules, then collections, traits and lifetimes, then testing,
+ * then the threads and the futures the language gives you, and a money type
+ * of your own design at the end.
+ */
+export const RUST_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
   ["rust-values", "Rust, cargo, and your first value", "free"],
   ["rust-ownership", "One owner at a time", "free"],
   ["rust-borrowing", "Look without taking", "free"],
@@ -650,12 +664,38 @@ export const RUST_LEDGER: [string, string, "free" | "pro"][] = [
   ["rust-pointers", "One value, several owners", "pro"],
   ["rust-threads", "Work on another thread", "pro"],
   ["rust-async", "A future is a plan, not a run", "pro"],
-  ["rust-tokio", "A task the runtime owns", "pro"],
+  ["rust-amount", "Your turn: the ledger’s money type", "pro"],
+];
+
+/**
+ * The ledger as a service.
+ *
+ * The Rust course's second half: the runtime and its tasks, the channels
+ * between them, the router and its extractors, the state it shares, the layers
+ * around it, the stop at the end of it, the failures that become answers, the
+ * database, the configuration, the log, the tests, and a release you can
+ * defend.
+ */
+export const RUST_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
+  ["rust-checker", "A checker reads code and reports what it finds", "pro"],
+  ["rust-checker-report", "Your turn: the rules and the report", "pro"],
+  ["rust-tokio-runtime", "The runtime that owns the work", "pro"],
+  ["rust-tokio-channels", "A message from one task to another", "pro"],
+  ["rust-tokio-select", "Waiting on more than one thing", "pro"],
+  ["rust-tokio-streams", "A sequence that arrives over time", "pro"],
+  ["rust-tokio-state", "The state every task shares", "pro"],
+  ["rust-tokio", "A deadline and a clean stop", "pro"],
+  ["rust-axum-routing", "The router and its paths", "pro"],
+  ["rust-axum-extractors", "What each argument asks for", "pro"],
+  ["rust-axum-state", "The state every handler shares", "pro"],
+  ["rust-axum-middleware", "The layers around every route", "pro"],
+  ["rust-axum-shutdown", "The server and its stop", "pro"],
   ["rust-axum", "Axum: a typed door", "pro"],
-  ["rust-http-errors", "HTTP errors that say the right thing", "pro"],
+  ["rust-http-errors", "Your turn: how a failure becomes an answer", "pro"],
   ["rust-sqlx", "SQLx: the ledger survives a restart", "pro"],
+  ["rust-config", "The configuration the service reads once", "pro"],
+  ["rust-observability", "The line a request leaves behind", "pro"],
   ["rust-service-tests", "Testing the service without a port", "pro"],
-  ["rust-observability", "Configuration at the edge, redaction in the middle", "pro"],
   ["rust-ship", "Rust ship", "pro"],
   ["rust-review", "Read a library file the way a reviewer does", "pro"],
   ["rust-takehome", "Rust take-home", "pro"],
@@ -705,12 +745,20 @@ export const COURSES = [
     phases: GO_IN_PRODUCTION,
   },
   {
-    slug: "rust-ledger",
+    slug: "rust-fundamentals",
     role: "main",
-    label: "the ledger in Rust",
-    title: "Rust Ledger",
-    sub: "the ledger rebuilt in Rust, taken to a tested Axum service",
-    phases: RUST_LEDGER,
+    label: "the Rust language",
+    title: "Rust fundamentals",
+    sub: "the language itself, in the order the book teaches it",
+    phases: RUST_FUNDAMENTALS,
+  },
+  {
+    slug: "rust-in-production",
+    role: "main",
+    label: "the ledger as a service",
+    title: "Rust in production",
+    sub: "the runtime, the channels, the router, the database, and a release you can defend",
+    phases: RUST_IN_PRODUCTION,
   },
   {
     slug: "api-basics",
@@ -727,7 +775,8 @@ export const ALL_PHASES: [string, string, "free" | "pro"][] = [
   ...TASK_MANAGER,
   ...GO_FUNDAMENTALS,
   ...GO_IN_PRODUCTION,
-  ...RUST_LEDGER,
+  ...RUST_FUNDAMENTALS,
+  ...RUST_IN_PRODUCTION,
   ...API_BASICS,
 ] as const;
 

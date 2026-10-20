@@ -84,7 +84,8 @@ const COURSES = [
   ["task-manager", "TASK_MANAGER"],
   ["go-fundamentals", "GO_FUNDAMENTALS"],
   ["go-in-production", "GO_IN_PRODUCTION"],
-  ["rust-ledger", "RUST_LEDGER"],
+  ["rust-fundamentals", "RUST_FUNDAMENTALS"],
+  ["rust-in-production", "RUST_IN_PRODUCTION"],
   ["api-basics", "API_BASICS"],
 ];
 

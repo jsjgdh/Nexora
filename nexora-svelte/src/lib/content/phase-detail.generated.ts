@@ -148,6 +148,10 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
     "go-modules": {
       "goal": "A module is the unit Go versions and fetches: go.mod names the module path, every package is imported by that path, and the module boundary is what go test ./... actually walks.",
       "activities": 4
+    },
+    "go-checker": {
+      "goal": "A checker proves facts, and the facts are narrow: that a function is never called is a fact, that it does the wrong thing is not. This is your turn: you choose the rules, the finding and the wording, and the checks judge what your program reports.",
+      "activities": 4
     }
   },
   "go-in-production": {
@@ -248,7 +252,7 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 3
     }
   },
-  "rust-ledger": {
+  "rust-fundamentals": {
     "rust-values": {
       "goal": "The toolchain first, then a value: a binding, a type, and money as whole cents.",
       "activities": 4
@@ -309,8 +313,62 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "goal": "Futures that do nothing until polled, tasks that interleave, and the blocking call that stops them all.",
       "activities": 4
     },
+    "rust-amount": {
+      "goal": "Choose the shape of the type the whole ledger stores its money in.",
+      "activities": 4
+    }
+  },
+  "rust-in-production": {
+    "rust-checker": {
+      "goal": "Learn what a tool can establish about code, and how to report a finding a reader can judge.",
+      "activities": 4
+    },
+    "rust-checker-report": {
+      "goal": "Choose what the checker looks for, how badly it rates what it finds, and how the report says it.",
+      "activities": 4
+    },
+    "rust-tokio-runtime": {
+      "goal": "Learn what a runtime is, what spawn asks of a task, and how a handle is joined.",
+      "activities": 4
+    },
+    "rust-tokio-channels": {
+      "goal": "Learn the three channel shapes, what a bounded queue does when it is full, and how a reply comes back.",
+      "activities": 4
+    },
+    "rust-tokio-select": {
+      "goal": "Learn what select! does with the branch that loses, how a pattern can switch a branch off, and how a deadline is a branch.",
+      "activities": 4
+    },
+    "rust-tokio-streams": {
+      "goal": "Learn what a stream is, how a value is pulled out of it, and what the adapters over it are for.",
+      "activities": 4
+    },
+    "rust-tokio-state": {
+      "goal": "Learn how tasks share one value, why a lock must not be held across an await, and how blocking work leaves the runtime.",
+      "activities": 4
+    },
     "rust-tokio": {
-      "goal": "Spawn tasks, race them safely, bound them with timeouts, and stop them on purpose.",
+      "goal": "Learn what a timeout does to the work it bounds, when a task is safe to drop, and how a server stops on purpose.",
+      "activities": 4
+    },
+    "rust-axum-routing": {
+      "goal": "Learn how a router maps a path and a method to a handler, and what it answers when nothing matches.",
+      "activities": 4
+    },
+    "rust-axum-extractors": {
+      "goal": "Learn how an extractor turns part of a request into a typed value, and what happens when it cannot.",
+      "activities": 4
+    },
+    "rust-axum-state": {
+      "goal": "Learn how a service hands one value to every route, and how a handler asks for the part of it it needs.",
+      "activities": 4
+    },
+    "rust-axum-middleware": {
+      "goal": "Learn what a layer is, what order the layers run in, and how a layer hands the request on and the response back.",
+      "activities": 4
+    },
+    "rust-axum-shutdown": {
+      "goal": "Learn what a server waits for, how a stop signal reaches it, and why a server that cannot stop is a server that gets killed.",
       "activities": 4
     },
     "rust-axum": {
@@ -318,19 +376,23 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 4
     },
     "rust-http-errors": {
-      "goal": "One error type, three statuses, and no internal detail on the wire.",
+      "goal": "Choose how each failure is reported, and write the public words a client reads.",
       "activities": 4
     },
     "rust-sqlx": {
       "goal": "A pool, a migration and bound parameters over SQLite.",
       "activities": 4
     },
-    "rust-service-tests": {
-      "goal": "Drive the real router in memory and assert on what a client would see.",
+    "rust-config": {
+      "goal": "Learn why a service reads its configuration at startup, what a missing value means, and how a secret stays out of the log.",
       "activities": 4
     },
     "rust-observability": {
-      "goal": "Read the configuration once at startup, and keep a password out of every log line.",
+      "goal": "Learn what a log line has to carry, and how a secret stays out of every one of them.",
+      "activities": 4
+    },
+    "rust-service-tests": {
+      "goal": "Drive the real router in memory and assert on what a client would see.",
       "activities": 4
     },
     "rust-ship": {
@@ -364,9 +426,10 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
 
 export const COURSE_ACTIVITY_COUNTS: Record<string, number> = {
   "task-manager": 80,
-  "go-fundamentals": 60,
+  "go-fundamentals": 64,
   "go-in-production": 90,
-  "rust-ledger": 96,
+  "rust-fundamentals": 64,
+  "rust-in-production": 88,
   "api-basics": 9
 };
 
@@ -374,6 +437,7 @@ export const COURSE_DESCRIPTIONS: Record<string, string> = {
   "task-manager": "One JavaScript app, built phase by phase. You set up the tools, learn the words every later phase uses, build the interface, add the behavior, manage the data, debug what breaks, use Git, connect an API, serve one yourself, test the work, review it, and finish with a feature of your own. One phase leaves the app to read a codebase you did not write. Every phase is Learn, then Solve, then Review.",
   "go-fundamentals": "Go itself, from the first value to a module. Zero values and integers, control flow, functions, structs, methods, interfaces, packages, collections, pointers, embedding, errors, defer and panic, generics, and modules. The phases build one small ledger service, and each is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review.",
   "go-in-production": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, pipelines, JSON in and out, an HTTP server with its deadlines, routes, middleware, authentication, tests, performance, storage, a database, caching, resilience, operations, logging, dependencies, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
-  "rust-ledger": "A second main line: the ledger rebuilt in Rust, from the tools up. It opens with rustup, cargo and the first value, then follows the Rust Programming Language chapter by chapter, running the ledger's own money, accounts and transactions through each idea. Then threads, async, Tokio, HTTP, SQLx and a release you can ship. Every phase is Learn, then Solve, then Review, and every phase names the file it works in and the suite that judges it.",
+  "rust-fundamentals": "The Rust language, in the order the book teaches it: the tools, then values and control flow, then ownership and borrowing, then structs, enums, errors and modules, then collections, traits and lifetimes, then testing, then the threads and the futures the language gives you, and a money type of your own design at the end.",
+  "rust-in-production": "The ledger as a service. It opens with a program that reads code and reports what it finds, and then it builds the service: the runtime and its tasks, the channels between them, the router and its extractors, the state it shares, the layers around it, the stop at the end of it, the failures that become answers, the database, the configuration, the log, the tests, and a release you can defend.",
   "api-basics": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design — it gates nothing, and you can leave it at any point."
 };

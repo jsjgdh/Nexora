@@ -141,6 +141,15 @@ export const IDE_MANIFEST_GO_FUNDAMENTALS: unknown = {
       "tier": "pro",
       "authored": true,
       "activityCount": 4
+    },
+    {
+      "id": "go-checker",
+      "title": "Go checker",
+      "goal": "A checker proves facts, and the facts are narrow: that a function is never called is a fact, that it does the wrong thing is not. This is your turn: you choose the rules, the finding and the wording, and the checks judge what your program reports.",
+      "level": 3,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
     }
   ]
 };

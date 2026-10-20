@@ -295,6 +295,26 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "When would you reach for a replace directive or a go.work workspace, and what problem does each solve?",
         "What does the go directive in a go.mod control, and why does it matter across a team?"
       ]
+    },
+    {
+      "id": "go-checker",
+      "title": "Go checker",
+      "goal": "A checker proves facts, and the facts are narrow: that a function is never called is a fact, that it does the wrong thing is not. This is your turn: you choose the rules, the finding and the wording, and the checks judge what your program reports.",
+      "level": 3,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-checker-learn",
+        "go-checker-do",
+        "go-checker-ask",
+        "go-checker-review"
+      ],
+      "interviewQuestions": [
+        "What can a checker establish about a piece of code, and what can it only suggest?",
+        "Why is a false positive worse than a finding the checker missed?",
+        "What does a checker have to know about a file before it may say a function is never called?",
+        "How do you report a finding so that a reader can judge it without rerunning your tool?"
+      ]
     }
   ],
   "activities": {
@@ -302,6 +322,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-program-learn",
       "title": "Learn: what a program is",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -385,6 +406,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-program-ask",
       "title": "Reason: a main package with no main",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -416,6 +438,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-program-do",
       "title": "Solve: the first program",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -468,6 +491,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-program-review",
       "title": "Review: a second program",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -506,6 +530,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-values-learn",
       "title": "Learn: a variable already has a value",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -602,6 +627,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-values-ask",
       "title": "Reason: what does a fresh int hold",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -633,6 +659,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-values-do",
       "title": "Solve: FormatCents",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -685,6 +712,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-values-review",
       "title": "Review: RepeatLabel",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -723,6 +751,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-control-flow-learn",
       "title": "Learn: one condition, one path",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -814,6 +843,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-control-flow-ask",
       "title": "Reason: where an unlisted code goes",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -845,6 +875,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-control-flow-do",
       "title": "Solve: StatusWord",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -897,6 +928,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-control-flow-review",
       "title": "Review: SumUntil",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -935,6 +967,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-functions-learn",
       "title": "Learn: failure comes back beside the result",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1015,6 +1048,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-functions-ask",
       "title": "Reason: what the zero beside an error means",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1046,6 +1080,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-functions-do",
       "title": "Solve: ParseQty",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1098,6 +1133,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-functions-review",
       "title": "Review: MustPositive",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1136,6 +1172,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-structs-learn",
       "title": "Learn: name the fields the fact is made of",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1215,6 +1252,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-structs-ask",
       "title": "Reason: what a nil list of orders totals to",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1250,6 +1288,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-structs-do",
       "title": "Solve: Total",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1302,6 +1341,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-structs-review",
       "title": "Review: Billable",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1340,6 +1380,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-methods-learn",
       "title": "Learn: the receiver is how a type changes",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1440,6 +1481,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-methods-ask",
       "title": "Reason: why the balance did not move",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1471,6 +1513,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-methods-do",
       "title": "Solve: Deposit",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1523,6 +1566,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-methods-review",
       "title": "Review: ApplyFee",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1561,6 +1605,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-interfaces-learn",
       "title": "Learn: ask for the behaviour, not the struct",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1640,6 +1685,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-interfaces-ask",
       "title": "Reason: what satisfies an interface",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1671,6 +1717,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-interfaces-do",
       "title": "Solve: SumPriced",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1723,6 +1770,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-interfaces-review",
       "title": "Review: JoinNames",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1761,6 +1809,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-packages-learn",
       "title": "Learn: the import is the boundary",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -1828,6 +1877,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-packages-ask",
       "title": "Reason: why the helper is invisible",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -1859,6 +1909,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-packages-do",
       "title": "Solve: Cents",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -1911,6 +1962,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-packages-review",
       "title": "Review: Add",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -1949,6 +2001,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-collections-learn",
       "title": "Learn: a map answers \"which one\", a slice answers \"in what order\"",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2062,6 +2115,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-collections-ask",
       "title": "Reason: what a missing key looks like",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2093,6 +2147,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-collections-do",
       "title": "Solve: IndexBySKU",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2145,6 +2200,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-collections-review",
       "title": "Review: UniqueSKUs",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2183,6 +2239,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-pointers-learn",
       "title": "Learn: the address and the value",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2269,6 +2326,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-pointers-ask",
       "title": "Reason: what sticks and what does not",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2305,6 +2363,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-pointers-do",
       "title": "Solve: Reset and Nudge",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2358,6 +2417,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-pointers-review",
       "title": "Review: Clone",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2396,6 +2456,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-embedding-learn",
       "title": "Learn: embedding is composition that promotes",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2493,6 +2554,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-embedding-ask",
       "title": "Reason: which Twice runs",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2524,6 +2586,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-embedding-do",
       "title": "Solve: Satellite.Sum",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2576,6 +2639,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-embedding-review",
       "title": "Review: Tagged.Render",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2614,6 +2678,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-errors-learn",
       "title": "Learn: errors are values you pass around",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2705,6 +2770,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-errors-ask",
       "title": "Reason: what errors.Is sees",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2736,6 +2802,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-errors-do",
       "title": "Solve: Lookup and Wrap",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2788,6 +2855,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-errors-review",
       "title": "Review: Rate with recover",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -2826,6 +2894,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-lifecycle-learn",
       "title": "Learn: deferred until return",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -2895,6 +2964,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-lifecycle-ask",
       "title": "Reason: what the defers leave behind",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -2926,6 +2996,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-lifecycle-do",
       "title": "Solve: WithCleanup",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -2979,6 +3050,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-lifecycle-review",
       "title": "Review: RecoverValue",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -3017,6 +3089,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-generics-learn",
       "title": "Learn: one function, many types",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -3085,6 +3158,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-generics-ask",
       "title": "Reason: what the constraint buys",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -3116,6 +3190,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-generics-do",
       "title": "Solve: a generic Max",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -3168,6 +3243,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-generics-review",
       "title": "Review: a generic Unique",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -3206,6 +3282,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-modules-learn",
       "title": "Learn: a module is what go.mod names",
       "kind": "lesson",
+      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -3274,6 +3351,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-modules-ask",
       "title": "Reason: why the sibling import resolves",
       "kind": "question",
+      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -3305,6 +3383,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-modules-do",
       "title": "Solve: call a sibling by module path",
       "kind": "challenge",
+      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -3357,6 +3436,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-modules-review",
       "title": "Review: a second package, same rule",
       "kind": "retrieval",
+      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -3389,6 +3469,203 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "misconceptions": [
         "Thinking a package is imported by its folder name alone — it is the module path plus the folder, so price is example.com/moddemo/price.",
         "Expecting go test ./... at the ledger root to cover moddemo — moddemo is a separate module and is deliberately outside that pattern."
+      ]
+    },
+    "go-checker-learn": {
+      "id": "go-checker-learn",
+      "title": "Learn: what a checker may claim",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "direction": "independent",
+      "competencyIds": [
+        "go-checker"
+      ],
+      "objectives": [
+        "Explain what a checker can prove and what it cannot, and why the difference is the whole of its honesty.",
+        "Trace a false positive: how a rule about code that works ends up in a report a reader stops believing.",
+        "Read a Go file as text and find the functions it declares and never calls.",
+        "Write a checker that reports a fact and stays quiet about code that runs."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A checker reads code and reports what it finds, and the line that makes it a tool rather than a guess is this: it reports facts. That a function is never called is a fact, because the file says so and you can read it off the source. That a function does the wrong thing is not a fact at all, and a checker that states one is lying."
+        },
+        {
+          "kind": "prose",
+          "body": "The first thing that goes wrong is a false positive: a finding about code that works. Every rule has to be checked against the code it does not fire on, because a reader who sees one wrong finding stops reading the rest."
+        },
+        {
+          "kind": "prose",
+          "body": "The checks judge what your program prints: the facts it reports, and what it stays quiet about. They cannot judge whether your rules, your wording or your severity were the ones a reviewer would have chosen, and they do not pretend to. The quick check at the end is yours as well: no one is grading your reasoning, only what your program reports."
+        },
+        {
+          "kind": "example",
+          "body": "The file you are about to open, and the file it is judged on:",
+          "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\t// TODO: read the file, find the functions nothing calls, and print one\n\t// line per finding: which function, and that nothing calls it.\n\tfmt.Println(\"TODO\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The file the checker is run over: one function is called, one is not.",
+          "code": "package ledger\n\n// Called is called from the variable below, so it is not a finding.\nfunc Called() int { return 1 }\n\n// Unused is never called by anything in this file.\nfunc Unused() int { return 2 }\n\nvar total = Called()"
+        },
+        {
+          "kind": "prose",
+          "body": "Reading a Go file is reading text. os.ReadFile hands you the source as one string, strings.Split cuts it into lines, and a line that starts with func is a declaration. What the file proves is in the text, and the text is what you read."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A checker reports facts: never called is a fact, wrong is not.",
+            "A false positive is a finding about code that works.",
+            "A finding names the function and the fact, and stops there.",
+            "Quiet about code that runs is the difference between a tool and noise."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "The commands you run, and the one the Run button calls for you:",
+          "code": "go test ./cmd/check/...   # the checker's own tests\nnode --test --test-reporter=tap test/check.test.mjs   # what the Run button calls"
+        },
+        {
+          "kind": "task",
+          "body": "Open cmd/check/main.go and make it read the file named by its first argument and report the functions that nothing calls. Then run go test ./cmd/check/... and read what the check says."
+        }
+      ],
+      "hints": [
+        "Open cmd/check/main.go. It prints a placeholder; what it has to do is read a file and report on it. Run go test ./cmd/check/... and read the failure first. If go is command not found, run the environment check first.",
+        "The file is text: os.ReadFile gives you the whole source, strings.Split gives you the lines, and a line that starts with \"func \" declares a function.",
+        "The name is the second word on that line, without the parentheses: strings.Fields(line)[1], and then trim the \"()\" off the end.",
+        "A function is called if its name appears with a parenthesis somewhere else in the file: strings.Count(source, name+\"(\") is 2 when the code calls it and 1 when it does not.",
+        "Print one line per function nothing calls, naming the function. Nothing else: no severity, no summary, and no verdict on what the code should have been."
+      ],
+      "misconceptions": [
+        "Reporting that a function does the wrong thing. That is not a fact, and a checker that states it is lying about what it can see.",
+        "Reporting every function it finds. A finding about code that runs is a false positive, and one false positive is enough for a reader to stop reading."
+      ],
+      "resources": [
+        {
+          "label": "Go blog: static analysis, what it can and cannot say",
+          "url": "https://go.dev/blog/staticcheck"
+        }
+      ]
+    },
+    "go-checker-ask": {
+      "id": "go-checker-ask",
+      "title": "Reason: what one line of output established",
+      "kind": "question",
+      "mode": "review",
+      "guidance": 1,
+      "direction": "independent",
+      "competencyIds": [
+        "go-checker"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Your checker prints one line: \"Unused is never called\". What has it established about the code it read?"
+        }
+      ],
+      "options": [
+        "That Unused is never called, and that the code around it is therefore wrong.",
+        "That Unused is never called, and nothing beyond that.",
+        "That Unused is probably dead code and should be deleted.",
+        "That the file is wrong, because a function nothing calls is always a mistake."
+      ],
+      "answer": 1,
+      "explanation": "The line is a fact and only a fact: the file declares Unused, nothing calls it, and the checker read that off the source. Everything else in the other three options is a judgement: that the code is wrong, that the function should be deleted, that the file is a mistake. A checker that states a judgement claims a certainty it does not have, and a reader who catches it once will not believe the next line either. So the checker reports the fact, names the function, and stops: whether an uncalled function is a bug, a leftover, or an entry point nobody can see from inside the file is a question for a reader, not for the tool.",
+      "hints": [
+        "Ask what the source can prove on its own, and what it would take a person to know before the tool could say it."
+      ],
+      "misconceptions": [
+        "Reading a finding as a verdict. The tool read the source; it did not read the intent behind the source, and it cannot.",
+        "Believing a checker that says more is a better checker. It says more than it knows, and the first thing a reader checks is whether it is right."
+      ]
+    },
+    "go-checker-do": {
+      "id": "go-checker-do",
+      "title": "Solve: the checker",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 3,
+      "direction": "independent",
+      "competencyIds": [
+        "go-checker"
+      ],
+      "files": [
+        "cmd/check/main.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/check.test.mjs",
+      "checks": [
+        {
+          "id": "names-the-unused",
+          "label": "The checker names the function nothing calls",
+          "tests": [
+            "the checker names the function nobody calls"
+          ],
+          "feedback": "The checker has to report the function the file never calls, and it has to name it: the check reads what your program printed and looks for Unused in it. One line per finding, and the line names the function and the fact."
+        },
+        {
+          "id": "leaves-the-called-alone",
+          "label": "The checker leaves the function the code calls alone",
+          "tests": [
+            "the checker leaves the called function alone"
+          ],
+          "feedback": "The checker reported Called, which the file does call. A finding about code that runs is a false positive, and it is the fastest way to lose a reader: find the name where the code calls it, and count the name with its parenthesis rather than trusting the declaration.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open cmd/check/main.go. It prints a placeholder; what it has to do is read a file and report on it. Run go test ./cmd/check/... and read the failure first. If go is command not found, run the environment check first.",
+        "The file is text: os.ReadFile gives you the whole source, strings.Split gives you the lines, and a line that starts with \"func \" declares a function.",
+        "The name is the second word on that line, without the parentheses: strings.Fields(line)[1], and then trim the \"()\" off the end.",
+        "A function is called if its name appears with a parenthesis somewhere else in the file: strings.Count(source, name+\"(\") is 2 when the code calls it and 1 when it does not.",
+        "Print one line per function nothing calls, naming the function. Nothing else: no severity, no summary, and no verdict on what the code should have been."
+      ],
+      "misconceptions": [
+        "Reporting that a function does the wrong thing. That is not a fact, and a checker that states it is lying about what it can see.",
+        "Reporting every function it finds. A finding about code that runs is a false positive, and one false positive is enough for a reader to stop reading."
+      ]
+    },
+    "go-checker-review": {
+      "id": "go-checker-review",
+      "title": "Review: a second file",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 3,
+      "direction": "independent",
+      "competencyIds": [
+        "go-checker"
+      ],
+      "files": [
+        "cmd/check/main.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/check-review.test.mjs",
+      "checks": [
+        {
+          "id": "names-the-forgotten",
+          "label": "The checker names the function nothing calls in the second file",
+          "tests": [
+            "the checker names the forgotten function"
+          ],
+          "feedback": "The second file calls its function from another function, and the one nothing calls is called Forgotten. The check reads what your program printed over that file and looks for the name, so the program has to read the file it is given rather than the one it remembers."
+        },
+        {
+          "id": "leaves-the-used-alone",
+          "label": "The checker leaves the function the code calls alone",
+          "tests": [
+            "the checker leaves the used function alone"
+          ],
+          "feedback": "The checker reported Used, which the second file does call. The rule has to hold for every file the program is given, not for the one you tried first: count the name with its parenthesis across the whole source.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Reading the second file as a variation to special-case. The rule is one rule; the files are the inputs, and the program does not know which one it was given.",
+        "Believing the first file passing means the checker is right. One file is one file, and the whole point of a second is that a rule which only works on the first was never a rule."
       ]
     }
   }
