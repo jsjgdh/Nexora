@@ -24,8 +24,13 @@ import pg from "pg";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 
-/* The environment the services run with. A local stack writes it, and a
-   deployment has it in the process environment already. */
+/* The environment the services run with.
+ *
+ * The environment is the source of truth: a deployment has it, and the
+ * tooling reads it. The local file is a convenience for a machine running
+ * the local stack, and it never overrides what the environment already
+ * says, so a deployment cannot be pointed at the wrong database by a file
+ * that happens to be lying around. */
 const envFile = join(root, ".env.local");
 if (existsSync(envFile)) {
   for (const line of readFileSync(envFile, "utf8").split("\n")) {
@@ -38,9 +43,13 @@ if (existsSync(envFile)) {
   }
 }
 
-const url = process.env.AUTH_DATABASE_URL;
+/* The identity database. A deployment names it in the environment; a local
+   stack writes it into the file above. */
+const url = process.env.AUTH_DATABASE_URL ?? process.env.DATABASE_URL;
 if (!url) {
-  console.error("AUTH_DATABASE_URL is not set. Start the local stack, or set it in the environment.");
+  console.error(
+    "No database address. Set AUTH_DATABASE_URL (or DATABASE_URL) in the environment of the service, and run this where that environment is."
+  );
   process.exit(2);
 }
 

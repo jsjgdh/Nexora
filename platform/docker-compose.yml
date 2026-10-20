@@ -169,6 +169,57 @@ services:
     mem_limit: 256m
     cpus: 0.5
 
+  # The backup, on demand and never with the stack. It is behind a profile so
+  # `docker compose up -d` does not start it: the backup is a JOB, run by the
+  # host's cron (see docs/OPERATIONS.md), and a container that runs forever
+  # holding a database connection is a job that can be forgotten.
+  #
+  # It runs on the compose network, so the database's port never has to be
+  # published — not even to loopback. The dumps land in a named volume, which
+  # the operator copies off the host on their own schedule.
+  backup:
+    profiles: ["backup"]
+    build:
+      context: .
+      args:
+        SERVICE: gateway
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+      BACKUP_DIR: /backups
+    volumes:
+      - backups:/backups
+    command:
+      - sh
+      - -c
+      - >-
+        node scripts/backup.mjs --url="$$AUTH_DATABASE_URL" --dir=$$BACKUP_DIR --keep-days=14
+        && node scripts/backup.mjs --url="$$BILLING_DATABASE_URL" --dir=$$BACKUP_DIR --keep-days=14
+
+  # The restore drill, same shape: a job, on demand, against a database the
+  # operator names. It proves the dumps can be put back, which is the half of
+  # "we have backups" that is almost never done.
+  drill:
+    profiles: ["drill"]
+    build:
+      context: .
+      args:
+        SERVICE: gateway
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - node scripts/backup-drill.mjs --url="$$AUTH_DATABASE_URL"
+
   frontend:
     # Canonical NEXORA client (SvelteKit production build). Browser-facing;
     # PUBLIC_API_URL must be reachable FROM THE BROWSER, not the container.
@@ -203,3 +254,4 @@ services:
 
 volumes:
   pgdata:
+  backups:

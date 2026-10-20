@@ -21,6 +21,36 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SECRET = randomBytes(32).toString("hex");
 const MESH = randomBytes(32).toString("hex");
 
+/**
+ * Bind a port for a test, or say why it could not be bound.
+ *
+ * The old shape was `await new Promise((r) => server.listen(port, host, r))`,
+ * and it has a failure mode that hides everything: when the port is already
+ * taken, the listen callback never fires, the promise never settles, the
+ * event loop runs out of work, and the whole suite after this one is
+ * cancelled with "Promise resolution is still pending but the event loop has
+ * already resolved". A leftover process from an interrupted run is enough
+ * to do it, and the failure then reads like a bug in the product rather
+ * than like a busy port.
+ *
+ * So the error is the answer, not a hang: the port is named, and the suite
+ * says what is holding it. */
+function listenOn(server, port, host = "127.0.0.1") {
+  return new Promise((resolve, reject) => {
+    server.once("error", (err) => {
+      reject(
+        new Error(
+          `the test could not bind ${host}:${port}: ${err.message}. Another process is holding it.`
+        )
+      );
+    });
+    server.listen(port, host, () => {
+      server.removeAllListeners("error");
+      resolve();
+    });
+  });
+}
+
 process.env.BCRYPT_ROUNDS = "4"; // speed up tests only; production default is 12
 
 /* Mesh posture for this suite (B-27). The platform now refuses to serve without
@@ -38,6 +68,11 @@ const gwAuth = await import("../services/gateway/dist/auth.js");
 const gwLimits = await import("../services/gateway/dist/limits.js");
 const gwProxy = await import("../services/gateway/dist/proxy.js");
 const gwEntitlement = await import("../services/gateway/dist/entitlement.js");
+/* The Google Cloud deployment plan and the commands that apply it. Imported
+   here, at the top level, because the gate below needs them and a describe
+   body cannot await. */
+const gcpPlan = await import("../infra/gcp/dist/plan.js");
+const gcpDeploy = await import("../infra/gcp/dist/deploy.js");
 const gwRevocation = await import("../services/gateway/dist/revocation.js");
 const execValidate = await import("../services/execution/dist/validate.js");
 const execSub = await import("../services/execution/dist/runners/subprocess.js");
@@ -244,6 +279,70 @@ describe("the mesh boundary fails closed, not on NODE_ENV (B-27)", () => {
     const out = r.stderr + r.stdout;
     assert.match(out, /INTERNAL_API_KEY/, "the refusal names the variable");
     assert.match(out, /ALLOW_INSECURE_MESH/, "and the explicit development opt-in");
+  });
+});
+
+/* B-12: one request id, from the client's reply to the service's log.
+ *
+ * The gateway mints the trace id, returns it to the client as x-request-id and
+ * forwards it downstream. A service that minted its own would split one
+ * request across two ids: the client quotes the gateway's id, the gateway logs
+ * the gateway's id, and the error envelope names an id only the service has
+ * ever seen — so "greppable" stops being true the moment a request crosses
+ * one process boundary, which is every request there is. The envelope is the
+ * observable here: it is built from req.id, which is the same value Fastify's
+ * logger stamps on every line of that request's logs. Three things are
+ * asserted — the forwarded id is adopted, an absent id still produces one,
+ * and an id that is not a plain token is refused rather than written out. */
+describe("a service adopts the gateway's request id, or mints its own (B-12)", () => {
+  const uuidShape = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+  it("carries the forwarded id into the error envelope, and mints one when there is none", async () => {
+    const app = await kit.createService("test-request-id-adopt");
+    await app.ready();
+
+    const adopted = await app.inject({
+      method: "GET",
+      url: "/nope",
+      headers: { "x-request-id": "gw-01JABCDEF-1234" },
+    });
+    assert.equal(adopted.statusCode, 404);
+    assert.equal(
+      adopted.json().error.requestId,
+      "gw-01JABCDEF-1234",
+      "the edge's id is the service's id — one request, one grep"
+    );
+
+    const minted = await app.inject({ method: "GET", url: "/nope" });
+    assert.match(minted.json().error.requestId, uuidShape, "no header, so a fresh id is minted");
+
+    await app.close();
+  });
+
+  it("refuses an id that is not a plain token, instead of writing it to a log line", async () => {
+    const app = await kit.createService("test-request-id-junk");
+    await app.ready();
+    const junk = [
+      "short", // under the floor: a value too short to be one of ours
+      "x".repeat(7), // one below the floor, in digits rather than words
+      "x".repeat(300), // over the ceiling: an id is a correlation key, not a payload
+      "two words here", // whitespace would end the line it lands on
+      "emoji-\u{1F4A9}", // outside the charset: bytes a grep pattern cannot predict
+    ];
+    for (const bad of junk) {
+      const res = await app.inject({
+        method: "GET",
+        url: "/nope",
+        headers: { "x-request-id": String(bad) },
+      });
+      const id = res.json().error.requestId;
+      assert.match(
+        id,
+        uuidShape,
+        `${JSON.stringify(String(bad).slice(0, 24))} must not become the id services log`
+      );
+    }
+    await app.close();
   });
 });
 
@@ -560,7 +659,7 @@ describe("gateway pure units", () => {
       res.setHeader("content-type", "application/json");
       res.end(JSON.stringify({ keys: published.get(req.url) ?? published.get("/v1/jwks") }));
     });
-    await new Promise((r) => issuer.listen(0, "127.0.0.1", r));
+    await listenOn(issuer, 0);
     const apiUrl = `http://127.0.0.1:${issuer.address().port}`;
     const secretKey = "sk_test_jwks_proof";
 
@@ -619,34 +718,55 @@ describe("gateway entitlement cache", () => {
     let calls = 0;
     const cache = new gwEntitlement.EntitlementCache(1000, async () => {
       calls++;
-      return true;
+      return { status: "entitled", courses: null };
     });
-    assert.equal(await cache.get("u", 0), "entitled");
-    assert.equal(await cache.get("u", 500), "entitled");
+    assert.deepEqual(await cache.get("u", 0), { status: "entitled", courses: null });
+    assert.deepEqual(await cache.get("u", 500), { status: "entitled", courses: null });
     assert.equal(calls, 1, "a fresh grant is served from cache within the TTL");
-    assert.equal(await cache.get("u", 1001), "entitled");
+    assert.deepEqual(await cache.get("u", 1001), { status: "entitled", courses: null });
     assert.equal(calls, 2, "an expired grant is re-asked: a cached grant must not outlive its TTL");
   });
   it("caches a denial only until the webhook path invalidates it", async () => {
-    let answer = false;
+    let answer = { status: "not_entitled", courses: null };
     let calls = 0;
     const cache = new gwEntitlement.EntitlementCache(60_000, async () => {
       calls++;
       return answer;
     });
-    assert.equal(await cache.get("u", 0), "not_entitled");
-    answer = true; // the learner subscribes while the denial is still cached
-    assert.equal(await cache.get("u", 10), "not_entitled", "still the cached denial");
+    assert.deepEqual(await cache.get("u", 0), { status: "not_entitled", courses: null });
+    answer = { status: "entitled", courses: null }; // the learner subscribes while the denial is still cached
+    assert.deepEqual(
+      await cache.get("u", 10),
+      { status: "not_entitled", courses: null },
+      "still the cached denial"
+    );
     assert.equal(calls, 1);
     cache.invalidate(); // this is what proxying the billing webhook does
-    assert.equal(await cache.get("u", 20), "entitled", "a cached denial must not survive a successful checkout");
+    assert.deepEqual(
+      await cache.get("u", 20),
+      { status: "entitled", courses: null },
+      "a cached denial must not survive a successful checkout"
+    );
     assert.equal(calls, 2);
+  });
+  it("a seat keeps its courses, and a subscription keeps them all", async () => {
+    const seat = new gwEntitlement.EntitlementCache(1000, async () => ({
+      status: "entitled",
+      courses: ["go-in-production"],
+    }));
+    assert.deepEqual(await seat.get("u", 0), { status: "entitled", courses: ["go-in-production"] });
+    // A subscription covers every course, and the list that says so is null.
+    const subscription = new gwEntitlement.EntitlementCache(1000, async () => ({
+      status: "entitled",
+      courses: null,
+    }));
+    assert.deepEqual(await subscription.get("u", 0), { status: "entitled", courses: null });
   });
   it("invalidate can drop a single user", async () => {
     const seen = [];
     const cache = new gwEntitlement.EntitlementCache(60_000, async (u) => {
       seen.push(u);
-      return true;
+      return { status: "entitled", courses: null };
     });
     await cache.get("a", 0);
     await cache.get("b", 0);
@@ -661,8 +781,8 @@ describe("gateway entitlement cache", () => {
       calls++;
       throw new Error("billing down");
     });
-    assert.equal(await cache.get("u", 0), "unknown");
-    assert.equal(await cache.get("u", 1), "unknown");
+    assert.deepEqual(await cache.get("u", 0), { status: "unknown", courses: null });
+    assert.deepEqual(await cache.get("u", 1), { status: "unknown", courses: null });
     assert.equal(calls, 2, "an outage is retried, not remembered as a denial");
   });
   it("billingLookup reads entitled from the subscription view and throws on a non-2xx", async () => {
@@ -681,7 +801,7 @@ describe("gateway entitlement cache", () => {
       res.statusCode = 404;
       res.end("{}");
     });
-    await new Promise((r) => srv.listen(18099, "127.0.0.1", r));
+    await listenOn(srv, 18099);
     try {
       const lookup = gwEntitlement.billingLookup({ url: "http://127.0.0.1:18099", internalKey: MESH, timeoutMs: 2000 });
       assert.equal(await lookup("yes"), true);
@@ -980,7 +1100,7 @@ describe("gateway revocation (jti denylist)", () => {
         res.end(JSON.stringify({ revoked: sent.jti === "revoked-jti" }));
       });
     });
-    await new Promise((r) => srv.listen(18098, "127.0.0.1", r));
+    await listenOn(srv, 18098);
     try {
       const lookup = gwRevocation.revocationLookup({
         url: "http://127.0.0.1:18098",
@@ -1096,7 +1216,7 @@ describe("gateway live proxy against stubs", () => {
         res.end(JSON.stringify({ stub: true }));
       });
     });
-    await new Promise((r) => stub.listen(18081, "127.0.0.1", r));
+    await listenOn(stub, 18081);
     // stdout/stderr are captured rather than ignored: "log loudly" is part of what
     // the degradation mode is for, and a log line nobody can assert on is a log line
     // nobody has read.
@@ -1521,7 +1641,7 @@ describe("gateway live proxy against stubs", () => {
       res.setHeader("content-type", "application/json");
       res.end(JSON.stringify(cannedBody));
     });
-    await new Promise((r) => canned.listen(18078, "127.0.0.1", r));
+    await listenOn(canned, 18078);
     try {
       cannedBody = {
         status: "ready",
@@ -2487,7 +2607,9 @@ describe("curriculum service (in-process)", () => {
     const r = await app.inject({
       method: "GET",
       url: "/ide/phases/ui",
-      headers: { "x-user-id": "u1", "x-entitled": "1" },
+      // What the edge injects for a subscription: entitled, and every course
+      // covered. A seat carries the one course it was bought for.
+      headers: { "x-user-id": "u1", "x-entitled": "1", "x-entitled-courses": "*" },
     });
     assert.equal(r.statusCode, 200);
     const b = r.json();
@@ -2501,11 +2623,36 @@ describe("curriculum service (in-process)", () => {
     for (const id of b.phase.activities) assert.ok(id in b.activities, `${id} is served with the phase`);
     assert.match(r.headers["cache-control"], /no-store/, "a paid payload never sits in a shared cache");
   });
+  it("serves a paid phase to a learner whose seat covers that course", async () => {
+    const r = await app.inject({
+      method: "GET",
+      url: "/ide/phases/ui",
+      headers: { "x-user-id": "u1", "x-entitled": "1", "x-entitled-courses": "task-manager" },
+    });
+    assert.equal(r.statusCode, 200, "the seat covers the course the phase is in");
+  });
+  it("refuses a paid phase of a course the verdict does not cover", async () => {
+    const r = await app.inject({
+      method: "GET",
+      url: "/ide/phases/ui",
+      headers: { "x-user-id": "u1", "x-entitled": "1", "x-entitled-courses": "rust-ledger" },
+    });
+    assert.equal(r.statusCode, 402, "a seat in one course is not a seat in another");
+    assert.equal(r.json().error.code, "entitlement_required");
+  });
+  it("fails closed when the verdict carries no course at all", async () => {
+    const r = await app.inject({
+      method: "GET",
+      url: "/ide/phases/ui",
+      headers: { "x-user-id": "u1", "x-entitled": "1" },
+    });
+    assert.equal(r.statusCode, 402, "a verdict with no course covers nothing");
+  });
   it("404s an unknown phase for an entitled caller", async () => {
     const r = await app.inject({
       method: "GET",
       url: "/ide/phases/nope",
-      headers: { "x-user-id": "u1", "x-entitled": "1" },
+      headers: { "x-user-id": "u1", "x-entitled": "1", "x-entitled-courses": "*" },
     });
     assert.equal(r.statusCode, 404);
   });
@@ -7171,7 +7318,7 @@ describe("gateway global breaker (P0)", () => {
       res.setHeader("content-type", "application/json");
       res.end(JSON.stringify({ ok: true }));
     });
-    await new Promise((r) => stub.listen(18082, "127.0.0.1", r));
+    await listenOn(stub, 18082);
     // AUTH_URL/CURRICULUM_URL/EXECUTION_URL/BILLING_URL all point at the stub so
     // no real upstream is needed: this test is only about the edge limiter.
     proc = spawn("node", ["services/gateway/dist/index.js"], {
@@ -7233,6 +7380,292 @@ describe("gateway global breaker (P0)", () => {
     // The breaker is checked BEFORE the route is forwarded: upstream saw only the
     // allowed requests, so a refused flood never reaches a service.
     assert.equal(stubHits, LIMIT, "only the allowed requests were proxied upstream");
+  });
+});
+
+/* B-12: the synthetic journey check — login → mission → run.
+ *
+ * The script is spawned exactly as cron runs it — a child process, its exit
+ * status and its output read — and the platform it walks is a canned gateway
+ * here, because the real one needs Postgres this suite runs without. What
+ * that costs is honest: these routes' real contracts are pinned by the auth,
+ * curriculum and execution suites. What it buys is control over every verdict
+ * the journey can receive, so each exit status and each reason the check can
+ * print is exercised — including the two that must never be confused: the
+ * platform saying no (1) and the check being unable to ask (2). */
+describe("the synthetic login→mission→run check (B-12)", () => {
+  const EMAIL = "canary@example.com";
+  const PASSWORD = "canary-passphrase-1"; // ≥ 10 chars: the register schema's floor
+  const MARKER = "nexora-synthetic-ok";
+  const REST = { login: "ok", register: "exists", identity: "ok", manifest: "ok", phase: "served", run: "ok" };
+  const behavior = { ...REST };
+  const seen = { registerBody: null };
+  let canned = null;
+  let port = 0;
+
+  beforeEach(() => {
+    Object.assign(behavior, REST);
+    seen.registerBody = null;
+  });
+
+  before(async () => {
+    canned = http.createServer((req, res) => {
+      const chunks = [];
+      req.on("data", (c) => chunks.push(c));
+      req.on("end", () => {
+        let body = {};
+        try {
+          body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+        } catch {
+          /* no step here cares about an unparseable inbound body */
+        }
+        const send = (status, payload, extra = {}) => {
+          res.writeHead(status, { "content-type": "application/json", ...extra });
+          res.end(JSON.stringify(payload));
+        };
+        const envelope = (status, code, message) => send(status, { error: { code, message, requestId: "canned" } });
+        const url = req.url.split("?")[0];
+
+        if (req.method === "POST" && url === "/api/auth/register") {
+          seen.registerBody = body;
+          if (behavior.register === "limited") return envelope(429, "rate_limited", "Too many accounts created from this address.");
+          if (behavior.register === "created") return send(201, { user: { id: "u-canary" }, tokens: {} });
+          return envelope(409, "conflict", "An account with this email already exists.");
+        }
+        if (req.method === "POST" && url === "/api/auth/login") {
+          if (behavior.login === "refused") return envelope(401, "invalid_credentials", "Email or password is incorrect.");
+          if (behavior.login === "shaped") return send(200, { user: { id: "u-canary" } }); // no tokens
+          return send(200, {
+            user: { id: "u-canary" },
+            tokens: { accessToken: "tok-canned", refreshToken: "r", expiresIn: 900 },
+          });
+        }
+        if (req.method === "GET" && url === "/api/auth/me") {
+          if (behavior.identity === "refused") return envelope(401, "unauthorized", "Missing authenticated user.");
+          if (req.headers.authorization !== "Bearer tok-canned") return envelope(401, "unauthorized", "Missing authenticated user.");
+          return send(200, { user: { id: "u-canary" } });
+        }
+        if (req.method === "GET" && url === "/api/curriculum/ide/manifest") {
+          if (behavior.manifest === "down") return envelope(500, "internal", "Something went wrong.");
+          return send(200, {
+            manifest: { id: "task-manager", phases: [{ id: "setup" }, { id: "fundamentals" }] },
+            course: "task-manager",
+          });
+        }
+        if (req.method === "GET" && url.startsWith("/api/curriculum/ide/phases/")) {
+          const id = url.slice(url.lastIndexOf("/") + 1);
+          if (behavior.phase === "down") return envelope(503, "entitlement_unavailable", "We can't confirm your subscription right now.");
+          if (behavior.phase === "paywall") return envelope(402, "entitlement_required", "This content is part of the paid curriculum.");
+          return send(200, { phase: { id }, bodies: [] });
+        }
+        if (req.method === "POST" && url === "/api/execute/execute") {
+          if (behavior.run === "quota") return envelope(429, "quota_reached", "Daily execution quota reached (200). Try again tomorrow.");
+          if (behavior.run === "missing-language") return envelope(503, "language_unavailable", "node is not installed on this runner (missing node).");
+          if (behavior.run === "wrong-output") {
+            return send(200, { stdout: "something else\n", stderr: "", exitCode: 0, timedOut: false, truncated: false, durationMs: 4, runner: "subprocess" });
+          }
+          if (behavior.run === "crashed") {
+            return send(200, { stdout: "", stderr: "boom", exitCode: 1, timedOut: false, truncated: false, durationMs: 4, runner: "subprocess" });
+          }
+          return send(
+            200,
+            { stdout: `${MARKER}\n`, stderr: "", exitCode: 0, timedOut: false, truncated: false, durationMs: 41, runner: "subprocess" },
+            { "x-execution-daily-remaining": "199" }
+          );
+        }
+        envelope(404, "not_found", `No route ${req.method} ${url}.`);
+      });
+    });
+    await new Promise((resolve) => {
+      canned.once("error", resolve);
+      canned.listen(0, "127.0.0.1", resolve);
+    });
+    port = canned.address().port;
+  });
+
+  after(() => (canned ? new Promise((resolve) => canned.close(resolve)) : undefined));
+
+  /* Spawned, not spawnSync: the canned platform lives in *this* process, so a
+     blocking child would deadlock the loop it is waiting on. */
+  const run = (args = [], env = {}, url = `http://127.0.0.1:${port}`) =>
+    new Promise((resolve) => {
+      const child = spawn(
+        process.execPath,
+        [join(root, "scripts", "synthetic.mjs"), url, ...args],
+        {
+          cwd: root,
+          env: { ...process.env, SYNTHETIC_EMAIL: EMAIL, SYNTHETIC_PASSWORD: PASSWORD, ...env },
+          stdio: ["ignore", "pipe", "pipe"],
+        }
+      );
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (d) => (stdout += d));
+      child.stderr.on("data", (d) => (stderr += d));
+      child.on("close", (code) => resolve({ code, stdout, stderr }));
+    });
+
+  it("the whole journey passes, and says what it saw", async () => {
+    const prose = await run();
+    assert.equal(prose.code, 0, prose.stderr);
+    assert.match(prose.stdout, /^journey ok: sign-in/);
+    assert.match(prose.stdout, /manifest \(task-manager: 2 phases → setup\)/);
+    assert.match(prose.stdout, /run \(exit 0 in 41ms via subprocess, 199 runs left today\)/);
+
+    const json = await run(["--json"]);
+    assert.equal(json.code, 0, json.stderr);
+    const summary = JSON.parse(json.stdout);
+    assert.equal(summary.ok, true);
+    assert.deepEqual(
+      summary.steps.map((s) => s.step),
+      ["sign-in", "identity", "manifest", "phase", "run"],
+      "the journey is walked in the order a learner walks it"
+    );
+    assert.equal(summary.steps.find((s) => s.step === "phase").status, 200);
+
+    const quiet = await run(["--quiet"]);
+    assert.equal(quiet.code, 0);
+    assert.equal(quiet.stdout, "", "--quiet prints nothing when everything passes");
+  });
+
+  it("the paywall's own answer passes, and is recorded rather than swallowed", async () => {
+    behavior.phase = "paywall";
+    const json = await run(["--json"]);
+    assert.equal(json.code, 0, json.stderr);
+    const phase = JSON.parse(json.stdout).steps.find((s) => s.step === "phase");
+    assert.equal(phase.status, 402, "billing answered — the platform is healthy");
+    assert.match(phase.detail, /paywall refused \(402 entitlement_required\)/);
+  });
+
+  it("a refused sign-in is the platform saying no (1), and names the fix", async () => {
+    behavior.login = "refused";
+    const r = await run();
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /FAIL .* at sign-in/);
+    assert.match(r.stderr, /provision the canary once with --provision/);
+  });
+
+  it("the token sign-in issued being refused is the edge and auth disagreeing (1)", async () => {
+    behavior.identity = "refused";
+    const r = await run();
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /the token sign-in just issued was refused/);
+  });
+
+  it("a sign-in reply without tokens is the protocol failing (2), not the platform refusing", async () => {
+    behavior.login = "shaped";
+    const r = await run();
+    assert.equal(r.code, 2, r.stdout);
+    assert.match(r.stderr, /not a sign-in answer/);
+    assert.match(r.stderr, /exit 2: the check could not do its job/);
+  });
+
+  it("entitlement unconfirmable is the platform's 503 (1), not the check's silence", async () => {
+    behavior.phase = "down";
+    const r = await run();
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /entitlement cannot be confirmed/);
+  });
+
+  it("a manifest the curriculum cannot serve is a failure (1), not an empty journey", async () => {
+    behavior.manifest = "down";
+    const r = await run();
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /manifest answered HTTP 500/);
+  });
+
+  it("the quota refusing this account pages, with the cadence named", async () => {
+    behavior.run = "quota";
+    const r = await run();
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /daily execution quota reached for this account/);
+    assert.match(r.stderr, /cadence is too high/);
+  });
+
+  it("a runner without the language is the platform's problem (1)", async () => {
+    behavior.run = "missing-language";
+    const r = await run();
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /runner unavailable \(language_unavailable/);
+  });
+
+  it("a run that exited 0 without the marker is a failure — something else ran", async () => {
+    behavior.run = "wrong-output";
+    const r = await run();
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /stdout did not contain nexora-synthetic-ok/);
+  });
+
+  it("a program that crashes is told apart from a platform that is broken", async () => {
+    behavior.run = "crashed";
+    const r = await run();
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /the program ran and failed: exit 1 — boom/);
+  });
+
+  it("no gateway is exit 2 — asked and unanswered, kept apart from refused", async () => {
+    // A listener opened and closed, so the port is guaranteed to be one
+    // nothing answers on rather than one this machine might repurpose.
+    const silent = http.createServer();
+    await new Promise((resolve) => silent.listen(0, "127.0.0.1", resolve));
+    const deadPort = silent.address().port;
+    await new Promise((resolve) => silent.close(resolve));
+    const r = await run([], {}, `http://127.0.0.1:${deadPort}`);
+    assert.equal(r.code, 2, r.stdout);
+    assert.match(r.stderr, /request failed: fetch failed/);
+    assert.match(r.stderr, /exit 2: the check could not do its job/);
+  });
+
+  it("a gateway that accepts and never answers is exit 2 too, within the timeout it was given", async () => {
+    // The other half of "could not ask": a port that speaks but says nothing,
+    // so the abort — not the refusal — is what carries the answer. 500ms keeps
+    // the test fast; the message quotes whatever it was given.
+    const hung = http.createServer(() => {
+      /* accepts, then deliberately never writes a byte */
+    });
+    await new Promise((resolve) => hung.listen(0, "127.0.0.1", resolve));
+    const hungPort = hung.address().port;
+    try {
+      const r = await run(["--timeout=500"], {}, `http://127.0.0.1:${hungPort}`);
+      assert.equal(r.code, 2, r.stdout);
+      assert.match(r.stderr, /no reply within 500ms/);
+      assert.match(r.stderr, /exit 2: the check could not do its job/);
+    } finally {
+      await new Promise((resolve) => hung.close(resolve));
+    }
+  });
+
+  it("without credentials the check cannot do its job (2), and says what to set", async () => {
+    const r = await run([], { SYNTHETIC_EMAIL: "", SYNTHETIC_PASSWORD: "" });
+    assert.equal(r.code, 2, r.stdout);
+    assert.match(r.stderr, /no credentials: set SYNTHETIC_EMAIL and SYNTHETIC_PASSWORD/);
+  });
+
+  it("--provision creates the account carrying the declarations production demands", async () => {
+    behavior.register = "created";
+    const r = await run(["--provision", "--json"]);
+    assert.equal(r.code, 0, r.stderr);
+    const steps = JSON.parse(r.stdout).steps;
+    assert.equal(steps[0].step, "provision");
+    assert.equal(steps[0].status, 201);
+    assert.equal(seen.registerBody.acceptTerms, true, "production refuses an account without the terms acceptance");
+    assert.equal(seen.registerBody.acceptPrivacy, true, "…or the privacy notice");
+    assert.equal(seen.registerBody.ageAffirmed, true, "…or the age affirmation");
+  });
+
+  it("--provision takes an existing account as a fact, not a failure", async () => {
+    const r = await run(["--provision", "--json"]);
+    assert.equal(r.code, 0, r.stderr);
+    const provision = JSON.parse(r.stdout).steps.find((s) => s.step === "provision");
+    assert.equal(provision.status, 409);
+    assert.match(provision.detail, /already exists/);
+  });
+
+  it("--provision reports a rate-limited registration as the platform saying no (1)", async () => {
+    behavior.register = "limited";
+    const r = await run(["--provision"]);
+    assert.equal(r.code, 1, r.stdout);
+    assert.match(r.stderr, /register refused \(429 rate_limited/);
   });
 });
 
@@ -7405,6 +7838,69 @@ describe("the Google Cloud plan matches the code it deploys", () => {
     );
   });
 
+  it("a service that cannot scale is caught", () => {
+    const broken = clone();
+    const gateway = broken.services.find((s) => s.service === "gateway");
+    gateway.minInstances = 9;
+    gateway.maxInstances = 2;
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("cannot scale below")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a service that scales to zero without saying so is caught", () => {
+    const broken = clone();
+    const curriculum = broken.services.find((s) => s.service === "curriculum");
+    curriculum.scaleToZero = false;
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("scale to zero")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a service whose scaling has no reason is caught", () => {
+    const broken = clone();
+    broken.services[0].why = "";
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("why it scales")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a database with no backup is caught", () => {
+    const broken = clone();
+    broken.database.backup.enabled = false;
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("no automated backup")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a database that can be deleted by accident is caught", () => {
+    const broken = clone();
+    broken.database.deletionProtection = false;
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("deletion protection")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
+  it("a budget that never alerts is caught", () => {
+    const broken = clone();
+    broken.observability.budget.thresholds = [];
+    const reasons = planModule.planBlockers(broken);
+    assert.ok(
+      reasons.some((r) => r.includes("never alerts")),
+      `the wrong reason fired: ${reasons.join("; ")}`
+    );
+  });
+
   it("the deploy commands are the ones the plan says they are", () => {
     const gateway = plan.services.find((s) => s.service === "gateway");
     const commands = deployModule.deployCommands(gateway, "img:1", "us-central1", "p");
@@ -7414,13 +7910,150 @@ describe("the Google Cloud plan matches the code it deploys", () => {
     assert.equal(deploy.args[deploy.args.indexOf("--ingress") + 1], "internal-and-cloud-load-balancing");
     assert.equal(deploy.args[deploy.args.indexOf("--port") + 1], "8080");
     assert.ok(deploy.args.some((a) => a.includes("FRONTEND_URL=https://nexora.dev")));
+    // The scaling knobs are in the deploy, because a plan that states them
+    // and a deploy that does not apply them are two different plans.
+    assert.equal(deploy.args[deploy.args.indexOf("--min-instances") + 1], String(gateway.minInstances));
+    assert.equal(deploy.args[deploy.args.indexOf("--max-instances") + 1], String(gateway.maxInstances));
+    assert.equal(deploy.args[deploy.args.indexOf("--cpu-threshold") + 1], String(gateway.cpuThreshold));
+    assert.equal(deploy.args[deploy.args.indexOf("--concurrency") + 1], String(gateway.concurrency));
     const secrets = commands.find((c) => c.label === "mount secrets for nexora-gateway");
     assert.ok(secrets, "the secrets are mounted in their own step");
     assert.ok(secrets.args.some((a) => a.includes("INTERNAL_API_KEY=nexora-internal-api-key:latest")));
+  });
+
+  it("the backup commands turn the backups on and protect the instance", () => {
+    const commands = deployModule.backupCommands(plan);
+    const backup = commands.find((c) => c.args.includes("--retention-settings"));
+    assert.ok(backup, "there is a backup command");
+    assert.ok(backup.args.includes("--enable-point-in-time-recovery"));
+    assert.ok(
+      backup.args.some((a) => a.includes(`file-retention=${plan.database.backup.fileRetentionDays}`)),
+      "the retention window is applied"
+    );
+    assert.ok(
+      commands.some((c) => c.args.includes("--deletion-protection")),
+      "and the instance is protected from deletion"
+    );
   });
 
   it("the peer URLs are filled in, and only the ones that are known", () => {
     const filled = planModule.fillPlan(plan, { auth: "a.run.app" }, { host: "db", password: "pw" });
     const gateway = filled.services.find((s) => s.service === "gateway");
     assert.equal(gateway.env.AUTH_URL, "https://a.run.app");
-    // A peer that was not resolved keep
+    // A peer that was not resolved keeps its placeholder rather than becoming
+    // a URL that is literally "{{curriculum}}" and fails as a DNS error.
+    assert.equal(gateway.env.CURRICULUM_URL, "https://{{curriculum}}");
+    const auth = filled.services.find((s) => s.service === "auth");
+    assert.equal(auth.env.DATABASE_URL, "postgres://nexora:pw@db:5432/authdb");
+  });
+});
+
+/* B-12: error reporting — the process-wide half.
+ *
+ * Fastify answers a request that throws; start() answers everything else: a
+ * rejection in a timer, a callback that blew up. Node's default for those is
+ * an unstructured stack on stderr and an exit nobody can grep; the chassis
+ * now emits one structured fatal (service name, event, error object) and
+ * decides the exit itself. The children here are real service processes —
+ * a temp file that boots the built chassis and then breaks it on purpose —
+ * because the thing under test is exactly the part no in-process test can
+ * reach: a listener on the process. Three verdicts are asserted: the line,
+ * the exit, and the optional webhook that turns a crash on one box into a
+ * report wherever the operator is looking. */
+describe("a fatal outside any request is reported, then exited (B-12)", () => {
+  const kitUrl = pathToFileURL(join(root, "packages", "service-kit", "dist", "index.js")).href;
+
+  /* A real service process: boot the built chassis, then break it after the
+     loop is already running, which is when the handlers under test fire. */
+  const makeChild = (name, body) => {
+    const dir = mkdtempSync(join(tmpdir(), "nexora-fatal-"));
+    const file = join(dir, "child.mjs");
+    writeFileSync(
+      file,
+      `import { createService, start } from ${JSON.stringify(kitUrl)};
+const app = await createService(${JSON.stringify(name)});
+await start(app, 0);
+${body}
+`
+    );
+    return file;
+  };
+
+  const runChild = (file, env = {}) =>
+    new Promise((resolve) => {
+      const childEnv = { ...process.env, ALLOW_INSECURE_MESH: "1", ...env };
+      // The webhook must be opted into per test, never inherited: a stray
+      // value in the runner's environment would turn a crash test into a
+      // two-and-a-half-second wait on a hook nobody is serving.
+      if (!("FATAL_WEBHOOK_URL" in env)) delete childEnv.FATAL_WEBHOOK_URL;
+      const child = spawn(process.execPath, [file], { env: childEnv, stdio: ["ignore", "pipe", "pipe"] });
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (d) => (stdout += d));
+      child.stderr.on("data", (d) => (stderr += d));
+      child.on("close", (code) => resolve({ code, stdout, stderr }));
+    });
+
+  const fatalLine = (r) => {
+    const line = r.stdout.split("\n").find((l) => l.includes('"level":60'));
+    assert.ok(line, `a structured fatal line was logged; stdout:\n${r.stdout}\nstderr:\n${r.stderr}`);
+    return JSON.parse(line);
+  };
+
+  it("an exception outside any request is one structured fatal line, and exit 1", async () => {
+    const file = makeChild(
+      "test-fatal-uncaught",
+      `setTimeout(() => { throw new Error("boom-uncaught-b12"); }, 50);`
+    );
+    const r = await runChild(file);
+    assert.equal(r.code, 1, `the process dies rather than limps on: ${r.stderr}`);
+    const fatal = fatalLine(r);
+    assert.equal(fatal.service, "test-fatal-uncaught", "the line names the service that is dying");
+    assert.equal(fatal.event, "uncaughtException", "and which kind of death it was");
+    assert.match(JSON.stringify(fatal.err), /boom-uncaught-b12/, "and carries the error itself");
+  });
+
+  it("an awaited-nowhere rejection is reported the same way", async () => {
+    const file = makeChild(
+      "test-fatal-rejection",
+      `setTimeout(() => { void Promise.reject(new Error("boom-rejection-b12")); }, 50);`
+    );
+    const r = await runChild(file);
+    assert.equal(r.code, 1, `a rejection nobody awaited is fatal too: ${r.stderr}`);
+    const fatal = fatalLine(r);
+    assert.equal(fatal.service, "test-fatal-rejection");
+    assert.equal(fatal.event, "unhandledRejection");
+    assert.match(JSON.stringify(fatal.err), /boom-rejection-b12/);
+  });
+
+  it("the fatal is also POSTed to FATAL_WEBHOOK_URL before the process dies", async () => {
+    const posts = [];
+    const hook = http.createServer((req, res) => {
+      const chunks = [];
+      req.on("data", (c) => chunks.push(c));
+      req.on("end", () => {
+        posts.push(Buffer.concat(chunks).toString("utf8"));
+        res.writeHead(204);
+        res.end();
+      });
+    });
+    await new Promise((resolve) => hook.listen(0, "127.0.0.1", resolve));
+    try {
+      const file = makeChild(
+        "test-fatal-webhook",
+        `setTimeout(() => { throw new Error("boom-hook-b12"); }, 50);`
+      );
+      const r = await runChild(file, { FATAL_WEBHOOK_URL: `http://127.0.0.1:${hook.address().port}/hook` });
+      assert.equal(r.code, 1, `the webhook does not save the process: ${r.stderr}`);
+      assert.equal(posts.length, 1, "the report left the process before the exit");
+      const report = JSON.parse(posts[0]);
+      assert.equal(report.service, "test-fatal-webhook", "the operator learns which service died");
+      assert.equal(report.event, "uncaughtException");
+      assert.equal(report.message, "boom-hook-b12", "in the operator's own words, not a stack alone");
+      assert.match(report.stack, /boom-hook-b12/, "with the stack for the ones who want it");
+      assert.ok(!Number.isNaN(Date.parse(report.at)), "and a timestamp the receiving end can store");
+    } finally {
+      await new Promise((resolve) => hook.close(resolve));
+    }
+  });
+});

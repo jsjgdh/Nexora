@@ -1,1 +1,0 @@
-function e(...e){return e.filter(Boolean).join(` `)}function t(e){if(!e)return`never`;let t=Date.now()-new Date(e).getTime(),n=Math.floor(t/6e4);if(n<1)return`just now`;if(n<60)return`${n}m ago`;let r=Math.floor(n/60);if(r<24)return`${r}h ago`;let i=Math.floor(r/24);return i<30?`${i}d ago`:new Date(e).toLocaleDateString()}export{t as n,e as t};

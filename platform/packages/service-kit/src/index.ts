@@ -232,6 +232,11 @@ export async function createService(name: string, opts: ServiceOptions = {}): Pr
     trustProxy: true,
   });
 
+  // Named here so start()'s process-level reporter can say which service is
+  // dying: threading the name through the start() signature would mean
+  // touching every entry point, for a value the chassis already holds.
+  (app as unknown as { serviceName: string }).serviceName = name;
+
   await app.register(helmet, { contentSecurityPolicy: false });
 
   // Mesh authentication: only the gateway (holder of the key) may call
@@ -313,6 +318,64 @@ function reqLog(app: FastifyInstance, err: unknown) {
 /** Listen + graceful shutdown (drains before exit for rolling deploys). */
 export async function start(app: FastifyInstance, port: number): Promise<void> {
   await app.listen({ port, host: "0.0.0.0" });
+
+  /* Error reporting, the process-wide half (TODO 5.2).
+   *
+   * Fastify answers a request that throws; this is everything else — a
+   * rejection in a timer, a callback that blew up, the failures outside any
+   * request that Node otherwise prints as an unstructured stack and turns
+   * into an exit code nobody can grep. Here the line is one structured
+   * fatal with the service name and the error object, matching every other
+   * log this service writes, and the exit is decided rather than defaulted.
+   *
+   * Attached in start() and never in createService() on purpose: this suite
+   * (and dev) create services in-process by the dozen, and process-level
+   * handlers belong to the real process, not to each instance — attaching
+   * there would put a crash-the-suite listener behind every test's factory.
+   *
+   * FATAL_WEBHOOK_URL is the "reporting" half: set, the fatal is also POSTed
+   * as one small JSON body (service, event, message, stack) to whatever the
+   * operator points it at — any endpoint that accepts JSON, so a single-VPS
+   * deploy gets error reporting without adopting a vendor. Unset, the log
+   * line is the report, and `docker logs` is where it is read. Either way the
+   * bound is short: a dying process never waits on a reporting endpoint. */
+  const serviceName = (app as unknown as { serviceName?: string }).serviceName ?? "service";
+  const report = (event: string, err: unknown): void => {
+    app.log.fatal({ err, event }, `${event}: the process cannot continue`);
+    const die = (): void => {
+      try {
+        (app.log as { flush?: () => void }).flush?.();
+      } catch {
+        /* a logger that will not flush is not worth a second failure */
+      }
+      process.exit(1);
+    };
+    const hook = process.env.FATAL_WEBHOOK_URL;
+    if (!hook) return die();
+    fetch(hook, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        service: serviceName,
+        event,
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? (err.stack ?? "").slice(0, 2000) : "",
+        at: new Date().toISOString(),
+      }),
+      signal: AbortSignal.timeout(2_000),
+    })
+      .catch(() => undefined)
+      .finally(() => die());
+    // …and a ceiling under the bound, in case fetch itself misbehaves.
+    setTimeout(die, 2_500).unref();
+  };
+  process.on("uncaughtException", (err) => report("uncaughtException", err));
+  // With a listener present Node no longer applies its default of printing
+  // and crashing — the report is the crash now, so it decides the exit too.
+  // Same verdict either way: a rejection nobody awaited means the state
+  // after it cannot be trusted, and the line says so before the code says 1.
+  process.on("unhandledRejection", (reason) => report("unhandledRejection", reason));
+
   const stop = async (signal: string) => {
     app.log.info({ signal }, "shutting down");
     try {

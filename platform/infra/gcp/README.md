@@ -79,21 +79,36 @@ Two facts about the current product that decide the order:
 
 ## The order of operations
 
-### 1. Provision the database
+### 1. Provision the database, and turn the backups on
 
 ```sh
 node infra/gcp/dist/deploy.js --print     # shows the commands without running them
 ```
 
-The instance, the two databases, and the Secret Manager entries are created
-first, because everything else needs them to exist.
+The instance, the two databases, the automated backups, the deletion
+protection and the Secret Manager entries are created first, because
+everything else needs them to exist.
 
 - Cloud SQL is created **without a public IP** (`--no-assign-ip`). The services
   reach it through the **Cloud SQL Auth Proxy** sidecar, which Cloud Run
   supports natively. That is the difference between a database that is only
   reachable from inside Google and one that is on the internet.
+- The **automated backups are part of the same step**, not a later
+  remembrance: a daily window at 03:00, seven days of file retention, seven
+  days of transaction logs and point-in-time recovery, so a mistake is
+  recoverable from any minute in the week and not only from the last dump.
+  The instance also gets **deletion protection**, because a database that one
+  command can delete is one command away from gone.
 - The `nexora` role's password is generated and stored in Secret Manager as
   `nexora-db-password`. It is never written into a file, an image, or the plan.
+
+The engine-level restore drill is the one that is still owed, and it is
+written down rather than assumed: restore the latest automated backup into a
+NEW instance and run the platform's own drill against it
+(`npm run drill -- --url=…`). The drill proves the rows come back; the engine
+backup proves the engine can be restored. They are different mechanisms and
+the runbook must not confuse them. See
+[OPERATIONS.md](docs/OPERATIONS.md) for the whole contract.
 
 ### 2. Generate the secrets
 
@@ -142,6 +157,23 @@ exist until the service does:
 So the first run of a fresh project leaves the gateway pointing at nothing it
 can reach, and the second run completes it. **Run it twice** on a new project,
 or run it once and re-run the dependents.
+
+**The scaling settings are part of the deploy**, because a plan that states
+them and a deploy that does not apply them are two different plans. Each
+service carries its own minimum, maximum, CPU threshold and concurrency, and a
+sentence saying why it scales that way:
+
+| Service | Min | Max | Why |
+|---|---|---|---|
+| `curriculum` | 0 | 4 | The roadmap and the phase bodies are read from disk and change rarely, so it scales to zero between lessons and costs nothing while idle |
+| `billing` | 1 | 4 | A scale-to-zero here would put a cold start in front of a checkout — the one moment a learner is deciding whether to pay |
+| `auth` | 2 | 6 | Every authenticated request checks the revocation list, so it stays warm; two instances so a deploy is not an outage |
+| `execution` | 1 | 4 | Its queue and its daily quota counters live in the process, so it must never scale to zero |
+| `gateway` | 2 | 6 | The only public surface. The second instance waits for a shared rate-limit store — see OPERATIONS.md §1 |
+
+**The execution service must keep at least one instance**, and it is the one
+service whose "down" means "learners' hosted runs are refused" rather than
+"requests queue for a second".
 
 ### 5. The load balancer
 
@@ -220,6 +252,16 @@ In order, because each one tells you which step failed:
 4. **The receipts verify offline** — the front door's `/verify` re-derives a
    verdict in the browser against the published key. If that fails, the
    `RECEIPT_ED25519_KEY` is not the one whose public half is published.
+5. **The monitor is installed**, so a fault pages rather than being noticed
+   the next morning:
+
+   ```sh
+   * * * * * cd /srv/nexora/platform && npm run monitor -- --quiet
+   ```
+
+   It reports a fault that begins and a fault that ends, and stays quiet in
+   between. `MONITOR_TO` is where the message goes; `RESEND_API_KEY` and
+   `RESEND_FROM` are the provider the platform already has.
 
 ## Rollback
 
@@ -236,15 +278,17 @@ reviewed as such.
 
 ## What is not done yet, and is not a plan's job to hide
 
-- **No backups and no restore drill.** Cloud SQL's automated backups are on;
-  the restore drill has not been performed. Do it before any learner data the
-  team cannot afford to lose exists.
-- **No alerting.** The gateway's `/health/deep` is the thing worth alerting on,
-  and `npm run healthcheck` is a crontab-shaped command that exits 0/1/2. What
-  is missing is a monitor that pages anyone.
-- **Rate limits and quotas are in-memory** and per-instance, so they are
-  correct on one instance and wrong on two. Scale the gateway past one instance
-  and the limits need a shared store.
+- **No live rehearsal.** The deploy procedure has not been run against a real
+  project, including the rollback step. The first deploy is a drill, with the
+  team present.
+- **The restore drill has not been performed against a real database.** The
+  command exists and is proven against a real Postgres in CI; what is owed is
+  running it against a restored engine backup on a real instance.
+- **No alerting is wired.** The monitor exists, and the cron line is in this
+  file; installing it is an operator step.
+- **The gateway's rate limits are per-instance**, so the second instance in
+  the table above is a placeholder until a shared store exists — see
+  [OPERATIONS.md](docs/OPERATIONS.md) §1.
 - **The `docker` runner is refused in production** unless
   `EXECUTION_RUNNER=docker` is set, which the plan does. On Cloud Run there is
   no Docker daemon, so the general hosted-run path (`/execute`, a learner's

@@ -43,6 +43,13 @@ COPY --from=build /app/services/execution/dist ./services/execution/dist
 COPY --from=build /app/services/billing/dist ./services/billing/dist
 COPY --from=build /app/services/auth/migrations ./services/auth/migrations
 COPY --from=build /app/services/billing/migrations ./services/billing/migrations
+# The backup and the restore drill travel IN the image, so the operator can run
+# them from the same artifact that is running — `docker compose run --rm backup`
+# — without a second copy of the platform on the host, and without the host
+# needing a Postgres client it would otherwise have to keep in step with the
+# server's version.
+COPY scripts/backup.mjs ./scripts/backup.mjs
+COPY scripts/backup-drill.mjs ./scripts/backup-drill.mjs
 
 # The execution service is the one image that must run learner code, and Go is
 # the product's teaching language, so only that image pays for the toolchain.

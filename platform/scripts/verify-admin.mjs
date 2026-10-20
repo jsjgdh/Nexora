@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createServer } from "node:net";
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { Pool } from "pg";
@@ -22,7 +23,22 @@ import { registerAdminRoutes } from "../services/auth/dist/admin.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
-const PORT = 55499;
+
+/* A port the operating system picks, so the suite never collides with a
+   running stack or with itself on a machine that already has one. */
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.unref();
+    probe.on("error", reject);
+    probe.listen(0, "127.0.0.1", () => {
+      const { port } = probe.address();
+      probe.close(() => resolve(port));
+    });
+  });
+}
+
+const PORT = await freePort();
 
 /* The service chassis refuses to boot without a mesh key, because without one
    every internal route would trust a bare x-user-id header from any caller.
@@ -130,40 +146,28 @@ describe("the operator's console (real database)", () => {
     assert.match(body.error.message, /not an operator/i);
   });
 
-  it("the check route reads the session without spending it", async () => {
-    // A token the service never issued is refused.
-    const bogus = await app.inject({
-      method: "POST",
-      url: "/admin/check",
-      headers: asCaller(),
-      payload: { refreshToken: "not-a-real-token" },
-    });
-    assert.equal(bogus.statusCode, 401);
-
-    // An operator's live session answers, and says so.
-    const op = await app.inject({
+  it("there is no route that takes a session credential in a request body", async () => {
+    // The check route is gone, and this is why.
+    //
+    // It took a refresh token in the body and answered whether the token was
+    // live, and who it belonged to. The auth service's prefix is public at the
+    // edge, so that made a credential oracle for anybody who could reach it: a
+    // stolen thirty-day token could be confirmed, and the account's name and
+    // address read back, without the token ever being used for access. The
+    // token's holder already had those rights, so the harm was the oracle and
+    // the credential travelling in a body, where a log line or an ingestion
+    // pipe can keep it.
+    //
+    // The refresh token belongs in an HttpOnly cookie, and the app's own broker
+    // (the /auth/session endpoints) is where it is exchanged. Nothing in the
+    // product called the route, so it is deleted rather than guarded.
+    const res = await app.inject({
       method: "POST",
       url: "/admin/check",
       headers: asCaller(),
       payload: { refreshToken: OP_TOKEN },
     });
-    assert.equal(op.statusCode, 200);
-    assert.equal(op.json().operator, true);
-    assert.equal(op.json().email, "operator@example.com");
-
-    // A learner's live session answers too, and says no.
-    const learner = await app.inject({
-      method: "POST",
-      url: "/admin/check",
-      headers: asCaller(),
-      payload: { refreshToken: LEARNER_TOKEN },
-    });
-    assert.equal(learner.statusCode, 200);
-    assert.equal(learner.json().operator, false);
-
-    // And the check did not spend the token: it is still a live session.
-    const { rows } = await pool.query("SELECT revoked_at FROM refresh_tokens WHERE id = 'r-op'");
-    assert.equal(rows[0].revoked_at, null, "a check must not rotate the session it reads");
+    assert.equal(res.statusCode, 404, "the route is gone, not merely closed");
   });
 
   it("the operator's overview counts what is there", async () => {

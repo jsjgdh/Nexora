@@ -34,22 +34,52 @@
     "    in the image.",
     "  - The run receipts are signed by a key that lives in ONE service's",
     "    environment and nowhere else. The plan keeps that true:",
-    "    `RECEIPT_ED25519_KEY` is mapped for `auth` and `execution` only, because",
-    "    both mint receipts — and for nothing else."
+    "    `RECEIPT_ED25519_KEY` is mapped for `execution` only, because it is the",
+    "    only service that runs code and signs what it observed, and the PUBLIC",
+    "    half is what `auth` gets, because `auth` stores receipts and must not be",
+    "    able to mint one."
   ],
-
   "project": "nexora-prod",
   "region": "us-central1",
   "artifactRegistry": "nexora",
-
   "database": {
     "instance": "nexora-postgres",
     "engineVersion": "POSTGRES_17",
     "tier": "db-custom-2-4096",
     "availability": "ZONAL",
-    "databases": ["authdb", "billingdb"]
+    "databases": [
+      "authdb",
+      "billingdb"
+    ],
+    "backup": {
+      "enabled": true,
+      "startTime": "03:00",
+      "fileRetentionDays": 7,
+      "transactionLogRetentionDays": 7,
+      "pointInTimeRecovery": true,
+      "binaryLogsEnabled": true
+    },
+    "deletionProtection": true,
+    "user": "nexora"
   },
-
+  "observability": {
+    "logRetentionDays": 30,
+    "budget": {
+      "displayName": "nexora-monthly",
+      "amount": 50,
+      "currency": "USD",
+      "thresholds": [
+        0.5,
+        0.9,
+        1
+      ]
+    },
+    "uptimeCheck": {
+      "path": "/health/live",
+      "periodSeconds": 60,
+      "timeoutSeconds": 10
+    }
+  },
   "services": [
     {
       "name": "nexora-curriculum",
@@ -57,7 +87,7 @@
       "ingress": "internal",
       "public": false,
       "order": 10,
-      "minInstances": 1,
+      "minInstances": 0,
       "maxInstances": 4,
       "cpu": "1",
       "memory": "512Mi",
@@ -69,8 +99,15 @@
         "LOG_LEVEL": "info"
       },
       "secrets": [
-        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" }
-      ]
+        {
+          "env": "INTERNAL_API_KEY",
+          "secret": "nexora-internal-api-key"
+        }
+      ],
+      "cpuThreshold": 70,
+      "concurrency": 80,
+      "scaleToZero": true,
+      "why": "The roadmap and the phase bodies are read from disk and change rarely, so this scales to zero between lessons and costs nothing while idle. A cold start is a second of latency on a request a learner makes once."
     },
     {
       "name": "nexora-billing",
@@ -95,10 +132,23 @@
         "OPERATOR_LEGAL_NAME": "NEXORA"
       },
       "secrets": [
-        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" },
-        { "env": "DODO_PAYMENTS_API_KEY", "secret": "nexora-dodo-api-key" },
-        { "env": "DODO_PAYMENTS_WEBHOOK_SECRET", "secret": "nexora-dodo-webhook-secret" }
-      ]
+        {
+          "env": "INTERNAL_API_KEY",
+          "secret": "nexora-internal-api-key"
+        },
+        {
+          "env": "DODO_PAYMENTS_API_KEY",
+          "secret": "nexora-dodo-api-key"
+        },
+        {
+          "env": "DODO_PAYMENTS_WEBHOOK_SECRET",
+          "secret": "nexora-dodo-webhook-secret"
+        }
+      ],
+      "cpuThreshold": 70,
+      "concurrency": 80,
+      "scaleToZero": false,
+      "why": "Billing is small, but a scale-to-zero here would put a cold start in front of a checkout — the one moment a learner is deciding whether to pay."
     },
     {
       "name": "nexora-auth",
@@ -106,12 +156,14 @@
       "ingress": "internal",
       "public": false,
       "order": 30,
-      "minInstances": 1,
+      "minInstances": 2,
       "maxInstances": 6,
       "cpu": "1",
       "memory": "512Mi",
       "timeoutSeconds": 60,
-      "dependsOn": ["nexora-billing"],
+      "dependsOn": [
+        "nexora-billing"
+      ],
       "env": {
         "PORT": "8080",
         "NODE_ENV": "production",
@@ -128,11 +180,27 @@
         "NEXORA_REQUIRE_CONSENT": "1"
       },
       "secrets": [
-        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" },
-        { "env": "AUTH_JWT_SECRET", "secret": "nexora-auth-jwt-secret" },
-        { "env": "RESEND_API_KEY", "secret": "nexora-resend-api-key" },
-        { "env": "RECEIPT_ED25519_PUBLIC_KEY", "secret": "nexora-receipt-ed25519-public-key" }
-      ]
+        {
+          "env": "INTERNAL_API_KEY",
+          "secret": "nexora-internal-api-key"
+        },
+        {
+          "env": "AUTH_JWT_SECRET",
+          "secret": "nexora-auth-jwt-secret"
+        },
+        {
+          "env": "RESEND_API_KEY",
+          "secret": "nexora-resend-api-key"
+        },
+        {
+          "env": "RECEIPT_ED25519_PUBLIC_KEY",
+          "secret": "nexora-receipt-ed25519-public-key"
+        }
+      ],
+      "cpuThreshold": 70,
+      "concurrency": 80,
+      "scaleToZero": false,
+      "why": "Every authenticated request checks the revocation list, and the auth service is on that path, so it stays warm. Two instances because the gateway calls it on every request; a single instance is a single point of failure for the whole product."
     },
     {
       "name": "nexora-execution",
@@ -157,14 +225,24 @@
         "RECEIPT_KEY_ID": "ed1"
       },
       "secrets": [
-        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" },
-        { "env": "RECEIPT_ED25519_KEY", "secret": "nexora-receipt-ed25519-key" }
+        {
+          "env": "INTERNAL_API_KEY",
+          "secret": "nexora-internal-api-key"
+        },
+        {
+          "env": "RECEIPT_ED25519_KEY",
+          "secret": "nexora-receipt-ed25519-key"
+        }
       ],
       "optionalEnv": {
         "EXECUTION_ALLOW_SUBPROCESS": "Only consulted when EXECUTION_RUNNER is `subprocess`. This deployment uses the `docker` tier, and leaving this unset is exactly what keeps the subprocess tier refused at boot in production — a submitted program must not be able to read this service's own environment.",
         "EXECUTION_GO_CACHE": "A path to a persistent Go build cache. Cloud Run's filesystem is ephemeral, so a shared cache would not survive a cold start; the runner image already carries a prewarmed standard-library cache, which is the part that costs every learner the most.",
         "NEXORA_TAKEHOME_PROJECT": "Only read by the take-home path, where the acceptance suite is handed the learner's project root through the environment. The attested path judges against the platform's own canonical suites and never reads it."
-      }
+      },
+      "cpuThreshold": 70,
+      "concurrency": 40,
+      "scaleToZero": false,
+      "why": "The queue and the daily quota counters live in this process, so it must never scale to zero: a cold start would lose the jobs that were queued and reset the count of the day. Its concurrency is lower because each job is a container, not a request."
     },
     {
       "name": "nexora-gateway",
@@ -172,12 +250,17 @@
       "ingress": "internal-and-cloud-load-balancing",
       "public": true,
       "order": 50,
-      "minInstances": 1,
+      "minInstances": 2,
       "maxInstances": 6,
       "cpu": "1",
       "memory": "512Mi",
       "timeoutSeconds": 60,
-      "dependsOn": ["nexora-auth", "nexora-curriculum", "nexora-execution", "nexora-billing"],
+      "dependsOn": [
+        "nexora-auth",
+        "nexora-curriculum",
+        "nexora-execution",
+        "nexora-billing"
+      ],
       "env": {
         "PORT": "8080",
         "NODE_ENV": "production",
@@ -196,25 +279,33 @@
         "ENTITLEMENT_CACHE_TTL_MS": "60000"
       },
       "secrets": [
-        { "env": "INTERNAL_API_KEY", "secret": "nexora-internal-api-key" },
-        { "env": "AUTH_JWT_SECRET", "secret": "nexora-auth-jwt-secret" }
+        {
+          "env": "INTERNAL_API_KEY",
+          "secret": "nexora-internal-api-key"
+        },
+        {
+          "env": "AUTH_JWT_SECRET",
+          "secret": "nexora-auth-jwt-secret"
+        }
       ],
       "optionalEnv": {
         "CLERK_SECRET_KEY": "Only read in clerk mode. This deployment runs AUTH_MODE=local, where the auth service signs its own tokens; switching to Clerk means setting this and re-running the plan check.",
         "CLERK_JWT_KEY": "Only read in clerk mode, and only as the alternative to CLERK_SECRET_KEY. Local mode never fetches a JWKS, so there is no address to reach.",
         "CLERK_API_URL": "Only read in clerk mode, and only to point at a self-hosted or sovereign Clerk instead of Clerk's hosted default. Local mode has no Clerk to point at.",
         "CLERK_AUTHORIZED_PARTIES": "Only read in clerk mode. In local mode the allowed origin comes from FRONTEND_URL, which this plan sets."
-      }
+      },
+      "cpuThreshold": 70,
+      "concurrency": 80,
+      "scaleToZero": false,
+      "why": "The only public surface. Two instances so a deploy or a crash is not an outage, and the per-instance rate limit is the reason the second instance waits for a shared store (see OPERATIONS.md)."
     }
   ],
-
   "loadBalancer": {
     "name": "nexora-api",
     "domain": "api.nexora.dev",
     "certificate": "nexora-api-cert",
     "service": "nexora-gateway"
   },
-
   "secrets": [
     {
       "name": "nexora-internal-api-key",

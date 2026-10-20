@@ -473,6 +473,9 @@ export function registerCohortRoutes(app: FastifyInstance, pool: Pool): void {
     lines.push("It carries no credit and it is not accredited.");
     lines.push("The institution decides what this work is worth, and the regulator decides what is accredited.");
     lines.push("Each row below is one verified proof by one member.");
+    lines.push(
+      "A member's proofs are listed whatever course they are from, because the ledger is the member's work and not the cohort's."
+    );
     lines.push("The receipt that identifies a row is the signed payload whose sha256 is in the receipt_sha256 column.");
     lines.push("To re-derive a row, post that receipt to /verify and compare the answer with the row.");
     lines.push("");

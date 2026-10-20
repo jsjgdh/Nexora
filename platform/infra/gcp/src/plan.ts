@@ -51,6 +51,10 @@ export interface IPlannedService {
 	readonly order: number;
 	readonly minInstances: number;
 	readonly maxInstances: number;
+	readonly cpuThreshold: number;
+	readonly concurrency: number;
+	readonly scaleToZero: boolean;
+	readonly why: string;
 	readonly cpu: string;
 	readonly memory: string;
 	readonly timeoutSeconds: number;
@@ -81,6 +85,30 @@ export interface IPlan {
 		readonly tier: string;
 		readonly availability: string;
 		readonly databases: readonly string[];
+		readonly backup: {
+			readonly enabled: boolean;
+			readonly startTime: string;
+			readonly fileRetentionDays: number;
+			readonly transactionLogRetentionDays: number;
+			readonly pointInTimeRecovery: boolean;
+			readonly binaryLogsEnabled: boolean;
+		};
+		readonly deletionProtection: boolean;
+		readonly user: string;
+	};
+	readonly observability: {
+		readonly logRetentionDays: number;
+		readonly budget: {
+			readonly displayName: string;
+			readonly amount: number;
+			readonly currency: string;
+			readonly thresholds: readonly number[];
+		};
+		readonly uptimeCheck: {
+			readonly path: string;
+			readonly periodSeconds: number;
+			readonly timeoutSeconds: number;
+		};
 	};
 	readonly services: readonly IPlannedService[];
 	readonly loadBalancer: {
@@ -428,6 +456,73 @@ export function planBlockers(plan: IPlan): string[] {
 	}
 	if (!verifiers.includes("auth")) {
 		blockers.push("the auth service holds no receipt public key, so it cannot verify what it is asked to store");
+	}
+
+	// (15) The scaling knobs are coherent, and every service says why it is
+	// configured the way it is. A minimum above the maximum is a service that
+	// cannot start; a service that scales to zero must say so out loud, because
+	// a cold start in front of a checkout is a decision and not a default.
+	for (const planned of plan.services) {
+		if (planned.minInstances < 0) {
+			blockers.push(`${planned.name} has a negative minimum instance count`);
+		}
+		if (planned.minInstances > planned.maxInstances) {
+			blockers.push(`${planned.name} cannot scale below ${planned.minInstances} and above ${planned.maxInstances} at the same time`);
+		}
+		if (planned.scaleToZero !== (planned.minInstances === 0)) {
+			blockers.push(`${planned.name} says it ${planned.scaleToZero ? "does" : "does not"} scale to zero, but its minimum is ${planned.minInstances}`);
+		}
+		if (planned.why.trim().length < 40) {
+			blockers.push(`${planned.name} does not say why it scales the way it does`);
+		}
+		if (planned.cpuThreshold < 10 || planned.cpuThreshold > 95) {
+			blockers.push(`${planned.name} scales on ${planned.cpuThreshold}% CPU, which is outside the range where the answer is useful`);
+		}
+		if (planned.concurrency < 1) {
+			blockers.push(`${planned.name} allows ${planned.concurrency} concurrent requests per instance`);
+		}
+	}
+
+	// (16) The database is backed up, the backups are kept long enough to be
+	// worth having, and the instance cannot be deleted by accident. A database
+	// with no automated backup is the whole of the product's evidence in one
+	// disk, and a database that can be deleted with one command is one command
+	// away from gone.
+	if (!plan.database.backup.enabled) {
+		blockers.push("the database has no automated backup");
+	}
+	if (plan.database.backup.fileRetentionDays < 7) {
+		blockers.push(`backups are kept for ${plan.database.backup.fileRetentionDays} day(s); a weekly cycle has to survive one`);
+	}
+	if (plan.database.backup.transactionLogRetentionDays < 1) {
+		blockers.push("the transaction log is not retained, so a point-in-time restore can only go back to the last dump");
+	}
+	if (!plan.database.backup.pointInTimeRecovery) {
+		blockers.push("point-in-time recovery is off, so a mistake is only recoverable from the last dump");
+	}
+	if (!plan.database.deletionProtection) {
+		blockers.push("the database instance has no deletion protection");
+	}
+
+	// (17) The bill is watched. A budget with no thresholds is a number in a
+	// file; thresholds are what turn it into an alert before the month ends.
+	const budget = plan.observability.budget;
+	if (!(budget.amount > 0)) {
+		blockers.push("no budget amount is set, so nothing alerts before the money is spent");
+	}
+	if (budget.thresholds.length === 0) {
+		blockers.push("the budget has no thresholds, so it never alerts");
+	}
+	for (const threshold of budget.thresholds) {
+		if (threshold <= 0 || threshold > 1) {
+			blockers.push(`the budget threshold ${threshold} is not a fraction of the budget`);
+		}
+	}
+	if (plan.observability.logRetentionDays < 7) {
+		blockers.push(`logs are kept for ${plan.observability.logRetentionDays} day(s), which is too short to investigate an incident`);
+	}
+	if (!plan.observability.uptimeCheck.path.startsWith("/health/")) {
+		blockers.push("the uptime check does not ask a health endpoint");
 	}
 
 	return blockers;

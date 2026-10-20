@@ -1,0 +1,9 @@
+# Build output.
+build/
+.svelte-kit/
+.vercel/
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store

@@ -66,8 +66,14 @@ export function deployCommands(
 				'--platform', 'managed',
 				'--allow-unauthenticated',
 				'--ingress', planned.ingress,
+				// The scaling knobs. `--min-instances 0` is scale to zero: the
+				// service costs nothing while idle and pays a cold start on the
+				// first request. `--cpu-threshold` is when it grows, and
+				// `--concurrency` is how much it takes on before it grows.
 				'--min-instances', String(planned.minInstances),
 				'--max-instances', String(planned.maxInstances),
+				'--cpu-threshold', String(planned.cpuThreshold),
+				'--concurrency', String(planned.concurrency),
 				'--cpu', planned.cpu,
 				'--memory', planned.memory,
 				'--timeout', `${planned.timeoutSeconds}s`,
@@ -88,6 +94,50 @@ export function deployCommands(
 		});
 	}
 	return commands;
+}
+
+/** The gcloud command that turns the automated backups on. */
+export function backupCommands(plan: IPlan): ICommand[] {
+	const backup = plan.database.backup;
+	const retention = `file-retention=${backup.fileRetentionDays},transaction-log-retention=${backup.transactionLogRetentionDays}`;
+	return [
+		{
+			label: `turn on the automated backups for ${plan.database.instance}`,
+			args: [
+				'sql', 'instances', 'patch', plan.database.instance,
+				'--backup-start-time', backup.startTime,
+				'--retention-settings', retention,
+				'--enable-point-in-time-recovery',
+				'--require-ssl',
+				'--project', plan.project,
+			],
+		},
+		{
+			label: `protect ${plan.database.instance} from deletion`,
+			args: [
+				'sql', 'instances', 'patch', plan.database.instance,
+				'--deletion-protection',
+				'--project', plan.project,
+			],
+		},
+	];
+}
+
+/** The gcloud command that sets the budget alert. */
+export function budgetCommand(plan: IPlan): ICommand {
+	const budget = plan.observability.budget;
+	return {
+		label: `create the budget alert ${budget.displayName}`,
+		args: [
+			'billing', 'budgets', 'create',
+			'--billing-account', 'BILLING_ACCOUNT',
+			'--budget-amount', String(budget.amount),
+			'--currency', budget.currency,
+			'--display-name', budget.displayName,
+			'--threshold-rules', budget.thresholds.map((t) => `${Math.round(t * 100)}%`).join(','),
+			'--project', plan.project,
+		],
+	};
 }
 
 /** The gcloud command that creates the Cloud SQL instance and its databases. */
@@ -188,7 +238,13 @@ function main(): void {
 	const region = plan.region;
 
 	if (args.includes('--print')) {
-		for (const command of [registryCommand(plan), ...databaseCommands(plan), ...plan.secrets.map(s => secretCommand(s.name, project))]) {
+		for (const command of [
+			registryCommand(plan),
+			...databaseCommands(plan),
+			...backupCommands(plan),
+			budgetCommand(plan),
+			...plan.secrets.map(s => secretCommand(s.name, project)),
+		]) {
 			console.log(`gcloud ${command.args.join(' ')}`);
 		}
 		return;
@@ -200,6 +256,14 @@ function main(): void {
 	}
 
 	console.log(`\ndeploying to ${project} (${region})…\n`);
+
+	// The database first, with its backups on: a service that boots against a
+	// database that is not there yet fails to start, and a database with no
+	// backups is the whole of the product's evidence on one disk.
+	for (const command of [...databaseCommands(plan), ...backupCommands(plan)]) {
+		console.log(`gcloud ${command.args.join(' ')}`);
+		execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+	}
 
 	// Pass one: the services that depend on nobody. They are the ones whose
 	// URLs the others need, so they have to exist before anything can point at

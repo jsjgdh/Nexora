@@ -1,0 +1,4 @@
+# The monitor's memory of what it last reported. Runtime state, never source:
+# a file that says "this fault is already known" is true on one machine and
+# meaningless on another, so it is not something to share.
+.monitor-state.json

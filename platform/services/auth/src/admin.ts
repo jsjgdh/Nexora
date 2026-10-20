@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { Pool } from "pg";
-import { ApiError, newId, requireUserId, sha256 } from "@nexora/service-kit";
+import { ApiError, newId, requireUserId } from "@nexora/service-kit";
 import { revokeAccountBefore } from "./revocation-store.js";
 
 /* The operator's console, on the platform side.
@@ -91,37 +91,20 @@ function iso(value: unknown): string | null {
 }
 
 export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
-  /* Is this session an operator's?
+  /* There is deliberately no "is this session an operator's" route here.
    *
-   * The console has to decide this on the server, before it renders
-   * anything, and it has to decide it without touching the refresh token.
-   * A refresh rotates, and two refreshes of one token are a theft signal:
-   * the second one revokes the whole family. So the check reads the token
-   * instead of spending it.
+   * There was one: it took a refresh token in the request body and answered
+   * whether the token was a live session, and whose it was. The auth service's
+   * prefix is public at the edge, so that made a credential oracle for
+   * anybody who could reach it. A stolen thirty-day token could be confirmed
+   * and the account's name and address read back, without the token ever
+   * being used for access, and the credential travelled in a body where a log
+   * line or an ingestion pipe can keep it.
    *
-   * The token never leaves the server that holds it, and the answer is a
-   * yes or a no: 401 for a token that is not a live session, and 200 with
-   * `operator: false` for a live session that is not one of us. */
-  app.post("/admin/check", async (req) => {
-    const body = (req.body ?? {}) as { refreshToken?: string };
-    const token = typeof body.refreshToken === "string" ? body.refreshToken : "";
-    if (!token) throw new ApiError(401, "unauthorized", "No session.");
-    const { rows } = await pool.query(
-      "SELECT u.id, u.email, u.name, o.user_id IS NOT NULL AS is_operator " +
-        "FROM refresh_tokens t JOIN users u ON u.id = t.user_id " +
-        "LEFT JOIN operators o ON o.user_id = u.id " +
-        "WHERE t.token_hash = $1 AND t.revoked_at IS NULL AND t.expires_at > now()",
-      [sha256(token)]
-    );
-    const row = rows[0];
-    if (!row) throw new ApiError(401, "unauthorized", "No session.");
-    return {
-      operator: row.is_operator === true,
-      id: row.id,
-      email: row.email,
-      name: row.name,
-    };
-  });
+   * The console does not need it. Every route below reads the identity the
+   * gateway injected after it verified the caller's own access token, and the
+   * operator's flag is a row. The refresh token stays in the app's HttpOnly
+   * cookie, where it belongs, and the app's own broker exchanges it. */
   /* The first screen: the numbers an operator looks at before anything else,
      and the configuration they need to read them correctly. The
      configuration is a set of booleans and names, never a secret: an
