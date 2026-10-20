@@ -8318,3 +8318,176 @@ describe("the metrics reporter reads what exists and names what does not (B-12)"
     assert.ok(reason.includes("authdb@db.internal:5432"), `and still says where: ${reason}`);
   });
 });
+
+/* B-12: alerts — the machine judging itself, once an hour from cron.
+ *
+ * Three verdicts, three exit codes: a breach is 1, every available check
+ * under threshold is 0 (with skips printed rather than silently dropped),
+ * and a run in which nothing at all could be asked is 2 — an alarm that is
+ * blind must not look like an alarm that is calm. No database runs on this
+ * machine, so the gates here are the deterministic edges: a threshold any
+ * number crosses, a database configured but dead (which IS the breach a
+ * skip would hide), credentials absent (skip, not breach), and a canned
+ * gateway whose queueDepth is the one number the queue check exists for.
+ * The formula the script cannot reach by running itself — statfs rows
+ * into a percent — is pinned as a pure function, because statfs works on
+ * every box this suite runs on, but its arithmetic deserves its own
+ * assertion rather than an incidental one. */
+describe("the alarms judge the machine, and say when they cannot (B-12)", () => {
+  let alerts = null;
+
+  before(async () => {
+    alerts = await import(pathToFileURL(join(root, "scripts", "alerts.mjs")).href);
+  });
+
+  /* Every run is hermetic: the ambient environment decides nothing. An
+     unset variable must read as unset, not as whatever the operator's
+     shell happens to export today. */
+  const cleanEnv = (extra = {}) => ({
+    ...process.env,
+    AUTH_DATABASE_URL: "",
+    BILLING_DATABASE_URL: "",
+    SYNTHETIC_URL: "",
+    SYNTHETIC_EMAIL: "",
+    SYNTHETIC_PASSWORD: "",
+    ...extra,
+  });
+
+  const runSync = (argv, env) =>
+    spawnSync(process.execPath, [join(root, "scripts", "alerts.mjs"), ...argv], {
+      cwd: root,
+      encoding: "utf8",
+      env: cleanEnv(env),
+    });
+
+  it("the disk number is what a process can actually fill to", () => {
+    assert.equal(alerts.pctUsed({ blocks: 1000, bavail: 100 }), 90);
+    assert.equal(
+      alerts.pctUsed({ blocks: 1000, bfree: 50, bavail: 1000 }),
+      0,
+      "blocks free-to-root are not the operator's free space"
+    );
+    assert.equal(alerts.pctUsed({ blocks: 0, bavail: 0 }), null, "no totals is no number, not a confident 0%");
+  });
+
+  it("a disk threshold reached is a breach (1), and the board still prints every check", () => {
+    const r = runSync(["--disk-warn=0"]);
+    assert.equal(r.status, 1, `${r.stdout}${r.stderr}`);
+    assert.match(r.stdout, /BREACH - disk: \d+(\.\d+)?% used at \//);
+    assert.match(r.stdout, /skip - postgres AUTH_DATABASE_URL: not configured/, "the board prints past its own breach");
+    assert.match(r.stdout, /verdict: BREACH — 1 of 4 checks over threshold \(exit 1\)/);
+  });
+
+  it("unset databases and credentials are skips, not breaches (0)", () => {
+    const r = runSync(["--disk-warn=1000"]);
+    assert.equal(r.status, 0, `${r.stdout}${r.stderr}`);
+    assert.match(r.stdout, /skip - postgres AUTH_DATABASE_URL: not configured/);
+    assert.match(r.stdout, /skip - postgres BILLING_DATABASE_URL: not configured/);
+    assert.match(r.stdout, /skip - queue: SYNTHETIC_URL \/ SYNTHETIC_EMAIL \/ SYNTHETIC_PASSWORD not all set/);
+    assert.match(r.stdout, /3 of 4 checks could not be asked/);
+    assert.match(r.stdout, /every available check under threshold \(exit 0\)/);
+  });
+
+  it("a configured database that will not answer is a breach (1), with no password in it", () => {
+    const r = runSync(["--disk-warn=1000"], {
+      AUTH_DATABASE_URL: "postgres://canary:sekrit-b12@127.0.0.1:1/nexora",
+    });
+    assert.equal(r.status, 1, `${r.stdout}${r.stderr}`);
+    assert.match(
+      r.stdout,
+      /BREACH - postgres AUTH_DATABASE_URL: nexora@127\.0\.0\.1:1 did not answer/,
+      "named by the variable an operator edits and the place that failed"
+    );
+    assert.ok(!r.stdout.includes("sekrit-b12"), `password never reaches the board: ${r.stdout}`);
+    assert.ok(!r.stderr.includes("sekrit-b12"), `nor the stderr: ${r.stderr}`);
+  });
+
+  it("when nothing at all can be checked, the alarm says so and exits 2", () => {
+    const r = runSync(["--disk-warn=1000", "--path=nexora-alerts-no-such-path-b12"]);
+    assert.equal(r.status, 2, `${r.stdout}${r.stderr}`);
+    assert.match(r.stdout, /skip - disk: not measurable/);
+    assert.match(r.stdout, /4 of 4 checks could not be asked/);
+    assert.match(r.stdout, /NOTHING COULD BE CHECKED — the alarm itself is blind \(exit 2\)/);
+  });
+
+  /* The queue check end to end against a canned gateway that answers the
+     two calls the script actually makes, with the same shapes the real
+     ones use. In-process, so these two run async — a blocking wait would
+     deadlock the runner against its own server. */
+  const cannedGateway = async (queueDepth) => {
+    const server = http.createServer((req, res) => {
+      const chunks = [];
+      req.on("data", (c) => chunks.push(c));
+      req.on("end", () => {
+        const send = (code, body) => {
+          res.writeHead(code, { "content-type": "application/json" });
+          res.end(JSON.stringify(body));
+        };
+        if (req.method === "POST" && req.url === "/api/auth/login") {
+          const body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+          if (body.email !== "canary@example.test" || body.password !== "pw-b12") {
+            return send(401, { error: "invalid_credentials" });
+          }
+          return send(200, { user: { id: "u-canary" }, tokens: { accessToken: "tok-b12" } });
+        }
+        if (req.method === "GET" && req.url === "/api/execute/capabilities") {
+          if (req.headers.authorization !== "Bearer tok-b12") return send(401, { error: "unauthorized" });
+          return send(200, {
+            queueDepth,
+            concurrency: 2,
+            runner: "subprocess",
+            languages: ["javascript"],
+            dailyQuota: 200,
+            dailyRemaining: 199,
+          });
+        }
+        return send(404, { error: "not_found" });
+      });
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    return server;
+  };
+
+  const runAsync = (argv, env) =>
+    new Promise((resolve) => {
+      const child = spawn(process.execPath, [join(root, "scripts", "alerts.mjs"), ...argv], {
+        cwd: root,
+        env: cleanEnv(env),
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (d) => (stdout += d));
+      child.stderr.on("data", (d) => (stderr += d));
+      child.on("close", (code) => resolve({ status: code, stdout, stderr }));
+    });
+
+  const queueRun = (gateway, argv) =>
+    runAsync(argv, {
+      SYNTHETIC_URL: `http://127.0.0.1:${gateway.address().port}`,
+      SYNTHETIC_EMAIL: "canary@example.test",
+      SYNTHETIC_PASSWORD: "pw-b12",
+    });
+
+  it("jobs waiting for a runner slot beyond the threshold are a breach (1)", async () => {
+    const gateway = await cannedGateway(7);
+    try {
+      const r = await queueRun(gateway, ["--disk-warn=1000", "--queue-warn=5"]);
+      assert.equal(r.status, 1, `${r.stdout}${r.stderr}`);
+      assert.match(r.stdout, /BREACH - queue: 7 jobs waiting \(warn 5\) · concurrency 2 · runner subprocess/);
+    } finally {
+      await new Promise((resolve) => gateway.close(resolve));
+    }
+  });
+
+  it("an idle queue under the threshold is not a breach (0)", async () => {
+    const gateway = await cannedGateway(1);
+    try {
+      const r = await queueRun(gateway, ["--disk-warn=1000", "--queue-warn=5"]);
+      assert.equal(r.status, 0, `${r.stdout}${r.stderr}`);
+      assert.match(r.stdout, /ok - queue: 1 waiting \(warn 5\)/);
+    } finally {
+      await new Promise((resolve) => gateway.close(resolve));
+    }
+  });
+});

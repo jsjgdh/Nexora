@@ -792,3 +792,37 @@ content type now belongs to a body, and only to a body.
   identity service cannot map a competency to a course; the curriculum
   service owns that map. Closing this needs the map to be reachable, and
   until then the file says what it contains.
+
+### F-10. A confirmed licence did not open the course until the cache expired (medium, fixed)
+
+**Vulnerable component:** `platform/services/gateway/src/entitlement.ts`,
+`platform/services/gateway/src/index.ts`.
+
+**Attack path.** None: a defect, and one that a classroom would have felt.
+The edge cached the combined entitlement verdict for its TTL, and a seat
+changes when an operator confirms a licence, which is a person with a CLI and
+not a webhook. There is no event to drop the cached verdict, so a student
+whose licence had just been confirmed kept the cached denial, and the paid
+course stayed closed until the TTL ran out, with nothing on screen to say
+why. A seat is now asked on every paid request, while the subscription keeps
+its cache and its webhook-driven invalidation, because a subscription does
+change on an event and a seat does not.
+
+The cost is one indexed query on the identity service's own database per
+paid request, which is the price of a licence opening when the operator says
+so.
+
+### The proof, over real HTTP
+
+The contract's last section, walked against the running stack after the
+fixes: two accounts registered, a cohort created (`pending`, a join code,
+no entitlement), a learner joining with the code, the seat check answering
+`entitled: false` while the licence is pending, the seat check refused with
+403 without the mesh key, a paid phase answering **402
+`entitlement_required`** before the licence, the operator's confirmation
+succeeding with the seat count and refused with 400 without it, the seat
+check answering `entitled: true` with `courses: ["go-in-production"]`, a
+paid phase of that course answering **200** straight after the confirmation,
+a paid phase of another course answering 402, the instructor's roster
+answering 200 with one member, and a learner asking for that roster
+answering 404.
