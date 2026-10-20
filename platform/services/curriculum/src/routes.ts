@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { ApiError, requireUserId } from "@nexora/service-kit";
 import { IDE_CONTENT_VERSION } from "./data/ide-version.js";
-import { getIdeManifest, getIdePhase, getIdePhaseCourse, getIdeVersion, getIdeCourses, getDefaultIdeCourse } from "./ide.js";
+import { getIdeManifest, getIdePhase, getIdePhaseCourse, getIdeVersion, getIdeCourses, getDefaultIdeCourse, getCurriculumProvenance } from "./ide.js";
 
 /* The curriculum service serves the IDE curriculum only: a public roadmap
    (names and tiers, no lesson bodies) and paid phase payloads behind
@@ -97,6 +97,13 @@ export function registerCurriculumRoutes(app: FastifyInstance) {
   // old call still works and still means the same thing.
   app.get("/ide/version", async () => getIdeVersion());
   app.get("/ide/courses", async () => ({ courses: getIdeCourses(), defaultCourse: getDefaultIdeCourse() }));
+  /* The provenance and the rubric of every phase: who wrote it, who read it,
+     where it came from, and which of its activities the server recomputes
+     against the learner's own account. No lesson body and no check, so it
+     sits beside the public roadmap. A portfolio reads it next to a proof, and
+     a reader sees the gap where there is no second reader rather than an
+     implied review that never happened. */
+  app.get("/ide/provenance", async () => getCurriculumProvenance());
   app.get("/ide/manifest", async (req) => {
     const query = req.query as { course?: string } | undefined;
     const courseId = query?.course;

@@ -1,5 +1,6 @@
 import { IDE_COURSES, IDE_DEFAULT_COURSE } from "./data/ide-courses.js";
 import { IDE_CONTENT_VERSION } from "./data/ide-version.js";
+import { phaseProvenance, phaseRubric, type PhaseProvenance, type PhaseRubric } from "./provenance.js";
 
 /* The IDE curriculum, served behind entitlement.
  *
@@ -82,6 +83,11 @@ export interface IdePhase {
 export interface IdePhasePayload {
   phase: IdePhase;
   activities: Record<string, unknown>;
+  /** Who wrote this phase, who read it, where it came from, its licence. */
+  provenance: PhaseProvenance;
+  /** Which of its activities the server recomputes, and which rest on the
+   *  learner's own account. A portfolio reads this beside a proof. */
+  rubric: PhaseRubric;
 }
 
 function fail(msg: string): never {
@@ -316,7 +322,58 @@ export function getIdePhase(id: string, courseId?: string): IdePhasePayload | nu
   if (courseId !== undefined && found.course.id !== courseId) return null;
   const activities: Record<string, unknown> = {};
   for (const a of found.phase.activities) activities[a] = found.course.activities[a];
-  return { phase: structuredClone(found.phase), activities: structuredClone(activities) };
+  return {
+    phase: structuredClone(found.phase),
+    activities: structuredClone(activities),
+    provenance: phaseProvenance(found.course.id, found.phase.id, found.phase.title, IDE_CONTENT_VERSION),
+    rubric: phaseRubric(
+      found.course.id,
+      found.phase.id,
+      found.phase.title,
+      found.phase.activities,
+      found.course.activities
+    ),
+  };
+}
+
+/**
+ * The provenance and the rubric of every phase in the catalogue.
+ *
+ * This is the record a portfolio reads: for each phase, who wrote it, who
+ * read it, and which of its activities the server can recompute. It carries
+ * no lesson body and no check, so it can be served beside a public roadmap
+ * without giving anything away.
+ */
+export function getCurriculumProvenance(): {
+  contentVersion: string;
+  courses: {
+    id: string;
+    title: string;
+    provenance: PhaseProvenance;
+    rubric: PhaseRubric;
+    phases: { provenance: PhaseProvenance; rubric: PhaseRubric }[];
+  }[];
+} {
+  return {
+    contentVersion: IDE_CONTENT_VERSION,
+    courses: [...courses.values()].map((course) => {
+      const phases = course.phases.map((phase) => {
+        const provenance = phaseProvenance(course.id, phase.id, phase.title, IDE_CONTENT_VERSION);
+        const rubric = phaseRubric(course.id, phase.id, phase.title, phase.activities, course.activities);
+        return { provenance, rubric };
+      });
+      // Every phase of a course shares the course's authorship, so the
+      // catalogue's first phase carries the course's record and the rest
+      // carry their own.
+      return {
+        id: course.id,
+        title: course.title,
+        provenance: phases[0]?.provenance ?? phaseProvenance(course.id, "", course.title, IDE_CONTENT_VERSION),
+        rubric: phases[0]?.rubric ?? phaseRubric(course.id, "", course.title, [], {}),
+        phases,
+      };
+    }),
+  };
 }
 
 /** The course a phase belongs to, or null when no phase has that id. */

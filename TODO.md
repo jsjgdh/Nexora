@@ -59,13 +59,27 @@ Pro do not exist.
   (shipped 2026-10-20: one id rides edge→service — the gateway mints it,
   services keep it instead of minting their own, unsafe values refused —
   so `x-request-id` on a failed reply greps every service's logs);
-  error reporting for web app + every service; per-service health plus a
+  error reporting for web app + every service (shipped 2026-10-20:
+  the chassis logs one structured fatal and exits 1 on any exception or
+  rejection no request owns, POSTing `{service, event, message, stack,
+  at}` to `FATAL_WEBHOOK_URL` when set, bounded at 2s; the web app's
+  `handleError` writes the same-shaped line and answers the browser with
+  the generic message); per-service health plus a
   synthetic login→mission→run check (shipped 2026-10-20: `npm run
   synthetic`, exit 0/1/2 like healthcheck, canary account via
   `--provision`, hourly cron + quota arithmetic in DEPLOYMENT.md);
   dashboards (signup→first run,
-  completions, execution failures by language, sync errors); alerts (error
-  rate, queue depth, connections, disk).
+  completions, execution failures by language, sync errors) (data layer
+  shipped 2026-10-20: `npm run metrics` prints what exists — signups,
+  live sessions, the signup→first-attested-evidence funnel,
+  subscriptions — and prints the three it genuinely cannot count as
+  named gaps rather than zeros; the rendered dashboard is still
+  unwritten); alerts (error
+  rate, queue depth, connections, disk) (shipped 2026-10-20: `npm run
+  alerts` — disk, per-database connections vs max_connections, queue
+  depth via the gateway, exit 1/0/2 with skips printed; error rate
+  remains a recorded gap — nothing persists request outcomes to count,
+  and paging is still whatever the operator wires the exit codes to).
 - [ ] Secrets: rotated away from every example; authoritative env-var
   inventory (who needs what, required or not); nothing secret in images
   or `git log`.
@@ -81,9 +95,23 @@ Pro do not exist.
   keep failing closed (the `document-rules` bypass classes stay covered).
   `computed-style`/`scripted` remain the client's report until a
   headless-browser tier exists — stated, not hidden.
-- [ ] Rubrics as data (which checks prove *demonstrated* vs *independent*)
-  and provenance per mission (author, reviewer, source, licence) — the
-  portfolio reads these, so they must exist where the portfolio reads.
+- [x] Rubrics as data and provenance per phase (2026-10-20): the curriculum
+  service now carries two records for every phase and serves them at
+  `/ide/provenance` (public, no lesson body) and inside the phase's own paid
+  payload. The provenance names the author, the source, and the licence, and
+  its `reviewer` is `null` for every phase, because no second reader has read
+  the curriculum and a record that implied a review would be a false claim.
+  The rubric classifies every activity the phase reaches: `attested` when the
+  platform can re-derive it (checks and the command that runs them, or an
+  incident or design the platform judges from its own catalogue), `material`
+  for reading, `client-reported` for everything that rests on the learner's
+  own account, and it says in one plain sentence which. It is fail-closed: an
+  activity with checks and no command is not attested. The take-home phase
+  attests nothing, and the rubric says so rather than letting it look
+  verified. Proof: `platform/scripts/verify-assessment.mjs` (12 assertions).
+  Residual: the account export names the phase id per proof, and the site's
+  portfolio joins the rubric to it in the browser; the export file itself
+  still carries the phase id only.
 - [x] The curriculum is five courses, and the mesh serves them as five
   (2026-10-19): the Go half of the Task Manager course is now "Go
   fundamentals" (14 phases) and "Go in production" (21), with the JavaScript
