@@ -81,10 +81,12 @@ async function seed() {
   await pool.query(
     "INSERT INTO users (id, email, name, password_hash, created_at, provider, email_verified_at) " +
       "VALUES ('u-op', 'operator@example.com', 'The Operator', 'x', now(), 'local', now()), " +
-      "('u-learner', 'learner@example.com', 'A Learner', 'x', now(), 'local', NULL)"
+      "('u-op2', 'second@example.com', 'A Second Operator', 'x', now(), 'local', now()), " +
+      "('u-learner', 'learner@example.com', 'A Learner', 'x', now(), 'local', NULL), " +
+      "('u-verified', 'verified@example.com', 'A Verified Learner', 'x', now(), 'local', now())"
   );
   await pool.query(
-    "INSERT INTO operators (user_id, role, granted_by) VALUES ('u-op', 'operator', 'tooling')"
+    "INSERT INTO operators (user_id, role, granted_by) VALUES ('u-op', 'super', 'tooling'), ('u-op2', 'operator', 'u-op')"
   );
   await pool.query(
     "INSERT INTO refresh_tokens (id, user_id, token_hash, created_at, expires_at) VALUES " +
@@ -174,8 +176,8 @@ describe("the operator's console (real database)", () => {
     const res = await app.inject({ method: "GET", url: "/admin/overview", headers: asUser("u-op") });
     assert.equal(res.statusCode, 200);
     const body = res.json();
-    assert.equal(body.counts.accounts, 2);
-    assert.equal(body.counts.operators, 1);
+    assert.equal(body.counts.accounts, 4);
+    assert.equal(body.counts.operators, 2);
     assert.equal(body.counts.openRightsRequests, 1);
     assert.equal(body.operator.email, "operator@example.com");
     // The configuration is a set of flags, never a key.
@@ -270,24 +272,94 @@ describe("the operator's console (real database)", () => {
       method: "POST",
       url: "/admin/operators",
       headers: asUser("u-op"),
-      payload: { email: "learner@example.com", operatorId: "u-somebody-else" },
+      payload: { email: "verified@example.com", operatorId: "u-somebody-else" },
     });
     assert.equal(res.statusCode, 201);
-    assert.equal(res.json().operator.email, "learner@example.com");
-    const { rows } = await pool.query("SELECT granted_by FROM operators WHERE user_id = 'u-learner'");
+    assert.equal(res.json().operator.email, "verified@example.com");
+    const { rows } = await pool.query("SELECT granted_by, role, expires_at FROM operators WHERE user_id = 'u-verified'");
     assert.equal(rows[0].granted_by, "u-op", "the giver is the caller, not what the body said");
+    assert.equal(rows[0].role, "operator");
+    assert.ok(rows[0].expires_at, "a flag granted from the console always ends");
   });
 
-  it("an operator cannot take their own flag away", async () => {
+  it("only a super may hand the flag on", async () => {
     const res = await app.inject({
+      method: "POST",
+      url: "/admin/operators",
+      headers: asUser("u-op2"),
+      payload: { email: "learner@example.com" },
+    });
+    assert.equal(res.statusCode, 403);
+    assert.equal(res.json().error.code, "not_a_super_operator");
+    const { rows } = await pool.query("SELECT 1 FROM operators WHERE user_id = 'u-learner'");
+    assert.equal(rows.length, 0, "and nothing was written");
+  });
+
+  it("the flag is not granted to an address nobody proved they own", async () => {
+    // The account exists and its address was never verified. A stranger can
+    // register an address that is not theirs, so an account row is not proof.
+    const res = await app.inject({
+      method: "POST",
+      url: "/admin/operators",
+      headers: asUser("u-op"),
+      payload: { email: "learner@example.com" },
+    });
+    assert.equal(res.statusCode, 409);
+    assert.equal(res.json().error.code, "address_not_verified");
+    const { rows } = await pool.query("SELECT 1 FROM operators WHERE user_id = 'u-learner'");
+    assert.equal(rows.length, 0, "and no flag was written");
+  });
+
+  it("the log records the grant once, and the second attempt is refused", async () => {
+    const before = await pool.query("SELECT count(*) FROM admin_actions WHERE action = 'operator.granted'");
+    const res = await app.inject({
+      method: "POST",
+      url: "/admin/operators",
+      headers: asUser("u-op"),
+      payload: { email: "verified@example.com" },
+    });
+    assert.equal(res.statusCode, 409, "that account is already an operator");
+    assert.equal(res.json().error.code, "already_an_operator");
+    const after = await pool.query("SELECT count(*) FROM admin_actions WHERE action = 'operator.granted'");
+    assert.equal(
+      Number(after.rows[0].count),
+      Number(before.rows[0].count),
+      "the log must not record a grant that did not happen"
+    );
+  });
+
+  it("a flag that has ended is not a flag", async () => {
+    await pool.query("UPDATE operators SET expires_at = now() - interval '1 minute' WHERE user_id = 'u-op2'");
+    try {
+      const res = await app.inject({ method: "GET", url: "/admin/overview", headers: asUser("u-op2") });
+      assert.equal(res.statusCode, 403, "an ended flag grants nothing");
+      assert.equal(res.json().error.code, "not_an_operator");
+    } finally {
+      await pool.query("UPDATE operators SET expires_at = NULL WHERE user_id = 'u-op2'");
+    }
+  });
+
+  it("a super may take the flag away, and nobody may take their own", async () => {
+    const own = await app.inject({
       method: "POST",
       url: "/admin/operators/revoke",
       headers: asUser("u-op"),
       payload: { email: "operator@example.com" },
     });
-    assert.equal(res.statusCode, 400);
-    const { rows } = await pool.query("SELECT 1 FROM operators WHERE user_id = 'u-op'");
-    assert.equal(rows.length, 1, "the flag is still there");
+    assert.equal(own.statusCode, 400, "an operator cannot take their own flag away");
+
+    const other = await app.inject({
+      method: "POST",
+      url: "/admin/operators/revoke",
+      headers: asUser("u-op"),
+      payload: { email: "second@example.com" },
+    });
+    assert.equal(other.statusCode, 200);
+    const { rows } = await pool.query("SELECT 1 FROM operators WHERE user_id = 'u-op2'");
+    assert.equal(rows.length, 0, "the flag is gone");
+    const log = await pool.query("SELECT operator_id, target FROM admin_actions WHERE action = 'operator.revoked'");
+    assert.equal(log.rows.length, 1);
+    assert.equal(log.rows[0].operator_id, "u-op");
   });
 
   it("the rights ledger lists the request that has a clock on it", async () => {

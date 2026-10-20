@@ -1,0 +1,15 @@
+-- The scope and the life of an operator's flag.
+--
+-- Two things the flag did not have, and both of them were the difference
+-- between a console and a permanent compromise.
+--
+-- The scope: 'operator' may look at the platform and end a session. 'super'
+-- may also grant and take away the flag. Only the operator's tooling can
+-- make a super, because a console that could hand itself the power to make
+-- more consoles is not a boundary.
+--
+-- The expiry: how long the flag holds. A flag that never ends is a
+-- permanent key to every account on the platform, and there was no way to
+-- contain it from inside the console. A flag granted from the console now
+-- always carries an end date; only the tooling can grant one without.
+ALTER TABLE operators ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;

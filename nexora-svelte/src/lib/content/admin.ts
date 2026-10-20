@@ -116,13 +116,23 @@ export const ADMIN = {
   operators: {
     list: "Operators",
     grant: "Grant the flag",
-    grantNote: "The person has to have an account already. The flag is written to the log with your name on it.",
+    grantNote:
+      "The address has to belong to an account whose address is verified. A verified address is the only proof that the person at the address is the person who holds the account, and without it a stranger who registered somebody else's address could be handed the console.",
     grantButton: "Grant",
+    days: "Days the flag holds",
+    role: "What the flag may do",
+    roleOperator: "Operator: look at the platform, and end a session.",
+    roleSuper: "Super: look at the platform, end a session, and hand the flag on.",
     revoke: "Take the flag away",
     revokeButton: "Take it away",
     granted: "Granted",
+    ends: "Ends",
+    noEnd: "No end",
     by: "By",
     selfNote: "You cannot take your own flag away from this panel. The operator's tooling on the machine can do that, and it leaves a record too.",
+    superOnly:
+      "Only a super operator can grant or take away the flag, and a super is made by the operator's tooling on the machine, never from here. So one operator account cannot hand the console to another.",
+    ended: "This flag has ended, so it is not a flag any more.",
   },
   activity: {
     empty: "Nothing has been done yet.",
@@ -136,5 +146,6 @@ export const ADMIN = {
     notAnswered: "The platform did not answer. Nothing was changed.",
     refused: "The platform refused that.",
     noSession: "The session is not an operator's session any more. Sign in again.",
+    notOperator: "This console is for operators.",
   },
 } as const;

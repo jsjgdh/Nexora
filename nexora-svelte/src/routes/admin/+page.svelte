@@ -62,6 +62,8 @@
   let actions = $state<AdminAction[] | null>(null);
   let query = $state("");
   let grantEmail = $state("");
+  let grantDays = $state(90);
+  let grantRole = $state<"operator" | "super">("operator");
   let revokeEmail = $state("");
   let busy = $state(false);
   let note = $state<string | null>(null);
@@ -77,9 +79,11 @@
   /**
    * Who is this? The platform answers, and its answer is the boundary.
    *
-   * A signed-in learner without the flag is told so and shown nothing. A
-   * visitor with no session is sent to sign in, because the console is
-   * behind a session and pretending otherwise would only waste their time.
+   * Three answers, and the page says which one it got, because they are
+   * different facts: a signed-in learner without the flag, a visitor with no
+   * session, and a platform that could not be reached. A page that called
+   * the second and the third the same thing would send a real operator away
+   * from the console on a bad afternoon.
    */
   async function identify(): Promise<void> {
     if (!adminApiConfigured) {
@@ -91,23 +95,27 @@
       overview = await adminApi.overview();
       view = "operator";
     } catch (err) {
-      const code = (err as { code?: string }).code;
-      if (code === "no_session") view = "signed-out";
-      else {
-        view = "refused";
-        problem = ADMIN.errors.notAnswered;
+      const failure = err as { code?: string; status?: number };
+      if (failure.code === "no_session" || failure.status === 401) {
+        view = "signed-out";
+        return;
       }
+      view = "refused";
+      problem =
+        failure.code === "not_an_operator" || failure.status === 403
+          ? ADMIN.errors.notOperator
+          : ADMIN.errors.notAnswered;
     }
   }
 
   /** One failure, one sentence, and nothing changed. */
   function failed(err: unknown): void {
-    const code = (err as { code?: string }).code;
+    const failure = err as { code?: string; status?: number };
     problem =
-      code === "no_session"
+      failure.code === "no_session" || failure.status === 401
         ? ADMIN.errors.noSession
-        : code === "not_an_operator"
-          ? ADMIN.errors.noSession
+        : failure.code === "not_an_operator" || failure.status === 403
+          ? ADMIN.errors.notOperator
           : (err as Error)?.message || ADMIN.errors.notAnswered;
   }
 
@@ -169,12 +177,17 @@
 
   async function grant(): Promise<void> {
     if (!grantEmail.trim()) return;
+    const days = Number(grantDays);
+    if (!Number.isInteger(days) || days < 1 || days > 365) {
+      problem = "Give how many days the flag holds, between 1 and 365.";
+      return;
+    }
     busy = true;
     problem = null;
     note = null;
     try {
-      await adminApi.grant(grantEmail.trim());
-      note = `${grantEmail.trim()} is an operator.`;
+      await adminApi.grant(grantEmail.trim(), grantRole, days);
+      note = `${grantEmail.trim()} is an ${grantRole} for ${days} days.`;
       grantEmail = "";
       operators = (await adminApi.operators()).operators;
     } catch (err) {
@@ -210,6 +223,7 @@
   title={pageTitle(ADMIN.title)}
   description="The operator's console for the NEXORA platform: accounts, data requests, operators, and the log of what was done."
   path="/admin"
+  noindex
 />
 
 <div class="mx-auto max-w-[1320px] px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
@@ -243,6 +257,11 @@
       />
       <Plate>
         <p class="reading text-[15px] leading-relaxed text-muted">{ADMIN.notAnOperator.body}</p>
+        {#if problem && problem !== ADMIN.errors.notOperator}
+          <p class="mt-4 border-l border-review pl-4 text-[13.5px] leading-relaxed text-muted">
+            {problem}
+          </p>
+        {/if}
         <div class="mt-6">
           <ActionLink href="/account" variant="ghost">{ADMIN.notAnOperator.back}</ActionLink>
         </div>
@@ -253,6 +272,12 @@
     <p class="reading mt-6 max-w-[62ch] text-[15px] leading-relaxed text-muted">{ADMIN.lede}</p>
     <p class="mt-3 text-[13px] text-faint">
       {overview?.operator.name ?? overview?.operator.email ?? ""}
+      {#if overview?.operator.role}
+        <span class="ml-2">{overview.operator.role}</span>
+      {/if}
+      {#if overview?.operator.expiresAt}
+        <span class="ml-2">{ADMIN.operators.ends} {day(overview.operator.expiresAt)}</span>
+      {/if}
     </p>
 
     {#if note}
@@ -678,6 +703,12 @@
                 <span class="num text-[12.5px] text-faint">
                   {ADMIN.operators.granted} {day(operator.grantedAt)}
                 </span>
+                <span class="num text-[12.5px] text-faint">
+                  {operator.expiresAt ? `${ADMIN.operators.ends} ${day(operator.expiresAt)}` : ADMIN.operators.noEnd}
+                </span>
+                {#if !operator.live}
+                  <span class="text-[12.5px] text-removed">{ADMIN.operators.ended}</span>
+                {/if}
                 {#if operator.grantedBy}
                   <span class="text-[12.5px] text-faint">
                     {ADMIN.operators.by} {operator.grantedBy}
@@ -694,25 +725,59 @@
           <Plate>
             <p class="stamp text-faint">{ADMIN.operators.grant}</p>
             <p class="mt-3 max-w-[48ch] text-[13px] leading-relaxed text-muted">{ADMIN.operators.grantNote}</p>
-            <form
-              class="mt-4"
-              onsubmit={(e) => {
-                e.preventDefault();
-                void grant();
-              }}
-            >
-              <label for="admin-grant" class="stamp block text-faint">Email</label>
-              <input
-                id="admin-grant"
-                type="email"
-                bind:value={grantEmail}
-                autocomplete="off"
-                class="mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[14px] text-ink"
-              />
-              <div class="mt-4">
-                <Button type="submit" busy={busy}>{ADMIN.operators.grantButton}</Button>
-              </div>
-            </form>
+            {#if overview?.operator.role === "super"}
+              <form
+                class="mt-4"
+                onsubmit={(e) => {
+                  e.preventDefault();
+                  void grant();
+                }}
+              >
+                <label for="admin-grant" class="stamp block text-faint">Email</label>
+                <input
+                  id="admin-grant"
+                  type="email"
+                  bind:value={grantEmail}
+                  autocomplete="off"
+                  class="mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[14px] text-ink"
+                />
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label for="admin-grant-days" class="stamp block text-faint">
+                      {ADMIN.operators.days}
+                    </label>
+                    <input
+                      id="admin-grant-days"
+                      type="number"
+                      min="1"
+                      max="365"
+                      bind:value={grantDays}
+                      class="num mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[14px] text-ink"
+                    />
+                  </div>
+                  <div>
+                    <label for="admin-grant-role" class="stamp block text-faint">
+                      {ADMIN.operators.role}
+                    </label>
+                    <select
+                      id="admin-grant-role"
+                      bind:value={grantRole}
+                      class="mt-2 w-full border border-control bg-raised px-3 py-2.5 text-[14px] text-ink"
+                    >
+                      <option value="operator">{ADMIN.operators.roleOperator}</option>
+                      <option value="super">{ADMIN.operators.roleSuper}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <Button type="submit" busy={busy}>{ADMIN.operators.grantButton}</Button>
+                </div>
+              </form>
+            {:else}
+              <p class="mt-4 border-l border-rule pl-4 text-[13px] leading-relaxed text-faint">
+                {ADMIN.operators.superOnly}
+              </p>
+            {/if}
           </Plate>
 
           <Plate>

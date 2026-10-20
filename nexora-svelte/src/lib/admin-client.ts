@@ -27,7 +27,11 @@ async function call<T>(
 ): Promise<T> {
   if (!adminApiConfigured) throw new Error("The platform is not connected in this build.");
   const send = async (token: string): Promise<Response> => {
-    const headers: Record<string, string> = { "content-type": "application/json" };
+    // A bodyless call carries no content type: a POST with an empty body and
+    // a JSON content type is refused by the server, which is how "end every
+    // session" failed with a 400.
+    const headers: Record<string, string> = {};
+    if (opts.body !== undefined) headers["content-type"] = "application/json";
     headers.authorization = `Bearer ${token}`;
     return fetch(`${BASE}/api/auth/admin${path}`, {
       method: opts.method ?? "GET",
@@ -105,7 +109,13 @@ export interface AdminAccountDetail {
 }
 
 export interface AdminOverview {
-  operator: { id: string; email: string | null; name: string | null };
+  operator: {
+    id: string;
+    email: string | null;
+    name: string | null;
+    role: string;
+    expiresAt: string | null;
+  };
   counts: {
     accounts: number;
     verifiedAddresses: number;
@@ -149,6 +159,8 @@ export interface AdminOperator {
   role: string;
   grantedAt: string | null;
   grantedBy: string | null;
+  expiresAt: string | null;
+  live: boolean;
 }
 
 export interface AdminAction {
@@ -170,8 +182,11 @@ export const adminApi = {
     }),
   rights: () => call<AdminRights>("/rights"),
   operators: () => call<{ operators: AdminOperator[] }>("/operators"),
-  grant: (email: string) =>
-    call<{ operator: AdminOperator }>("/operators", { method: "POST", body: { email } }),
+  grant: (email: string, role: "operator" | "super", expiresInDays: number) =>
+    call<{ operator: AdminOperator }>("/operators", {
+      method: "POST",
+      body: { email, role, expiresInDays },
+    }),
   revoke: (email: string) =>
     call<{ ok: boolean; removed: number }>("/operators/revoke", { method: "POST", body: { email } }),
   actions: () => call<{ actions: AdminAction[] }>("/actions"),

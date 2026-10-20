@@ -31,10 +31,42 @@ import { revokeAccountBefore } from "./revocation-store.js";
 
 const PAGE_SIZE = 50;
 
-/** True when the operator holds the flag. */
-async function isOperator(pool: Pool, userId: string): Promise<boolean> {
-  const { rows } = await pool.query("SELECT 1 FROM operators WHERE user_id = $1", [userId]);
-  return rows.length > 0;
+/**
+ * What an operator's flag carries.
+ *
+ * 'operator' may look at the platform and end a session. 'super' may also
+ * grant and take away the flag. The difference is not a nicety: with one
+ * role, one compromised operator account was a permanent key to every
+ * account on the platform, and one operator could hand that key to a second
+ * account they controlled and keep it after their own was taken away.
+ */
+export type OperatorRole = "operator" | "super";
+
+/** How long a flag granted from the console holds, when the operator does not say. */
+const DEFAULT_GRANT_DAYS = 90;
+/** The longest a console grant may last. A year is long enough to be useful. */
+const MAX_GRANT_DAYS = 365;
+
+/**
+ * The caller's flag, if it is live.
+ *
+ * A flag that has ended is not a flag. That is the whole point of the end
+ * date: the containment lever a console without one does not have.
+ */
+async function operatorFlag(
+  pool: Pool,
+  userId: string
+): Promise<{ role: OperatorRole; expiresAt: Date | null } | null> {
+  const { rows } = await pool.query(
+    "SELECT role, expires_at FROM operators WHERE user_id = $1 AND (expires_at IS NULL OR expires_at > now())",
+    [userId]
+  );
+  const row = rows[0] as { role?: string; expires_at?: Date | null } | undefined;
+  if (!row) return null;
+  return {
+    role: row.role === "super" ? "super" : "operator",
+    expiresAt: row.expires_at ?? null,
+  };
 }
 
 /**
@@ -47,12 +79,38 @@ async function isOperator(pool: Pool, userId: string): Promise<boolean> {
  * signed in and you are not one of us" are different facts, and an operator
  * console is not a secret place.
  */
-async function requireOperator(pool: Pool, req: FastifyRequest): Promise<string> {
+async function requireOperator(
+  pool: Pool,
+  req: FastifyRequest
+): Promise<{ id: string; role: OperatorRole; expiresAt: Date | null }> {
   const userId = requireUserId(req);
-  if (!(await isOperator(pool, userId))) {
+  const flag = await operatorFlag(pool, userId);
+  if (!flag) {
     throw new ApiError(403, "not_an_operator", "This account is not an operator.");
   }
-  return userId;
+  return { id: userId, role: flag.role, expiresAt: flag.expiresAt };
+}
+
+/**
+ * The caller may hand out and take away the flag.
+ *
+ * Only a super may, and only the operator's tooling can make a super. So
+ * the power to create more operators is separate from the power to use the
+ * console, and a compromised operator cannot hand the console on.
+ */
+async function requireSuper(
+  pool: Pool,
+  req: FastifyRequest
+): Promise<{ id: string; role: OperatorRole; expiresAt: Date | null }> {
+  const operator = await requireOperator(pool, req);
+  if (operator.role !== "super") {
+    throw new ApiError(
+      403,
+      "not_a_super_operator",
+      "Only a super operator can grant or take away the operator flag."
+    );
+  }
+  return operator;
 }
 
 /** Write the operator's log. */
@@ -111,8 +169,9 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
      operator needs to know that the mail provider is not configured, and
      never needs to see the key. */
   app.get("/admin/overview", async (req) => {
-    const operatorId = await requireOperator(pool, req);
-    const [counts, operator, actions, cohorts, proofsHere] = await Promise.all([
+    const operator = await requireOperator(pool, req);
+    const operatorId = operator.id;
+    const [counts, who, actions, cohorts, proofsHere] = await Promise.all([
       pool.query(
         "SELECT " +
           "(SELECT count(*) FROM users) AS accounts, " +
@@ -135,8 +194,10 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
     return {
       operator: {
         id: operatorId,
-        email: operator.rows[0]?.email ?? null,
-        name: operator.rows[0]?.name ?? null,
+        email: who.rows[0]?.email ?? null,
+        name: who.rows[0]?.name ?? null,
+        role: operator.role,
+        expiresAt: iso(operator.expiresAt),
       },
       counts: {
         accounts: Number(row.accounts ?? 0),
@@ -302,7 +363,8 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
    * lifetime. The work the learner has done is untouched: a receipt is a
    * record of work, and ending a session does not unprove anything. */
   app.post("/admin/accounts/:id/sessions/revoke", async (req) => {
-    const operatorId = await requireOperator(pool, req);
+    const operator = await requireOperator(pool, req);
+    const operatorId = operator.id;
     const id = (req.params as { id: string }).id;
     const at = new Date();
     const sessions = await pool.query(
@@ -365,7 +427,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
   app.get("/admin/operators", async (req) => {
     await requireOperator(pool, req);
     const { rows } = await pool.query(
-      "SELECT o.user_id, o.role, o.granted_at, o.granted_by, u.email, u.name FROM operators o JOIN users u ON u.id = o.user_id ORDER BY o.granted_at"
+      "SELECT o.user_id, o.role, o.granted_at, o.granted_by, o.expires_at, u.email, u.name FROM operators o JOIN users u ON u.id = o.user_id ORDER BY o.granted_at"
     );
     return {
       operators: rows.map((r: Record<string, unknown>) => ({
@@ -375,45 +437,110 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         role: r.role,
         grantedAt: iso(r.granted_at),
         grantedBy: r.granted_by,
+        expiresAt: iso(r.expires_at),
+        live: r.expires_at === null || new Date(String(r.expires_at)).getTime() > Date.now(),
       })),
     };
   });
 
-  /* Grant the operator flag. The giver is the caller, never the body. */
+  /* Grant the operator flag. The giver is the caller, never the body.
+   *
+   * Three rules, and each of them closes a way in that the review found:
+   *
+   *   - only a super may grant, so one compromised operator cannot hand the
+   *     console to a second account they control;
+   *   - the target's address must be verified, because an account row is not
+   *     proof that anybody owns that address: a stranger can register one,
+   *     and an operator typing it into this form would otherwise hand the
+   *     console to that stranger;
+   *   - the grant always carries an end date, so the flag is something the
+   *     studio can take back rather than something it has to hunt for. */
   app.post("/admin/operators", async (req, reply) => {
-    const operatorId = await requireOperator(pool, req);
-    const body = (req.body ?? {}) as { email?: string };
+    const operator = await requireSuper(pool, req);
+    const body = (req.body ?? {}) as { email?: string; role?: string; expiresInDays?: number };
     const email = (body.email ?? "").trim().toLowerCase();
     if (!email) throw new ApiError(400, "bad_request", "Give the address of the account.");
-    const { rows } = await pool.query("SELECT id, email, name FROM users WHERE lower(email) = $1", [email]);
+    const role: OperatorRole = body.role === "super" ? "super" : "operator";
+    const days =
+      body.expiresInDays === undefined ? DEFAULT_GRANT_DAYS : Number(body.expiresInDays);
+    if (!Number.isInteger(days) || days < 1 || days > MAX_GRANT_DAYS) {
+      throw new ApiError(
+        400,
+        "bad_request",
+        `Give how many days the flag holds, between 1 and ${MAX_GRANT_DAYS}.`
+      );
+    }
+    const { rows } = await pool.query(
+      "SELECT id, email, name, email_verified_at FROM users WHERE lower(email) = $1",
+      [email]
+    );
     const target = rows[0];
     if (!target) throw new ApiError(404, "not_found", "No account with that address.");
-    await pool.query(
-      "INSERT INTO operators (user_id, role, granted_by) VALUES ($1, 'operator', $2) ON CONFLICT (user_id) DO NOTHING",
-      [target.id, operatorId]
+    if (!target.email_verified_at) {
+      throw new ApiError(
+        409,
+        "address_not_verified",
+        "That account's address was never verified, so the flag was not granted. A verified address is the only proof that the person who holds the account is the person at the address."
+      );
+    }
+    const expiresAt = new Date(Date.now() + days * 24 * 3600_000);
+    const granted = await pool.query(
+      "INSERT INTO operators (user_id, role, granted_by, expires_at) VALUES ($1, $2, $3, $4) " +
+        "ON CONFLICT (user_id) DO NOTHING RETURNING user_id",
+      [target.id, role, operator.id, expiresAt]
     );
-    await record(pool, operatorId, "operator.granted", target.id, email);
-    req.log.info({ operatorId, target: target.id }, "operator granted the operator flag");
-    return reply.code(201).send({ operator: { id: target.id, email: target.email, name: target.name, role: "operator" } });
+    if (granted.rowCount === 0) {
+      throw new ApiError(409, "already_an_operator", "That account is already an operator.");
+    }
+    await record(
+      pool,
+      operator.id,
+      "operator.granted",
+      target.id,
+      `${role} for ${days} days, ${email}`
+    );
+    req.log.info({ operatorId: operator.id, target: target.id, role, days }, "operator granted the operator flag");
+    return reply.code(201).send({
+      operator: {
+        id: target.id,
+        email: target.email,
+        name: target.name,
+        role,
+        grantedAt: new Date().toISOString(),
+        grantedBy: operator.id,
+        expiresAt: expiresAt.toISOString(),
+        live: true,
+      },
+    });
   });
 
   /* Take the operator flag away. The operator doing it cannot take their own
      away, because a console that can lock itself out is a console with no
      way back in short of the tooling on the machine. */
   app.post("/admin/operators/revoke", async (req) => {
-    const operatorId = await requireOperator(pool, req);
+    const operator = await requireSuper(pool, req);
     const body = (req.body ?? {}) as { email?: string };
     const email = (body.email ?? "").trim().toLowerCase();
     if (!email) throw new ApiError(400, "bad_request", "Give the address of the account.");
-    if (email === ((await pool.query("SELECT email FROM users WHERE id = $1", [operatorId])).rows[0]?.email ?? "").toLowerCase()) {
-      throw new ApiError(400, "bad_request", "An operator cannot take their own flag away. The tooling can do that.");
+    const { rows } = await pool.query("SELECT id, email FROM users WHERE lower(email) = $1", [email]);
+    const target = rows[0];
+    if (!target) throw new ApiError(404, "not_found", "No account with that address.");
+    if (target.id === operator.id) {
+      throw new ApiError(
+        400,
+        "bad_request",
+        "An operator cannot take their own flag away. The tooling can do that, and it leaves a record too."
+      );
     }
     const removed = await pool.query(
-      "DELETE FROM operators WHERE user_id IN (SELECT id FROM users WHERE lower(email) = $1)",
-      [email]
+      "DELETE FROM operators WHERE user_id = $1",
+      [target.id]
     );
-    await record(pool, operatorId, "operator.revoked", email, `${removed.rowCount ?? 0} removed`);
-    req.log.info({ operatorId, email }, "operator took the operator flag away");
+    if (removed.rowCount === 0) {
+      throw new ApiError(404, "not_an_operator", "That account does not hold the flag.");
+    }
+    await record(pool, operator.id, "operator.revoked", target.id, email);
+    req.log.info({ operatorId: operator.id, target: target.id }, "operator took the operator flag away");
     return { ok: true, removed: removed.rowCount ?? 0 };
   });
 

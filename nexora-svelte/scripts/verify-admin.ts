@@ -66,11 +66,14 @@ const copyPath = "lib/content/admin.ts";
     "the browser never sends who it is: the only credential it sends is the bearer",
     client.includes("headers.authorization") &&
       !client.includes("x-user-id") &&
-      // Every body the console sends is an address and nothing else. The
-      // operator is the caller, and the platform reads the caller from the
-      // token the gateway verified.
+      // Every body the console sends names an address, a scope and a length.
+      // It never names an operator: the operator is the caller, and the
+      // platform reads the caller from the token the gateway verified.
       (client.match(/body:\s*\{/g) ?? []).length === 2 &&
-      (client.match(/body:\s*\{\s*email\s*\}/g) ?? []).length === 2,
+      (client.match(/body:\s*\{\s*email\s*\}/g) ?? []).length === 1 &&
+      // The shapes above are exact: a body that carried an operator id would
+      // not match them, so this is what says the client cannot name one.
+      (client.match(/body:\s*\{\s*email\s*,\s*role\s*,\s*expiresInDays\s*\}/g) ?? []).length === 1,
     "the console's client must not be able to name the operator"
   );
 
@@ -90,6 +93,37 @@ const copyPath = "lib/content/admin.ts";
     page.includes("view === \"checking\"") &&
       page.indexOf("view === \"checking\"") < page.indexOf("overview?.operator"),
     "the console's numbers must not be rendered before the platform has said who the caller is"
+  );
+
+  ok(
+    "the console is not indexed, and it says so in its head",
+    page.includes("noindex")
+  );
+
+  ok(
+    "handing the flag on is behind the super role, so one operator cannot pass the console on",
+    page.includes('overview?.operator.role === "super"') &&
+      ADMIN.operators.superOnly.includes("super operator")
+  );
+
+  ok(
+    "a flag granted from the console always carries an end, and the form asks for it",
+    client.includes("expiresInDays") && page.includes("admin-grant-days") && page.includes("grantDays")
+  );
+
+  ok(
+    "and the grant names the scope it is granting",
+    client.includes("role") && ADMIN.operators.roleOperator.includes("Operator") && ADMIN.operators.roleSuper.includes("Super")
+  );
+
+  ok(
+    "the console says what a flag may not be granted to: an address nobody proved they own",
+    ADMIN.operators.grantNote.includes("verified")
+  );
+
+  ok(
+    "the console shows the scope and the end of every flag it lists",
+    page.includes("operator.expiresAt") && page.includes("operator.role")
   );
 
   ok(

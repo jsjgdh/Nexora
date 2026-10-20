@@ -7,12 +7,14 @@
  * somebody with the database.
  *
  *   node scripts/operator.mjs list
- *   node scripts/operator.mjs grant <email> [--by <email>]
+ *   node scripts/operator.mjs grant <email> [--by <email>] [--super] [--days N]
  *   node scripts/operator.mjs revoke <email>
  *
- * It reads the same environment the services run with (platform/.env.local
- * for a local stack), and it applies the operator migration itself, so the
- * first flag can be granted before the service has ever booted.
+ * The tooling is the root of trust: it is the only way to make a super
+ * operator, and the only way to grant a flag that does not end. It reads the
+ * same environment the services run with, and it applies the operator
+ * migration itself, so the first flag can be granted before the service has
+ * ever booted.
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -73,16 +75,18 @@ async function main() {
 
   if (command === "list") {
     const { rows } = await pool.query(
-      "SELECT o.user_id, o.role, o.granted_at, o.granted_by, u.email, u.name FROM operators o JOIN users u ON u.id = o.user_id ORDER BY o.granted_at"
+      "SELECT o.user_id, o.role, o.granted_at, o.granted_by, o.expires_at, u.email, u.name FROM operators o JOIN users u ON u.id = o.user_id ORDER BY o.granted_at"
     );
     if (rows.length === 0) {
       console.log("No operators yet.");
-      console.log("Grant the first one: node scripts/operator.mjs grant you@example.com");
+      console.log("Grant the first one: node scripts/operator.mjs grant you@example.com --super");
       return;
     }
     for (const r of rows) {
+      const ends = r.expires_at ? new Date(r.expires_at).toISOString() : "no end";
+      const live = !r.expires_at || new Date(r.expires_at).getTime() > Date.now();
       console.log(
-        `${r.email}\t${r.role}\tgranted ${new Date(r.granted_at).toISOString()}${r.granted_by ? ` by ${r.granted_by}` : ""}`
+        `${r.email}\t${r.role}\t${live ? "live" : "ended"}\tends ${ends}\tgranted ${new Date(r.granted_at).toISOString()}${r.granted_by ? ` by ${r.granted_by}` : ""}`
       );
     }
     return;
@@ -100,15 +104,29 @@ async function main() {
       process.exit(1);
     }
     const by = flag("by") ?? null;
-    await pool.query(
-      "INSERT INTO operators (user_id, role, granted_by) VALUES ($1, 'operator', $2) ON CONFLICT (user_id) DO NOTHING",
-      [rows[0].id, by]
+    const role = rest.includes("--super") ? "super" : "operator";
+    const days = flag("days") ? Number(flag("days")) : null;
+    if (days !== null && (!Number.isInteger(days) || days < 1 || days > 365)) {
+      console.error("--days must be a whole number of days, between 1 and 365.");
+      process.exit(2);
+    }
+    const expiresAt = days === null ? null : new Date(Date.now() + days * 24 * 3600_000);
+    const granted = await pool.query(
+      "INSERT INTO operators (user_id, role, granted_by, expires_at) VALUES ($1, $2, $3, $4) " +
+        "ON CONFLICT (user_id) DO NOTHING RETURNING user_id",
+      [rows[0].id, role, by, expiresAt]
     );
+    if (granted.rowCount === 0) {
+      console.log(`${email} is already an operator. Nothing changed.`);
+      return;
+    }
     await pool.query(
       "INSERT INTO admin_actions (id, operator_id, action, target, detail) VALUES ($1, $2, 'operator.granted', $3, $4)",
-      [randomUUID(), by ?? "tooling", rows[0].id, email]
+      [randomUUID(), by ?? "tooling", rows[0].id, `${role}${expiresAt ? ` for ${days} days` : " with no end"}`]
     );
-    console.log(`${email} is an operator.`);
+    console.log(
+      `${email} is an ${role}${expiresAt ? ` until ${expiresAt.toISOString()}` : " with no end"}.`
+    );
     return;
   }
 
