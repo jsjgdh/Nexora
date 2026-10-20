@@ -10,7 +10,7 @@ import { describe, it, before, beforeEach, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync, execSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -735,16 +735,45 @@ describe("the auth service mounts every route module it has", () => {
   const modules = readdirSync(srcDir).filter((f) => f.endsWith(".ts") && f !== "index.ts");
 
   it("every route module is mounted by the service's entry point", () => {
-    const unmounted = [];
+    /* Reachability, which is the question the service actually answers.
+     *
+     * A route module is mounted when something the entry point reaches calls
+     * it, and the thing that calls it is often another route module:
+     * `routes.ts` mounts the identity and rights modules, and `index.ts`
+     * mounts `routes.ts`. So the walk starts at the entry point and follows
+     * every register call it finds. A module that exports a register function
+     * nobody reaches is a 404 in production, and the suite cannot see it,
+     * because the suite registers the module on its own test app.
+     */
+    const exported = new Map(); // register function name -> the file that exports it
     for (const file of modules) {
       const source = readFileSync(join(srcDir, file), "utf8");
-      const exported = [...source.matchAll(/export function (register\w+Routes)\s*\(/g)].map((m) => m[1]);
-      for (const name of exported) {
-        if (!new RegExp(`${name}\\s*\\(\\s*app\\s*,`).test(entry)) {
-          unmounted.push(`${file} exports ${name}, and index.ts never mounts it`);
-        }
+      for (const m of source.matchAll(/export function (register\w+Routes)\s*\(/g)) {
+        exported.set(m[1], file);
       }
     }
+    const callsIn = (source) =>
+      [
+        ...source
+          .replace(/export function register\w+Routes\s*\([^)]*\)\s*(:\s*void)?\s*\{/g, "")
+          .matchAll(/\b(register\w+Routes)\s*\(/g),
+      ].map((m) => m[1]);
+
+    const reachable = new Set();
+    const queue = callsIn(entry);
+    while (queue.length > 0) {
+      const name = queue.pop();
+      if (reachable.has(name)) continue;
+      reachable.add(name);
+      const file = exported.get(name);
+      if (!file) continue;
+      for (const called of callsIn(readFileSync(join(srcDir, file), "utf8"))) {
+        if (!reachable.has(called)) queue.push(called);
+      }
+    }
+    const unmounted = [...exported.entries()]
+      .filter(([name]) => !reachable.has(name))
+      .map(([name, file]) => `${file} exports ${name}, and nothing the service reaches mounts it`);
     assert.deepEqual(unmounted, [], "a route module that is written and not mounted is a 404 in production");
   });
 
@@ -810,6 +839,71 @@ describe("the gateway entitlement cache", () => {
       courses: null,
     }));
     assert.deepEqual(await subscription.get("u", 0), { status: "entitled", courses: null });
+  });
+
+  it("the two questions are answered together, and either one grants", async () => {
+    const combined = gwEntitlement.combinedEntitlementLookup({
+      subscription: async () => "not_entitled",
+      seat: async () => ({ entitled: true, courses: ["go-in-production"] }),
+    });
+    assert.deepEqual(await combined("u"), {
+      status: "entitled",
+      courses: ["go-in-production"],
+    });
+    const bySubscription = gwEntitlement.combinedEntitlementLookup({
+      subscription: async () => "entitled",
+      seat: async () => ({ entitled: false, courses: [] }),
+    });
+    assert.deepEqual(await bySubscription("u"), { status: "entitled", courses: null });
+    const neither = gwEntitlement.combinedEntitlementLookup({
+      subscription: async () => "not_entitled",
+      seat: async () => ({ entitled: false, courses: [] }),
+    });
+    assert.deepEqual(await neither("u"), { status: "not_entitled", courses: null });
+  });
+
+  it("a question that cannot be answered is unknown, never a denial", async () => {
+    const billingDown = gwEntitlement.combinedEntitlementLookup({
+      subscription: async () => "unknown",
+      seat: async () => ({ entitled: false, courses: [] }),
+    });
+    assert.deepEqual(await billingDown("u"), { status: "unknown", courses: null });
+    const seatDown = gwEntitlement.combinedEntitlementLookup({
+      subscription: async () => "not_entitled",
+      seat: async () => {
+        throw new Error("the identity service is down");
+      },
+    });
+    assert.deepEqual(await seatDown("u"), { status: "unknown", courses: null });
+  });
+
+  it("a seat is asked every time, so a licence opens the course at once", async () => {
+    // The seat is not cached, because a licence is confirmed by a person with
+    // a CLI and there is no webhook to drop a cached verdict. A student whose
+    // licence was confirmed had to wait out the cache before the paid course
+    // opened, with nothing on screen to say why.
+    let seated = false;
+    let seatCalls = 0;
+    const seat = async () => {
+      seatCalls++;
+      return { entitled: seated, courses: seated ? ["go-in-production"] : [] };
+    };
+    const subscription = new gwEntitlement.EntitlementCache(30_000, async () => ({
+      status: "not_entitled",
+      courses: null,
+    }));
+    const combined = gwEntitlement.combinedEntitlementLookup({
+      subscription: async (id) => (await subscription.get(id)).status,
+      seat,
+    });
+    assert.deepEqual(await combined("u"), { status: "not_entitled", courses: null });
+    // The operator confirms the licence.
+    seated = true;
+    assert.deepEqual(await combined("u"), {
+      status: "entitled",
+      courses: ["go-in-production"],
+    });
+    assert.equal(seatCalls, 2, "the seat is asked again, so the change is felt at once");
   });
   it("invalidate can drop a single user", async () => {
     const seen = [];
@@ -8104,5 +8198,123 @@ ${body}
     } finally {
       await new Promise((resolve) => hook.close(resolve));
     }
+  });
+});
+
+/* B-12: the metrics data layer — the numbers behind the dashboards.
+ *
+ * metrics.mjs reads what the platform records (users, sessions, proofs,
+ * subscriptions) and prints, by name, what it does not. No database runs on
+ * this machine, so the live read is the one part this suite cannot
+ * exercise — the same honest boundary the synthetic check draws. What is
+ * exercised is everything that can be wrong without a database: the
+ * queries' tables held against the migrations (schema drift fails the gate
+ * here, not the report in production), the funnel arithmetic as a pure
+ * function of rows, the exit when the database is absent, and the promise
+ * that the reason a database did not answer never carries its password
+ * into a log, a terminal, or a pasted report. */
+describe("the metrics reporter reads what exists and names what does not (B-12)", () => {
+  let metrics = null;
+
+  before(async () => {
+    metrics = await import(pathToFileURL(join(root, "scripts", "metrics.mjs")).href);
+  });
+
+  it("every table the queries read exists in the migrations, so drift fails here", () => {
+    // The migrations as they are on disk right now — not a copy of their
+    // names, so a table that is renamed or dropped under the report is a
+    // red gate rather than a runtime error on the operator's box.
+    const created = new Set();
+    const services = readdirSync(join(root, "services"));
+    for (const service of services) {
+      const dir = join(root, "services", service, "migrations");
+      if (!existsSync(dir)) continue;
+      for (const file of readdirSync(dir)) {
+        if (!file.endsWith(".sql")) continue;
+        const sql = readFileSync(join(dir, file), "utf8");
+        for (const m of sql.matchAll(/CREATE TABLE IF NOT EXISTS\s+([a-z_]+)/g)) created.add(m[1]);
+      }
+    }
+    assert.ok(created.size > 0, "the migration scan found tables at all");
+
+    const read = new Set();
+    for (const query of Object.values(metrics.QUERIES)) {
+      for (const m of query.matchAll(/\b(?:FROM|JOIN)\s+([a-z_]+)/gi)) read.add(m[1]);
+    }
+    assert.ok(read.size >= 4, `the queries name their tables (${[...read].join(", ")})`);
+    for (const table of read) {
+      assert.ok(
+        created.has(table),
+        `metrics reads ${table}, which no migration creates — the report would die on the box, not in the gate`
+      );
+    }
+  });
+
+  it("the signup→evidence funnel is arithmetic over rows, and tests without a database", () => {
+    const rows = [
+      { signup_at: "2026-10-01T00:00:00Z", first_evidence_at: "2026-10-01T01:00:00Z" }, // 1h
+      { signup_at: "2026-10-01T00:00:00Z", first_evidence_at: "2026-10-02T06:00:00Z" }, // 30h
+      { signup_at: "2026-10-02T00:00:00Z", first_evidence_at: null }, // never synced
+      { signup_at: "2026-10-03T00:00:00Z", first_evidence_at: "2026-10-03T00:30:00Z" }, // 0.5h
+      { signup_at: "2026-10-04T00:00:00Z", first_evidence_at: "2026-10-03T23:00:00Z" }, // clock skew: −1h
+    ];
+    const stats = metrics.firstEvidenceStats(rows);
+    assert.equal(stats.users, 5, "every signup counts in the denominator, synced or not");
+    assert.equal(stats.withEvidence, 3, "and the skew row is dropped from the lags, not reported");
+    assert.equal(stats.sharePercent, 60, "share is over all signups");
+    assert.equal(stats.medianHours, 1, "median of 0.5, 1, 30");
+    assert.equal(stats.within24h, 2);
+    assert.equal(stats.within7d, 3);
+
+    const empty = metrics.firstEvidenceStats([]);
+    assert.equal(empty.users, 0);
+    assert.equal(empty.sharePercent, null, "an empty platform reports nulls, never a confident zero");
+    assert.equal(empty.medianHours, null);
+  });
+
+  it("without AUTH_DATABASE_URL the report cannot be produced (2), and says which variable", () => {
+    const r = spawnSync(process.execPath, [join(root, "scripts", "metrics.mjs")], {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, AUTH_DATABASE_URL: "", BILLING_DATABASE_URL: "" },
+    });
+    assert.equal(r.status, 2, r.stdout);
+    assert.match(r.stderr, /AUTH_DATABASE_URL is not set/);
+    assert.match(r.stderr, /exit 2: the report could not be produced/);
+  });
+
+  it("a database that does not answer fails the report (2), without leaking its password", () => {
+    const r = spawnSync(
+      process.execPath,
+      [join(root, "scripts", "metrics.mjs"), "--json"],
+      {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          AUTH_DATABASE_URL: "postgres://canary:sekrit-b12@127.0.0.1:1/nexora",
+          BILLING_DATABASE_URL: "",
+        },
+      }
+    );
+    assert.equal(r.status, 2, r.stdout);
+    assert.match(r.stderr, /nexora@127\.0\.0\.1:1 did not answer/, "the reason names where, not why-not-look");
+    assert.ok(!r.stderr.includes("sekrit-b12"), "the credential it was given is taken back out of the reason");
+  });
+
+  /* The refused-connection assertion above can only ever prove the message
+     did not happen to contain the password — pg's ECONNREFUSED text never
+     does. This one manufactures the case the redaction exists for: an error
+     (a driver that echoes its DSN, a proxy that echoes the request line)
+     whose very words carry the credential, and holds the reason to the
+     promise the script makes in its header: the secret is taken back out
+     before anything is written anywhere. */
+  it("the reason a database gives never carries the credential it was given", () => {
+    const url = "postgres://canary:sekrit-b12@db.internal:5432/authdb";
+    const reason = metrics.whyNot(url, new Error(`connect failed for ${url}`));
+    assert.ok(!reason.includes("sekrit-b12"), `password scrubbed: ${reason}`);
+    assert.ok(reason.includes("canary"), `the user stays — it identifies the grant, not the secret: ${reason}`);
+    assert.ok(reason.includes("***"), `the scrub leaves evidence it happened: ${reason}`);
+    assert.ok(reason.includes("authdb@db.internal:5432"), `and still says where: ${reason}`);
   });
 });

@@ -190,7 +190,12 @@ export function seatLookup(opts: {
  * it", and a billing or auth outage must not be remembered as a denial.
  */
 export function combinedEntitlementLookup(opts: {
-  subscription: (userId: string) => Promise<boolean>;
+  /**
+   * The subscription question. It answers a status rather than a boolean,
+   * because "we cannot ask billing right now" is a third answer and it must
+   * not be folded into a denial.
+   */
+  subscription: (userId: string) => Promise<"entitled" | "not_entitled" | "unknown">;
   seat: (userId: string) => Promise<SeatAnswer>;
 }): EntitlementLookup {
   return async (userId: string): Promise<EntitlementAnswer> => {
@@ -200,7 +205,7 @@ export function combinedEntitlementLookup(opts: {
     ]);
 
     // A subscription covers every course. That is `courses: null`.
-    if (subscription.status === "fulfilled" && subscription.value === true) {
+    if (subscription.status === "fulfilled" && subscription.value === "entitled") {
       return { status: "entitled", courses: null };
     }
     // A seat covers exactly the courses the cohort was bought for.
@@ -209,6 +214,9 @@ export function combinedEntitlementLookup(opts: {
     }
     // Neither says yes. If either could not answer, the verdict is unknown.
     if (subscription.status === "rejected" || seat.status === "rejected") {
+      return { status: "unknown", courses: null };
+    }
+    if (subscription.status === "fulfilled" && subscription.value === "unknown") {
       return { status: "unknown", courses: null };
     }
     return { status: "not_entitled", courses: null };

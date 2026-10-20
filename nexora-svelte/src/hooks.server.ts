@@ -1,4 +1,4 @@
-import type { Handle } from "@sveltejs/kit";
+import type { Handle, HandleServerError } from "@sveltejs/kit";
 
 /* Baseline security headers for the HTML origin.
  *
@@ -48,4 +48,36 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Set on the final response so it lands on every reply, including errors.
   response.headers.set("content-security-policy-report-only", CSP);
   return response;
+};
+
+/* Error reporting, the web app's half (TODO 5.2).
+ *
+ * SvelteKit routes every unexpected server error through this hook, and
+ * providing it replaces the default handler — the one that logs in its own
+ * shape. Every service in this platform reports failures as one structured
+ * JSON line with a service name on stderr, and a surface that answers
+ * differently is a surface that cannot be grepped with the rest; so the
+ * report happens here, in the same shape, and `docker logs` reads the web
+ * app exactly like it reads the mesh.
+ *
+ * What the browser gets back is deliberately the generic message. The
+ * detail lives in this log, not in a response — the same posture as the
+ * API's own 500 envelopes ("Something went wrong."), so no surface of this
+ * product tells a stranger what broke inside. In development SvelteKit
+ * shows the original error in the overlay regardless; this only decides
+ * what is logged and what a production error page says. */
+export const handleError: HandleServerError = ({ event, error }) => {
+  const message = error instanceof Error ? error.message : String(error);
+  const stack = error instanceof Error ? (error.stack ?? "") : "";
+  console.error(
+    JSON.stringify({
+      level: 50,
+      service: "web",
+      url: event.url.pathname + event.url.search,
+      message,
+      stack: stack.slice(0, 2000),
+      at: new Date().toISOString(),
+    })
+  );
+  return { message: "Internal error" };
 };

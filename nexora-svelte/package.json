@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
     "start": "node build",
-    "verify": "tsx scripts/verify.ts && tsx scripts/verify-account.ts && tsx scripts/verify-admin.ts",
+    "verify": "tsx scripts/verify.ts && tsx scripts/verify-account.ts && tsx scripts/verify-admin.ts && tsx scripts/verify-observability.ts",
     "verify:account": "tsx scripts/verify-account.ts",
     "verify:admin": "tsx scripts/verify-admin.ts",
     "verify:a11y": "tsx scripts/verify-a11y.ts",

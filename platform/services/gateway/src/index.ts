@@ -6,7 +6,13 @@ import { loadConfig, type RouteConfig } from "./config.js";
 import { bearerIdentity, clerkVerifier, localVerifier, type TokenVerifier } from "./auth.js";
 import { FixedWindow } from "./limits.js";
 import { MAX_BODY_BYTES, forward, matchRoute, buildForwardHeaders, upstreamPathFor } from "./proxy.js";
-import { EntitlementCache, billingLookup, combinedEntitlementLookup, seatLookup } from "./entitlement.js";
+import {
+  EntitlementCache,
+  billingLookup,
+  combinedEntitlementLookup,
+  seatLookup,
+  type EntitlementAnswer,
+} from "./entitlement.js";
 import { RevocationCache, revocationLookup } from "./revocation.js";
 
 /* Public edge: CORS, JWT authentication, rate limits, request tracing, and
@@ -27,18 +33,48 @@ const verifier: TokenVerifier =
 const globalLimiter = new FixedWindow(config.globalLimit.windowMs, config.globalLimit.max);
 const routeLimiters = new Map(config.routes.map((r) => [r.prefix, new FixedWindow(r.limit.windowMs, r.limit.max)]));
 
-// Entitlement for paid curriculum routes: one cache, resolved against billing
-// and against the cohort seats, short-lived so a cancellation bites within the
-// TTL and invalidated on the webhook path so a new subscription bites at once.
-// Either answer grants entitlement, and a failure in either is "unknown",
-// never a denial. See entitlement.ts.
-const entitlement = new EntitlementCache(
+/* Entitlement for paid curriculum routes.
+ *
+ * Two questions, and they are cached differently because they change
+ * differently.
+ *
+ * The subscription is cached for the TTL and dropped the moment a billing
+ * webhook says otherwise, so a cancellation bites within the TTL and a new
+ * subscription bites at once.
+ *
+ * The seat is NOT cached. A seat changes when an operator confirms a licence,
+ * and there is no webhook for that: the operator is a person with a CLI, and
+ * the classroom's paid course opening is the moment they are waiting for. So
+ * the seat is asked on every paid request, which is one indexed query on the
+ * identity service's own database. The earlier shape cached the combined
+ * answer, and a student whose licence was confirmed had to wait out the TTL
+ * before the course opened, with nothing on screen to say why.
+ *
+ * Either answer grants entitlement, and a failure in either is "unknown",
+ * never a denial. See entitlement.ts. */
+const subscriptionEntitlement = new EntitlementCache(
   config.entitlementTtlMs,
-  combinedEntitlementLookup({
-    subscription: billingLookup({ url: config.billingUrl, internalKey: config.internalKey, timeoutMs: 5_000 }),
-    seat: seatLookup({ url: config.authUrl, internalKey: config.internalKey, timeoutMs: 5_000 }),
-  })
+  async (userId) => {
+    const entitled = await billingLookup({
+      url: config.billingUrl,
+      internalKey: config.internalKey,
+      timeoutMs: 5_000,
+    })(userId);
+    return { status: entitled ? "entitled" : "not_entitled", courses: null };
+  }
 );
+const entitlement = {
+  async get(userId: string, now = Date.now()): Promise<EntitlementAnswer> {
+    return combinedEntitlementLookup({
+      subscription: async (id: string) => (await subscriptionEntitlement.get(id, now)).status,
+      seat: seatLookup({ url: config.authUrl, internalKey: config.internalKey, timeoutMs: 5_000 }),
+    })(userId);
+  },
+  /** Drop one user's subscription verdict, or every verdict when no id is given. */
+  invalidate(userId?: string): void {
+    subscriptionEntitlement.invalidate(userId);
+  },
+};
 
 // Revocation: sign-out must end the token in hand, not just the family it renews
 // with, so every request presenting a token that carries an id asks the auth
