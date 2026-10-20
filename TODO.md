@@ -174,12 +174,13 @@ not connected" where the sign-in form should have been.
 - [x] The site's content security policy is enforced (2026-10-20): a hash on a
   prerendered page, a nonce on a page rendered at request time, and no
   'unsafe-inline' in script-src in production. The one inline script in the
-  shell carries the nonce. The report-only header is gone. The font host is
-  named in the policy and in the list of subprocessors, because the site asks
-  it for the typefaces.
-- [ ] Self-host the typefaces, so the front door makes no third-party request
-  at all. It is the better answer than naming the font host in the policy, and
-  it is a change to the build rather than to a header.
+  shell carries the nonce. The report-only header is gone.
+- [x] The typefaces are served from this site (2026-10-20): Archivo, IBM Plex
+  Mono and Newsreader, the Latin subset, under the SIL Open Font License with
+  the licence text beside them. The front door makes no third-party request
+  to render a page, and the policy does not have to make room for one. The
+  list of processors no longer names a font host, because the site no longer
+  asks one.
 - [x] Subscription management: "Manage subscription" opens a Dodo customer
   portal session (new backend endpoint minting the session for the stored
   `dodo_customer_id`; frontend redirects). Cancel, card update, and invoice
