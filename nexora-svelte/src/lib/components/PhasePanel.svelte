@@ -48,7 +48,7 @@
   ];
 </script>
 
-<div class="border border-rule bg-panel" use:inView>
+<div class="border border-rule bg-panel">
   <!-- The rail: the course, in order, as it ships. -->
   <div class="grid lg:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
     <div class="border-b border-rule lg:border-r lg:border-b-0">
@@ -64,7 +64,7 @@
               aria-pressed={selected === id}
               onclick={() => (selected = id)}
               class={cn(
-                "flex w-full cursor-pointer items-baseline gap-3 border-b border-rule px-4 py-2.5 text-left transition-[background-color,color] duration-200",
+                "flex min-h-[44px] w-full cursor-pointer items-baseline gap-3 border-b border-rule px-4 py-2.5 text-left transition-[color,background-color] duration-200",
                 selected === id ? "bg-raised text-ink" : "text-muted hover:text-ink"
               )}
             >
@@ -99,7 +99,7 @@
           </p>
         {/if}
 
-        <ol class="mt-8 grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
+        <ol class="mt-8 grid gap-px bg-rule sm:grid-cols-2 lg:grid-cols-4">
           {#each SHAPE as step, i (step.name)}
             <li class="bg-panel px-4 py-4">
               <p class="num text-[11px] text-faint">{String(i + 1).padStart(2, "0")}</p>

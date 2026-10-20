@@ -1872,7 +1872,7 @@ console.log("\n== the design is held to the same rules as the product ==");
   // Nothing rolls its own motion check: one module owns the decision.
   ok(
     "every animated component asks the one motion module rather than testing the media query itself",
-    ["Reveal.svelte", "Headline.svelte", "Ticker.svelte", "ScrollRail.svelte", "ProofRun.svelte", "ActionLink.svelte", "DeviceCode.svelte"].every(
+    ["Headline.svelte", "Ticker.svelte", "ScrollRail.svelte", "ProofRun.svelte", "ActionLink.svelte", "DeviceCode.svelte"].every(
       (name) => component(name).includes("$lib/motion")
     ) &&
       !srcFiles.some(
@@ -1880,6 +1880,74 @@ console.log("\n== the design is held to the same rules as the product ==");
           f.endsWith(".svelte") && readFileSync(f, "utf8").includes("prefers-reduced-motion: reduce")
       )
   );
+
+  // The page has one orchestrated entrance, and the rest is structure.
+  //
+  // A page where every heading fades in when it reaches the viewport is a page
+  // that never settles: the reader is made to wait for the document to catch
+  // up with them. So a heading is always there, and what arrives is the
+  // content under it.
+  {
+    const sectionHead = component("SectionHead.svelte");
+    const reveals = srcFiles.filter((f) => {
+      if (!f.endsWith(".svelte")) return false;
+      const src = readFileSync(f, "utf8");
+      return /use:inView\b/.test(src) || /use:inViewStagger\b/.test(src);
+    });
+    ok(
+      "a section heading is structure, and it does not fade in",
+      !sectionHead.includes("use:inView") && !sectionHead.includes("fade-up")
+    );
+    ok(
+      "and the motion on the page is a budget, not a habit",
+      reveals.length <= 10,
+      `${reveals.length} components reveal on scroll: ${reveals
+        .map((f) => f.split("/").pop())
+        .join(", ")}`
+    );
+  }
+
+  // The bar's edge fades; it does not grow. A height transition is a layout
+  // transition, and the bar sits at the top of every page.
+  {
+    const chrome = readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8");
+    const edgeRule = /\.edge\s*\{([\s\S]*?)\}/.exec(chrome)?.[1] ?? "";
+    ok(
+      "the bar's edge fades rather than growing, because a height transition is a layout transition",
+      /height:\s*\d/.test(edgeRule) &&
+        /transition:\s*opacity/.test(edgeRule) &&
+        !/transition:[^;]*height/.test(chrome)
+    );
+
+    // The folio is a row of its own below the wide breakpoint. Squeezed into
+    // the space beside a wordmark and two buttons, it was forty pixels wide
+    // on a phone, and five of the site's destinations were invisible.
+    ok(
+      "the folio takes a row of its own below the wide breakpoint, so no destination is squeezed out of sight",
+      /\.folio\s*\{[^}]*flex:\s*1 0 100%/.test(chrome) &&
+        /@media \(min-width: 1280px\)/.test(chrome)
+    );
+  }
+
+  {
+    // The faces the first screen is set in are preloaded, so the download
+    // starts with the stylesheet instead of after the browser has parsed the
+    // CSS. The italic is the poster's alone, so the page that has a poster
+    // preloads it and the pages that do not are not made to pay for it.
+    const appHtml = readFileSync(new URL("../src/app.html", import.meta.url), "utf8");
+    const landingHtml = readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8");
+    ok(
+      "the typefaces every page is set in are preloaded",
+      appHtml.includes('rel="preload"') &&
+        appHtml.includes("/fonts/archivo-normal-1.woff2") &&
+        appHtml.includes("/fonts/newsreader-normal-1.woff2")
+    );
+    ok(
+      "and the poster's own italic is preloaded by the poster, not by every page",
+      landingHtml.includes("/fonts/newsreader-italic-0.woff2") &&
+        !appHtml.includes("/fonts/newsreader-italic-0.woff2")
+    );
+  }
 
   // The pointer is the platform's. This build drew its own follower behind the
   // pointer — a ring that has to blend the whole viewport on every frame and

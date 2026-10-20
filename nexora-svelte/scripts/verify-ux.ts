@@ -447,6 +447,52 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
 }
 
 /* ------------------------------------------------------------------ *
+ * 7. The thumb floor, measured on a phone.
+ *
+ *    The house says every control is at least 44 pixels tall. That is a
+ *    claim about the rendered page, so it is checked on the rendered page, at
+ *    the width a thumb is actually holding.
+ *
+ *    Two kinds of control are exempt, and both are exemptions the standard
+ *    makes: a link inside a sentence, and a control that is hidden until it
+ *    is focused.
+ * ------------------------------------------------------------------ */
+{
+  const routes = ["/", "/courses", "/pricing", "/universities", "/employers", "/download", "/teach"];
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  for (const route of routes) {
+    await page.goto(ORIGIN + route, { waitUntil: "networkidle" });
+    await page.addStyleTag({ content: SETTLE });
+    await page.waitForTimeout(400);
+    const small = await page.evaluate(() => {
+      const found: { text: string; w: number; h: number }[] = [];
+      for (const el of document.querySelectorAll("a,button,input,select,textarea,[role=button]")) {
+        const style = getComputedStyle(el);
+        if (style.display === "none" || style.visibility === "hidden") continue;
+        // A link inside a sentence is exempt: the standard exempts inline
+        // targets, because a sentence of text cannot be made taller.
+        if (style.display === "inline") continue;
+        const rect = el.getBoundingClientRect();
+        // A control that is hidden until it is focused is not a small target;
+        // it is a target that is the size of its focus ring.
+        if (rect.width <= 2 && rect.height <= 2) continue;
+        if (rect.height > 0 && rect.height < 44) {
+          const text = (el.textContent ?? "").trim().slice(0, 30);
+          if (!found.some((f) => f.text === text)) {
+            found.push({ text, w: Math.round(rect.width), h: Math.round(rect.height) });
+          }
+        }
+      }
+      return found;
+    });
+    for (const target of small) {
+      note("thumb floor", `${route}: "${target.text}" is ${target.w}x${target.h}, under 44px`);
+    }
+  }
+  await page.close();
+}
+
+/* ------------------------------------------------------------------ *
  * 6. Rendered contrast. The token suite measures the declarations; this
  *    measures the pixels. It walks every text node, composites the real
  *    background behind it, and computes the ratio that a reader would

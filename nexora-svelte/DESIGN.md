@@ -279,13 +279,48 @@ that order and they do not move.
 The bar is sticky, and it is the header that sticks rather than a bar nested
 inside a header, because a nested sticky element unsticks the moment its
 parent scrolls away. The page dissolves into it through a short fade instead
-of stopping at a rule, and the fade deepens once the page has moved. Nothing
-blurs: the house refuses a blur of whatever happens to be behind it, and the
-page coming up under a fade is the same effect without the lie.
+of stopping at a rule. The fade is a change of **opacity**, never of height:
+the bar sits at the top of every page, and a height transition is a layout
+transition.
+
+**Below 1280px the folio takes a row of its own**, the full width of the page.
+Squeezed into the space left beside a wordmark and two buttons, nine links
+become a forty-pixel slot on a phone, and five of the site's destinations are
+invisible. The strip still scrolls at narrow widths, because nine destinations
+do not fit in a phone, and the link that is half off the edge is the signal
+that there is more.
 
 The reading about the product's state, and the desk's description of it, live
 in the footer's title block, because those are facts about the product and the
 title block is where the facts are.
+
+## How much the page moves
+
+**One orchestrated entrance**, and then content that is simply there.
+
+The poster's masked reveal is the entrance. The gap's four lines light up in
+turn, because the gap is a progression and the order is the point. The five
+steps of a loop and the courses arrive in order, because a list with an order
+should show it. Everything else — the section headings, the caption under
+them, the footer's title block — is structure, and structure is always
+visible. A heading that fades in when it reaches the viewport is a heading
+that is not there for a reader who scrolls fast, and a page where every
+heading arrives is a page that never settles.
+
+The suite counts the reveals and fails above ten, so the budget cannot be
+spent by accident.
+
+## The one word in the poster
+
+The poster marks one word, and it is set in the italic serif: the second
+voice, saying the thing the promise hangs on.
+
+This is a deliberate house decision and it is the one place where this site
+knowingly breaks a common rule of thumb, which is that a heading should never
+carry an italic word. The brief says it, the type system says it, and the
+alternative (a weight, an accent colour) would spend the amber, which is
+reserved for things a reader can act on. It is written down here so that the
+next person to meet the rule knows the exception and the reason for it.
 
 ## Composition
 

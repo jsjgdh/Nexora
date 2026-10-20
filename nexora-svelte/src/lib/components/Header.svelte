@@ -177,7 +177,7 @@
          It is the only sticky layer, because a nameplate pinned to the top of
          every screen is a wall and not navigation. -->
     <nav class="folio" aria-label="Site">
-      <ul class="nice-scroll -mx-5 flex items-stretch overflow-x-auto px-5 sm:-mx-8 sm:px-8">
+      <ul class="nice-scroll -mx-4 flex items-stretch overflow-x-auto px-4 sm:-mx-8 sm:px-8">
         {#each NAV as item (item.href)}
           <li class="flex">
             <a href={item.href} aria-current={currentKind(item.href)} class="folio-link">
@@ -249,7 +249,9 @@
 
   .bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
     gap: var(--space-2);
     max-width: 1320px;
     margin: 0 auto;
@@ -266,19 +268,29 @@
   /* The edge of the bar. The page dissolves into the chrome instead of
      stopping at a rule. Nothing blurs: the house refuses a blur of whatever
      happens to be behind it, and the page coming up under a fade is the
-     same effect without the lie. The fade deepens once the page has moved,
-     because a bar over a moving page needs more of it. */
+     same effect without the lie.
+
+     The height is fixed and the DEPTH of the fade changes, because animating
+     `height` is animating a layout property, and the bar sits at the top of
+     every page. */
   .edge {
-    height: 14px;
+    height: 20px;
     background: linear-gradient(var(--color-ground), transparent);
+    opacity: 0.55;
     pointer-events: none;
-    transition: height 240ms var(--ease-out);
+    transition: opacity 240ms var(--ease-out);
   }
 
   /* The attribute is set by the scroll measure at run time, so it has to be
      addressed globally or the compiler cannot see it. */
   .edge:global([data-scrolled="true"]) {
-    height: 22px;
+    opacity: 1;
+  }
+
+  /* The attribute is set by the scroll measure at run time, so it has to be
+     addressed globally or the compiler cannot see it. */
+  .edge:global([data-scrolled="true"]) {
+    opacity: 1;
   }
 
   /* The page you are on is inked, the same gesture the folio makes for the
@@ -331,10 +343,23 @@
 
   /* The folio: the sections, from the one list the rest of the site reads.
      The links are flat and dim, and the current one is underlined, so the bar
-     reads as a list of places rather than as a row of buttons. */
+     reads as a list of places rather than as a row of buttons.
+
+     Below the wide breakpoint the folio takes a row of its OWN, the full width
+     of the page, because a strip of nine links squeezed into the leftover
+     space beside a wordmark and two buttons is a forty-pixel slot on a phone,
+     and the reader cannot see that there is anything to scroll to. */
   .folio {
     min-width: 0;
-    flex: 1 1 auto;
+    order: 3;
+    flex: 1 0 100%;
+  }
+
+  @media (min-width: 1280px) {
+    .folio {
+      order: 0;
+      flex: 1 1 auto;
+    }
   }
 
   .folio ul {
@@ -346,7 +371,7 @@
     display: flex;
     align-items: center;
     min-height: 44px;
-    padding: 0 var(--space-3);
+    padding: 0 var(--space-2);
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 500;
@@ -368,8 +393,8 @@
   .folio-link::after {
     content: "";
     position: absolute;
-    left: var(--space-3);
-    right: var(--space-3);
+    left: var(--space-2);
+    right: var(--space-2);
     bottom: 6px;
     height: 2px;
     background: var(--color-accent);

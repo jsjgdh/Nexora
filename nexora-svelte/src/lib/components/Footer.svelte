@@ -1,7 +1,6 @@
 <script lang="ts">
   import { FOOTER_LINKS, BRAND, MASTHEAD } from "$lib/content/site";
   import { LEGAL_LINKS } from "$lib/legal";
-  import { inView } from "$lib/motion";
   import type { ReleaseState } from "$lib/release";
 
   /* The title block.
@@ -42,10 +41,7 @@
          from a gradient, so it costs no request and no image. -->
     <div class="scale" aria-hidden="true"></div>
 
-    <div
-      class="fade-up grid border-t border-l border-rule bg-panel sm:grid-cols-2 lg:grid-cols-4"
-      use:inView
-    >
+    <div class="grid border-t border-l border-rule bg-panel sm:grid-cols-2 lg:grid-cols-4">
       <div class="border-r border-b border-rule p-6">
         <p class="display text-[clamp(1.5rem,3.2vw,2.1rem)] text-ink">{BRAND}</p>
         <p class="mt-3 max-w-[26ch] text-[14px] leading-relaxed text-muted">

@@ -12,7 +12,31 @@
     </script>
     <!-- The typefaces are served from this site: /fonts, under the SIL Open
          Font License. There is no third-party request to render a page here,
-         and the content security policy does not have to make room for one. -->
+         and the content security policy does not have to make room for one.
+
+         The three faces below are the ones every page is set in, and they
+         are the heavy ones: the grotesque for the headings and the serif for
+         the body. Preloading them starts the download at the same moment as
+         the stylesheet, instead of after the browser has parsed the CSS and
+         worked out which face a word needs.
+
+         The italic is NOT here. One poster line is set in it and nothing else
+         is, so a page that has no poster should not pay a hundred and forty
+         kilobytes for it. The page that does have one preloads it itself. -->
+    <link
+      rel="preload"
+      href="/fonts/archivo-normal-1.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/newsreader-normal-1.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

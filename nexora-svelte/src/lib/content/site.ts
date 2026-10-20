@@ -529,7 +529,7 @@ export const COURSE_PATH_NOTES: Record<string, { title: string; body: string }> 
  */
 export const TASK_MANAGER: [string, string, "free" | "pro"][] = [
   ["setup", "Project setup", "free"],
-  ["fundamentals", "Programming fundamentals", "free"],
+  ["fundamentals", "Programming fundamentals", "pro"],
   ["web-basics", "How the web talks", "pro"],
   ["crud-data", "Create, read, update, delete", "pro"],
   ["regex-validation", "Reading and writing a pattern", "pro"],
@@ -556,7 +556,7 @@ export const TASK_MANAGER: [string, string, "free" | "pro"][] = [
  * language, before the service and before the app it sits behind.
  */
 export const GO_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
-  ["go-program", "Go program", "pro"],
+  ["go-program", "Go program", "free"],
   ["go-values", "Go values", "pro"],
   ["go-control-flow", "Go control flow", "pro"],
   ["go-functions", "Go functions", "pro"],
@@ -581,7 +581,7 @@ export const GO_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
  * subject: a running service, its storage, its operations and its failures.
  */
 export const GO_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
-  ["go-goroutines", "Goroutines and channels", "pro"],
+  ["go-goroutines", "Goroutines and channels", "free"],
   ["go-sync", "Shared state and sync", "pro"],
   ["go-concur", "Worker pools and fan-in", "pro"],
   ["go-context", "Contexts and cancellation", "pro"],
@@ -618,9 +618,9 @@ export const GO_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
  */
 export const RUST_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
   ["rust-values", "Rust, cargo, and your first value", "free"],
-  ["rust-ownership", "One owner at a time", "free"],
-  ["rust-borrowing", "Look without taking", "free"],
-  ["rust-structs", "One door into the type", "free"],
+  ["rust-ownership", "One owner at a time", "pro"],
+  ["rust-borrowing", "Look without taking", "pro"],
+  ["rust-structs", "One door into the type", "pro"],
   ["rust-enums", "A value that is one of several shapes", "pro"],
   ["rust-errors", "A failure is a value", "pro"],
   ["rust-modules", "The public edge of a crate", "pro"],
@@ -645,7 +645,7 @@ export const RUST_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
  * defend.
  */
 export const RUST_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
-  ["rust-checker", "A checker reads code and reports what it finds", "pro"],
+  ["rust-checker", "A checker reads code and reports what it finds", "free"],
   ["rust-checker-report", "Your turn: the rules and the report", "pro"],
   ["rust-tokio-runtime", "The runtime that owns the work", "pro"],
   ["rust-tokio-channels", "A message from one task to another", "pro"],
@@ -677,7 +677,7 @@ export const RUST_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
  * tell the difference between a slow query and a wrong one.
  */
 export const SQL_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
-  ["sql-first-database", "The first database", "pro"],
+  ["sql-first-database", "The first database", "free"],
   ["sql-select-where", "SELECT and WHERE", "pro"],
   ["sql-order-limit", "ORDER BY and LIMIT", "pro"],
   ["sql-group-by", "The aggregates and GROUP BY", "pro"],
@@ -935,9 +935,9 @@ export const STEPS = [
     id: "tier",
     title: "Your tier opens the courses.",
     caption:
-      "Those nine phases are free forever and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.",
+      "The first phase of every course is free, and so is the whole API primer: nine phases, free forever, and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.",
     points: [
-      "Free: nine phases, judged end to end",
+      "Free: the first phase of every course, and the API primer whole",
       "Pro: every further phase, fetched per entitlement",
       "Assessment stays free. A verdict you have to pay for is not one you can trust",
     ],

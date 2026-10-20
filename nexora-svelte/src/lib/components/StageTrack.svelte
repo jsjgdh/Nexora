@@ -39,6 +39,14 @@
   {/each}
 </ol>
 
+<!-- The track is wider than the column on purpose, and a reader who has not
+     scrolled it has no way of knowing there is more of the project. So it
+     says so, in the same voice as everything else on the page. -->
+<p class="mt-4 text-[12.5px] text-faint">
+  the track scrolls · {BUILD_JOURNEY.beats.length} stages, from an empty folder to a reviewed pull
+  request
+</p>
+
 <style>
   .track {
     display: flex;

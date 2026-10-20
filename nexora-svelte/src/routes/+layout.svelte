@@ -73,6 +73,10 @@
      default here plus a page override would put two descriptions in the
      document, and the crawler would pick one of them. -->
 <svelte:head>
+  <!-- The colour of the browser's own chrome, so the address bar belongs to
+       the page. It is a literal because a meta tag cannot read a custom
+       property, and it is a copy of `--color-ground`: if the ground moves,
+       this moves with it. -->
   <meta name="theme-color" content="#0b0e12" />
   <meta property="og:site_name" content={SITE_NAME} />
   <meta name="twitter:card" content="summary" />

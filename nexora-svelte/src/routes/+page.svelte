@@ -148,6 +148,19 @@
   });
 </script>
 
+<svelte:head>
+  <!-- The one marked word in the poster is set in the italic serif, and it is
+       the only place on the site that uses that face. So the page that has
+       one preloads it, and a page that does not is not made to pay for it. -->
+  <link
+    rel="preload"
+    href="/fonts/newsreader-italic-0.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin="anonymous"
+  />
+</svelte:head>
+
 <PageHead title={SITE_TITLE} description={SITE_DESCRIPTION} path="/" />
 
 <ScrollRail sections={railSections} />
