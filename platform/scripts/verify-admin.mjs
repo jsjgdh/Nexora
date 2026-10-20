@@ -51,6 +51,17 @@ async function migrate() {
 }
 
 async function seed() {
+  /* The verified ledger. The console reads it from the identity service, and
+     in some builds the ledger lives in a service of its own, so the test owns
+     the table rather than inheriting whatever the migrations happen to say
+     today. That way both shapes are covered: the ledger here, and the ledger
+     somewhere else. */
+  await pool.query(
+    "CREATE TABLE IF NOT EXISTS proofs (" +
+      "user_id TEXT NOT NULL, competency_id TEXT NOT NULL, level TEXT NOT NULL, " +
+      "receipt JSONB NOT NULL DEFAULT '{}'::jsonb, payload_sha256 TEXT NOT NULL DEFAULT '', " +
+      "issued_at TIMESTAMPTZ NOT NULL DEFAULT now())"
+  );
   await pool.query(
     "INSERT INTO users (id, email, name, password_hash, created_at, provider, email_verified_at) " +
       "VALUES ('u-op', 'operator@example.com', 'The Operator', 'x', now(), 'local', now()), " +
@@ -72,6 +83,10 @@ async function seed() {
   await pool.query(
     "INSERT INTO rights_requests (id, user_id, subject_ref, kind, detail, due_at) VALUES " +
       "('q-1', 'u-learner', 'ref-1', 'access', 'A copy of my data', now() + interval '30 days')"
+  );
+  await pool.query(
+    "INSERT INTO proofs (user_id, competency_id, level, receipt, payload_sha256, issued_at) VALUES " +
+      "('u-learner', 'javascript-basics', 'practiced', '{\"facts\":{\"kind\":\"run\"}}'::jsonb, 'sha-1', now())"
   );
 }
 
@@ -193,6 +208,34 @@ describe("the operator's console (real database)", () => {
     // read as "this learner has done nothing".
     assert.equal(typeof body.proofsAvailable, "boolean");
     assert.ok(Array.isArray(body.proofs));
+  });
+
+  it("the console says where the verified ledger is, in both shapes", async () => {
+    // The ledger is here: the account shows its work, and the console says so.
+    const here = await app.inject({ method: "GET", url: "/admin/accounts/u-learner", headers: asUser("u-op") });
+    assert.equal(here.statusCode, 200);
+    assert.equal(here.json().proofsAvailable, true);
+
+    // The ledger is elsewhere: the console still answers, and it says that it
+    // cannot show that work rather than showing an empty list as if the
+    // learner had done nothing.
+    await pool.query("ALTER TABLE proofs RENAME TO proofs_moved");
+    try {
+      const elsewhere = await app.inject({
+        method: "GET",
+        url: "/admin/accounts/u-learner",
+        headers: asUser("u-op"),
+      });
+      assert.equal(elsewhere.statusCode, 200, "a ledger in another service is not an error");
+      assert.equal(elsewhere.json().proofsAvailable, false);
+      assert.deepEqual(elsewhere.json().proofs, []);
+      const overview = await app.inject({ method: "GET", url: "/admin/overview", headers: asUser("u-op") });
+      assert.equal(overview.statusCode, 200);
+      assert.equal(overview.json().configuration.proofsAvailable, false);
+      assert.equal(overview.json().counts.proofs, 0, "and it does not count a ledger it cannot see");
+    } finally {
+      await pool.query("ALTER TABLE proofs_moved RENAME TO proofs");
+    }
   });
 
   it("an account that does not exist is a 404, not an empty page", async () => {
