@@ -536,3 +536,151 @@ Verification for the session work (M-1 + L-3), which is what this pass added. `p
 **A note on the working tree.** Several of the files touched here (`gateway/config.ts`, `gateway/index.ts`, `gateway/proxy.ts`, `billing/routes.ts`, `docker-compose.yml`, `scripts/verify.mjs`, the `curriculum` files, `site sync-curriculum.mjs`) already carried uncommitted changes when this work began. Those changes were left intact; the edits above were layered on top, and `SECURITY-AUDIT.md` is a new untracked file. The session work added `nexora-svelte/src/lib/session-core.ts`, `nexora-svelte/src/lib/server/session-broker.ts`, and the four `nexora-svelte/src/routes/auth/session/*/+server.ts` endpoints.
 
 **Why the `nexora-svelte` suite did not complete in this pass.** A curriculum expansion is in flight in this working tree and it changes the content the app's suite asserts on: `lib/missions.ts` and `lib/curriculum.ts` are modified, `missions-s.ts` … `missions-w.ts` are new and untracked, and the mission count is now 60 where `scripts/verify.ts` asserts 46. The count assertion is no longer the first casualty — the suite now runs past it and dies later, at `go-build: op ids unique`, on a duplicated block inside the untracked `lib/missions-v.ts` (`svelte-check` reports the same file: "an object literal cannot have multiple properties with the same name", at the repeated `hintLadder`). None of that is part of this work and none of it was touched: repairing it means deciding which of the pasted blocks is the intended one, which is an editorial call about content that is still being written. Three things were checked in its place, all of them against files this pass did change: in the same `svelte-check` run **no file changed here reported a single diagnostic**; the thirteen conditions the app suite would assert about sign-out-everywhere (the client method and the endpoint it names, the broker forwarding the token and refusing cross-site callers, the cookie cleared only on a confirmed reply, the answer rendered outside the signed-in branch, the Clerk helper aliased rather than shadowed, exactly one local declaration of it) were evaluated directly against the files and all thirteen hold; and the control itself was driven **in the browser** against a stub gateway — signed in through the form, the button armed by the first click and performed by the second, a real `POST /api/auth/logout-all` carrying the access token the page was holding in its body (`{ accessToken }`, decoded from the stub's log, with no Authorization header — the gateway strips bearers, which is why the body route exists), the confirmation line the learner sees ("Every session for this account is ended (2 ended just now)"), and a refresh attempt afterwards answered `401 no_session` because the cookie was cleared. Re-run the app suite once the curriculum expansion lands — the added assertions sit after the mission-content ones and will execute then.
+
+---
+
+## 10. Second pass: the institutional surface (2026-10-20)
+
+**Target:** the code written in the hours after the first pass: the cohort and
+licence surface, the operator's console, the course-scoped seat entitlement,
+and the front door's pages for them.
+
+**Method:** the same discipline. A finding needs a lower-trust principal, an
+accepted input, the intended control, the boundary crossed, the affected
+principal or resource, and a concrete result. Hardening advice is listed as
+a missing control, not as a finding.
+
+**Note on the tree:** this pass ran while another session was writing in the
+same repository (a deployment plan, a backup and restore drill, an operator
+console). The tree moved under the review, so the findings below are stated
+against the code as it stood at the end of the pass, and the fixes are the
+ones in the history that follows.
+
+### F-1. A public route took a session credential in a request body (medium, fixed)
+
+**Vulnerable component:** `platform/services/auth/src/admin.ts`, the
+`POST /admin/check` route.
+
+**Attack path.** The auth service's prefix is public at the edge
+(`/api/auth` is `auth: false`, so no token is required to reach it). The
+route read a refresh token out of the request body and answered three things:
+whether the token was a live session, whether the account was an operator,
+and the account's id, email and name. A refresh token is a thirty-day
+credential. A caller who held one could therefore confirm that it was live,
+and read the account it belonged to, without ever using it for access, and
+without any credential but the token itself.
+
+**Impact.** A credential oracle on the public surface for the longest-lived
+credential in the system, and a credential travelling in a request body,
+where an ingestion pipe or a debug log can keep it. The token's holder
+already had the account's rights, so the harm is the oracle, the credential's
+travel, and the fact that the route is a second, weaker path to the
+operator question.
+
+**Fix.** The route is deleted. Nothing in the product called it: the console
+reads the identity the gateway injected after verifying the caller's own
+access token, and the operator's flag is a row. The refresh token stays in
+the app's HttpOnly cookie, where the broker exchanges it. The suite now
+asserts the route answers 404, so it cannot come back quietly.
+
+### F-2. The suite's port binding hung instead of failing (medium, fixed)
+
+**Vulnerable component:** `platform/scripts/verify.mjs`, every
+`await new Promise((r) => server.listen(port, host, r))`.
+
+**Attack path.** None. This is a finding about the instrument, not the
+product, and it is here because it cost a real debugging session: when the
+port is already taken, the listen callback never fires, the promise never
+settles, the event loop runs out of work, and every suite after that one is
+cancelled with "Promise resolution is still pending but the event loop has
+already resolved". A leftover process from an interrupted run is enough to
+do it.
+
+**Impact.** A red platform suite that reads as a product failure and is not
+one. The reporter of this pass initially read it as a hang in the gateway
+and then as a broken entitlement path, and the truth was a busy port.
+
+**Fix.** One `listenOn(server, port)` helper that rejects with the port and
+the reason, used at all six call sites.
+
+### F-3. The entitlement verdict changed shape and three tests still asserted the old one (low, fixed)
+
+**Component:** `platform/scripts/verify.mjs`, the gateway entitlement cache
+suite.
+
+The verdict is now `{ status, courses }`, because a seat has to name the
+course it covers. Three cases still compared it with the string "entitled",
+so the suite was red for a reason that was not a defect in the product.
+Fixed, and a new case asserts the two shapes that matter: a seat keeps its
+course, and a subscription keeps them all (`courses: null`).
+
+### F-4. The course-scoped paywall had no test at all (medium, fixed)
+
+**Component:** `platform/services/curriculum/src/routes.ts`,
+`requireCourseCovered`.
+
+The second floor under the paywall now refuses a paid phase whose course the
+verdict does not cover, and fails closed when the verdict carries no course
+at all. Neither behaviour was asserted: the only case injected
+`x-entitled: 1` and no course list, which under the new rule is a refusal,
+so the suite failed and the behaviour itself was untested.
+
+**Fix.** Four cases: a seat whose course covers the phase is served, a seat
+in another course is refused with the same code a learner who bought nothing
+gets, a verdict with no course list covers nothing, and a subscription
+(`*`) is served. The edge's header hygiene is also asserted: `x-entitled` and
+`x-entitled-courses` are both in `NEVER_FORWARDED`, so a client cannot
+forge a verdict or a course list.
+
+### F-5. The cohort export did not say what it contained (low, fixed)
+
+**Component:** `platform/services/auth/src/cohorts.ts`, the CSV export.
+
+The export lists every verified proof a member has, from any course, because
+the ledger is the member's work and not the cohort's, and the auth service
+cannot map a competency to a course (the curriculum service owns that map).
+The file said "one verified proof by one member" and nothing more, so a
+reader could have read the file as a statement about the course being
+taught. It now says what it is, in its own header.
+
+### Checked and found sound, with the evidence
+
+- **The operator boundary holds.** The flag is a row in `operators`; every
+  admin route calls `requireOperator`, which is `requireUserId` (the
+  gateway-verified identity) and then the row. The first flag is granted by
+  a machine credential (`platform/scripts/operator.mjs` connects straight to
+  the database and applies the migration itself), never by the console, so a
+  console that could hand itself the right to exist would not be a
+  boundary. The operator's actions are written to `admin_actions`.
+- **The seat check is mesh-only.** `POST /internal/entitlement/seat` needs
+  the mesh key, and the gateway refuses to proxy any path containing
+  `/internal/`, so the public surface cannot reach it.
+- **A learner cannot grant themselves a seat.** The licence is activated
+  over the mesh or by the operator CLI, a new cohort is `pending`, and a
+  `pending` cohort grants nothing.
+- **A cohort cannot be oversubscribed.** The seat count is checked inside
+  the INSERT, so two joins arriving together cannot both take the last seat.
+- **One cohort's data is not another's.** The roster and the export are
+  scoped to `instructor_id`, and a cohort the caller does not teach is a
+  404 rather than a 403, so the route does not confirm that it exists.
+- **The front door cannot hand out what the platform holds.** The site's
+  console calls the platform with the learner's own access token; the
+  operator's rows, accounts, proofs and cohorts all come from the platform,
+  and the account home's data is the same.
+
+### Missing controls, and residuals, with the reason
+
+1. **The roster and the export show a member's proofs from any course.**
+   The auth service cannot map a competency to a course. Closing this
+   properly needs the curriculum's phase-to-competency map to be reachable
+   from the auth service. Until then the file says what it contains.
+2. **The site's `/admin` page shell loads for anybody.** The data is
+   refused by the platform, and the route is out of the sitemap and
+   disallowed in robots, but the front door imposes no gate of its own, so
+   the whole boundary rests on the platform's operator table.
+3. **Identity inside the mesh is still one shared bearer key and an
+   unsigned `x-user-id` header.** This is the first pass's M-3 residual,
+   unchanged, and it is an architectural change rather than a patch.
+4. **The limits, the quotas and the entitlement cache are per-process.**
+   The first pass's missing control 5, unchanged, and still the one place to
+   move when a second gateway appears.
