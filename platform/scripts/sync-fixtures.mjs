@@ -46,6 +46,9 @@ const PROJECT_ROOTS = {
      that it reads the catalogue, they come with it. */
   "api-basics": "fixtures/api-basics",
   "rust-ledger": "fixtures/rust-ledger",
+  /* The SQL course has a workspace of its own, and its phases name it
+     explicitly, so the entry is the workspace and not a fallback. */
+  "sql-ledger": "fixtures/sql-ledger",
 };
 
 /* Every course the IDE carries, and the suites its activities name.
