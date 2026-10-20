@@ -372,6 +372,10 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "ide",
           "action": "tab-closed"
+        },
+        {
+          "kind": "ide",
+          "action": "terminal-created"
         }
       ],
       "lesson": [
@@ -381,7 +385,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "You can show or hide each region with a shortcut. This phase has 8 steps: 4 short reads, 2 quick questions, 1 hands-on Solve where you bring the project up, and 1 Review you do alone. Each read ends with Mark as Complete, which unlocks the next step. A read that watches what you do finishes itself, and Mark as Complete is still there when you would rather say so."
+          "body": "You can show or hide each region with a shortcut. This phase has 8 steps: 4 short reads, 2 quick questions, 1 hands-on Solve where you bring the project up, and 1 Review you do alone. Each read ends with Mark as Complete, which unlocks the next step. A read that watches what you do finishes itself, and Mark as Complete is still there when you need it."
         },
         {
           "kind": "example",
