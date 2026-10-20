@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { page } from "$app/state";
   import { session } from "$lib/session.svelte";
-  import { BRAND, MASTHEAD, NAV } from "$lib/content/site";
+  import { BRAND, NAV } from "$lib/content/site";
   import type { ReleaseState } from "$lib/release";
 
   /* The instrument face.
@@ -162,191 +162,203 @@
 </script>
 
 <header class="masthead">
-  <div class="mx-auto max-w-[1320px] px-5 sm:px-8">
-    <!-- The status line: what is actually true of the product right now, on the
-         left, and the two actions on the right. It is a reading rather than a
-         slogan, so it can be checked — and it changes when the product
-         changes. The hairline under it is what makes the line a *label strip*
-         rather than a floating row of small print.
+  <div class="bar">
+    <!-- The nameplate: the product's word and the mark that goes with it.
+         It is a link home, and it says so to a screen reader in words rather
+         than with an aria-label, because a label that REPLACES the visible
+         word is a name a voice control cannot act on. -->
+    <a href="/" class="nameplate">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="sr-only">Home</span>
+      <span class="word display">{BRAND}</span>
+    </a>
 
-         The line is dropped below `sm` so a phone's strip is the download and
-         nothing else; the actions keep right-aligned either way. -->
-    <div class="flex flex-wrap items-center justify-between gap-x-5 gap-y-1 border-b border-rule py-3 sm:py-1">
-      <p class="stamp hidden text-[11px] text-faint sm:block">
-        {MASTHEAD.status}
-      </p>
-      <div class="ml-auto flex items-center gap-2.5">
-        {#if !session.loggedIn}
-          <a
-            href="/download"
-            aria-current={pathname === "/download" ? "page" : undefined}
-            class="inline-flex min-h-[44px] shrink-0 items-center border border-accent bg-accent px-3.5 text-[12.5px] font-bold whitespace-nowrap text-ground transition-[color,background-color,border-color] duration-200 hover:border-accent-bright hover:bg-accent-bright"
-          >
-            {release.labelShort}
-          </a>
-        {/if}
+    <!-- The folio: the sections, from the one list the rest of the site reads.
+         It is the only sticky layer, because a nameplate pinned to the top of
+         every screen is a wall and not navigation. -->
+    <nav class="folio" aria-label="Site">
+      <ul class="nice-scroll -mx-5 flex items-stretch overflow-x-auto px-5 sm:-mx-8 sm:px-8">
+        {#each NAV as item (item.href)}
+          <li class="flex">
+            <a href={item.href} aria-current={currentKind(item.href)} class="folio-link">
+              {item.label}
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </nav>
 
-        <!-- The sign-in link waits for `restoring`: the session lives in a
-             cookie this page cannot read, so "signed out" is not known yet on
-             a fresh load, and offering the link is a claim we cannot make until
-             the server has answered. The avatar has no such problem — being
-             shown something is only ever wrong once.
-             The link is shown in local mode too: there is no account to sign
-             into there, but the account page still has something to say about
-             it, and a header with no account control at all is how a site
-             looks like a site that has no accounts. -->
-        {#if session.loggedIn}
-          <a
-            href="/account"
-            aria-current={pathname === "/account" || pathname === "/profile" || pathname === "/auth" ? "page" : undefined}
-            aria-label={session.user ? `Account: ${session.user.email}` : "Account"}
-            title={session.user?.email ?? "Account"}
-            class="grid h-11 w-11 place-items-center border border-rule-strong font-mono text-[12px] font-bold text-ink transition-[color,background-color,border-color] duration-200 hover:border-accent hover:bg-accent hover:text-ground"
-          >
-            {(session.user?.email ?? "?").slice(0, 1).toUpperCase()}
-          </a>
-        {:else if !session.restoring}
-          <a
-            href="/auth"
-            aria-current={pathname === "/auth" ? "page" : undefined}
-            class="inline-flex min-h-[44px] items-center border border-rule-strong px-3.5 text-[12.5px] font-semibold whitespace-nowrap text-muted transition-[color,background-color,border-color] duration-200 hover:border-ink hover:text-ink"
-          >
-            Sign in
-          </a>
-        {/if}
-      </div>
-    </div>
+    <!-- The controls: the one action, and who is signed in. -->
+    <div class="actions">
+      {#if !session.loggedIn}
+        <a
+          href="/download"
+          aria-current={pathname === "/download" ? "page" : undefined}
+          class="inline-flex min-h-[44px] shrink-0 items-center border border-accent bg-accent px-3.5 text-[12.5px] font-bold whitespace-nowrap text-ground transition-[color,background-color,border-color] duration-200 hover:border-accent-bright hover:bg-accent-bright"
+        >
+          {release.labelShort}
+        </a>
+      {/if}
 
-    <!-- The nameplate: the product's name at the size of the page's own
-         display type, and the desk's description sitting on its baseline like
-         the legend under a manufacturer's plate. The row is a hairline above
-         the folio, so the two read as one band of instrument.
-
-         The link stays the width of the word rather than the width of the
-         band — an invisible 900px home hotspot across the top of the page is a
-         trap, not a nameplate. -->
-    <div class="nameplate-row">
-      <a href="/" class="nameplate">
-        <span class="display block text-[clamp(1.9rem,5.2vw,3.2rem)] text-ink">{BRAND}</span>
-        <span class="sr-only">Home</span>
-      </a>
-      <p class="stamp hidden text-[11px] text-faint md:block">{MASTHEAD.descriptor}</p>
+      <!-- The sign-in link waits for `restoring`: the session lives in a
+           cookie this page cannot read, so "signed out" is not known yet on a
+           fresh load, and offering the link is a claim we cannot make until
+           the server has answered. The avatar has no such problem — being
+           shown something is only ever wrong once. -->
+      {#if session.loggedIn}
+        <a
+          href="/account"
+          aria-current={pathname === "/account" || pathname === "/profile" || pathname === "/auth" ? "page" : undefined}
+          aria-label={session.user ? `Account: ${session.user.email}` : "Account"}
+          title={session.user?.email ?? "Account"}
+          class="grid h-11 w-11 place-items-center border border-rule-strong font-mono text-[12px] font-bold text-ink transition-[color,background-color,border-color] duration-200 hover:border-accent hover:bg-accent hover:text-ground"
+        >
+          {(session.user?.email ?? "?").slice(0, 1).toUpperCase()}
+        </a>
+      {:else if !session.restoring}
+        <a
+          href="/auth"
+          aria-current={pathname === "/auth" ? "page" : undefined}
+          class="inline-flex min-h-[44px] items-center border border-rule-strong px-3.5 text-[12.5px] font-semibold whitespace-nowrap text-muted transition-[color,background-color,border-color] duration-200 hover:border-ink hover:text-ink"
+        >
+          Sign in
+        </a>
+      {/if}
     </div>
   </div>
+
+  <!-- The edge of the bar. The page dissolves into the chrome instead of
+       stopping at a rule, and nothing scrolls under a blur: the house refuses
+       a blur of whatever happens to be behind it. -->
+  <div class="edge" aria-hidden="true"></div>
 </header>
 
-<!-- The folio: one section bar for every width, which is also why the old
-     desktop/mobile nav pair is gone — two copies of the same five links was two
-     places for the current marker to be wrong. It bleeds to the screen edges,
-     so its negative margin has to match the container's padding at each width
-     or it hangs short of the edge above `sm`. -->
-<nav aria-label="Site" class="folio sticky top-0 z-50" data-scrolled={scrolled}>
-  <div class="mx-auto max-w-[1320px] px-5 sm:px-8">
-    <ul class="nice-scroll -mx-5 flex items-stretch overflow-x-auto px-5 sm:-mx-8 sm:px-8">
-      {#each NAV as item (item.href)}
-        <li class="flex">
-          <a href={item.href} aria-current={currentKind(item.href)} class="folio-link">
-            {item.label}
-          </a>
-        </li>
-      {/each}
-    </ul>
-  </div>
-</nav>
+<!-- The folio now lives in the bar above, so there is one row of chrome and
+     not two: the nameplate, the sections and the controls, in one line. -->
 
 <style>
-  /* The masthead is the room's back wall, and it scrolls away. Nothing here is
-     sticky and nothing is blurred: a bench does not frost. */
+  /* The bar. One row: the nameplate, the sections, the controls.
+     It is the only sticky layer, and it is the only thing that crosses the
+     page, so it has to read as an edge rather than as a band of colour. */
   .masthead {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
     background: var(--color-ground);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  @media (min-width: 640px) {
+    .bar {
+      gap: var(--space-4);
+      padding: var(--space-3) var(--space-8);
+    }
+  }
+
+  /* The edge of the bar. The page dissolves into the chrome instead of
+     stopping at a rule. Nothing blurs: the house refuses a blur of whatever
+     happens to be behind it, and the page coming up under a fade is the
+     same effect without the lie. The fade deepens once the page has moved,
+     because a bar over a moving page needs more of it. */
+  .edge {
+    height: 14px;
+    background: linear-gradient(var(--color-ground), transparent);
+    pointer-events: none;
+    transition: height 240ms var(--ease-out);
+  }
+
+  /* The attribute is set by the scroll measure at run time, so it has to be
+     addressed globally or the compiler cannot see it. */
+  .edge:global([data-scrolled="true"]) {
+    height: 22px;
   }
 
   /* The page you are on is inked, the same gesture the folio makes for the
      section you are inside. The download and the account are not sections of
      the front page, so the folio has nothing to mark on those routes; the
-     action that owns the route carries the marker instead, or an interior page
-     is a page with no way home marked anywhere in the chrome. */
+     action that owns the route carries the marker instead, or an interior
+     page is a page with no way home marked anywhere in the chrome. */
   .masthead a[aria-current="page"] {
     border-color: var(--color-ink);
     background: var(--color-ink);
     color: var(--color-ground);
   }
 
-  /* The nameplate row: the name on the left, the legend on the right, and a
-     hairline between them and the folio below. */
-  .nameplate-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-6);
-    padding-bottom: var(--space-3);
-  }
-
-  /* The nameplate itself: the page's own display face, set tight. It carries
-     the weight a lockup would have carried. `inline-flex` with a 44px floor
-     so the brand is a thumb target like every other control: the way home
-     should not be the smallest thing in the chrome. */
+  /* The nameplate: the product's word, the mark that goes with it, and
+     nothing else. The link is the width of the word and the mark together,
+     not the width of the band — an invisible 900px home hotspot across the
+     top of the page is a trap, not a nameplate. */
   .nameplate {
     display: inline-flex;
     align-items: center;
+    gap: var(--space-3);
     min-height: 44px;
     min-width: 0;
+    flex: none;
     color: var(--color-ink);
+    text-decoration: none;
   }
-  .nameplate .display {
-    letter-spacing: 0.02em;
+
+  .nameplate .word {
+    font-size: clamp(1rem, 2.1vw, 1.45rem);
+    font-weight: 800;
+    letter-spacing: 0.14em;
   }
-  .nameplate:hover .display {
+
+  .nameplate:hover .word {
     color: var(--color-accent);
   }
 
-  /* The folio: the heavy rule the nameplate sits on, and the bar under it.
-     Once it is pinned it has to read as an edge rather than as a band of
-     colour, and in this house an edge is a rule and never a shadow: a blur
-     of whatever happens to be behind it is exactly the thing the surface
-     system refuses to do. So the pinned state strengthens the lower rule
-     instead, and the bar separates itself by contrast, not by a halo. */
-  .folio {
-    background: var(--color-ground);
-    border-top: 1px solid var(--color-rule-strong);
-    border-bottom: 1px solid var(--color-rule);
-    transition: border-color 200ms var(--ease-out);
-  }
-  .folio[data-scrolled="true"] {
-    border-bottom-color: var(--color-rule-strong);
+  /* The mark: a plate with one corner cut, in the signal colour. It is the
+     only piece of ornament in the chrome, and it is the same shape as the
+     cut corner the house uses everywhere else. */
+  .mark {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    flex: none;
+    background: var(--color-accent);
+    clip-path: polygon(0 0, 100% 0, 100% 72%, 72% 100%, 0 100%);
   }
 
-  /* A section bar cell: printed, one line, and 44px tall at every width so a
-     thumb gets the same target a pointer does. The hairlines fall *between*
-     cells rather than around them, the way a section bar is ruled. */
-  .folio li + li {
-    border-left: 1px solid var(--color-rule);
+  /* The folio: the sections, from the one list the rest of the site reads.
+     The links are flat and dim, and the current one is underlined, so the bar
+     reads as a list of places rather than as a row of buttons. */
+  .folio {
+    min-width: 0;
+    flex: 1 1 auto;
   }
+
+  .folio ul {
+    list-style: none;
+  }
+
   .folio-link {
     position: relative;
     display: flex;
     align-items: center;
     min-height: 44px;
-    padding: 0 var(--space-4);
+    padding: 0 var(--space-3);
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     white-space: nowrap;
-    color: var(--color-muted);
-    transition:
-      color 200ms var(--ease-out),
-      background-color 200ms var(--ease-out);
+    color: var(--color-faint);
+    transition: color 200ms var(--ease-out);
   }
+
   .folio-link:hover {
     color: var(--color-ink);
-  }
-  /* Pressing a section inks the cell and prints its label in the room's own
-     dark. */
-  .folio-link:active {
-    background: var(--color-ink);
-    color: var(--color-ground);
   }
 
   /* The current section is carried by a drawn rule, not by a hue: the underline
@@ -356,19 +368,29 @@
   .folio-link::after {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: 6px;
     height: 2px;
     background: var(--color-accent);
     transform: scaleX(0);
     transform-origin: left center;
     transition: transform 260ms var(--ease-out);
   }
+
   .folio-link[aria-current] {
     color: var(--color-ink);
   }
+
   .folio-link[aria-current]::after {
     transform: scaleX(1);
+  }
+
+  /* The controls sit at the right and never move. */
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: none;
   }
 </style>

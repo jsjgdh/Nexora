@@ -454,58 +454,22 @@ export const EMPLOYER = {
  * a job market in front of someone who came to learn to code. This set ends
  * on the third thing that actually goes wrong, which is the bug.
  */
-export const WEDGE = [
-  {
-    title: "The tutorial ends.",
-    body: "The video stops, the file is empty, and the two are not the same skill. Following was practised. Building was not.",
-  },
-  {
-    title: "The blank file is the whole distance.",
-    body: "Nobody freezes because the explanation was unclear. They freeze because nothing says what to type first, and the first line is where all of it happens.",
-  },
-  {
-    title: "A bug is a question, not a wall.",
-    body: "A failing test tells you what was expected and what actually happened. Read that and the cause is usually one line away. The habit being built is reading the machine rather than guessing at it.",
-  },
-] as const;
-
 /**
  * What a phase is, in the curriculum's own words.
  *
  * The sentence in the title is the shipped manifest's own, and it is quoted
  * rather than paraphrased because it is the shape of every course in the
- * product: Learn, then Solve, then Review. The four steps below are that
- * sentence taken apart, and each one describes something the course data
- * actually contains: a read with examples and key points, a question with an
- * explanation, a hands-on task judged in the learner's own workspace, and a
- * review the learner does alone.
+ * product: Learn, then Solve, then Review.
+ *
+ * The five steps below are what the LEARNER does inside that shape, and each
+ * one carries the panel it would actually show. The panels are read out of the
+ * product's own transcript, so the failure on the page is a failure the
+ * platform really produces.
  */
 export const LEARN_CYCLE = {
-  title: "Every phase is Learn, then Solve, then Review.",
+  title: "Watch how learning happens.",
   caption:
-    "That is the shipped manifest's own sentence, and it is true of every course in the product. Here is what each part is, so the reader knows what they are agreeing to before they install anything.",
-  steps: [
-    {
-      n: "01",
-      name: "Learn",
-      body: "A short read that names the idea in plain words, shows it running, and lists the points worth keeping. It says why the idea exists before it shows the syntax.",
-    },
-    {
-      n: "02",
-      name: "Check",
-      body: "A question with one right answer, and an explanation of why that answer is right. You find out what you understood rather than what you hoped.",
-    },
-    {
-      n: "03",
-      name: "Solve",
-      body: "A task in your own workspace, with the scaffolding it needs. The check runs against the code you wrote, in the files you own.",
-    },
-    {
-      n: "04",
-      name: "Review",
-      body: "A transfer task you do alone. Each activity carries a level of guidance, and the help thins out as you get better at it.",
-    },
-  ],
+    "Every phase is Learn, then Solve, then Review. This is what that looks like: five steps, inside the editor, on your own project.",
   guidance: {
     title: "The help runs out.",
     body: "Every activity states how much of the answer it will give you. Early on, that is the shape of the answer. Later, it is the question and nothing else, and a phase that only works with the answer open is not a phase you passed.",
@@ -541,6 +505,10 @@ export const COURSE_PATH_NOTES: Record<string, { title: string; body: string }> 
   "rust-in-production": {
     title: "Rust, the service behind it.",
     body: "The runtime and its tasks, the channels between them, the router and its extractors, the state it shares, the failures that become answers, the database, the configuration, the log, the tests, and a release you can defend.",
+  },
+  "sql-fundamentals": {
+    title: "SQL, the query language.",
+    body: "The shape of a query, what the planner does with it, the joins that bite, and how to tell a slow query from a wrong one.",
   },
   "api-basics": {
     title: "The API, from the outside.",
@@ -701,6 +669,33 @@ export const RUST_IN_PRODUCTION: [string, string, "free" | "pro"][] = [
   ["rust-takehome", "Rust take-home", "pro"],
 ];
 
+/**
+ * The SQL course, on its own.
+ *
+ * The language every backend is written in, taught as a language rather than
+ * as a tool: the shape of a query, what the planner does with it, and how to
+ * tell the difference between a slow query and a wrong one.
+ */
+export const SQL_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
+  ["sql-first-database", "The first database", "pro"],
+  ["sql-select-where", "SELECT and WHERE", "pro"],
+  ["sql-order-limit", "ORDER BY and LIMIT", "pro"],
+  ["sql-group-by", "The aggregates and GROUP BY", "pro"],
+  ["sql-joins", "The joins", "pro"],
+  ["sql-subqueries", "The subqueries and the views", "pro"],
+  ["sql-indexes", "The indexes and the query plan", "pro"],
+  ["sql-transactions", "The transactions and the isolation SQLite gives", "pro"],
+  ["sql-schema", "The schema and a change made safely", "pro"],
+  ["sql-your-turn", "Your turn: the report", "pro"],
+];
+
+/**
+ * The APIs course, from the outside.
+ *
+ * The knowledge the main line assumes the first time it calls a server: what
+ * a request is, why an answer is not a yes, and why valid JSON is not valid
+ * data.
+ */
 export const API_BASICS: [string, string, "free" | "pro"][] = [
   ["api-contract", "Read the contract first", "free"],
   ["api-response", "An answer is not a yes", "free"],
@@ -761,6 +756,14 @@ export const COURSES = [
     phases: RUST_IN_PRODUCTION,
   },
   {
+    slug: "sql-fundamentals",
+    role: "main",
+    label: "the SQL",
+    title: "SQL fundamentals",
+    sub: "the query language every backend is written in, taught as a language rather than as a tool",
+    phases: SQL_FUNDAMENTALS,
+  },
+  {
     slug: "api-basics",
     role: "side",
     label: "reading an API from the outside",
@@ -777,6 +780,7 @@ export const ALL_PHASES: [string, string, "free" | "pro"][] = [
   ...GO_IN_PRODUCTION,
   ...RUST_FUNDAMENTALS,
   ...RUST_IN_PRODUCTION,
+  ...SQL_FUNDAMENTALS,
   ...API_BASICS,
 ] as const;
 
@@ -1126,11 +1130,6 @@ export const PRICING = {
   annual: 290,
   freePhases: FREE_PHASE_COUNT,
   paidPhases: PRO_PHASE_COUNT,
-  teams: {
-    perLearnerMonthly: 29,
-    minLearners: 5,
-    billedYearly: true,
-  },
 } as const;
 
 /** An amount as the provider charges it. The page never writes a price itself. */
@@ -1145,6 +1144,10 @@ export function money(amount: number): string {
  *
  * Free is the first hour. Pro is the whole curriculum. Teams is the same Pro
  * with one invoice and the two things a hiring manager needs.
+ *
+ * The self-serve lines live here, because their prices are decided and
+ * published. The lines that are QUOTED live in `QUOTED_PLANS`, below, because
+ * their prices are not.
  */
 export const PRICING_PLANS = [
   {
@@ -1152,6 +1155,7 @@ export const PRICING_PLANS = [
     name: "Free",
     price: money(PRICING.free),
     priceNote: "the first hour",
+    quoted: false,
     points: FREE_TIER_POINTS,
   },
   {
@@ -1159,6 +1163,7 @@ export const PRICING_PLANS = [
     name: "Pro",
     price: money(PRICING.monthly),
     priceNote: `a month, or ${money(PRICING.annual)} a year`,
+    quoted: false,
     points: [
       `All ${ALL_PHASES.length} phases, in the IDE you already have`,
       "Sync across devices",
@@ -1167,61 +1172,101 @@ export const PRICING_PLANS = [
       "New phases as they land",
     ],
   },
-  {
-    id: "teams",
-    name: "Teams",
-    price: money(PRICING.teams.perLearnerMonthly),
-    priceNote: "per learner per month, billed yearly",
-    points: [
-      "The same Pro, on one invoice",
-      `${PRICING.teams.minLearners} learners or more`,
-      "The hiring one-pager",
-      "A verified-evidence link for the hiring manager",
-    ],
-  },
 ] as const;
+
+/**
+ * The offers with no published price.
+ *
+ * A school licence and a team licence are quoted rather than listed, and the
+ * reason is not that the number is hard to find. The price depends on the size
+ * of the cohort, the length of the term, the courses, and whether one
+ * lecturer or a whole institution is buying. A list price would be wrong for
+ * most of them, and a published price is a price the studio has to honour
+ * afterwards.
+ *
+ * Both were already quoted in practice. The platform creates a cohort in
+ * PENDING and the studio confirms the licence, so no school and no team has
+ * ever bought one at a checkout. What changes here is that the site stops
+ * implying there is a list price behind the conversation.
+ *
+ * So the plate says QUOTED, says what the quote depends on, and gives the
+ * reader exactly one action: talk to a person.
+ */
+export const QUOTED = {
+  /** What the plate says where a price would be. */
+  label: "Quoted",
+} as const;
+
+const TEAM_PLAN = {
+  id: "teams",
+  name: "Teams",
+  price: QUOTED.label,
+  priceNote: "priced for your team, per term",
+  quoted: true,
+  points: [
+    "The same Pro your people get",
+    "One invoice, no card per person",
+    "Invoiced, not a checkout",
+    "The hiring one-pager for your roles",
+    "A verified-evidence link for the hiring manager",
+  ],
+  dependsOn: "The quote depends on how many people, for how long, and on which courses.",
+  cap: "The quote is capped: a licence never costs more than the same people would pay for Pro on their own.",
+  checkout: "There is no checkout for a team licence. It is invoiced, and the quote comes first.",
+  action: { href: "/employers#contact", label: "Let's talk" },
+} as const;
+
+const CAMPUS_PLAN = {
+  id: "campus",
+  name: "Campus",
+  price: QUOTED.label,
+  priceNote: "priced for your institution, per term",
+  quoted: true,
+  points: [
+    "The same Pro your students get",
+    "One invoice, no card per student",
+    "Invoiced, not a checkout",
+    "One term, and the students you name",
+    "The roster, and the evidence your students leave",
+  ],
+  dependsOn:
+    "The quote depends on the size of the cohort, the length of the term, and the courses you teach.",
+  cap: "The quote is capped: a licence never costs more than the same students would pay for Pro on their own.",
+  checkout: "There is no checkout for a campus licence. It is invoiced, and the quote comes first.",
+  action: { href: "/universities#contact", label: "Let's talk" },
+} as const;
+
+/** The two quoted offers, in the order a reader meets them. */
+export const QUOTED_PLANS = [TEAM_PLAN, CAMPUS_PLAN] as const;
 
 /* ===========================================================================
  * ADDED BY THE TEACHING-SURFACE WORKER, 2026-10-20.
  *
  * The campus licence: the same Pro, sold to a cohort, on one invoice.
  *
- * The number lives here, next to the prices above, because this file is the
- * one place a price lives. The page prints it and the suite reads it, and no
- * page writes an amount of its own.
- *
- * It is invoiced rather than bought at a checkout, exactly like the teams
+ * It was invoiced rather than bought at a checkout, exactly like the teams
  * line: there is no provider product for it, and the pricing page keeps
- * saying that checkout is not on sale yet.
+ * saying that checkout is not on sale yet. It is now QUOTED rather than
+ * listed, because the price depends on the cohort, the term and the courses,
+ * and a per-student list price would be wrong for most of the schools that
+ * would ask.
  *
- * The discount is visible. The line may say that Pro on its own is the
- * monthly price, and that a term licence is the per-student price, and it
- * must never invent a list price nobody pays or present this as a higher
- * local price for anyone. That is the billing commitment below, applied.
+ * The discount is still visible. The line says what Pro costs on its own, and
+ * it says the quote is capped at what those students would have paid for Pro
+ * individually, so nobody is shown a higher local price than the public one.
+ * That is the billing commitment below, applied.
  * ======================================================================== */
 
-const CAMPUS_PER_STUDENT = 19;
-const CAMPUS_MIN_STUDENTS = 20;
-
 export const CAMPUS = {
-  perStudent: CAMPUS_PER_STUDENT,
-  minStudents: CAMPUS_MIN_STUDENTS,
-  plan: {
-    id: "campus",
-    name: "Campus",
-    price: money(CAMPUS_PER_STUDENT),
-    priceNote: `a student for a term, ${CAMPUS_MIN_STUDENTS} students or more`,
-    points: [
-      "The same Pro your students get",
-      "One invoice, no card per student",
-      "Invoiced, not a checkout",
-      "One term, and the students you name",
-    ],
-  },
-  note: `Pro on its own is ${money(PRICING.monthly)} a month. A term licence is ${money(CAMPUS_PER_STUDENT)} a student, and that is a discount you can see rather than a higher price for anyone.`,
-  checkout:
-    "The licence is invoiced, not checked out, and checkout is not on sale yet.",
-  link: { href: "/universities#contact", label: "Ask about a campus licence" },
+  /** The offer itself, so the pricing page and the teaching page say it the same way. */
+  plan: CAMPUS_PLAN,
+  /**
+   * The number the seat field starts on.
+   *
+   * It is a default and not a minimum: a cohort of three is a cohort of
+   * three, and the studio quotes whatever the cohort actually is.
+   */
+  defaultSeats: 20,
 } as const;
 
 /**
@@ -1343,6 +1388,148 @@ export const RECEIPT = {
     { key: "duration", value: "412ms" },
   ],
 } as const;
+
+/**
+ * The audience line, and the three facts under the buttons.
+ *
+ * The line says who the page is for, in the reader's own words, so a visitor
+ * can tell in one glance whether this is for them. The facts are the three
+ * things a person hesitates on before they start, and every one of them is
+ * true of the product today rather than promised.
+ */
+export const AUDIENCE_LINE = {
+  learner: "For people who have done the tutorials and still freeze on a blank file",
+  employer: "For teams that hire, and for the evidence they need to see",
+} as const;
+
+/**
+ * What the reader gets for nothing, in three short facts.
+ *
+ * The count is the shipped free count, in words, because it is computed from
+ * the phase list rather than written down here.
+ */
+export const MICRO_FACTS = {
+  learner: [
+    `${numberWords(FREE_PHASE_COUNT)?.replace(/^./, (c) => c.toUpperCase()) ?? String(FREE_PHASE_COUNT)} phases free`,
+    "No card, no account",
+    "Your project stays on your machine",
+  ],
+  employer: [
+    "A receipt for every finished phase",
+    "Anyone can re-derive it",
+    "Nothing hidden behind an account",
+  ],
+} as const;
+
+/**
+ * The gap, as a sequence rather than a list.
+ *
+ * The reader does not arrive with one problem, they arrive with four, in
+ * order, and the last one is the moment the product is for. So the four lines
+ * light up in turn as the reader reaches them, and the fourth is the one that
+ * is about NEXORA.
+ */
+export const GAP = {
+  title: "You followed the tutorial. Then the project was empty.",
+  lead: "Following a tutorial teaches you to recognise code. It does not teach you what to do on a blank file, in a codebase you did not write, or when a test fails and nobody says why.",
+  lines: [
+    "You have watched the tutorials.",
+    "You have finished the exercises.",
+    "Then a bug appears, and you do not know where to look.",
+    "NEXORA exists for that moment.",
+  ],
+} as const;
+
+/**
+ * One line of a panel, and how it is coloured.
+ *
+ * The colour is data and not a rule written in the view: a failure is red
+ * because the platform says it failed, and the platform's own transcript is
+ * where the panel's lines come from.
+ */
+export interface IPanelLine {
+  readonly text: string;
+  readonly tone: "plain" | "bad" | "ok";
+}
+
+/** A panel: the thing a step would show on screen. */
+export interface IPanel {
+  readonly kind: "prose" | "code";
+  readonly lines: readonly IPanelLine[];
+}
+
+/**
+ * The five steps of a phase, as the product's own transcript shows them.
+ *
+ * The panels are not written here. They are read out of `RUN_SCRIPT`, which is
+ * the product's real transcript, so the loop on the page cannot show a failure
+ * the platform would not produce, and the suite checks that every line in
+ * every code panel is a line of that transcript.
+ */
+export const LOOP_STEPS: readonly {
+  readonly n: string;
+  readonly name: string;
+  readonly body: string;
+  readonly panel: IPanel;
+}[] = (() => {
+  const command = RUN_SCRIPT.find((line) => line.kind === "cmd")?.text ?? "";
+  const failure = RUN_SCRIPT.find((line) => line.kind === "fail")?.text ?? "";
+  const notes = RUN_SCRIPT.filter((line) => line.kind === "note").map((line) => line.text.trim());
+  const passing = RUN_SCRIPT.find((line) => line.kind === "ok")?.text ?? "";
+  return [
+    {
+      n: "01",
+      name: "Understand",
+      body: "A short explanation, then straight into your own project. There is no separate sandbox.",
+      panel: {
+        kind: "prose" as const,
+        lines: [{ text: "A failing test is a question, not a verdict.", tone: "plain" as const }],
+      },
+    },
+    {
+      n: "02",
+      name: "Write the code",
+      body: "You write the first attempt yourself. It does not have to be right.",
+      panel: {
+        kind: "prose" as const,
+        lines: [{ text: "Your own workspace, your own files.", tone: "plain" as const }],
+      },
+    },
+    {
+      n: "03",
+      name: "Run it",
+      body: "The failure is real, and it arrives the way it would at work.",
+      panel: {
+        kind: "code" as const,
+        lines: [
+          { text: command, tone: "plain" as const },
+          { text: failure, tone: "bad" as const },
+        ],
+      },
+    },
+    {
+      n: "04",
+      name: "Investigate",
+      body: "You get a way to look, not the answer. The hints fade as you improve.",
+      panel: {
+        kind: "code" as const,
+        lines: [{ text: notes[1] ?? "", tone: "plain" as const }],
+      },
+    },
+    {
+      n: "05",
+      name: "Verify",
+      body: "The same check gives the same result every time, and it leaves a receipt.",
+      panel: {
+        kind: "code" as const,
+        lines: [
+          { text: passing, tone: "ok" as const },
+          { text: notes[2] ?? "", tone: "plain" as const },
+        ],
+      },
+    },
+  ];
+})();
 
 /**
  * The words this audience already uses (MARKET.md §9.2). Present so a future
@@ -1665,8 +1852,8 @@ export const UNIVERSITY = {
       evidence: `${FREE_PHASE_COUNT} phases are free forever, offline, with no account and no card. No procurement, no institution account, no budget.`,
     },
     {
-      claim: "That the licence is a number you can read.",
-      evidence: `Pro is ${money(PRICING.monthly)} a month or ${money(PRICING.annual)} a year. A campus licence is the invoiced line for a cohort: ${money(CAMPUS.perStudent)} a student for a term.`,
+      claim: "That the licence is priced before it is bought.",
+      evidence: `Pro is ${money(PRICING.monthly)} a month or ${money(PRICING.annual)} a year. A campus licence is quoted for your cohort, and invoiced on one line.`,
     },
   ],
   /**
@@ -1888,7 +2075,8 @@ export const COHORT_TEACH = {
     term: "the term",
     termPlaceholder: "2026 autumn",
     seats: "the number of seats",
-    seatsHint: `A term licence is ${money(CAMPUS.perStudent)} a student, for ${CAMPUS.minStudents} students or more. The seats you put here are the seats the licence covers.`,
+    seatsHint:
+      "A term licence is quoted for your cohort, and the studio confirms it. The seats you put here are the seats the licence will cover.",
     submit: "Create the cohort",
     submitting: "Creating the cohort",
     created:

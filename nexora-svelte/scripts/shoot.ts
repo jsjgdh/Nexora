@@ -58,6 +58,7 @@ for (const build of BUILDS) {
     { route: "/", width: 1440, name: "home-courses", at: "#courses" },
     { route: "/", width: 390, name: "home-mobile" },
     { route: "/courses", width: 1440, name: "courses" },
+    { route: "/pricing", width: 1440, name: "pricing" },
     { route: "/download", width: 1440, name: "download" },
   ];
 

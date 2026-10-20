@@ -59,7 +59,7 @@
   let institution = $state("");
   let courseId = $state<string>(COHORT_COURSE_OPTIONS[0]?.id ?? "");
   let term = $state("");
-  let seats = $state<number>(CAMPUS.minStudents);
+  let seats = $state<number>(CAMPUS.defaultSeats);
 
   /** The cohort whose end is armed, so ending takes two clicks. */
   let endArmed = $state<string | null>(null);

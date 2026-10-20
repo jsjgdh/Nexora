@@ -583,8 +583,11 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   ok(
     "the masthead sets the paper's name at display size, and the way home is the word itself rather than a label",
     headerSrc.includes('class="nameplate"') &&
-      /class="display block text-\[clamp\(/.test(headerSrc) &&
-      headerSrc.includes('<span class="sr-only">Home</span>')
+      /class="word display"/.test(headerSrc) &&
+      headerSrc.includes('<span class="sr-only">Home</span>') &&
+      // and the word is set in the display face at a display size, not in the
+      // reading face and not as a label
+      /\.word \{[^}]*font-size: clamp\(/.test(headerSrc)
   );
   ok(
     "the nameplate link is the width of the word, not an invisible home hotspot across the top of the page",
@@ -595,11 +598,17 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     /\.nameplate\s*\{[^}]*min-height:\s*44px/.test(headerSrc)
   );
   ok(
-    "the edition line sits on its own rule, instead of floating over the nameplate as small print",
-    headerSrc.includes("border-b border-rule py-3 sm:py-1")
+    "the status reading moved to the title block, where a fact can be checked",
+    // The bar carries the nameplate, the sections and the controls. The
+    // reading about the product's state is a fact, and the footer's title
+    // block is where the facts about the product live.
+    !headerSrc.includes("MASTHEAD.status") &&
+      readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8").includes(
+        "MASTHEAD.status"
+      )
   );
   ok(
-    "and the actions on that line are 44px targets, not the 36px house stock",
+    "and the actions are 44px targets, not the 36px house stock",
     !/min-h-\[3[0-9]px\]/.test(headerSrc) && headerSrc.includes("min-h-[44px]")
   );
   ok(
@@ -607,13 +616,18 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     (headerSrc.match(/<nav /g) ?? []).length === 1 && headerSrc.includes("{#each NAV as item (item.href)}")
   );
   ok(
-    "the folio is a sibling of the masthead, because a sticky bar nested inside a header unsticks the moment the header ends",
-    headerSrc.indexOf("</header>") > 0 &&
-      headerSrc.indexOf("</header>") < headerSrc.indexOf('class="folio sticky top-0')
+    "the bar is one row: the nameplate, the folio and the controls, in that order",
+    headerSrc.indexOf('class="nameplate"') < headerSrc.indexOf('class="folio"') &&
+      headerSrc.indexOf('class="folio"') < headerSrc.indexOf('class="actions"')
   );
   ok(
-    "and only the folio is sticky: the nameplate scrolls away with the page it belongs to",
-    !/class="masthead[^"]*sticky/.test(headerSrc)
+    "and the sticky layer is the bar itself, so the folio cannot unstick the moment the header ends",
+    /\.masthead\s*\{[^}]*position:\s*sticky/.test(headerSrc) &&
+      headerSrc.indexOf('class="folio"') < headerSrc.indexOf("</header>")
+  );
+  ok(
+    "and the page dissolves into the bar rather than stopping at a rule",
+    /\.edge\s*\{[^}]*linear-gradient/.test(headerSrc)
   );
   ok(
     "a folio cell is a 44px thumb target at every width, the same as a pointer target",
@@ -1052,7 +1066,7 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       COPY.SPEC,
       COPY.EMPLOYER,
       COPY.FACTS,
-      COPY.WEDGE,
+      COPY.GAP,
       COPY.STEPS,
       COPY.DISCLOSURE,
       COPY.NO_LIST,
@@ -1126,14 +1140,10 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       COPY.PRICING.monthly === 29 &&
         COPY.PRICING.annual === 290 &&
         COPY.PRICING.annual === COPY.PRICING.monthly * 10 &&
-        COPY.PRICING.teams.perLearnerMonthly === COPY.PRICING.monthly &&
-        COPY.PRICING.teams.minLearners === 5 &&
-        COPY.PRICING.teams.billedYearly === true &&
         COPY.PRICING.free === 0
     );
     const freePlan = COPY.PRICING_PLANS.find((plan) => plan.id === "free");
     const proPlan = COPY.PRICING_PLANS.find((plan) => plan.id === "pro");
-    const teamsPlan = COPY.PRICING_PLANS.find((plan) => plan.id === "teams");
     ok(
       "the free line is the first hour, and it is the free phases and the free checks",
       freePlan !== undefined &&
@@ -1153,24 +1163,68 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
         proPlan.points.some((point) => point.includes("Hosted runs")) &&
         proPlan.points.some((point) => point.includes("New phases as they land"))
     );
+    {
+      // A quoted offer has no price, and the page must not print one for it.
+      // The price depends on the cohort, the term and the courses, so a list
+      // price would be wrong for most of the schools and teams that would ask,
+      // and a published price is a price the studio has to honour afterwards.
+      const teams = COPY.QUOTED_PLANS.find((plan) => plan.id === "teams");
+      const campus = COPY.QUOTED_PLANS.find((plan) => plan.id === "campus");
+      ok(
+        "a team licence is quoted, not listed, and the plate says so where the price would be",
+        teams !== undefined &&
+          campus !== undefined &&
+          teams.price === COPY.QUOTED.label &&
+          campus.price === COPY.QUOTED.label &&
+          teams.quoted === true &&
+          campus.quoted === true &&
+          !/\$[0-9]/.test(teams.price) &&
+          !/\$[0-9]/.test(campus.price) &&
+          !/\$[0-9]/.test(teams.priceNote) &&
+          !/\$[0-9]/.test(campus.priceNote)
+      );
+      ok(
+        "and the quoted lines say what the quote depends on, and what the reader does next",
+        teams !== undefined &&
+          campus !== undefined &&
+          teams.dependsOn.length > 30 &&
+          campus.dependsOn.length > 30 &&
+          teams.action.label === "Let's talk" &&
+          campus.action.label === "Let's talk" &&
+          teams.action.href.startsWith("/") &&
+          campus.action.href.startsWith("/")
+      );
+      ok(
+        "and the quote is capped, so nobody is shown a higher local price than the public one",
+        teams !== undefined &&
+          campus !== undefined &&
+          teams.cap.includes("never costs more than") &&
+          campus.cap.includes("never costs more than") &&
+          teams.cap.includes("Pro on their own") &&
+          campus.cap.includes("Pro on their own")
+      );
+      ok(
+        "and the quoted lines are invoiced, not a checkout",
+        teams !== undefined &&
+          campus !== undefined &&
+          teams.checkout.includes("no checkout") &&
+          campus.checkout.includes("no checkout") &&
+          teams.points.some((point) => point.includes("Invoiced, not a checkout")) &&
+          campus.points.some((point) => point.includes("Invoiced, not a checkout"))
+      );
+    }
     ok(
-      "the teams line reads its per-learner price from the one constant",
-      teamsPlan !== undefined &&
-        teamsPlan.price === money(COPY.PRICING.teams.perLearnerMonthly) &&
-        teamsPlan.priceNote === "per learner per month, billed yearly" &&
-        teamsPlan.points.some((point) =>
-          point.includes(`${COPY.PRICING.teams.minLearners} learners or more`)
-        ) &&
-        teamsPlan.points.some((point) => point.includes("one invoice")) &&
-        teamsPlan.points.some((point) => point.includes("verified-evidence link"))
+      "there are two decided lines and two quoted ones, and the page prints all four from the module",
+      COPY.PRICING_PLANS.length === 2 &&
+        COPY.QUOTED_PLANS.length === 2 &&
+        pricingPage.includes("PRICING_PLANS") &&
+        pricingPage.includes("QUOTED_PLANS")
     );
     ok(
-      "there are three lines, and the page prints all three from the module",
-      COPY.PRICING_PLANS.length === 3 && pricingPage.includes("PRICING_PLANS")
-    );
-    ok(
-      "the page writes no amount of its own, and does not restate the teams rule",
-      !/\$[0-9]/.test(pricingPage) && !pricingPage.includes("per learner per month")
+      "the page writes no amount of its own, and does not restate a price for a quoted offer",
+      !/\$[0-9]/.test(pricingPage) &&
+        !pricingPage.includes("per learner per month") &&
+        !pricingPage.includes("a student for a term")
     );
     ok(
       "the page says checkout is not on sale yet, and that the provider must carry the same price",
@@ -1773,7 +1827,7 @@ console.log("\n== the design is held to the same rules as the product ==");
     COPY.SPEC,
     COPY.EMPLOYER,
     COPY.FACTS,
-    COPY.WEDGE,
+    COPY.GAP,
     COPY.STEPS,
     COPY.DISCLOSURE,
     COPY.NO_LIST,
@@ -2019,7 +2073,7 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
       COPY.SPEC,
       COPY.EMPLOYER,
       COPY.FACTS,
-      COPY.WEDGE,
+      COPY.GAP,
       COPY.STEPS,
       COPY.DISCLOSURE,
       COPY.NO_LIST,
@@ -2156,7 +2210,7 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
       COPY.PROPS,
       COPY.LANDSCAPE,
       COPY.HERO_VARIANTS,
-      COPY.WEDGE,
+      COPY.GAP,
       COPY.HERO,
       COPY.HIRING,
       COPY.POSITIONING,
@@ -2556,33 +2610,36 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
       COPY.TEACHING_ENQUIRY.lead.includes(COPY.TEACHING_ENQUIRY.replyTime)
   );
 
-  // 8. The campus licence is the fourth line, and it is a decided number
-  //    that lives in the copy module.
+  // 8. The campus licence is quoted, and the quote is what the studio sends.
+  //    It is not a decided number on the page, because the price depends on
+  //    the cohort, the term and the courses.
   ok(
-    "the campus price is decided, and it lives in the copy module",
-    COPY.CAMPUS.perStudent === 19 &&
-      COPY.CAMPUS.minStudents === 20 &&
-      COPY.CAMPUS.plan.price === COPY.money(COPY.CAMPUS.perStudent) &&
-      COPY.CAMPUS.plan.priceNote.includes(`${COPY.CAMPUS.minStudents} students or more`)
+    "the campus licence is quoted, and the plate says so where a price would be",
+    COPY.CAMPUS.plan.quoted === true &&
+      COPY.CAMPUS.plan.price === COPY.QUOTED.label &&
+      !/\$[0-9]/.test(COPY.CAMPUS.plan.price) &&
+      !/\$[0-9]/.test(COPY.CAMPUS.plan.priceNote) &&
+      !/\$[0-9]/.test(COPY.CAMPUS.plan.points.join(" "))
   );
   ok(
     "and the pricing page prints four lines, the campus one among them",
-    pricingSrc.includes("[...PRICING_PLANS, CAMPUS.plan]") && pricingSrc.includes("CAMPUS")
+    pricingSrc.includes("[...PRICING_PLANS, ...QUOTED_PLANS]") &&
+      pricingSrc.includes("QUOTED_PLANS") &&
+      COPY.QUOTED_PLANS.length === 2
   );
   ok(
     "and the campus licence is invoiced, not a checkout",
     COPY.CAMPUS.plan.points.some((point) => point.includes("Invoiced, not a checkout")) &&
       COPY.CAMPUS.plan.points.some((point) => point.includes("One invoice, no card per student")) &&
-      COPY.CAMPUS.checkout.includes("not on sale yet") &&
+      COPY.CAMPUS.plan.checkout.includes("no checkout") &&
       pricingSrc.includes("The plan is priced and it is not on sale yet")
   );
   ok(
-    "and the discount is visible: the monthly price of Pro beside the price of a term",
-    COPY.CAMPUS.note.includes(COPY.money(COPY.PRICING.monthly)) &&
-      COPY.CAMPUS.note.includes(COPY.money(COPY.CAMPUS.perStudent)) &&
+    "and the quote is capped, so nobody is shown a higher local price than the public one",
+    COPY.CAMPUS.plan.cap.includes("never costs more than") &&
       // No invented list price, and no local price that is higher for anyone.
-      !/list price/i.test(COPY.CAMPUS.note) &&
-      COPY.CAMPUS.note.includes("a discount you can see")
+      !/list price/i.test(COPY.CAMPUS.plan.cap) &&
+      COPY.CAMPUS.plan.cap.includes("Pro on their own")
   );
   ok(
     "and no page carries a literal price, so the copy module stays the one place a price lives",
@@ -2834,18 +2891,18 @@ console.log("\n== the cohort surface: a front door for a lecturer, and the truth
     "the page writes no price of its own, and no seat count of its own",
     !/\$[0-9]/.test(teachSrc) &&
       !/seats\s*[:=]\s*[0-9]/.test(teachSrc) &&
-      teachSrc.includes("CAMPUS.minStudents")
+      teachSrc.includes("CAMPUS.defaultSeats")
   );
   ok(
     "and the member count and the seat count are the platform's",
     teachSrc.includes("cohort.memberCount") && teachSrc.includes("cohort.seats")
   );
   ok(
-    "and the price of a seat is the decided one, in the copy module",
-    COPY.CAMPUS.perStudent === 19 &&
-      COPY.CAMPUS.minStudents === 20 &&
-      COPY.COHORT_TEACH.create.seatsHint.includes(COPY.money(COPY.CAMPUS.perStudent)) &&
-      COPY.COHORT_TEACH.create.seatsHint.includes(String(COPY.CAMPUS.minStudents))
+    "and the seat price is a quote, not a number the site decided",
+    !/\$[0-9]/.test(COPY.COHORT_TEACH.create.seatsHint) &&
+      COPY.COHORT_TEACH.create.seatsHint.includes("quoted") &&
+      COPY.COHORT_TEACH.create.seatsHint.includes("the studio confirms it") &&
+      COPY.CAMPUS.defaultSeats > 0
   );
 
   // 9. The platform did not answer is not a fact about a cohort.
@@ -3010,9 +3067,9 @@ console.log("\n== the front door says what is true today, and says it once ==");
   // The learning cycle the page describes is the curriculum's own sentence.
   ok(
     "the page says what a phase is, in the shipped manifest's words",
-    COPY.LEARN_CYCLE.title === "Every phase is Learn, then Solve, then Review." &&
-      COPY.LEARN_CYCLE.steps.length === 4 &&
-      landingSrc.includes("LEARN_CYCLE")
+    COPY.LEARN_CYCLE.caption.includes("Learn, then Solve, then Review") &&
+      landingSrc.includes("LEARN_CYCLE") &&
+      landingSrc.includes("<LoopCards")
   );
   ok(
     "and the journey it offers names real phases",
@@ -3022,6 +3079,72 @@ console.log("\n== the front door says what is true today, and says it once ==");
           beat.phases.length > 0 &&
           beat.phases.every((id) => COPY.ALL_PHASES.some(([phaseId]) => phaseId === id))
       )
+  );
+
+  // The loop on the page must be the PRODUCT's transcript and not a transcript
+  // written for a page. Every code panel is a line of `RUN_SCRIPT`, which is the
+  // run the site already prints and the platform really produces.
+  {
+    const transcript = COPY.RUN_SCRIPT.map((line) => line.text.trim());
+    const panels = COPY.LOOP_STEPS.flatMap((step) =>
+      step.panel.kind === "code" ? step.panel.lines : []
+    );
+    ok(
+      "every line in the loop's code panels is a line of the product's own transcript",
+      panels.length > 0 &&
+        panels.every((line) => transcript.includes(line.text.trim())),
+      panels
+        .filter((line) => !transcript.includes(line.text.trim()))
+        .map((line) => line.text)
+        .join(" | ")
+    );
+    ok(
+      "and the loop shows the failure, the reason and the pass, in that order",
+      COPY.LOOP_STEPS.length === 5 &&
+        COPY.LOOP_STEPS.some((step) =>
+          step.panel.lines.some((line) => line.text.includes("not ok"))
+        ) &&
+        COPY.LOOP_STEPS.some((step) =>
+          step.panel.lines.some((line) => line.text.includes("src/store.js"))
+        ) &&
+        COPY.LOOP_STEPS.some((step) =>
+          step.panel.lines.some((line) => line.text.startsWith("ok "))
+        )
+    );
+    ok(
+      "and the failure is marked as a failure, and the pass as a pass",
+      COPY.LOOP_STEPS.some((step) =>
+        step.panel.lines.some((line) => line.tone === "bad")
+      ) &&
+        COPY.LOOP_STEPS.some((step) =>
+          step.panel.lines.some((line) => line.tone === "ok")
+        )
+    );
+  }
+
+  // The gap is a sequence, and it ends on the moment the product is for.
+  ok(
+    "the gap is a sequence that ends on the product",
+    COPY.GAP.lines.length === 4 &&
+      COPY.GAP.lines[COPY.GAP.lines.length - 1]?.includes("NEXORA") &&
+      landingSrc.includes("<GapSequence")
+  );
+
+  // The line that says who this is for, and the three facts under the button.
+  ok(
+    "the page says who it is for, and the line changes with the audience",
+    String(COPY.AUDIENCE_LINE.learner) !== String(COPY.AUDIENCE_LINE.employer) &&
+      COPY.AUDIENCE_LINE.learner.length > 20 &&
+      landingSrc.includes("<AudienceLine")
+  );
+  ok(
+    "and the three facts under the button are facts, with the shipped free count in them",
+    COPY.MICRO_FACTS.learner.length === 3 &&
+      COPY.MICRO_FACTS.employer.length === 3 &&
+      COPY.MICRO_FACTS.learner[0]?.toLowerCase().includes(
+        (COPY.numberWords(COPY.FREE_PHASE_COUNT) ?? String(COPY.FREE_PHASE_COUNT)).toLowerCase()
+      ) &&
+      landingSrc.includes("<MicroFacts")
   );
 
   // A course added later has to reach the page without anybody coming back to

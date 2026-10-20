@@ -16,8 +16,11 @@
   import LaunchList from "$lib/components/LaunchList.svelte";
   import PropositionStack from "$lib/components/PropositionStack.svelte";
   import PhasePanel from "$lib/components/PhasePanel.svelte";
-  import LearnCycle from "$lib/components/LearnCycle.svelte";
-  import BuildJourney from "$lib/components/BuildJourney.svelte";
+  import LoopCards from "$lib/components/LoopCards.svelte";
+  import GapSequence from "$lib/components/GapSequence.svelte";
+  import StageTrack from "$lib/components/StageTrack.svelte";
+  import AudienceLine from "$lib/components/AudienceLine.svelte";
+  import MicroFacts from "$lib/components/MicroFacts.svelte";
   import CoursePaths from "$lib/components/CoursePaths.svelte";
   import { inView, inViewStagger, reduced } from "$lib/motion";
   import { SITE_DESCRIPTION, SITE_TITLE } from "$lib/seo";
@@ -26,7 +29,6 @@
     HERO_VARIANTS,
     HIRING,
     LANDSCAPE,
-    WEDGE,
     DISCLOSURE,
     NO_LIST,
     FAQ,
@@ -157,7 +159,7 @@
 <section class="relative overflow-x-clip" data-headline-variant={data.headline}>
   <div class="hero-block relative z-10 mx-auto max-w-[1320px] px-5 pt-8 pb-12 sm:px-8 sm:pt-10 sm:pb-14">
     <div class="relative z-10">
-      <AudienceSwitch bind:value={audience} />
+      <AudienceLine {audience} />
       <Headline
         as="h1"
         lines={[active.lineOne, active.lineTwo]}
@@ -173,6 +175,7 @@
           <ActionLink href="#loop" variant="ghost">See how it works</ActionLink>
         </div>
       </div>
+      <MicroFacts {audience} />
     </div>
   </div>
 
@@ -189,6 +192,9 @@
           <p class="reading mt-4 max-w-[46ch] text-[17px] leading-relaxed text-muted">
             {release.note}
           </p>
+          <div class="mt-7">
+            <AudienceSwitch bind:value={audience} />
+          </div>
         </div>
         <SpecSheet clusters={["where it runs"]} />
       </div>
@@ -203,14 +209,23 @@
 </section>
 
 <!-- = 2 · What a phase is =====================
-     The shipped manifest's own sentence, taken apart, and then the product
-     running: a check that fails, the reason, the file and the line, and the
-     receipt that follows. -->
+     The shipped manifest's own sentence, taken apart into the five steps a
+     learner actually takes, and then the product running: a check that fails,
+     the reason, the file and the line, and the receipt that follows. -->
 <section id="loop" class="border-t border-rule">
   <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
     <SectionHead title={LEARN_CYCLE.title} caption={LEARN_CYCLE.caption} wide />
-    <div class="mt-16">
-      <LearnCycle />
+    <div class="mt-14">
+      <LoopCards />
+    </div>
+
+    <div class="mt-16 border-l-2 border-accent pl-6">
+      <h3 class="display max-w-[24ch] text-[clamp(1.25rem,2.2vw,1.7rem)] text-ink">
+        {LEARN_CYCLE.guidance.title}
+      </h3>
+      <p class="reading mt-3 max-w-[62ch] text-[17px] leading-relaxed text-muted">
+        {LEARN_CYCLE.guidance.body}
+      </p>
     </div>
   </div>
 
@@ -220,24 +235,11 @@
 </section>
 
 <!-- = 3 · The gap =====================
-     The situation a learner is in, before the page offers the answer. -->
+     The situation a learner is in, in their own words, in the order it
+     happens. -->
 <section id="gap" class="border-t border-rule">
   <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
-    <SectionHead
-      title="Most learning stops before the building starts."
-      caption="None of this is about intelligence or about the quality of a tutorial. It is about a gap between what a lesson can show you and what a project asks of you."
-      wide
-    />
-    <div class="mt-14 grid gap-x-12 gap-y-10 lg:grid-cols-3" use:inViewStagger>
-      {#each WEDGE as cell (cell.title)}
-        <article class="fade-up border-t border-rule-strong pt-6" data-stagger-item>
-          <h3 class="display max-w-[20ch] text-[clamp(1.3rem,2.2vw,1.7rem)] text-ink">
-            {cell.title}
-          </h3>
-          <p class="reading mt-3 max-w-[42ch] text-[17px] leading-relaxed text-muted">{cell.body}</p>
-        </article>
-      {/each}
-    </div>
+    <GapSequence />
   </div>
 </section>
 
@@ -247,7 +249,7 @@
   <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
     <SectionHead title={BUILD_JOURNEY.title} caption={BUILD_JOURNEY.caption} wide />
     <div class="mt-14">
-      <BuildJourney />
+      <StageTrack />
     </div>
   </div>
 

@@ -408,6 +408,48 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 4
     }
   },
+  "sql-fundamentals": {
+    "sql-first-database": {
+      "goal": "What a database file is, what a table is, and how one query reads a file.",
+      "activities": 4
+    },
+    "sql-select-where": {
+      "goal": "The two clauses every query has: the columns you want, and the rows you keep.",
+      "activities": 4
+    },
+    "sql-order-limit": {
+      "goal": "Saying what order the rows come back in, and how many of them you want.",
+      "activities": 4
+    },
+    "sql-group-by": {
+      "goal": "One number for many rows: counting, adding up, and grouping the rows first.",
+      "activities": 4
+    },
+    "sql-joins": {
+      "goal": "Reading two tables as one: matching the rows of one table against the rows of another.",
+      "activities": 4
+    },
+    "sql-subqueries": {
+      "goal": "A query inside a query, and a query with a name in the schema.",
+      "activities": 4
+    },
+    "sql-indexes": {
+      "goal": "What an index is, what it costs, and how to read the plan SQLite prints for a query.",
+      "activities": 4
+    },
+    "sql-transactions": {
+      "goal": "All of a change or none of it, and what SQLite really promises when two things happen at once.",
+      "activities": 4
+    },
+    "sql-schema": {
+      "goal": "What SQLite can change about a table by itself, and how a bigger change is made without losing a row.",
+      "activities": 4
+    },
+    "sql-your-turn": {
+      "goal": "The query you write yourself, judged by the case file the next course is built on.",
+      "activities": 4
+    }
+  },
   "api-basics": {
     "api-contract": {
       "goal": "An endpoint is a promise written down: a method, a path, a status and a body. This phase reads one before writing a single call, so a wrong answer later reads as a wrong request rather than a broken server.",
@@ -430,6 +472,7 @@ export const COURSE_ACTIVITY_COUNTS: Record<string, number> = {
   "go-in-production": 90,
   "rust-fundamentals": 64,
   "rust-in-production": 88,
+  "sql-fundamentals": 40,
   "api-basics": 9
 };
 
@@ -439,5 +482,6 @@ export const COURSE_DESCRIPTIONS: Record<string, string> = {
   "go-in-production": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, pipelines, JSON in and out, an HTTP server with its deadlines, routes, middleware, authentication, tests, performance, storage, a database, caching, resilience, operations, logging, dependencies, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
   "rust-fundamentals": "The Rust language, in the order the book teaches it: the tools, then values and control flow, then ownership and borrowing, then structs, enums, errors and modules, then collections, traits and lifetimes, then testing, then the threads and the futures the language gives you, and a money type of your own design at the end.",
   "rust-in-production": "The ledger as a service. It opens with a program that reads code and reports what it finds, and then it builds the service: the runtime and its tasks, the channels between them, the router and its extractors, the state it shares, the layers around it, the stop at the end of it, the failures that become answers, the database, the configuration, the log, the tests, and a release you can defend.",
+  "sql-fundamentals": "SQL as SQLite really accepts it, on the ledger the Go and Rust courses already build: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
   "api-basics": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design — it gates nothing, and you can leave it at any point."
 };

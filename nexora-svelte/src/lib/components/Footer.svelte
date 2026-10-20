@@ -51,6 +51,7 @@
         <p class="mt-3 max-w-[26ch] text-[14px] leading-relaxed text-muted">
           {MASTHEAD.descriptor}.
         </p>
+        <p class="num mt-4 text-[11.5px] text-faint">{MASTHEAD.status}</p>
         <p class="stamp mt-5 text-[11px] text-faint">signed receipts, not badges</p>
       </div>
 

@@ -60,20 +60,22 @@ asked to agree with its principles before they had seen what it does.
 
 The order now is the argument, in the order a reader needs it:
 
-1. **The poster.** What it is, and one action that is true today.
-2. **What this is, and where it stands.** The release state and where the
-   product runs.
+1. **The poster.** A line that says who this is for, the headline, the lede, one
+   action, and the three facts a person hesitates on.
+2. **What this is, and where it stands.** The state of the release, and the
+   three facts about where the product runs.
 3. **A real phase.** The shipped manifest, read: a phase, its goal, its
    activities, and the shape every phase has.
-4. **What a phase is.** Learn, then Solve, then Review, which is the shipped
-   manifest's own sentence.
-5. **Most learning stops before the building starts.** The gap, in the
-   learner's words.
-6. **One app, from an empty folder to a reviewed pull request.** What they end
-   up holding, and the other lines behind it.
+4. **Watch how learning happens.** The five steps a learner takes, each with
+   the panel it would actually show, taken from the product's own transcript.
+5. **The gap.** The four things that have already happened to the reader, in
+   order, ending on the one NEXORA is for.
+6. **What you build.** One app, from an empty folder to a reviewed pull
+   request, and the other lines behind it.
 7. **What makes the experience different.** The benefits.
 8. **How a verdict earns trust.** The datasheet, the receipt chain, the
-   disclosure about what can be re-derived, and the refusals, said once.
+   disclosure about what can be re-derived, and the three things that are
+   deliberately absent.
 9. **The curriculum.** The readings, the field, and the way into the full list.
 10. **For the people who hire.** The other reader.
 11. **The questions, answered plainly.**
@@ -84,6 +86,54 @@ market research and the categories moved to `/employers`, where they are
 context for the reader who came for them. The exhaustive phase list moved to
 `/courses`, because a homepage that prints eighty names before it has said
 what the product does is a catalogue.
+
+## What the prototypes gave, and what they did not
+
+Two HTML prototypes were built for the front door and a number of things in
+them were taken. The ones that were not are written down here, because a
+prototype is not a brief and the house rules are not optional.
+
+**Taken.**
+
+- **A line that says who the page is for**, above the headline, so a reader
+  knows in the first second whether this is for them. It changes with the
+  audience switch, because the two readers are not looking for the same thing.
+- **The three facts under the button.** Everyone hesitates on the same three
+  things, and each answer is a fact about the product rather than a promise.
+- **The gap as a sequence.** Four lines that light up in turn and end on the
+  moment the product is for. It is a progression, not a set, and a set of
+  columns made it a list.
+- **The loop as five steps with a panel each.** The panels are read out of
+  `RUN_SCRIPT`, so the failure on the page is a failure the platform really
+  produces, and the suite checks that every line in every panel is a line of
+  that transcript.
+- **The capstone as a horizontal track.** A project is a direction, and a
+  column makes it a list.
+
+**Not taken, and why.**
+
+- **The three testimonials.** They are sample quotes with a note saying to
+  replace them. The site has no testimonials and will not have any until
+  there are real learners to quote.
+- **"100% of results are recomputable."** It is not true. Some checks are
+  recomputed by the platform from the learner's own run; a few are the
+  browser's report of what it saw, and the platform has to take those on
+  trust. The disclosure says so, and a headline cannot say the opposite.
+- **"Five full courses."** The site never counts the courses. The courses are
+  named, and the number of them is a thing that changes.
+- **The comparison table.** "Another course" against "NEXORA" is the framing
+  the front door was rebuilt to remove: it defines the product by what it
+  rejects, and it puts the reader on the defensive before they know anything.
+- **The scrolling marquee.** It is motion that carries no information the
+  section does not already carry, and the house rule is one focal element and
+  no motion without meaning.
+- **The cursor ring, the magnetic buttons, the tilting cards, the 3D point
+  cloud.** The house refuses custom cursors and un-motivated motion, and the
+  site already has one piece of 3D that means something: the field, which is
+  the curriculum.
+- **The Python and pytest examples.** The course in the prototype is Python
+  and the course in the product is JavaScript. Showing the prototype's code
+  would be showing a product that does not exist.
 
 ## The unforgettable thing
 
@@ -217,12 +267,32 @@ Rules: under reduced motion everything is static and everything is visible,
 with no exceptions and no faster animations. No motion that does not carry
 meaning. No motion in the first paint that waits for a library.
 
+## The chrome
+
+One bar, and it is the only thing that crosses the page.
+
+It holds the **nameplate** (the amber plate mark and the word), the **folio**
+(the sections, flat and dim, with a drawn rule under the one you are inside),
+and the **controls** (the one action, and who is signed in). The three are in
+that order and they do not move.
+
+The bar is sticky, and it is the header that sticks rather than a bar nested
+inside a header, because a nested sticky element unsticks the moment its
+parent scrolls away. The page dissolves into it through a short fade instead
+of stopping at a rule, and the fade deepens once the page has moved. Nothing
+blurs: the house refuses a blur of whatever happens to be behind it, and the
+page coming up under a fade is the same effect without the lie.
+
+The reading about the product's state, and the desk's description of it, live
+in the footer's title block, because those are facts about the product and the
+title block is where the facts are.
+
 ## Composition
 
 Full-bleed bands, a measured column inside them, and a shape change between
-them: a poster, a strip of readings, a panel, a run, three columns, a ruled
-run of beats, a datasheet, a scrubbed chain, a plate of lights, a field, a
-set of limits, a plain list of questions.
+them: a poster, a strip of readings, a panel, a run of five steps, a sequence,
+a track of stages, a datasheet, a scrubbed chain, a plate of lights, a field,
+a set of limits, a plain list of questions.
 
 The grid is broken twice: the poster overlaps the light behind it, and the
 field runs off the right edge of the page.

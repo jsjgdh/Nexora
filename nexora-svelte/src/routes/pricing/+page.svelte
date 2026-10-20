@@ -7,7 +7,7 @@
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
-  import { BILLING_COMMITMENTS, CAMPUS, NOT_SOLD, PRICING, PRICING_PLANS, money } from "$lib/content/site";
+  import { BILLING_COMMITMENTS, NOT_SOLD, PRICING, PRICING_PLANS, QUOTED_PLANS, money } from "$lib/content/site";
   import { SUBSCRIPTION_TERMS } from "$lib/legal";
 
   /* The price, printed. One number in one place, and the same number in the
@@ -20,7 +20,7 @@
      cohort, on one invoice. It is invoiced rather than bought at a checkout,
      so there is no provider product for it and the page keeps saying that
      checkout is not on sale yet. */
-  const priceLines = [...PRICING_PLANS, CAMPUS.plan];
+  const priceLines = [...PRICING_PLANS, ...QUOTED_PLANS];
 
   /* Pricing backed by the real plans feed — never hardcoded copy. The API
      names plans only (no amounts travel through it), so prices live where
@@ -115,7 +115,17 @@
           {/if}
         </div>
 
-        <p class="num mt-5 text-[clamp(2rem,4vw,2.75rem)] leading-none text-ink">{plan.price}</p>
+        {#if plan.quoted}
+          <!-- A quoted offer has no price, so it says so in the place a price
+               would be, and then says what the quote depends on. The word is
+               in the reading face rather than the mono one, because it is a
+               sentence and not a reading. -->
+          <p class="display mt-5 text-[clamp(1.9rem,3.6vw,2.6rem)] leading-none text-ink">
+            {plan.price}
+          </p>
+        {:else}
+          <p class="num mt-5 text-[clamp(2rem,4vw,2.75rem)] leading-none text-ink">{plan.price}</p>
+        {/if}
         <p class="stamp mt-2 text-[11px] text-faint">{plan.priceNote}</p>
 
         <ul class="mt-6 grid gap-3 border-t border-rule pt-6">
@@ -197,24 +207,17 @@
               </p>
             {/if}
           </div>
-        {:else if plan.id === "teams"}
+        {:else if plan.quoted}
+          <!-- The one action a quoted offer has: talk to a person. There is no
+               checkout, because a quoted offer is a conversation, and the
+               quote says what it depends on so the reader can answer in one
+               message. -->
           <div class="mt-7">
-            <ActionLink href="/employers#contact" variant="ghost">Ask about a team plan</ActionLink>
-          </div>
-        {:else}
-          <!-- The campus licence. It is invoiced, so there is no checkout for
-               it and no card per student, and the discount is printed rather
-               than implied: the monthly price of Pro beside the per-student
-               price of a term. -->
-          <div class="mt-7">
-            <p class="text-[13px] leading-relaxed text-muted">
-              {CAMPUS.note}
-            </p>
-            <p class="mt-3 text-[12.5px] leading-relaxed text-faint">
-              {CAMPUS.checkout}
-            </p>
+            <p class="text-[13px] leading-relaxed text-muted">{plan.dependsOn}</p>
+            <p class="mt-3 text-[12.5px] leading-relaxed text-muted">{plan.cap}</p>
+            <p class="mt-3 text-[12.5px] leading-relaxed text-faint">{plan.checkout}</p>
             <div class="mt-5">
-              <ActionLink href={CAMPUS.link.href} variant="ghost">{CAMPUS.link.label}</ActionLink>
+              <ActionLink href={plan.action.href} variant="ghost">{plan.action.label}</ActionLink>
             </div>
           </div>
         {/if}

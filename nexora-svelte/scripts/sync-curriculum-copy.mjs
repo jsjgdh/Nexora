@@ -86,6 +86,7 @@ const COURSES = [
   ["go-in-production", "GO_IN_PRODUCTION"],
   ["rust-fundamentals", "RUST_FUNDAMENTALS"],
   ["rust-in-production", "RUST_IN_PRODUCTION"],
+  ["sql-fundamentals", "SQL_FUNDAMENTALS"],
   ["api-basics", "API_BASICS"],
 ];
 
