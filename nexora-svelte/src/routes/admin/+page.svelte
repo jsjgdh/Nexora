@@ -822,9 +822,17 @@
                     {action.detail ?? action.target ?? ""}
                     {action.createdAt ? ` · ${timeAgo(action.createdAt)}` : ""}
                   </p>
+                  <!-- The route and the request id are what turn a row into an
+                       answer: the route says what was read, the request id ties
+                       the row to the request's own log lines. -->
+                  <p class="mt-1 font-mono text-[11.5px] text-faint">
+                    {action.route ?? ""}{action.target ? ` · ${action.target}` : ""}
+                    {action.requestId ? ` · request ${action.requestId}` : ""}
+                  </p>
                 </li>
               {/each}
             </ul>
+            <p class="mt-4 text-[12.5px] leading-relaxed text-faint">{ADMIN.activity.note}</p>
           {/if}
         {:else}
           <p class="text-[13.5px] text-muted">{ADMIN.errors.notAnswered}</p>

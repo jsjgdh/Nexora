@@ -177,7 +177,9 @@
         "BCRYPT_ROUNDS": "12",
         "REVOCATION_PRUNE_INTERVAL_MS": "3600000",
         "OPERATOR_LEGAL_NAME": "NEXORA",
-        "NEXORA_REQUIRE_CONSENT": "1"
+        "NEXORA_REQUIRE_CONSENT": "1",
+        "LTI_BASE_URL": "https://nexora.dev/api/auth",
+        "LTI_COMPLETE_URL": "https://nexora.dev/lti/complete"
       },
       "secrets": [
         {
@@ -197,6 +199,12 @@
           "secret": "nexora-receipt-ed25519-public-key"
         }
       ],
+      "optionalEnv": {
+        "LTI_STATEMENT_ED25519_KEY": "The operator-held Ed25519 key a statement of verified work is signed with. Unset, a statement carries the mesh signature only and offline verification is unavailable, which the answer says rather than fakes.",
+        "LTI_STATEMENT_KEY_ID": "The published name of the statement key, so a rotation has a name to be read under. Unset, the key is published as statement-ed1; it is a name and not a secret.",
+        "LTI_TOOL_KEY": "The platform's own RSA key, used for the private-key client assertion the course's token endpoint may ask for. Unset, the platform authenticates with the client secret the operator registered for the deployment.",
+        "LTI_TOOL_KEY_ID": "The key id the platform's own key is published under in the tool's JWKS. Unset, it is published as tool-1; it is a name and not a secret."
+      },
       "cpuThreshold": 70,
       "concurrency": 80,
       "scaleToZero": false,
@@ -273,6 +281,11 @@
         "TRUST_PROXY": "1",
         "AUTH_MODE": "local",
         "GATEWAY_GLOBAL_LIMIT": "600",
+        "GATEWAY_ANON_LIMIT": "60",
+        "GATEWAY_EDGE_LIMIT": "20000",
+        "GATEWAY_LIMIT_WINDOW_MS": "60000",
+        "GATEWAY_BREAKER_FAILURES": "3",
+        "GATEWAY_BREAKER_COOLDOWN_MS": "15000",
         "REVOCATION_TIMEOUT_MS": "2000",
         "REVOCATION_CLEAR_TTL_MS": "60000",
         "REVOCATION_REPORT_MS": "60000",

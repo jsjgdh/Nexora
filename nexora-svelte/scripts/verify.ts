@@ -61,7 +61,7 @@ function numberWords(n: number): string | null {
   }
   return null;
 }
-const srcFiles: string[] = [];
+const srcFiles: string[] = []; const declaredFontFamilies = [...new Set([...readFileSync(new URL("../src/lib/fonts.css", import.meta.url), "utf8").matchAll(/font-family:\s*'([^']+)'/g)].map((m) => m[1]!))];
 {
   const walkSrc = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -1255,10 +1255,10 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
   ];
   const htmlSrc = readFileSync(new URL("../src/app.html", import.meta.url), "utf8");
   ok(
-    `the build uses three families and no more (${families.join(" + ")})`,
+    `the build uses three families and no more (${families.join(" + ")}), and they are served from this site`,
     families.length === 3 &&
-      (htmlSrc.match(/family=/g) ?? []).length === families.length &&
-      families.every((f) => htmlSrc.includes(`family=${f.replace(/ /g, "+")}`))
+      declaredFontFamilies.length === families.length &&
+      families.every((f) => declaredFontFamilies.includes(f)) && !htmlSrc.includes("fonts.googleapis") && !htmlSrc.includes("fonts.gstatic")
   );
 
   // A pure white surface and a pure black ground are the two values every screen
@@ -2763,12 +2763,17 @@ console.log("== the front door's own security posture ==");
     /<script nonce="%sveltekit\.nonce%">/.test(shellSrc)
   );
   ok(
-    "and the font host is named, because the site asks it for the typefaces",
-    configSrc.includes("https://fonts.googleapis.com") && configSrc.includes("https://fonts.gstatic.com")
+    "and the typefaces are served from this site, so the front door asks nobody for a font",
+    !shellSrc.includes("fonts.googleapis.com") &&
+      !configSrc.includes("fonts.googleapis.com") &&
+      !configSrc.includes("fonts.gstatic.com") &&
+      readFileSync(fileURLToPath(new URL("../src/lib/fonts.css", import.meta.url)), "utf8").includes(
+        "/fonts/"
+      )
   );
   ok(
-    "and the subprocessors page says where that request goes",
-    LEGAL.SUBPROCESSORS.some((s) => /Google/i.test(s.name) && /typeface/i.test(s.purpose))
+    "and no processor is named for the typefaces, because the site no longer asks one",
+    !LEGAL.SUBPROCESSORS.some((s) => /Google/i.test(s.name))
   );
 }
 

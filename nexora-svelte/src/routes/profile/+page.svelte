@@ -30,11 +30,16 @@
   let billingLoading = $state(false);
   let billingError = $state<string | null>(null);
   let plans = $state<{ slug: string; name: string }[]>([]);
+  let paymentsConfigured = $state<boolean | null>(null);
   let subscription = $state<{
     plan: string | null;
     status: string | null;
     entitled: boolean;
     currentPeriodEnd: string | null;
+    /** When the access stops, for a subscription that is past due. */
+    graceUntil: string | null;
+    /** The length of the grace window, in days. */
+    graceDays: number;
   } | null>(null);
   let checkoutBusy = $state<string | null>(null);
   let portalBusy = $state(false);
@@ -66,6 +71,7 @@
           if (s.status === "fulfilled" && p.status === "fulfilled") {
             subscription = s.value.subscription;
             plans = p.value.plans;
+            paymentsConfigured = p.value.paymentsConfigured;
           } else {
             const first = [s, p].find((r) => r.status === "rejected");
             billingError =
@@ -127,6 +133,31 @@
    * builds this URL (see lib/billing.ts).
    */
   const checkoutReturn = $derived(page.url.searchParams.get("checkout") === "done");
+
+  /**
+   * The webhook grants the subscription, not the redirect.
+   *
+   * So a return from checkout says "pending" and keeps asking, until the
+   * grant lands or the learner gives up. A learner who has just paid should
+   * not have to press a button to find out whether they did, and the page
+   * must not claim Pro before the platform says so: the redirect proves
+   * nothing.
+   *
+   * The poll is bounded, so a page left open does not ask the platform for
+   * ever, and it stops the moment the subscription is granted.
+   */
+  let pollsLeft = 15;
+  $effect(() => {
+    // `billingLoaded` is read so the poll restarts whenever the page has
+    // finished a check: the grant arrives between two polls, not during one.
+    void billingLoaded;
+    if (!checkoutReturn || subscription?.entitled || pollsLeft <= 0) return;
+    const timer = setTimeout(() => {
+      pollsLeft -= 1;
+      billingLoaded = false;
+    }, 8000);
+    return () => clearTimeout(timer);
+  });
 </script>
 
 <!-- A signed-in view: it is deliberately absent from the sitemap, and it is
@@ -172,13 +203,30 @@
           <p class="mt-4 text-[13.5px] text-removed" role="alert">{billingError}</p>
         {:else if subscription?.entitled}
           <p class="mt-4 flex flex-wrap items-baseline gap-x-3 text-[14px]">
-            <span class="stamp text-approved">pro active</span>
+            <span class="stamp {subscription.status === "past_due" ? "text-review" : "text-approved"}">
+              {subscription.status === "past_due" ? "payment overdue" : "pro active"}
+            </span>
             <span class="text-muted">
               {subscription.plan}{subscription.currentPeriodEnd
                 ? ` · renews ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
                 : ""}
             </span>
           </p>
+          {#if subscription.status === "past_due"}
+            <!-- A failed renewal is not a cancellation. The provider marks the
+                 subscription overdue and the access continues for a bounded
+                 grace period, and the page says so rather than showing a plan
+                 that has quietly stopped. -->
+            <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+              The last payment did not go through, so the provider has marked this subscription
+              overdue. Your access continues until
+              {subscription.graceUntil
+                ? new Date(subscription.graceUntil).toLocaleDateString()
+                : "the end of the grace period"},
+              which is {subscription.graceDays} days of grace. Update the card in the payment
+              provider's portal before then.
+            </p>
+          {/if}
           <div class="mt-5 border-t border-rule pt-5">
             <Button size="sm" variant="ghost" onclick={manage} busy={portalBusy}>
               {portalBusy ? "Opening…" : "Manage subscription"}
@@ -196,7 +244,8 @@
             <span class="stamp text-review">payment received: confirming</span><br />
             <span class="mt-2 block">
               You are back from checkout. Pro activates when the payment provider confirms, usually
-              within a minute. The redirect itself grants nothing.
+              within a minute. The redirect itself grants nothing, so this page keeps checking until
+              the platform says you have it.
             </span>
           </p>
           <div class="mt-5 border-t border-rule pt-5">
@@ -222,6 +271,11 @@
                 </Button>
               {/each}
             </div>
+          {:else if paymentsConfigured === false}
+            <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
+              The payment provider is not configured in this deployment, so the checkout is closed.
+              Nothing is charged, and nothing is asked for.
+            </p>
           {:else}
             <p class="mt-4 text-[12.5px] text-faint">No plans published yet.</p>
           {/if}

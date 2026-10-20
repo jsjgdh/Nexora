@@ -305,6 +305,32 @@ const AUTH_EXPORT_NOT_INCLUDED = [
   },
 ];
 
+/**
+ * The export's top-level keys, in the order the file carries them.
+ *
+ * The export is an artefact a person is entitled to keep, and the IDE will
+ * read it one day, so its shape is a contract and not an accident. The keys
+ * are listed here, in order, and the file is built in that order: a reader
+ * that has to guess which key moved is a reader that breaks on a change that
+ * was not a change of meaning.
+ *
+ * Adding a key is a version bump. Removing or renaming one is a new version
+ * of the format, and the old files stay readable.
+ */
+export const ACCOUNT_EXPORT_KEYS = [
+  "format",
+  "version",
+  "generatedAt",
+  "controller",
+  "service",
+  "subject",
+  "consents",
+  "rightsRequests",
+  "proofs",
+  "sessions",
+  "notIncluded",
+] as const;
+
 export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
   /* The consents this account is currently bound to, oldest first. Read by the
      account page so a learner can see what they agreed to rather than being told
@@ -355,11 +381,26 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
 
   /* The access and portability export for everything this service holds
      (GDPR Arts. 15 and 20, CCPA §1798.110/§1798.115, DPDP access).
-     
+
      Machine-readable by construction — the artifact a person is entitled to, not
      a rendering of one — and complete for this half of the record. Sessions are
      reported as counts rather than contents: a refresh-token hash is a
-     credential, and an export is a file people email to themselves. */
+     credential, and an export is a file people email to themselves.
+
+     THE SHAPE, and it is a contract rather than an accident.
+
+     The IDE reads this file one day. The reader it uses is
+     `extensions/nexora/src/sync.ts` in the IDE, and it checks every proof row
+     for four fields: competencyId, level, kind and issuedAt, with kind being
+     one of run, design or incident. So the proof rows here carry exactly
+     those four names, and the kind is derived the way the ledger route
+     derives it, so a receipt of one kind is never reported as another. A
+     debugging receipt used to be exported as a run, which is a false
+     statement about somebody's work.
+
+     The top-level keys are in the order ACCOUNT_EXPORT_KEYS names, because a
+     file people keep has to be byte-stable across a change that did not
+     change its meaning. */
   app.get("/account/export", async (req) => {
     const userId = requireUserId(req);
     const who = await pool.query(
@@ -379,7 +420,7 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
         [userId]
       ),
       pool.query(
-        "SELECT competency_id, level, CASE WHEN receipt->'facts'->>'kind' = 'design' THEN 'design' ELSE 'run' END AS kind, issued_at FROM proofs WHERE user_id = $1 ORDER BY issued_at DESC",
+        "SELECT competency_id, level, CASE WHEN receipt->'facts'->>'kind' = 'design' THEN 'design' WHEN receipt->'facts'->>'kind' = 'incident' THEN 'incident' ELSE 'run' END AS kind, issued_at FROM proofs WHERE user_id = $1 ORDER BY issued_at DESC",
         [userId]
       ),
       pool.query(
@@ -391,6 +432,13 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
       ),
     ]);
 
+    /* A learner with nothing still gets a file.
+     *
+     * The empty case is not an error and not a missing key: the arrays are
+     * there, empty, and the counts are zero. A learner who has signed up and
+     * done nothing yet is entitled to their own record, and an export that
+     * failed for them would be a rights surface that only works once you have
+     * used the product. */
     return {
       format: "nexora-account-export" as const,
       version: 1 as const,
@@ -400,7 +448,7 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
       subject: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: user.name ?? null,
         createdAt: new Date(user.created_at).toISOString(),
         provider: user.provider,
       },

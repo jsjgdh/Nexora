@@ -1,0 +1,129 @@
+# Deploying the front door.
+#
+# The site is a SvelteKit app and Vercel serves it. Two ways to do that: let
+# Vercel's own git integration watch the repository, or run the deploy from
+# here. This workflow is the second one, and it exists because the first one
+# deploys without asking the repository anything.
+#
+# WHY THE DEPLOY IS IN A WORKFLOW AND NOT A GIT INTEGRATION
+#
+# The site's own suite — the type check, the assertions, the accessibility scan,
+# the UX sweep — is what decides whether the site is shippable. A git
+# integration builds and deploys; it does not run the suite, so the contract
+# becomes "whatever Vercel can build", and the gates become advice. In a
+# workflow the deploy is the LAST step, after the same suite the `verify`
+# workflow runs, and a red suite means the site is not deployed at all.
+#
+# ONE DEPLOY PATH, NOT TWO
+#
+# A repository with a git integration AND this workflow can deploy twice, from
+# two places, to the same URL — and the second one wins, silently. So: if the
+# project is connected to Vercel in its settings, turn this workflow's deploy
+# off (or disconnect the integration). One path, one decision.
+#
+# The secrets it needs:
+#   VERCEL_TOKEN      a Vercel token with deploy rights on the project
+#   VERCEL_ORG_ID     the organisation the project belongs to
+#   VERCEL_PROJECT_ID the project itself
+#
+# The environment variables the app needs at runtime are set on the Vercel
+# project, not here: PUBLIC_API_URL (the browser's route to the gateway),
+# GATEWAY_URL (the app server's own route), PUBLIC_SITE_URL, and RESEND_API_KEY.
+# The two gateway addresses are separate on purpose — see the note in
+# nexora-svelte/src/lib/server/session-broker.ts.
+
+name: deploy the front door
+
+on:
+  workflow_run:
+    workflows: [verify]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: which Vercel environment to deploy to
+        required: true
+        default: production
+        type: choice
+        options: [production, preview]
+
+concurrency:
+  group: deploy-frontend-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: build, gate, deploy
+    # A release TAG is the deliberate act, and a manual dispatch is the
+    # deliberate act with a reason attached. A merge to main is neither.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_branch, 'platform-v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: nexora-svelte
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          path: nexora-svelte
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: nexora-svelte/package-lock.json
+
+      - run: npm ci
+
+      # The same gates the verify workflow runs, in the same order, so the
+      # thing that decides is the thing that was decided on. A deploy that
+      # skipped them would be a different product.
+      - name: type check
+        run: npm run check
+      - name: assertion suite
+        run: npx tsx scripts/verify.ts
+      - name: production build
+        run: npm run build
+      - name: install accessibility browser
+        run: npx playwright install --with-deps chromium
+      - name: axe accessibility scan
+        run: npm run verify:a11y
+      - name: UX sweep
+        run: npm run verify:ux
+
+      # The deploy itself. `vercel build` reuses the build above's output
+      # rather than building a second time, so what is deployed is what was
+      # checked.
+      - name: deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx --yes vercel@latest pull --yes --environment=${{ inputs.environment || 'production' }} --token="${{ secrets.VERCEL_TOKEN }}"
+          npx --yes vercel@latest build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+          npx --yes vercel@latest deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"
+
+      # A deploy that does not check itself leaves a broken site running and
+      # calls it a success. The site answers on its own origin, so this is one
+      # request — and it is the SAME origin a learner will use, not a preview
+      # URL that happens to work.
+      - name: the deployed site answers
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS -o /dev/null -w '%{http_code}' "$SITE_URL" | grep -q '^2'; then
+              echo "the site is up"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "the site did not answer at $SITE_URL" >&2
+          exit 1

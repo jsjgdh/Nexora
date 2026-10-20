@@ -1,4 +1,7 @@
 <script lang="ts">
+  // The typefaces first: the faces this site uses are served from this site,
+  // so the front door makes no third-party request to render a page.
+  import "$lib/fonts.css";
   import "../app.css";
   import { afterNavigate, onNavigate } from "$app/navigation";
   import { onMount, type Snippet } from "svelte";

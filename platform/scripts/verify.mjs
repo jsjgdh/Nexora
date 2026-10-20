@@ -713,6 +713,75 @@ describe("gateway pure units", () => {
   });
 });
 
+describe("the deployment pipeline is wired, and the commands it runs exist", () => {
+  /* A deploy that does nothing is the worst kind of broken: the run is green,
+   * the artifacts are produced, and the platform is still on the old image. So
+   * the pipeline is checked the way everything else here is — by RUNNING the
+   * thing and looking at what it says.
+   *
+   * The bug this exists for already happened once: the deploy script's
+   * entrypoint guard compared the running file against the SOURCE name, so the
+   * BUILT file — the one the pipeline runs — matched nothing and did nothing,
+   * quietly, while the plan said the deployment was ready.
+   */
+  const deployScript = join(root, "infra", "gcp", "dist", "deploy.js");
+  const planCheck = join(root, "infra", "gcp", "dist", "plan-check.js");
+
+  it("the built deploy script runs and prints the commands it would run", () => {
+    assert.ok(existsSync(deployScript), "the deploy script is not built — run the gcp-plan build");
+    const out = execSync(`node "${deployScript}" --print`, { encoding: "utf8", cwd: root });
+    assert.match(out, /gcloud run deploy nexora-gateway/, "the deploy does not deploy the gateway");
+    assert.match(out, /gcloud sql instances create/, "the deploy does not create the database");
+    assert.match(out, /--enable-point-in-time-recovery/, "the deploy does not turn the backups on");
+    assert.match(out, /gcloud compute network-endpoint-groups create/, "the deploy does not build the load balancer");
+  });
+
+  it("the built plan check runs and refuses a plan that does not match the code", () => {
+    assert.ok(existsSync(planCheck), "the plan check is not built — run the gcp-plan build");
+    const out = execSync(`node "${planCheck}"`, { encoding: "utf8", cwd: root });
+    assert.match(out, /plan ok/, out);
+  });
+
+  it("the deploy workflows exist, and they wait for the suite", () => {
+    const workflows = join(root, "..", ".github", "workflows");
+    for (const file of ["deploy-platform.yml", "deploy-frontend.yml"]) {
+      const source = readFileSync(join(workflows, file), "utf8");
+      assert.match(source, /workflow_run:/, `${file} does not wait for the verify workflow`);
+      assert.match(source, /workflow_run\.conclusion == 'success'/, `${file} would deploy on a red suite`);
+      // A deployment that does not verify itself is a deployment that leaves a
+      // broken platform running and calls it a success. Each one checks the
+      // thing it deployed: the platform runs the health check against the
+      // deployed gateway, the site asks the deployed site for its own answer.
+      if (file.includes("platform")) {
+        assert.match(source, /healthcheck/, `${file} does not check the deployed platform`);
+      } else {
+        assert.match(source, /the deployed site answers/, `${file} does not check the deployed site`);
+        assert.match(source, /SITE_URL/, `${file} does not ask the deployed site for anything`);
+      }
+    }
+  });
+
+  it("the front door's deploy checks the SITE it deployed", () => {
+    // The site's own health endpoint does not exist, so the check is the site
+    // answering on the origin a learner will use — not a preview URL that
+    // happens to work.
+    const source = readFileSync(join(root, "..", ".github", "workflows", "deploy-frontend.yml"), "utf8");
+    assert.match(source, /the deployed site answers/, "the site deploy does not check the deployed site");
+    assert.match(source, /SITE_URL/, "and it does not say which origin to check");
+  });
+
+  it("the compose stack can run a published image, not only a local build", () => {
+    const compose = readFileSync(join(root, "docker-compose.yml"), "utf8");
+    assert.match(compose, /PLATFORM_IMAGE/, "the compose file cannot take a published image");
+    for (const service of ["auth", "curriculum", "execution", "billing", "gateway"]) {
+      assert.ok(
+        new RegExp(`image: \\$\\{PLATFORM_IMAGE`).test(compose),
+        `the ${service} service has no image line, so a deploy would rebuild it on the host`
+      );
+    }
+  });
+});
+
 describe("the auth service mounts every route module it has", () => {
   /* The gap this asserts is the one that cost a session: a module of routes
    * existed, the suite registered it on its own test app, and the service
@@ -3052,7 +3121,18 @@ describe("billing subscription view (in-process, fake pg)", () => {
     }
     row = null;
     const none = await app.inject({ method: "GET", url: "/subscription", headers: { "x-user-id": "u" } });
-    assert.deepEqual(none.json().subscription, { plan: null, status: null, entitled: false, currentPeriodEnd: null });
+    /* The view names the grace window as well as the entitlement, so a
+       reader can see how long a past-due subscription keeps its access. With
+       no subscription there is no grace to count down, but the window's
+       length is still stated, because the front door shows it either way. */
+    assert.deepEqual(none.json().subscription, {
+      plan: null,
+      status: null,
+      entitled: false,
+      currentPeriodEnd: null,
+      graceUntil: null,
+      graceDays: 7,
+    });
   });
   it("reads only the authenticated account's row, never a client-supplied id", async () => {
     row = { plan: "pro", status: "active", current_period_end: null };

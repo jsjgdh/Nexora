@@ -31,6 +31,8 @@ services:
     # network only. Publish 5432 locally only for debugging.
 
   auth:
+    image: ${PLATFORM_IMAGE:-nexora/platform:local}
+
     build:
       context: .
       args:
@@ -55,6 +57,8 @@ services:
     cpus: 0.5
 
   curriculum:
+    image: ${PLATFORM_IMAGE:-nexora/platform:local}
+
     build:
       context: .
       args:
@@ -75,6 +79,8 @@ services:
     cpus: 0.5
 
   execution:
+    image: ${PLATFORM_IMAGE:-nexora/platform:local}
+
     build:
       context: .
       args:
@@ -109,6 +115,8 @@ services:
     # understanding a container escape via the socket is a real risk.
 
   billing:
+    image: ${PLATFORM_IMAGE:-nexora/platform:local}
+
     build:
       context: .
       args:
@@ -139,6 +147,8 @@ services:
     cpus: 0.5
 
   gateway:
+    image: ${PLATFORM_IMAGE:-nexora/platform:local}
+
     build:
       context: .
       args:
@@ -179,6 +189,8 @@ services:
   # the operator copies off the host on their own schedule.
   backup:
     profiles: ["backup"]
+    image: ${PLATFORM_IMAGE:-nexora/platform:local}
+
     build:
       context: .
       args:
@@ -203,6 +215,8 @@ services:
   # "we have backups" that is almost never done.
   drill:
     profiles: ["drill"]
+    image: ${PLATFORM_IMAGE:-nexora/platform:local}
+
     build:
       context: .
       args:
@@ -223,6 +237,7 @@ services:
   frontend:
     # Canonical NEXORA client (SvelteKit production build). Browser-facing;
     # PUBLIC_API_URL must be reachable FROM THE BROWSER, not the container.
+    image: ${FRONTEND_IMAGE:-nexora/frontend:local}
     build:
       context: ../nexora-svelte
     env_file:

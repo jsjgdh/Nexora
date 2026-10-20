@@ -11,6 +11,11 @@
   import SessionControls from "$lib/components/SessionControls.svelte";
   import { pageTitle } from "$lib/seo";
   import { LEGAL_ENTITY, RIGHTS_RESPONSE_DAYS, RIGHT_KINDS } from "$lib/legal";
+  import {
+    ACCOUNT_EXPORT_BUNDLE_FORMAT,
+    ACCOUNT_EXPORT_BUNDLE_KEYS,
+    ACCOUNT_EXPORT_BUNDLE_VERSION,
+  } from "$lib/export-shape";
 
   /* The account home: the screen a learner lands on after signing in.
    *
@@ -232,16 +237,25 @@
         session.exportBilling().catch(() => null),
       ]);
       const bundle = {
-        format: "nexora-account-export-bundle",
-        version: 1,
+        format: ACCOUNT_EXPORT_BUNDLE_FORMAT,
+        version: ACCOUNT_EXPORT_BUNDLE_VERSION,
         generatedAt: new Date().toISOString(),
         note:
           "One file, two services. `parts[0]` is the account, consent, proof and request record held by the auth service; `parts[1]` is the subscription record held by the billing service. Each part names what it does not hold and where that lives.",
         parts: billing ? [auth, billing.export] : [auth],
+        /* The key is always there. A key that is in one file and not in the
+           next is a reader that has to handle two shapes, and the file is
+           something a person keeps. */
         billingUnavailable: billing
-          ? undefined
+          ? null
           : "The billing service could not be reached, so its half is missing from this file. Ask again, or write to the privacy contact and it will be sent to you.",
       };
+      /* The keys are named in one module, and the file is built in that order:
+         see lib/export-shape.ts. */
+      const order = Object.keys(bundle).join(",");
+      if (order !== ACCOUNT_EXPORT_BUNDLE_KEYS.join(",")) {
+        throw new Error("The export bundle's shape changed. Name it in lib/export-shape.ts.");
+      }
       const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -599,6 +613,11 @@
           records and every request you have filed, plus your subscription record, from the service
           that holds it. Each part states what it does not include, so the file cannot mislead you
           about its own completeness.
+        </p>
+        <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+          A read by one of our operators is written down too, with who looked, when, and which account
+          it was. Ask for that record as a request below, and it is answered the same way as any
+          other.
         </p>
         <div class="mt-6">
           <Button onclick={downloadEverything} busy={busy === "export"}>

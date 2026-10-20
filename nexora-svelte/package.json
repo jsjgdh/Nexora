@@ -13,6 +13,8 @@
     "verify:account": "tsx scripts/verify-account.ts",
     "verify:admin": "tsx scripts/verify-admin.ts",
     "verify:a11y": "tsx scripts/verify-a11y.ts",
+    "verify:csp": "tsx scripts/verify-csp.ts",
+    "verify:platform": "tsx scripts/verify-platform.mjs",
     "verify:ux": "tsx scripts/verify-ux.ts",
     "sync:copy": "node scripts/sync-curriculum-copy.mjs"
   },

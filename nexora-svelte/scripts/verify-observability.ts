@@ -33,7 +33,7 @@
    pinning it would mean booting the whole app inside this script. This gate
    pins our half of it: when called, it reports exactly like this. */
 import assert from "node:assert";
-import { handleError } from "../src/hooks.server";
+import { handleError } from "../src/lib/server/error-report";
 
 let passed = 0;
 function ok(name: string, cond: boolean, detail?: string) {

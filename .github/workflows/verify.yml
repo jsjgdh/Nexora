@@ -12,6 +12,10 @@ name: verify
 on:
   push:
     branches: [master, main]
+    # A release tag runs the same suite, and the deploy workflows wait for
+    # THIS run to be green before they roll anything. So a tag cannot ship a
+    # tree the suite has not passed.
+    tags: ["platform-v*"]
   pull_request:
   workflow_dispatch:
   schedule:

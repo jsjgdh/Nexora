@@ -169,6 +169,10 @@ export interface AdminAction {
   action: string;
   target: string | null;
   detail: string | null;
+  /** The endpoint that was called, so the row says what was read. */
+  route: string | null;
+  /** The request id the gateway minted, so the row can be tied to the logs. */
+  requestId: string | null;
   createdAt: string | null;
 }
 

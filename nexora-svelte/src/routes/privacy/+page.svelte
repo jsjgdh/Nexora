@@ -171,6 +171,18 @@
         </section>
 
         <section>
+          <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Who can see your record</h2>
+          <p class="mt-3">
+            The people who run the studio can open an account, to answer a request you have filed or to
+            end a session that should not be alive. That is a read of your data, and every read is
+            written down: who looked, which part of the console they called, which account it was,
+            when, and the request id it ran under. The record carries that somebody looked, and never
+            what they saw. Ask for a copy of it as a data request, from your account page or from the
+            privacy contact.
+          </p>
+        </section>
+
+        <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Where it goes</h2>
           <p class="mt-3">
             Our own servers and the processors above are not all in the same country, so using the

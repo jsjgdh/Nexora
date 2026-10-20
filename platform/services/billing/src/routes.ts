@@ -11,7 +11,6 @@ import {
   type LawfulBasis,
   type PlanInfo,
   type PortalResponse,
-  type SubscriptionView,
 } from "@nexora/contracts";
 import { ApiError, newId, parseOr400, requireUserId } from "@nexora/service-kit";
 import {
@@ -30,6 +29,33 @@ import {
 
 function hdr(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v;
+}
+
+/**
+ * How long a past-due subscription keeps access.
+ *
+ * A renewal that fails is not a cancellation, and a learner whose card was
+ * declined should not lose the work they paid for in the same minute. The
+ * provider moves the subscription to past_due and keeps sending its events, so
+ * the grace period is a window the platform honours: the subscription stays
+ * entitled until the period end plus this many days, and after that it does
+ * not.
+ *
+ * It is a bounded window, not an open-ended one. An unbounded grace is access
+ * that never ends, which is a promise the product cannot keep.
+ */
+export const GRACE_DAYS = 7;
+
+/** The subscription as the front door reads it, with the grace window named. */
+interface SubscriptionViewWithGrace {
+  plan: string | null;
+  status: string | null;
+  entitled: boolean;
+  currentPeriodEnd: string | null;
+  /** When the access stops, for a subscription that is past due. */
+  graceUntil: string | null;
+  /** The length of the grace window, in days. */
+  graceDays: number;
 }
 
 function str(v: unknown): string | undefined {
@@ -161,7 +187,12 @@ export function registerBillingRoutes(
 
   app.get("/plans", async () => {
     const out: PlanInfo[] = [...plans.entries()].map(([slug, p]) => ({ slug, name: p.name }));
-    return { plans: out };
+    /* Whether the payment provider is configured is part of the answer, not a
+       detail the front door has to guess. A learner who meets a checkout
+       button that cannot work has been told the product is broken; a learner
+       who is told the provider is not configured yet has been told the truth.
+       The key itself is never in this answer: a flag is a flag. */
+    return { plans: out, paymentsConfigured: dodoKey().length > 0 };
   });
 
   app.post("/checkout", async (req) => {
@@ -317,7 +348,18 @@ export function registerBillingRoutes(
       pool.query("SELECT type, received_at FROM billing_events WHERE payload #>> '{data,metadata,user_id}' = $1 ORDER BY received_at DESC LIMIT 500", [userId]),
     ]);
     const row = sub.rows[0];
-    const entitled = row?.status === "active" || row?.status === "past_due";
+    /* The export says whether the account is entitled, and it says it with the
+     * same rule the subscription route uses: a past-due subscription is
+     * entitled while its grace window runs and not after. An export that
+     * disagreed with the product would be worse than no answer. */
+    const periodEnd = row?.current_period_end ? new Date(row.current_period_end) : null;
+    const graceUntil =
+      row?.status === "past_due" && periodEnd
+        ? new Date(periodEnd.getTime() + GRACE_DAYS * 24 * 3600_000)
+        : null;
+    const entitled =
+      row?.status === "active" ||
+      (row?.status === "past_due" && (graceUntil === null || graceUntil.getTime() > Date.now()));
     const out: BillingExport = {
       format: "nexora-account-export",
       version: 1,
@@ -417,19 +459,40 @@ export function registerBillingRoutes(
     const userId = requireUserId(req);
     const { rows } = await pool.query("SELECT * FROM billing_subscriptions WHERE user_id = $1", [userId]);
     const row = rows[0];
-    // Access follows the vendor's own lifecycle: a failed renewal first moves
-    // the subscription to past_due while the grace period runs, and the
-    // customer keeps access until then. on_hold, expired, cancelled and
-    // failed do not entitle.
-    const entitled = row?.status === "active" || row?.status === "past_due";
-    const out: SubscriptionView = row
+    /* Access follows the vendor's own lifecycle, with one rule of our own: a
+     * failed renewal first moves the subscription to past_due, and the
+     * customer keeps access while the grace period runs. The window is
+     * bounded (GRACE_DAYS after the period end), so a card that was declined
+     * does not take the work away the same minute, and a subscription that is
+     * never fixed does not entitle for ever. on_hold, expired, cancelled and
+     * failed do not entitle. */
+    const periodEnd = row?.current_period_end ? new Date(row.current_period_end) : null;
+    const graceUntil =
+      row?.status === "past_due" && periodEnd
+        ? new Date(periodEnd.getTime() + GRACE_DAYS * 24 * 3600_000)
+        : null;
+    const pastDueEntitled =
+      row?.status === "past_due"
+        ? graceUntil === null || graceUntil.getTime() > Date.now()
+        : false;
+    const entitled = row?.status === "active" || pastDueEntitled;
+    const out: SubscriptionViewWithGrace = row
       ? {
           plan: row.plan,
           status: row.status,
           entitled,
-          currentPeriodEnd: row.current_period_end ? new Date(row.current_period_end).toISOString() : null,
+          currentPeriodEnd: periodEnd ? periodEnd.toISOString() : null,
+          graceUntil: graceUntil ? graceUntil.toISOString() : null,
+          graceDays: GRACE_DAYS,
         }
-      : { plan: null, status: null, entitled: false, currentPeriodEnd: null };
+      : {
+          plan: null,
+          status: null,
+          entitled: false,
+          currentPeriodEnd: null,
+          graceUntil: null,
+          graceDays: GRACE_DAYS,
+        };
     return { subscription: out };
   });
 }

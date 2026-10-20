@@ -61,20 +61,14 @@ const config = {
         "script-src": development ? ["self", "unsafe-inline"] : ["self"],
         // The site sets custom properties on elements, and a style attribute
         // cannot be hashed, so inline style stays allowed.
-        //
-        // The font host is named here on purpose. The site loads Archivo, IBM
-        // Plex Mono and Newsreader from Google Fonts, and the policy blocked
-        // the stylesheet, so the site had been rendering in fallback faces
-        // without anybody noticing: a report-only policy collects violations
-        // nobody reads. Naming the host makes the request visible, and the
-        // subprocessors page says where the request goes. Self-hosting the
-        // faces would remove the third party altogether, and it is the better
-        // answer, but it is a change to the build rather than to a header.
-        "style-src": ["self", "unsafe-inline", "https://fonts.googleapis.com"],
+        "style-src": ["self", "unsafe-inline"],
         "img-src": ["self", "data:", "blob:"],
-        "font-src": ["self", "data:", "https://fonts.gstatic.com"],
-        // The platform's gateway, the font host, and (in development) Vite's
-        // hot reload socket.
+        // The typefaces are served from this site, so the font source is this
+        // site too and the front door makes no third-party request to render
+        // a page.
+        "font-src": ["self", "data:"],
+        // The platform's gateway, and (in development) Vite's hot reload
+        // socket.
         "connect-src": development ? ["self", "https:", "ws:"] : ["self", "https:"],
         "frame-src": ["self", "https:"],
         "worker-src": ["self", "blob:"],

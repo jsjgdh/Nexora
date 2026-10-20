@@ -4,6 +4,13 @@ The mesh runs on **Cloud Run**, the front door runs on **Vercel**, and the two
 meet at one HTTPS load balancer in front of the gateway. This file is the order
 of operations, and what has to be true before each step.
 
+**As of 2026-10-20 this plan is the production decision**
+([DEPLOYMENT.md](../../docs/DEPLOYMENT.md) changed accordingly); the
+compose stack in that document is the fallback, kept building unchanged.
+Being the decision does not make it rehearsed — the first deploy is
+still a drill, rollback included, and that is stated rather than
+assumed at every step below.
+
 The plan lives in [`plan.json`](plan.json) and is **data**: `plan.ts` checks it
 against the source tree, `deploy.ts` applies it. Run the check before you run
 anything else:
@@ -108,7 +115,7 @@ NEW instance and run the platform's own drill against it
 (`npm run drill -- --url=…`). The drill proves the rows come back; the engine
 backup proves the engine can be restored. They are different mechanisms and
 the runbook must not confuse them. See
-[OPERATIONS.md](docs/OPERATIONS.md) for the whole contract.
+[OPERATIONS.md](../../docs/OPERATIONS.md) for the whole contract.
 
 ### 2. Generate the secrets
 
@@ -263,6 +270,18 @@ In order, because each one tells you which step failed:
    between. `MONITOR_TO` is where the message goes; `RESEND_API_KEY` and
    `RESEND_FROM` are the provider the platform already has.
 
+6. **The periodic board runs where it can read.** `npm run healthcheck`
+   and `npm run synthetic` need only the public endpoint
+   (`--url=https://api.nexora.dev`); `npm run metrics` and
+   `npm run alerts` read Postgres directly, and this plan's Cloud SQL
+   has no public IP — run them from a host holding a Cloud SQL Auth
+   Proxy connection (the plan's sidecars serve the services; an ops
+   host runs its own). Neither invents a number it cannot read:
+   `alerts` prints skips for URLs it was not given and breaches on one
+   that will not answer, `metrics` exits `2`. The request ids in their
+   output grep Cloud Logging (`gcloud logging read
+   'jsonPayload.requestId="<id>"'`), not `docker logs`.
+
 ## Rollback
 
 Every service keeps the previous image, and a rollback is a redeploy of the
@@ -288,7 +307,7 @@ reviewed as such.
   file; installing it is an operator step.
 - **The gateway's rate limits are per-instance**, so the second instance in
   the table above is a placeholder until a shared store exists — see
-  [OPERATIONS.md](docs/OPERATIONS.md) §1.
+  [OPERATIONS.md](../../docs/OPERATIONS.md) §1.
 - **The `docker` runner is refused in production** unless
   `EXECUTION_RUNNER=docker` is set, which the plan does. On Cloud Run there is
   no Docker daemon, so the general hosted-run path (`/execute`, a learner's

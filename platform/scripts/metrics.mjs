@@ -181,6 +181,18 @@ async function withClient(url, fn) {
 /* The reason a database did not answer, with the credentials it was given
    taken back out: connection strings travel into logs and chat windows far
    more often than anyone means them to, and this report is copied. */
+/** Where a database is, without anything that was given to reach it: the
+ *  name, the host, the port — never the user or the password. Both reporters
+ *  name a database with this, so an operator sees one spelling of "where". */
+export function dbLabel(url) {
+  try {
+    const u = new URL(url);
+    return `${u.pathname.replace(/^\//, "") || "postgres"}@${u.hostname}:${u.port || "5432"}`;
+  } catch {
+    return "postgres";
+  }
+}
+
 export function whyNot(url, err) {
   const message = String(err?.message ?? err);
   let secret = "";
@@ -190,14 +202,7 @@ export function whyNot(url, err) {
     /* an unparseable URL has no password of its own to leak */
   }
   const safe = secret ? message.replaceAll(secret, "***") : message;
-  let where = "the database";
-  try {
-    const u = new URL(url);
-    where = `${u.pathname.replace(/^\//, "") || "postgres"}@${u.hostname}:${u.port || "5432"}`;
-  } catch {
-    /* the message still says what happened */
-  }
-  return `${where} did not answer: ${safe}`;
+  return `${dbLabel(url)} did not answer: ${safe}`;
 }
 
 async function readReport({ authUrl, billingUrl, days }) {

@@ -204,13 +204,15 @@ is entitled to.
 
 ### What the code does
 
-Two commands, both with three exit statuses, and both written so that a
-monitor can be pointed at them:
+Four commands, written so that a monitor can be pointed at them; three
+carry three exit statuses, and the fourth refuses to judge:
 
 | Command | Asks | `0` | `1` | `2` |
 |---|---|---|---|---|
 | `npm run healthcheck` | the gateway's `/health/deep` | healthy | the edge says something is wrong | the check could not ask |
 | `npm run synthetic` | the journey a learner walks | the journey answered | the platform said something is wrong | the check could not ask |
+| `npm run alerts` | disk, database connections, queue depth | every check it could ask is under threshold | a breach | nothing at all could be checked |
+| `npm run metrics` | what the platform records — and what it cannot | the numbers were printed | — it reports, it does not judge | the report could not be produced |
 
 The two-value split between `1` and `2` is the point: "the platform says it is
 degraded" and "I cannot ask the platform" wake different people, and a monitor
@@ -257,14 +259,21 @@ sees the quota refuse it.
 
 ### What is missing
 
-- Nothing pages. The commands exist; a monitor is not wired to them. Until
-  it is, the whole of production visibility is a cron entry nobody has
-  installed.
-- **No dashboards.** Signup → first run, completions, execution failures by
-  language, sync errors: none of it is collected into anything anybody looks
-  at.
-- **No structured log sink with a retention policy.** `docker logs` and the
-  two commands are the whole of it.
+- Nothing pages *yet*. The monitor above exists and is wired to both
+  checks; its cron line is written down here and in the GCP runbook, and
+  nobody has installed it. Until that line runs on something that reads
+  its mail, production visibility is a cron entry on nobody's list.
+- **No dashboards.** The data layer now prints what exists —
+  `npm run metrics`: signups, live sessions, the signup→first-attested-
+  evidence funnel, subscriptions — and names the three numbers nothing
+  records (a first *local* run, execution failures by language, sync
+  errors) as gaps instead of zeros. Nothing renders it and nothing
+  archives it: the dashboard is still unwritten, and the plan's 30 days
+  are days of *logs*, not of numbers.
+- **No structured log sink on compose.** `docker logs` and these four
+  commands are the whole of it there. The GCP plan sends stdout and
+  stderr to Cloud Logging with 30 days of retention — a sink with a
+  policy — so this gap is compose's, and the plan closes it.
 - **No alert on the thing that actually matters:** the attestation path going
   unavailable. A deployment whose execution service has lost its key answers
   `attestation_unavailable` and the labs stay *practiced* rather than failing —
@@ -344,12 +353,16 @@ them down is that "we have backups" is not one of them.
 - It does not claim the retention schedule is enforced.
   `company/legal/RETENTION-DELETION.md` says so itself, and that document is
   the authority, not this one.
-- It does not describe a Google Cloud deployment. The platform's deployment
-  decision is one host plus `docker compose`
-  ([DEPLOYMENT.md](DEPLOYMENT.md)), and this document is written to hold for
-  that shape first — a single host is where the in-memory limits, the single
-  Postgres and the in-process queue are all *correct* rather than all
-  *broken at once*. Moving to a managed platform does not remove the
-  obligations in this document; it moves the backups and the autoscaling
-  settings into a different vendor's console, and it makes the shared-store
-  work in §1 unavoidable rather than optional.
+- It does not describe a Google Cloud deployment step by step — that is
+  [infra/gcp/README.md](../infra/gcp/README.md)'s job, written after
+  this document. The deployment *decision* is now that plan, with one
+  host plus `docker compose` as the fallback
+  ([DEPLOYMENT.md](DEPLOYMENT.md)), and this document is written to
+  hold for both shapes — a single host is where the in-memory limits,
+  the single Postgres and the in-process queue are all *correct* rather
+  than all *broken at once*, which is exactly why the plan pins
+  `execution` to a minimum of one instance and blocks the gateway's
+  second on a shared store. Moving to a managed platform does not remove
+  the obligations in this document; it moves the backups and the
+  autoscaling settings into a different vendor's console, and it makes
+  the shared-store work in §1 unavoidable rather than optional.

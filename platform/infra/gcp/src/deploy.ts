@@ -140,6 +140,91 @@ export function budgetCommand(plan: IPlan): ICommand {
 	};
 }
 
+/**
+ * The load balancer in front of the gateway.
+ *
+ * A Serverless NEG points at the Cloud Run service, an external HTTPS load
+ * balancer terminates TLS for the domain and routes to it, and a
+ * Google-managed certificate is the certificate. Nothing else is published:
+ * the four internal services have `internal` ingress, so they are reachable
+ * only by other Cloud Run services and by this balancer.
+ */
+export function loadBalancerCommands(plan: IPlan): ICommand[] {
+	const lb = plan.loadBalancer;
+	return [
+		{
+			label: `create the serverless NEG for ${lb.service}`,
+			args: [
+				'compute', 'network-endpoint-groups', 'create', `${lb.name}-neg`,
+				'--network-endpoint-type', 'serverless',
+				'--cloud-run-service', lb.service,
+				'--region', plan.region,
+				'--project', plan.project,
+			],
+		},
+		{
+			label: `create the backend service for ${lb.name}`,
+			args: [
+				'compute', 'backend-services', 'create', `${lb.name}-backend`,
+				'--global',
+				'--load-balancing-scheme', 'EXTERNAL_MANAGED',
+				'--protocol', 'HTTPS',
+				'--backend-config', `id=${lb.name}-neg`,
+				'--project', plan.project,
+			],
+		},
+		{
+			label: `create the certificate for ${lb.domain}`,
+			args: [
+				'compute', 'ssl-certificates', 'create', lb.certificate,
+				'--domains', lb.domain,
+				'--global',
+				'--project', plan.project,
+			],
+		},
+		{
+			label: `create the URL map for ${lb.domain}`,
+			args: [
+				'compute', 'url-maps', 'create', `${lb.name}-map`,
+				'--default-service', `${lb.name}-backend`,
+				'--global',
+				'--project', plan.project,
+			],
+		},
+		{
+			label: `create the target proxy for ${lb.domain}`,
+			args: [
+				'compute', 'target-https-proxies', 'create', `${lb.name}-proxy`,
+				'--url-map', `${lb.name}-map`,
+				'--ssl-certificates', lb.certificate,
+				'--global',
+				'--project', plan.project,
+			],
+		},
+		{
+			label: `create the forwarding rule for ${lb.domain}`,
+			args: [
+				'compute', 'forwarding-rules', 'create', `${lb.name}-rule`,
+				'--global',
+				'--target-https-proxy', `${lb.name}-proxy`,
+				'--ports', '443',
+				'--address', `${lb.name}-address`,
+				'--project', plan.project,
+			],
+		},
+		{
+			label: `reserve the address for ${lb.domain}`,
+			args: [
+				'compute', 'addresses', 'create', `${lb.name}-address`,
+				'--global',
+				'--ip-version', 'IPV4',
+				'--network-tier', 'PREMIUM',
+				'--project', plan.project,
+			],
+		},
+	];
+}
+
 /** The gcloud command that creates the Cloud SQL instance and its databases. */
 export function databaseCommands(plan: IPlan): ICommand[] {
 	const commands: ICommand[] = [
@@ -243,9 +328,30 @@ function main(): void {
 			...databaseCommands(plan),
 			...backupCommands(plan),
 			budgetCommand(plan),
+			...loadBalancerCommands(plan),
 			...plan.secrets.map(s => secretCommand(s.name, project)),
 		]) {
 			console.log(`gcloud ${command.args.join(' ')}`);
+		}
+		/* The services, in the same two passes the apply path uses. Without
+		 * them the printed plan showed the scaffolding and not the platform:
+		 * a database, a load balancer, a certificate, and no service to serve
+		 * anything. The URLs of the services that depend on others are
+		 * placeholders here, because a Cloud Run URL does not exist until the
+		 * service does; the apply path reads them back and fills them in. */
+		const independents = plan.services.filter(s => s.dependsOn.length === 0).sort((a, b) => a.order - b.order);
+		for (const planned of independents) {
+			console.log(`\n— ${planned.name}`);
+			for (const command of deployCommands(planned, image, region, project)) {
+				console.log(`  gcloud ${command.args.join(' ')}`);
+			}
+		}
+		const dependents = plan.services.filter(s => s.dependsOn.length > 0).sort((a, b) => a.order - b.order);
+		for (const planned of dependents) {
+			console.log(`\n— ${planned.name}`);
+			for (const command of deployCommands(planned, image, region, project)) {
+				console.log(`  gcloud ${command.args.join(' ')}`);
+			}
 		}
 		return;
 	}
@@ -254,8 +360,6 @@ function main(): void {
 		console.log('Nothing to do: pass --print to see the commands, --check to only validate, or --apply to deploy.');
 		return;
 	}
-
-	console.log(`\ndeploying to ${project} (${region})…\n`);
 
 	// The database first, with its backups on: a service that boots against a
 	// database that is not there yet fails to start, and a database with no
@@ -300,8 +404,30 @@ function main(): void {
 		}
 		peerUrls[planned.service] = serviceUrl(planned.name, region, project);
 	}
+
+	// The load balancer comes last: the services have to exist before the NEG
+	// can point at one of them, and the certificate has to exist before the
+	// proxy that uses it.
+	for (const command of loadBalancerCommands(plan)) {
+		console.log(`gcloud ${command.args.join(' ')}`);
+		execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+	}
+
+	console.log(`\ndeployed. the public surface is https://${plan.loadBalancer.domain}\n`);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]).endsWith('deploy.ts')) {
+/**
+ * Whether this file is the command being run, rather than a module something
+ * else imported.
+ *
+ * The comparison is against this file's OWN path, exactly. A name-based test
+ * ("does it end with deploy.ts") is true of the SOURCE and false of the
+ * BUILT file, and the built file is the one the pipeline runs — so the
+ * command would quietly do nothing.
+ */
+const isTheCommand =
+	process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isTheCommand) {
 	main();
 }

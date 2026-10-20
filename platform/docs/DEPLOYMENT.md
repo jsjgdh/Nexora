@@ -1,20 +1,63 @@
-# NEXORA production deployment — decided 2026-10-11
+# NEXORA production deployment — decided 2026-10-11, changed 2026-10-20
 
-**Decision: one VPS + `docker compose`.** Not a managed platform.
+**Decision (2026-10-20): the GCP plan — Cloud Run for the five mesh
+services, Vercel for the front door, Cloud SQL for the data — with one
+VPS + `docker compose` kept as the fallback shape.** The runbook that
+executes this decision is [infra/gcp/README.md](../infra/gcp/README.md),
+with `plan.json` as its machine-readable form; this document keeps the
+decision, the rules both shapes share, and the compose path unchanged.
 
-Why, in one paragraph: the stack is already a compose file with
-production-shaped properties (per-service healthchecks, `restart:
-unless-stopped`, memory/CPU caps, Postgres unpublished, one gateway
-everything flows through). A managed platform would re-platform the thing
-that makes this product what it is — the sandbox that runs learner code
-and signs what it observed, so a completion can be re-judged instead of
-trusted — plus five databases, for scale we do not have. One host we
-control keeps the isolation story inspectable and the bill legible.
-Revisit when one host stops being enough (sustained CPU saturation on
-`execution`, or Postgres past comfortable single-volume size); that
-revisit is a capacity decision with numbers, not a fashion one.
+Why it changed, in one paragraph: the 2026-10-11 decision below was
+answered rather than overruled. Its first concern — a managed platform
+would re-platform the thing that makes this product what it is, the
+sandbox that runs learner code and signs what it observed — was met
+afterwards by a plan that keeps the container model (one image, five
+Cloud Run services, the runner intact wherever a Docker daemon exists)
+and states its own gap plainly: no daemon there, so hosted `/execute`
+runs work on the compose path until `runners/` exists in the execution
+service. Its second concern — five managed services for scale nobody
+has — still holds, and the bill is OPERATIONS.md §5. What changed is
+who carries the machine: two people shipping a product should not also
+carry kernel patches, TLS renewals, disk failure and intrusion noise,
+and a managed plane is exactly the trade of money for attention. The
+old revisit rule survives in spirit — capacity moves are decided with
+numbers, and the scaling table in the runbook *is* those numbers. And
+neither shape has ever been rehearsed: the first deploy is still a
+drill, rollback included, whichever shape runs it.
+
+The 2026-10-11 decision, kept for the record:
+
+> **Decision: one VPS + `docker compose`.** Not a managed platform.
+>
+> Why, in one paragraph: the stack is already a compose file with
+> production-shaped properties (per-service healthchecks, `restart:
+> unless-stopped`, memory/CPU caps, Postgres unpublished, one gateway
+> everything flows through). A managed platform would re-platform the
+> thing that makes this product what it is — the sandbox that runs
+> learner code and signs what it observed, so a completion can be
+> re-judged instead of trusted — plus five databases, for scale we do
+> not have. One host we control keeps the isolation story inspectable
+> and the bill legible. Revisit when one host stops being enough
+> (sustained CPU saturation on `execution`, or Postgres past comfortable
+> single-volume size); that revisit is a capacity decision with numbers,
+> not a fashion one.
 
 ## What production is
+
+**On the GCP plan:** five Cloud Run services from one image (the gateway
+the only public ingress; the other four internal, reachable only across
+the mesh), one HTTPS load balancer on `api.nexora.dev`, Cloud SQL
+without a public IP — authdb and billingdb, automated 03:00 backups
+with point-in-time recovery and deletion protection — and Vercel in
+front of the SvelteKit site. The order of operations, the scaling
+table, the secrets table and the post-deploy verification live in
+[infra/gcp/README.md](../infra/gcp/README.md); `plan.json` is that
+shape as data, and `plan-check` refuses it drifting from this tree.
+
+**On the compose path (the fallback):** the shape everything in this
+repository was first built and tested against, still building with no
+flags (the frontend's adapter is chosen by the environment), and what
+the bullets below describe.
 
 - The `platform/docker-compose.yml` stack, unchanged in shape: postgres,
   auth, curriculum, execution, billing, gateway, frontend.
@@ -44,7 +87,7 @@ revisit is a capacity decision with numbers, not a fashion one.
   token in an `HttpOnly` cookie. Get it wrong and sign-in alone fails, with
   "the sign-in service did not answer", while every other page looks healthy.
 
-## Deploy procedure (zero-downtime-ish)
+## Deploy procedure — compose (the fallback; the GCP runbook's order of operations is [infra/gcp/README.md](../infra/gcp/README.md))
 
 1. Build: `docker compose build` — including `SERVICE=execution`, so the
    Go toolchain and prewarmed std cache ship **in the deployed image**.
@@ -83,7 +126,19 @@ no value of `NODE_ENV` can open the mesh, and a compose file that forgets
 the key line fails loudly instead of coming up unauthenticated. An environment that has ever run with a placeholder value must
 rotate both; they cannot be un-leaked.
 
+On the GCP plan these are Secret Manager entries created by the deploy
+(`nexora-internal-api-key`, `nexora-auth-jwt-secret`,
+`nexora-db-password`, the receipt key, and the provider keys — the
+runbook's secrets table), and the rules above travel with them: nothing
+secret in an image, an image tag, the plan file (`plan-check` refuses
+one written there) or a log — and placeholders still refused at boot,
+because that check lives in the code and runs in every environment.
+
 ## Pricing
+
+(The *product's* prices are below; the *infrastructure's* bill — Cloud
+Run + Cloud SQL + Vercel against the one-VPS alternative — is
+OPERATIONS.md §5.)
 
 One plan, one number, printed by the front door: **Pro at $29 a month, or $290 a
 year** (`nexora-svelte/src/lib/content/site.ts`, `PRICING`). The platform's own
@@ -105,15 +160,24 @@ and is deliberately absent from `BILLING_PLANS_JSON`.
 
 ## Honestly not done yet (see TODO.md Phase 5)
 
-- No live rehearsal: this procedure has not been run against a real host,
+- No live rehearsal: neither shape has been run against a real project,
   including the rollback step. The first deploy is a drill with the team
   present, not a launch.
-- No automated backups and no restore drill (5.3) — required before any
-  learner data the team cannot afford to lose exists.
-- No observability: structured logs, error reporting, health dashboards
-  and alerts (5.2) do not exist; the first deploy flies on `docker logs`
-  and the health endpoints. The gateway's `/health/deep` is the one that
-  carries state worth alerting on. Its `status` goes `degraded` when a mesh
+- Backups exist as commands and have never been proven against the
+  engine (5.3): `npm run backup` dumps every table with a manifest and
+  `npm run drill` restores them into a scratch schema (a silently lost
+  row fails it), and the GCP plan configures automated 03:00 backups
+  with point-in-time recovery — but the engine-level drill (restore the
+  latest backup into a NEW instance, run `npm run drill -- --url=…`
+  against it) is still owed, and is required before any learner data
+  the team cannot afford to lose exists.
+- No dashboards and no paging (5.2): the machinery exists — structured
+  request-id logs across the mesh, fatal error reporting with an optional
+  webhook, and the four commands below (health, synthetic, metrics,
+  alerts) — but nothing yet turns any of them into a page, and no
+  dashboard renders the numbers. The first deploy flies on `docker logs`,
+  these commands, and whatever the operator wires them to. The gateway's
+  `/health/deep` is the one that carries state worth alerting on. Its `status` goes `degraded` when a mesh
   member is down *or* when the auth service has stopped answering the
   per-request revocation check, and its `revocations` block says which and
   how bad: `authService` (`reachable` / `unreachable` / `unknown` — the
@@ -133,10 +197,14 @@ and is deliberately absent from `BILLING_PLANS_JSON`.
 
       * * * * * node /srv/nexora/platform/scripts/healthcheck.mjs --quiet
 
-  What is still missing is anything that would *page* someone. The
-  command has to be wired to a monitor, and there is no alerting system
-  in this stack yet (5.2) — `docker logs` and these commands are the
-  whole of production visibility.
+  What pages someone is `npm run monitor` (OPERATIONS.md §3): it runs
+  both checks and emails on a state change — a fault that begins, and a
+  fault that ends — through Resend. What is still missing is installing
+  that cron, and anything beyond one host's crontab: no on-call
+  rotation, and nothing outside this stack watching it. The GCP plan
+  carries a 60-second uptime check on `/health/live` and budget alerts
+  (`infra/gcp/plan.json`), but those watch reachability and spend, not
+  what these commands judge.
 
   The second command walks what a learner walks. `npm run synthetic`
   (`scripts/synthetic.mjs`) signs in with a canary account, reads its
@@ -166,6 +234,80 @@ and is deliberately absent from `BILLING_PLANS_JSON`.
   wrong length) is dropped for a fresh UUID rather than written out;
   the client-chosen-header spoof path is stripped at the gateway, as
   it always was.
+
+  The third command reports the numbers the dashboards would be made of.
+  `npm run metrics` (`scripts/metrics.mjs`) reads the two databases the
+  platform already has — signups, live sessions, the proofs ledger,
+  subscriptions, and the signup→first-attested-evidence funnel — as
+  prose, or one object with `--json`, and prints the three numbers the
+  platform genuinely cannot count (a first *local* run, execution
+  failures by language, sync errors) as named gaps rather than as
+  zeros. Exit `0` when the numbers were printed and `2` when the report
+  could not be produced (auth database unset or silent); it reports and
+  does not judge, so it has no `1`. A cron that archives one object per
+  run gives the operator a series to read without a TSDB in the stack
+  (`mkdir -p /var/log/nexora` first):
+
+      56 * * * * cd /srv/nexora/platform && node scripts/metrics.mjs --json >> /var/log/nexora/metrics.jsonl
+
+  The fourth command is a judge: `npm run alerts` (`scripts/alerts.mjs`)
+  reads disk (statfs, counted as what a process can actually fill to),
+  Postgres connections in use against `max_connections` on each
+  configured database, and the execution queue depth through the
+  gateway's own `/api/execute/capabilities` using the canary
+  credentials. Exit `1` on a breach, `0` when every check it could ask
+  is under threshold (skips are printed, never dropped), and `2` when
+  nothing at all could be asked — an alarm that is blind must not look
+  like an alarm that is calm. An unset database URL is a skip, because a
+  deployment mid-setup is not a breach; a configured URL that will not
+  answer is a breach, because a dead box does not get to pass its own
+  alarm:
+
+      */10 * * * * cd /srv/nexora/platform && node scripts/alerts.mjs
+
+  Thresholds are flags (`--disk-warn=90`, `--db-warn=90`,
+  `--queue-warn=5`); error-rate alerting is deliberately absent — the
+  platform records no request outcomes to count, so a threshold on
+  errors would be a number invented rather than read (the metrics
+  report names the same gap). Like the healthcheck, `alerts` exits to a
+  mailer or a monitor; the wiring is still the operator's.
+
+  Fatal errors have a channel of their own. Every service writes one
+  structured fatal line (`level` 60, service name, event, error) and
+  exits `1` on an exception or rejection no request owns — and with
+  `FATAL_WEBHOOK_URL` set in the environment, the same report is POSTed
+  as JSON `{service, event, message, stack, at}` to any endpoint that
+  takes JSON. The send is bounded at two seconds and the process dies
+  whether or not it arrives: a report never keeps a crash alive. The web
+  app reports in the same shape (`handleError` in `hooks.server.ts`: one
+  JSON line on stderr with the URL, the message, a bounded stack), and
+  answers the browser with the generic message — the API's own 500
+  posture: detail goes to the log, not to a stranger.
+
+  These commands belong to both shapes — the GCP plan above and the
+  compose fallback — and the GCP plan's three differences are worth
+  reading before 3am rather than during it:
+
+  - **Logs do not live in `docker logs`.** Cloud Run writes stdout and
+    stderr to Cloud Logging, and the plan sets 30 days of retention, so
+    the request-id recipe above becomes
+    `gcloud logging read 'jsonPayload.requestId="<id>"'` from any host
+    with `gcloud`; the web app's `handleError` lines land in Vercel's
+    runtime logs for the front door — a different console from the
+    API's, and the reason the line carries `service: "web"`.
+  - **`healthcheck` and `synthetic` only need the public endpoint:**
+    `npm run healthcheck -- --url=https://api.nexora.dev` (or
+    `HEALTHCHECK_URL=…`), same for synthetic. The monitor's cron runs
+    from any host that has this repository and the environment set —
+    the GCP runbook installs it exactly that way.
+  - **`metrics` and `alerts` read the databases directly, and the
+    plan's Cloud SQL has no public IP.** They must run where the Cloud
+    SQL Auth Proxy reaches Postgres — the plan's sidecars serve the
+    services, so an ops host runs its own proxy. Neither invents a
+    number when the database is out of reach: `alerts` prints
+    `not configured` skips for URLs it was not given (a configured URL
+    that will not answer is a breach), and `metrics` refuses with exit
+    2. A board that cannot read says so; it does not render green.
 - Rate limiting and quotas are in-memory and single-instance (5.4) — true
   on one host by construction, and the reason the one-host decision and
   the Redis move are linked: leaving one host means moving limits to

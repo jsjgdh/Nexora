@@ -696,7 +696,16 @@ class SessionStore {
   }
 
   async plans() {
-    return this.request<{ plans: { slug: string; name: string }[] }>("/api/billing/plans", {
+    /* The plans, and whether the payment provider is configured at all.
+     *
+     * The second half is what the front door needs to say the truth about the
+     * upgrade surface: a learner who meets a checkout button in a build with
+     * no provider configured has been told the product is broken, when the
+     * truth is that the provider is not set up yet. */
+    return this.request<{
+      plans: { slug: string; name: string }[];
+      paymentsConfigured: boolean;
+    }>("/api/billing/plans", {
       token: await this.resolveToken(),
     });
   }
@@ -723,7 +732,16 @@ class SessionStore {
 
   async subscription() {
     return this.request<{
-      subscription: { plan: string | null; status: string | null; entitled: boolean; currentPeriodEnd: string | null };
+      subscription: {
+        plan: string | null;
+        status: string | null;
+        entitled: boolean;
+        currentPeriodEnd: string | null;
+        /** When the access stops, for a subscription that is past due. */
+        graceUntil: string | null;
+        /** The length of the grace window, in days. */
+        graceDays: number;
+      };
     }>("/api/billing/subscription", { token: await this.resolveToken() });
   }
 

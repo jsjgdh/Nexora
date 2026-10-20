@@ -28,6 +28,7 @@
      page says exactly that instead of inventing a price. */
 
   let plans = $state<{ slug: string; name: string }[]>([]);
+  let paymentsConfigured = $state<boolean | null>(null);
   let subscription = $state<{
     plan: string | null;
     status: string | null;
@@ -55,6 +56,7 @@
         .then(([s, p]) => {
           subscription = s.subscription;
           plans = p.plans;
+          paymentsConfigured = p.paymentsConfigured;
         })
         .catch((e) => {
           error = e instanceof Error ? e.message : "Could not load plans.";
@@ -166,6 +168,16 @@
                 The plan is priced and it is not on sale yet. {price} a month, or {annual} a year,
                 opens the other {PRICING.paidPhases} phases inside the editor you already have.
                 Until the checkout opens, everything stays free.
+              </p>
+            {:else if paymentsConfigured === false}
+              <!-- The provider is not configured in this deployment. Saying so is
+                   the honest answer: a checkout button here would send the learner
+                   to a provider that is not there, and the failure would read like a
+                   broken product rather than a setting that has not been made. -->
+              <p class="text-[14px] leading-relaxed text-muted">
+                The payment provider is not configured in this deployment, so the checkout is
+                closed. Nothing is charged, and nothing is asked for. Everything you can learn
+                stays free.
               </p>
             {:else}
               <ul class="grid gap-3">
