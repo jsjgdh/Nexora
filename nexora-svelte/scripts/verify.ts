@@ -1144,13 +1144,19 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
     );
     const freePlan = COPY.PRICING_PLANS.find((plan) => plan.id === "free");
     const proPlan = COPY.PRICING_PLANS.find((plan) => plan.id === "pro");
+    const freeWords = COPY.numberWords(COPY.FREE_PHASE_COUNT);
+    const freeWordsCapital = freeWords
+      ? `${freeWords.charAt(0).toUpperCase()}${freeWords.slice(1)}`
+      : String(COPY.FREE_PHASE_COUNT);
     ok(
       "the free line is the first hour, and it is the free phases and the free checks",
       freePlan !== undefined &&
         freePlan.price === money(COPY.PRICING.free) &&
         freePlan.priceNote === "the first hour" &&
         freePlan.points.some((point) =>
-          point.includes("Nine phases bundled with the IDE, offline, no account")
+          // The count is the shipped one, in words: a catalogue that grows must
+          // not leave the pricing page quoting a number that is out of date.
+          point.includes(`${freeWordsCapital} phases bundled with the IDE, offline, no account`)
         ) &&
         freePlan.points.some((point) => point.includes("Every check and verdict, free forever"))
     );
