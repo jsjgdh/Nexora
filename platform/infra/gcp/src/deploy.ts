@@ -32,14 +32,16 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { fillPlan, planBlockers, readPlan, PLATFORM_ROOT, type IPlan, type IPlannedService } from './plan.js';
+import { imageBlockers, movingImage, resolveImage, runningImage } from './image.js';
+import { iamCommands } from './iam.js';
+import { availableSecrets, secretBlockers, secretValueCommand } from './secrets.js';
+import { rollbackBlockers, rollbackCommands } from './rollback.js';
+import type { ICommand } from './command.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 /** What a single gcloud invocation looks like, as data. */
-export interface ICommand {
-	readonly label: string;
-	readonly args: readonly string[];
-}
+export type { ICommand };
 
 /**
  * The gcloud commands that deploy one service.
@@ -123,14 +125,20 @@ export function backupCommands(plan: IPlan): ICommand[] {
 	];
 }
 
-/** The gcloud command that sets the budget alert. */
-export function budgetCommand(plan: IPlan): ICommand {
+/**
+ * The gcloud command that sets the budget alert.
+ *
+ * The billing account is the operator's: it belongs to a billing account and
+ * not to a project, so it is read from the environment and passed in here.
+ * The plan says which variable carries it.
+ */
+export function budgetCommand(plan: IPlan, billingAccount: string): ICommand {
 	const budget = plan.observability.budget;
 	return {
 		label: `create the budget alert ${budget.displayName}`,
 		args: [
 			'billing', 'budgets', 'create',
-			'--billing-account', 'BILLING_ACCOUNT',
+			'--billing-account', billingAccount,
 			'--budget-amount', String(budget.amount),
 			'--currency', budget.currency,
 			'--display-name', budget.displayName,
@@ -161,6 +169,11 @@ export function loadBalancerCommands(plan: IPlan): ICommand[] {
 				'--region', plan.region,
 				'--project', plan.project,
 			],
+			exists: [
+				'compute', 'network-endpoint-groups', 'describe', `${lb.name}-neg`,
+				'--region', plan.region,
+				'--project', plan.project,
+			],
 		},
 		{
 			label: `create the backend service for ${lb.name}`,
@@ -172,12 +185,22 @@ export function loadBalancerCommands(plan: IPlan): ICommand[] {
 				'--backend-config', `id=${lb.name}-neg`,
 				'--project', plan.project,
 			],
+			exists: [
+				'compute', 'backend-services', 'describe', `${lb.name}-backend`,
+				'--global',
+				'--project', plan.project,
+			],
 		},
 		{
 			label: `create the certificate for ${lb.domain}`,
 			args: [
 				'compute', 'ssl-certificates', 'create', lb.certificate,
 				'--domains', lb.domain,
+				'--global',
+				'--project', plan.project,
+			],
+			exists: [
+				'compute', 'ssl-certificates', 'describe', lb.certificate,
 				'--global',
 				'--project', plan.project,
 			],
@@ -190,6 +213,11 @@ export function loadBalancerCommands(plan: IPlan): ICommand[] {
 				'--global',
 				'--project', plan.project,
 			],
+			exists: [
+				'compute', 'url-maps', 'describe', `${lb.name}-map`,
+				'--global',
+				'--project', plan.project,
+			],
 		},
 		{
 			label: `create the target proxy for ${lb.domain}`,
@@ -197,6 +225,11 @@ export function loadBalancerCommands(plan: IPlan): ICommand[] {
 				'compute', 'target-https-proxies', 'create', `${lb.name}-proxy`,
 				'--url-map', `${lb.name}-map`,
 				'--ssl-certificates', lb.certificate,
+				'--global',
+				'--project', plan.project,
+			],
+			exists: [
+				'compute', 'target-https-proxies', 'describe', `${lb.name}-proxy`,
 				'--global',
 				'--project', plan.project,
 			],
@@ -211,6 +244,11 @@ export function loadBalancerCommands(plan: IPlan): ICommand[] {
 				'--address', `${lb.name}-address`,
 				'--project', plan.project,
 			],
+			exists: [
+				'compute', 'forwarding-rules', 'describe', `${lb.name}-rule`,
+				'--global',
+				'--project', plan.project,
+			],
 		},
 		{
 			label: `reserve the address for ${lb.domain}`,
@@ -219,6 +257,11 @@ export function loadBalancerCommands(plan: IPlan): ICommand[] {
 				'--global',
 				'--ip-version', 'IPV4',
 				'--network-tier', 'PREMIUM',
+				'--project', plan.project,
+			],
+			exists: [
+				'compute', 'addresses', 'describe', `${lb.name}-address`,
+				'--global',
 				'--project', plan.project,
 			],
 		},
@@ -239,6 +282,7 @@ export function databaseCommands(plan: IPlan): ICommand[] {
 				'--project', plan.project,
 				'--no-assign-ip',
 			],
+			exists: ['sql', 'instances', 'describe', plan.database.instance, '--project', plan.project],
 		},
 	];
 	for (const database of plan.database.databases) {
@@ -246,6 +290,11 @@ export function databaseCommands(plan: IPlan): ICommand[] {
 			label: `create the database ${database}`,
 			args: [
 				'sql', 'databases', 'create', database,
+				'--instance', plan.database.instance,
+				'--project', plan.project,
+			],
+			exists: [
+				'sql', 'databases', 'describe', database,
 				'--instance', plan.database.instance,
 				'--project', plan.project,
 			],
@@ -259,6 +308,7 @@ export function secretCommand(name: string, project: string): ICommand {
 	return {
 		label: `create the secret ${name}`,
 		args: ['secrets', 'create', name, '--replication-policy', 'automatic', '--project', project],
+		exists: ['secrets', 'describe', name, '--project', project],
 	};
 }
 
@@ -270,6 +320,10 @@ export function registryCommand(plan: IPlan): ICommand {
 			'artifacts', 'repositories', 'create', plan.artifactRegistry,
 			'--repository-format', 'docker',
 			'--location', plan.region,
+			'--project', plan.project,
+		],
+		exists: [
+			'artifacts', 'repositories', 'describe', plan.artifactRegistry,
 			'--project', plan.project,
 		],
 	};
@@ -300,6 +354,44 @@ export function databaseConnectionName(instance: string, region: string, project
 	return `${project}:${region}:${instance}`;
 }
 
+/**
+ * Run a command that CREATES something, skipping it when it is already there.
+ *
+ * A create that is not checked is a deploy that only works once, and the
+ * second run fails on the first resource that already exists — which reads
+ * as a broken deploy rather than as a repeat of a good one.
+ */
+function applyCreate(command: ICommand): void {
+	if (command.exists) {
+		try {
+			execFileSync('gcloud', [...command.exists, '--format', 'value(name)'], {
+				stdio: ['ignore', 'pipe', 'ignore'],
+			});
+			console.log(`  (already there: ${command.label})`);
+			return;
+		} catch {
+			/* it is not there, so make it */
+		}
+	}
+	console.log(`gcloud ${command.args.join(' ')}`);
+	execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+}
+
+/**
+ * Put a value into a Secret Manager entry.
+ *
+ * The value goes in on stdin. An argument would be visible in the process
+ * list and in the shell history, and a secret that leaks there has leaked.
+ */
+function applySecretValue(name: string, project: string, value: string): void {
+	const command = secretValueCommand(name, project);
+	console.log(`gcloud ${command.args.join(' ')}`);
+	execFileSync('gcloud', [...command.args], {
+		stdio: ['pipe', 'inherit', 'inherit'],
+		input: value,
+	});
+}
+
 function main(): void {
 	const args = process.argv.slice(2);
 	const plan = readPlan();
@@ -318,16 +410,38 @@ function main(): void {
 		return;
 	}
 
-	const image = `${plan.region}-docker.pkg.dev/${plan.project}/${plan.artifactRegistry}/mesh:latest`;
 	const project = plan.project;
 	const region = plan.region;
 
+	// The billing account is the operator's, and it is optional in the sense
+	// that the platform can run without a budget — but not optional in the
+	// sense that its absence goes unmentioned. A deploy that could not create
+	// the budget says so, loudly, because a budget that alerts nobody is the
+	// same as no budget.
+	const billingAccount = (process.env[plan.observability.budget.billingAccountEnv] ?? '').trim();
+
+	// The image, and the problems with it. The problems are computed before
+	// anything is created, so a wrong image costs nothing — but printing the
+	// commands is harmless, and the printed plan is how a person reads what a
+	// deploy WOULD do. So the refusal happens after the print, and the print
+	// says what would stop it.
+	const image = resolveImage(plan);
+	const imageProblems = imageBlockers(plan, image);
+	console.log(`image: ${image}`);
+
 	if (args.includes('--print')) {
+		if (imageProblems.length > 0) {
+			console.log('\nTHESE WOULD STOP THE DEPLOY:');
+			for (const reason of imageProblems) {
+				console.log(`  - ${reason}`);
+			}
+		}
 		for (const command of [
 			registryCommand(plan),
+			...iamCommands(plan),
 			...databaseCommands(plan),
 			...backupCommands(plan),
-			budgetCommand(plan),
+			budgetCommand(plan, billingAccount || 'NO_BILLING_ACCOUNT'),
 			...loadBalancerCommands(plan),
 			...plan.secrets.map(s => secretCommand(s.name, project)),
 		]) {
@@ -341,14 +455,14 @@ function main(): void {
 		 * service does; the apply path reads them back and fills them in. */
 		const independents = plan.services.filter(s => s.dependsOn.length === 0).sort((a, b) => a.order - b.order);
 		for (const planned of independents) {
-			console.log(`\n— ${planned.name}`);
+			console.log(`\\n— ${planned.name}`);
 			for (const command of deployCommands(planned, image, region, project)) {
 				console.log(`  gcloud ${command.args.join(' ')}`);
 			}
 		}
 		const dependents = plan.services.filter(s => s.dependsOn.length > 0).sort((a, b) => a.order - b.order);
 		for (const planned of dependents) {
-			console.log(`\n— ${planned.name}`);
+			console.log(`\\n— ${planned.name}`);
 			for (const command of deployCommands(planned, image, region, project)) {
 				console.log(`  gcloud ${command.args.join(' ')}`);
 			}
@@ -356,17 +470,88 @@ function main(): void {
 		return;
 	}
 
-	if (!args.includes('--apply')) {
-		console.log('Nothing to do: pass --print to see the commands, --check to only validate, or --apply to deploy.');
+	// The rollback, before anything is changed. The address of the image that
+	// is running right now is read from the API, because a remembered image
+	// is a guess and a rollback made from a guess is a second outage.
+	if (args.includes('--rollback')) {
+		const wanted = args.find(a => a.startsWith('--image='))?.slice('--image='.length);
+		const previous = wanted ?? runningImage(plan);
+		const rollbackProblems = rollbackBlockers(plan, previous);
+		if (rollbackProblems.length > 0) {
+			console.error('REFUSING TO ROLL BACK: there is nothing to roll back to.');
+			for (const reason of rollbackProblems) {
+				console.error(`  - ${reason}`);
+			}
+			process.exit(1);
+		}
+		console.log(`rolling every service back to ${previous}`);
+		for (const command of rollbackCommands(plan, previous)) {
+			console.log(`gcloud ${command.args.join(' ')}`);
+			execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+		}
+		console.log('\\nrolled back.');
 		return;
+	}
+
+	if (!args.includes('--apply')) {
+		console.log('Nothing to do: pass --print to see the commands, --check to only validate, --apply to deploy, --rollback to put the platform back on the previous image.');
+		return;
+	}
+
+	// The refusal, now that printing is done with.
+	if (imageProblems.length > 0) {
+		console.error('REFUSING TO DEPLOY: the image cannot be deployed.');
+		for (const reason of imageProblems) {
+			console.error(`  - ${reason}`);
+		}
+		process.exit(1);
+	}
+
+	// The registry first: the image has to be pullable before anything that
+	// runs it is created.
+	applyCreate(registryCommand(plan));
+
+	// The accounts, before the services: a service deployed with an account
+	// that does not exist yet comes up with no identity at all.
+	for (const command of iamCommands(plan)) {
+		if (command.exists) {
+			applyCreate(command);
+		} else {
+			console.log(`gcloud ${command.args.join(' ')}`);
+			execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+		}
 	}
 
 	// The database first, with its backups on: a service that boots against a
 	// database that is not there yet fails to start, and a database with no
 	// backups is the whole of the product's evidence on one disk.
 	for (const command of [...databaseCommands(plan), ...backupCommands(plan)]) {
-		console.log(`gcloud ${command.args.join(' ')}`);
-		execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+		if (command.exists) {
+			applyCreate(command);
+		} else {
+			console.log(`gcloud ${command.args.join(' ')}`);
+			execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+		}
+	}
+
+	// The secrets, and then their values. A secret is created, then a VERSION
+	// is added, and only then can a service mount it: mounting a secret with
+	// no version points the service at nothing, and it fails to start with a
+	// message about the secret rather than about the missing version.
+	const values = availableSecrets(plan, process.env as Record<string, string | undefined>);
+	const missing = secretBlockers(plan, process.env as Record<string, string | undefined>);
+	if (missing.length > 0) {
+		console.error('REFUSING TO DEPLOY: a secret has no value.');
+		for (const reason of missing) {
+			console.error(`  - ${reason}`);
+		}
+		process.exit(1);
+	}
+	for (const secret of plan.secrets) {
+		applyCreate(secretCommand(secret.name, project));
+	}
+	for (const secret of values) {
+		applySecretValue(secret.name, project, secret.value);
 	}
 
 	// Pass one: the services that depend on nobody. They are the ones whose
@@ -409,11 +594,23 @@ function main(): void {
 	// can point at one of them, and the certificate has to exist before the
 	// proxy that uses it.
 	for (const command of loadBalancerCommands(plan)) {
-		console.log(`gcloud ${command.args.join(' ')}`);
-		execFileSync('gcloud', [...command.args], { stdio: 'inherit' });
+		applyCreate(command);
 	}
 
-	console.log(`\ndeployed. the public surface is https://${plan.loadBalancer.domain}\n`);
+	// The bill is watched. It is the last thing, because it needs a billing
+	// account and the account is not something a project can create for
+	// itself. If the account is not in the environment the budget is NOT
+	// created, and the run says so in terms nobody can miss.
+	if (billingAccount) {
+		applyCreate(budgetCommand(plan, billingAccount));
+	} else {
+		console.log(
+			`\nTHE BUDGET WAS NOT CREATED: ${plan.observability.budget.billingAccountEnv} is not set.\n` +
+				`The platform is up, but nothing alerts before the money is spent.\n`
+		);
+	}
+
+	console.log(`\\ndeployed. the public surface is https://${plan.loadBalancer.domain}\\n`);
 }
 
 /**

@@ -16,8 +16,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-goroutines-learn",
-        "go-goroutines-ask",
         "go-goroutines-do",
+        "go-goroutines-ask",
         "go-goroutines-review"
       ],
       "interviewQuestions": [
@@ -36,8 +36,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-sync-learn",
-        "go-sync-ask",
         "go-sync-do",
+        "go-sync-ask",
         "go-sync-review"
       ],
       "interviewQuestions": [
@@ -56,8 +56,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-context-learn",
-        "go-context-ask",
         "go-context-do",
+        "go-context-ask",
         "go-context-review"
       ],
       "interviewQuestions": [
@@ -76,8 +76,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-concur-learn",
-        "go-concur-ask",
         "go-concur-do",
+        "go-concur-ask",
         "go-concur-review"
       ],
       "interviewQuestions": [
@@ -96,8 +96,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-json-learn",
-        "go-json-ask",
         "go-json-do",
+        "go-json-ask",
         "go-json-review"
       ],
       "interviewQuestions": [
@@ -115,8 +115,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-http-learn",
-        "go-http-ask",
         "go-http-do",
+        "go-http-ask",
         "go-http-review"
       ],
       "interviewQuestions": [
@@ -135,8 +135,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-routes-learn",
-        "go-routes-ask",
         "go-routes-do",
+        "go-routes-ask",
         "go-routes-review"
       ],
       "interviewQuestions": [
@@ -155,8 +155,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-auth-learn",
-        "go-auth-ask",
         "go-auth-do",
+        "go-auth-ask",
         "go-auth-review"
       ],
       "interviewQuestions": [
@@ -174,8 +174,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-tests-learn",
-        "go-tests-ask",
         "go-tests-do",
+        "go-tests-ask",
         "go-tests-review"
       ],
       "interviewQuestions": [
@@ -194,8 +194,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-perf-learn",
-        "go-perf-ask",
         "go-perf-do",
+        "go-perf-ask",
         "go-perf-review"
       ],
       "interviewQuestions": [
@@ -214,8 +214,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-store-learn",
-        "go-store-ask",
         "go-store-do",
+        "go-store-ask",
         "go-store-review"
       ],
       "interviewQuestions": [
@@ -233,8 +233,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-persist",
       "activities": [
         "go-db-learn",
-        "go-db-ask",
         "go-db-do",
+        "go-db-ask",
         "go-db-review"
       ],
       "interviewQuestions": [
@@ -252,8 +252,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-persist",
       "activities": [
         "go-cache-learn",
-        "go-cache-ask",
         "go-cache-do",
+        "go-cache-ask",
         "go-cache-review"
       ],
       "interviewQuestions": [
@@ -271,8 +271,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-ops-learn",
-        "go-ops-ask",
         "go-ops-do",
+        "go-ops-ask",
         "go-ops-review"
       ],
       "interviewQuestions": [
@@ -290,8 +290,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-logging-learn",
-        "go-logging-ask",
         "go-logging-do",
+        "go-logging-ask",
         "go-logging-review"
       ],
       "interviewQuestions": [
@@ -309,8 +309,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-deps-learn",
-        "go-deps-ask",
         "go-deps-do",
+        "go-deps-ask",
         "go-deps-review"
       ],
       "interviewQuestions": [
@@ -328,8 +328,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-resilience-learn",
-        "go-resilience-ask",
         "go-resilience-do",
+        "go-resilience-ask",
         "go-resilience-review"
       ],
       "interviewQuestions": [
@@ -453,12 +453,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "chan.go is where this phase works. It is one of the ledger's own library files, so its package clause says `package ledger`. The project's program is cmd/ledger: a package main whose func main starts the server.",
+          "code": "// FanSum starts n goroutines, each sending its index on an unbuffered channel,\n// receives all n values, and returns their sum.\nfunc FanSum(n int) int {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/chan.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In chan.go, make FanSum start n goroutines that each send their index on a channel, receive all n values, and return their sum. If go is missing from your PATH, run the environment check first."
         }
       ],
       "hints": [
-        "FanSum must launch n goroutines with the go keyword, not add the numbers in the loop that starts them.",
+        "FanSum must launch n goroutines with the go keyword, not add the numbers in the loop that starts them. If go is command not found, run the environment check first.",
         "A send on an unbuffered channel blocks until someone receives, so a loop that reads n values needs no WaitGroup."
       ],
       "misconceptions": [
@@ -514,7 +524,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-goroutines-ask",
       "title": "Reason: why the handoff is safe",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-goroutines"
@@ -582,7 +592,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "The file to change is chan.go, which owns FanSum: launch each worker with go, passing its own index so every send carries a distinct value.",
+        "The file to change is chan.go, which owns FanSum: launch each worker with go, passing its own index so every send carries a distinct value. Run go test ./... and read the name of the test that failed.",
         "Use make(chan int), unbuffered, so a send blocks until you receive it.",
         "After starting the goroutines, loop n times doing sum += <-ch.",
         "The sum of 0 through n-1 is n*(n-1)/2, so FanSum(5) is 10 and FanSum(4) is 6.",
@@ -646,7 +656,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-sync"
       ],
       "hints": [
-        "Bump adds m to one shared count from n goroutines; without a lock two increments can read the same value and one is lost.",
+        "Bump adds m to one shared count from n goroutines; without a lock two increments can read the same value and one is lost. If go is command not found, run the environment check first.",
         "You must wait for all goroutines with a WaitGroup before reading the count, or you read it too early. If the suite cannot run because `node` is command not found, run the environment check first."
       ],
       "misconceptions": [
@@ -700,6 +710,16 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "counter.go is where this phase works.",
+          "code": "// Bump starts n goroutines, each adding m to a shared count, waits for them all,\n// and returns the total. Guard the shared count so no update is lost, and only read\n// it once every goroutine has finished.\nfunc Bump(n, m int) int {\n\treturn -1\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/counter.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In counter.go, make Bump run n goroutines that each add m to a shared count. Guard each update with a Mutex, wait with a WaitGroup, then return the total."
         }
@@ -736,7 +756,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-sync-ask",
       "title": "Reason: what makes the count short",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-sync"
@@ -773,7 +793,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-sync"
       ],
       "hints": [
-        "The file to change is counter.go, which owns Bump: declare a sync.Mutex, a shared count, and a sync.WaitGroup inside it.",
+        "The file to change is counter.go, which owns Bump: declare a sync.Mutex, a shared count, and a sync.WaitGroup inside it. Run go test ./... and read the name of the test that failed.",
         "Before each go call wg.Add(1); inside the goroutine defer wg.Done().",
         "Wrap the increment: mu.Lock(); count++; mu.Unlock() — the mutex keeps every bump.",
         "Call wg.Wait() after starting all n goroutines and before you return count.",
@@ -897,12 +917,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "ctxwork.go is where this phase works.",
+          "code": "// WaitCtx waits for d, but returns early with the context's error if ctx is\n// cancelled or its deadline passes first. It returns nil when d elapses first.\nfunc WaitCtx(ctx context.Context, d time.Duration) error {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/ctxwork.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In ctxwork.go, implement WaitCtx(ctx, d): return nil after waiting d, but if ctx is cancelled or its deadline passes first, return early with ctx.Err."
         }
       ],
       "hints": [
-        "A cancelled or timed-out context closes its Done channel, so select on <-ctx.Done() against <-time.After(d).",
+        "A cancelled or timed-out context closes its Done channel, so select on <-ctx.Done() against <-time.After(d). If go is command not found, run the environment check first.",
         "Return ctx.Err() when Done wins and nil when the timer wins; the deadline case needs the real DeadlineExceeded error."
       ],
       "misconceptions": [
@@ -914,7 +944,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-context-ask",
       "title": "Reason: which branch wins",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-context"
@@ -982,7 +1012,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "The file to change is ctxwork.go, which owns WaitCtx: it needs one blocking choice between the caller giving up and its own timer running out.",
+        "The file to change is ctxwork.go, which owns WaitCtx: it needs one blocking choice between the caller giving up and its own timer running out. Run go test ./... and read the name of the test that failed.",
         "When <-ctx.Done() is ready, return ctx.Err() so the caller can tell cancel from timeout.",
         "When <-time.After(d) is ready, the wait finished on schedule: return nil.",
         "A pre-cancelled context makes Done fire immediately, so WaitCtx returns an error without waiting the full 50 ms.",
@@ -1081,12 +1111,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "pool.go is where this phase works.",
+          "code": "// SumPool spreads nums across `workers` goroutines that pull from a shared jobs\n// channel, then fans their partial sums back in and returns the total.\nfunc SumPool(nums []int, workers int) int {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/pool.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In pool.go, implement SumPool(nums, workers): start workers goroutines reading a shared jobs channel, queue every element, close jobs, and sum the partial results back in to return the total."
         }
       ],
       "hints": [
-        "Start workers goroutines that each range a jobs channel into a local partial, then send that partial on a results channel.",
+        "Start workers goroutines that each range a jobs channel into a local partial, then send that partial on a results channel. If go is command not found, run the environment check first.",
         "Send every element on jobs, close it, wait for all workers, close results, then sum results. If the suite cannot run because node is command not found, run the environment check first."
       ],
       "misconceptions": [
@@ -1158,7 +1198,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-concur-ask",
       "title": "Reason: why the total never moves",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-concur"
@@ -1226,7 +1266,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "The file to change is pool.go, which owns SumPool: one shared jobs channel fans out to the workers, and their partials fan back in for one total.",
+        "The file to change is pool.go, which owns SumPool: one shared jobs channel fans out to the workers, and their partials fan back in for one total. Run go test ./... and read the name of the test that failed.",
         "Every worker ranges over jobs, adding each value to its partial, and sends that partial on results once jobs closes.",
         "Feed the jobs channel from nums, then close(jobs) so the workers finish their ranges.",
         "Use a WaitGroup to know when all workers have sent, then close(results) from a goroutine that waits.",
@@ -1339,12 +1379,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "codec.go is where this phase works.",
+          "code": "// Encode renders a task as JSON.\nfunc Encode(t Task) string {\n\treturn \"\"\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/codec.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Open codec.go. Before you change anything, write in a comment the exact bytes Encode(Task{Title: \"Milk\", Cents: 199}) must produce, then implement Encode and Decode so the comment is true."
         }
       ],
       "hints": [
-        "Read a tag as a promise to the other side: whatever is in the quotes is the key, letter for letter.",
+        "Read a tag as a promise to the other side: whatever is in the quotes is the key, letter for letter. If go is command not found, run the environment check first.",
         "encoding/json does the work; your functions decide the contract around it."
       ],
       "misconceptions": [
@@ -1357,7 +1407,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-json-ask",
       "title": "Reason: whose names travel",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-json"
@@ -1430,7 +1480,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Open codec.go. encoding/json already knows the shape; your job is the two one-line calls plus the contract around them.",
+        "Open codec.go. encoding/json already knows the shape; your job is the two one-line calls plus the contract around them. Run go test ./... and read the name of the test that failed.",
         "Encode is Marshal-then-string. The tags on Task do the naming, so there is nothing to format by hand.",
         "Decode is Unmarshal-into-a-Task. On error, return Task{} and the error together — that pairing is the whole contract.",
         "Run go test and read the failing test name first: keys, then round trip, then the malformed edge.",
@@ -1545,12 +1595,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "httpapi.go is where this phase works.",
+          "code": "// TaskHandler returns the ledger's task API as an http.Handler:\n//\n//\tGET  /tasks   -> 200 with a non-empty JSON array of tasks\n//\tPOST /tasks   -> 201 when the JSON body carries a non-empty \"title\", else 400\n//\tanything else -> 404\n//\n// A JSON response declares Content-Type: application/json.\nfunc TaskHandler() http.Handler {\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tw.WriteHeader(http.StatusNotImplemented)\n\t})\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/httpapi.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In httpapi.go, implement TaskHandler() http.Handler: serve GET /tasks as a non-empty JSON array with the right content type, accept POST /tasks with a non-empty \"title\" as 201 and refuse it as 400 otherwise, and let the mux return 404 for any other path."
         }
       ],
       "hints": [
-        "A handler reads the request, decides the status, then writes headers and a body to the ResponseWriter — in that order.",
+        "A handler reads the request, decides the status, then writes headers and a body to the ResponseWriter — in that order. If go is command not found, run the environment check first.",
         "Register each path on an http.ServeMux and return the mux from your handler function; the mux writes 404 for paths you never added."
       ],
       "misconceptions": [
@@ -1593,7 +1653,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-http-ask",
       "title": "Reason: refuse before you store",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-http"
@@ -1661,7 +1721,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "The file to change is httpapi.go, which owns TaskHandler: hand back a mux with the tasks route on it, and answer each request with the status it earns.",
+        "The file to change is httpapi.go, which owns TaskHandler: hand back a mux with the tasks route on it, and answer each request with the status it earns. Run go test ./... and read the name of the test that failed.",
         "On GET /tasks set the Content-Type header to application/json, WriteHeader 200, then json.NewEncoder(w).Encode a non-empty slice of tasks.",
         "On POST /tasks json-decode the body into a map and read the \"title\" key as a string.",
         "If decoding fails or the title is empty, WriteHeader 400 and return before storing; otherwise WriteHeader 201.",
@@ -1731,7 +1791,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-routes"
       ],
       "hints": [
-        "Register method-and-path patterns like “GET /tasks/{id}” on one http.ServeMux and read the id with r.PathValue; the mux itself answers 405 for a verb you never registered.",
+        "Register method-and-path patterns like “GET /tasks/{id}” on one http.ServeMux and read the id with r.PathValue; the mux itself answers 405 for a verb you never registered. If go is command not found, run the environment check first.",
         "Parse ?limit= with r.URL.Query().Get(“limit”) and strconv.Atoi, clamp it to len(tasks), and slice the list before you encode it."
       ],
       "misconceptions": [
@@ -1762,6 +1822,16 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "routes.go is where this phase works.",
+          "code": "// Routes returns the ledger task API using Go 1.22 method-and-path routing:\n//\n//\tGET  /tasks        -> 200, a JSON array; ?limit=<n> trims it to at most n tasks\n//\tGET  /tasks/{id}   -> 200 the one task whose id matches, or 404 when none does"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/routes.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In routes.go, implement Routes() http.Handler: GET /tasks/{id} returns the matching task as JSON or 404 when no task carries that id, GET /tasks honours a ?limit= by returning at most that many tasks, and let the ServeMux answer 405 for a method you never registered."
         }
@@ -1771,7 +1841,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-routes-ask",
       "title": "Reason: the status that names the real mistake",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-routes"
@@ -1808,7 +1878,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-routes"
       ],
       "hints": [
-        "The file to change is routes.go, which owns Routes: one mux with a pattern per method and path, and the suite drives it with real requests.",
+        "The file to change is routes.go, which owns Routes: one mux with a pattern per method and path, and the suite drives it with real requests. Run go test ./... and read the name of the test that failed.",
         "In the /tasks/{id} handler read the segment with r.PathValue(“id”), find the task whose id matches and encode it as JSON, or WriteHeader 404 if none does.",
         "For the list, read the query with r.URL.Query().Get(“limit”) and parse it with strconv.Atoi, treating a missing or unparsable value as “no limit”.",
         "Clamp the limit so you never slice past len(tasks), then json-encode that trimmed slice with Content-Type application/json.",
@@ -1936,12 +2006,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "auth.go is where this phase works.",
+          "code": "// Vendored bcrypt, blank until Hash names it: the course vendors this module\n// so builds stay offline, and your implementation will call it by name —\n// deleting the underscore below is the first edit. Until then the import\n// only keeps the vendored copy shipping.\nimport _ \"golang.org/x/crypto/bcrypt\"\n\n// The two ways a token can be refused. They are distinct on purpose: an\n// expired token was once honest (re-login fixes it), a tampered one never\n// was. Handlers — and the suite — tell them apart with errors.Is.\nvar ErrTokenExpired = errors.New(\"auth: token expired\")\nvar ErrTokenInvalid = errors.New(\"auth: token invalid\")\n\n// Hash turns a password into something storable: a salted bcrypt hash, never\n// the password itself. The cost is the work factor — higher costs slower\n// attackers and slower logins alike.\nfunc Hash(password string) (string, error) {\n\treturn \"\", nil\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/auth.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Open auth.go. Before you change anything, write in a comment what Hash must return for a password and what it must never return, and what Verify must check before it reads the subject. Then implement it — deleting the underscore on the bcrypt import is the first edit."
         }
       ],
       "hints": [
-        "GenerateFromPassword salts for you; the returned bytes are the whole stored secret.",
+        "GenerateFromPassword salts for you; the returned bytes are the whole stored secret. If go is command not found, run the environment check first.",
         "A token is two readable segments plus a signature — build the signature last, check it first."
       ],
       "misconceptions": [
@@ -1954,7 +2034,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-auth-ask",
       "title": "Reason: whose trust is misplaced",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-auth"
@@ -2044,7 +2124,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Open auth.go. Hash is one GenerateFromPassword call; the question is only what cost honesty requires.",
+        "Open auth.go. Hash is one GenerateFromPassword call; the question is only what cost honesty requires. Run go test ./... and read the name of the test that failed.",
         "bcrypt.DefaultCost is the documented default — it is slow enough to hurt attackers, fast enough for tests.",
         "Issue builds head.body.signature with RawURLEncoding; the header is {\"alg\":\"HS256\",\"typ\":\"JWT\"}.",
         "Verify splits on dots, re-checks the HMAC first, then reads exp — a token that fails either check returns an empty subject.",
@@ -2116,7 +2196,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "testing-quality"
       ],
       "hints": [
-        "A table-driven test keeps its cases as a slice of {input, want} structs and runs them in one loop, so widening coverage means adding a row, not copy-pasting a function.",
+        "A table-driven test keeps its cases as a slice of {input, want} structs and runs them in one loop, so widening coverage means adding a row, not copy-pasting a function. If go is command not found, run the environment check first.",
         "Wrap each row in t.Run with a name built from its input, and test an http.Handler through httptest.NewServer with t.Cleanup(srv.Close) rather than faking the transport."
       ],
       "misconceptions": [
@@ -2148,6 +2228,16 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "grade.go is where this phase works.",
+          "code": "// Grade maps a score to a letter band and reports whether the score was in\n// range at all. The bands are 90-100 A, 80-89 B, 70-79 C, 60-69 D, 0-59 F;"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/grade.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In grade.go, implement Grade(score int) (string, bool) so the hidden table-driven suite passes: 90-100 A, 80-89 B, 70-79 C, 60-69 D, 0-59 F, and any score below 0 or above 100 returned with ok == false."
         }
@@ -2157,7 +2247,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-tests-ask",
       "title": "Reason: two green suites, one real difference",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "testing-quality"
@@ -2194,7 +2284,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "testing-quality"
       ],
       "hints": [
-        "grade.go owns the one function under test, and its doc comment already spells out the bands and what an out-of-range score means. Guard the domain before you choose a letter, so a refused score never gets guessed into a band.",
+        "grade.go owns the one function under test, and its doc comment already spells out the bands and what an out-of-range score means. Guard the domain before you choose a letter, so a refused score never gets guessed into a band. Run go test ./... and read the name of the test that failed.",
         "Return the ok bool alongside the letter rather than encoding “no grade” as an empty string with ok == true, so the bool is what the suite checks on its own.",
         "Walk the bands top to bottom and let the first range score falls in win, so 90 is an A and 89 is a B with no special cases bolted on.",
         "A boundary test checks both edges of every band, so trace 90 and 89, 80 and 79, 70 and 69, 60 and 59 across your logic before you trust a single middle value.",
@@ -2313,12 +2403,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "join.go is where this phase works.",
+          "code": "// JoinWords glues parts together with sep between them, the way strings.Join\n// does: no leading or trailing separator, and it must stay cheap on a large\n// slice. Think about what each round of `out = out + ...` really copies.\nfunc JoinWords(parts []string, sep string) string {\n\tout := \"\"\n\tfor _, p := range parts {\n\t\tout = out + p + sep\n\t}\n\treturn out\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/join.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In join.go, make JoinWords return the parts glued with sep between them (no leading or trailing separator) so it passes the correctness table AND the allocation budget — build the result in a single pass instead of copying on every element."
         }
       ],
       "hints": [
-        "A string built with += inside a loop copies the whole result every turn, so it does O(n^2) work; strings.Builder writes into one growing buffer and strings.Join is the one-line version that already handles it.",
+        "A string built with += inside a loop copies the whole result every turn, so it does O(n^2) work; strings.Builder writes into one growing buffer and strings.Join is the one-line version that already handles it. If go is command not found, run the environment check first.",
         "When you know the size of the answer up front, make([]T, n) allocates one backing array instead of letting append copy the slice several times as it doubles."
       ],
       "misconceptions": [
@@ -2336,7 +2436,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-perf-ask",
       "title": "Reason: same answer, very different work",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "algo-complexity"
@@ -2396,7 +2496,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "join.go owns JoinWords, and the body it ships with already joins the words — it is the obvious version, not the cheap one. Change that file only.",
+        "join.go owns JoinWords, and the body it ships with already joins the words — it is the obvious version, not the cheap one. Change that file only. Run go test ./... and read the name of the test that failed.",
         "If you build it yourself, a strings.Builder writes into one growing buffer, so you copy each byte once instead of copying the whole result every time you add a piece.",
         "Cost the line you were given before replacing it: every round builds a brand-new string and throws the old one away, so a thousand parts mean thousands of copies — that is what the allocation budget is measuring.",
         "The separator belongs between items, not after them: three parts use two separators, and that off-by-one is exactly what a hand-rolled trailing-sep loop gets wrong.",
@@ -2460,7 +2560,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "data-modeling"
       ],
       "hints": [
-        "Every rule written in a handler protects only the requests that pass through that handler. The store is the seam every writer shares, so the store is where the ledger's rules live.",
+        "Every rule written in a handler protects only the requests that pass through that handler. The store is the seam every writer shares, so the store is where the ledger's rules live. If go is command not found, run the environment check first.",
         "An error is a value in Go, and the useful part of that value is the name of the thing that was wrong. \"invalid input\" tells a caller nothing; \"entry is missing account\" tells them what to fix."
       ],
       "misconceptions": [
@@ -2492,8 +2592,18 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "store.go is where this phase works.",
+          "code": "// Add stores the entry. What it must refuse — and how the caller is told — is\n// the whole of this exercise; the hidden suite asks for the refusal by name.\nfunc (s *Store) Add(e Entry) error {\n\ts.entries = append(s.entries, e)\n\treturn nil\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/store.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
-          "body": "In store.go, make Add refuse what the ledger cannot hold: an entry with no id, an entry with no account, and a second entry under an id that is already stored. Each refusal is an error naming what was wrong, and none of them may change the store. Run node --test --test-reporter=tap test/store.test.mjs to see the three demands fail on the starter."
+          "body": "In store.go, make Add refuse what the ledger cannot hold: an entry with no id, an entry with no account, and a second entry under an id that is already stored. Each refusal is an error naming what was wrong, and none of them may change the store. Run go test ./... to see the three demands fail on the starter."
         }
       ],
       "resources": [
@@ -2507,7 +2617,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-store-ask",
       "title": "Reason: where the rule lives",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "data-modeling"
@@ -2544,7 +2654,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "data-modeling"
       ],
       "hints": [
-        "store.go is the file you own, and Add on its Store is where every writer is checked. Start with the refusals before the append: every check that returns early is a state the store never reaches.",
+        "store.go is the file you own, and Add on its Store is where every writer is checked. Start with the refusals before the append: every check that returns early is a state the store never reaches. Run go test ./... and read the name of the test that failed.",
         "The two required fields are id and account, and the caller has only the error text to learn which one was wrong — so the refusal has to name that field, in the same shape whichever field it is.",
         "The duplicate check is a pass over s.entries comparing IDs — the same loop Get already uses, asking the other question.",
         "Every refusal has to be decided before anything is written, so a refused entry changes nothing. Ask which single action in Add must still not have happened when you refuse.",
@@ -2685,12 +2795,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "storedb.go is where this phase works.",
+          "code": "// OpenDB opens the ledger database at path, creating the tasks table it\n// needs. The caller owns the handle and closes it.\nfunc OpenDB(path string) (*sql.DB, error) {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run, in the Go Persist workspace\nnode --test --test-reporter=tap test/storedb.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Open storedb.go and read driver.go beside it. Before you change anything, write in a comment what LoadTask must return for an id that was never saved — value and error both — then implement all three functions so the comment is true."
         }
       ],
       "hints": [
-        "CREATE TABLE IF NOT EXISTS makes OpenDB safe to call on every boot, first or fiftieth.",
+        "CREATE TABLE IF NOT EXISTS makes OpenDB safe to call on every boot, first or fiftieth. If go is command not found, run the environment check first.",
         "INSERT with ON CONFLICT(id) DO UPDATE turns a second save into an overwrite instead of a duplicate-key error."
       ],
       "misconceptions": [
@@ -2703,7 +2823,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-db-ask",
       "title": "Reason: whose syntax is it",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-db"
@@ -2784,7 +2904,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Open storedb.go. OpenDB opens sql.Open(\"sqlite3\", path) and runs CREATE TABLE IF NOT EXISTS; every other function assumes the table.",
+        "Open storedb.go. OpenDB opens sql.Open(\"sqlite3\", path) and runs CREATE TABLE IF NOT EXISTS; every other function assumes the table. Run go test ./... and read the name of the test that failed.",
         "SaveTask is one Exec with two placeholders and an ON CONFLICT(id) DO UPDATE tail — that tail is the upsert.",
         "LoadTask is QueryRow plus Scan. Do not special-case absence: Scan already returns ErrNoRows, and returning it untouched is the whole edge.",
         "Run go test and read the failing test name first: round trip, then upsert, then reopen, then the missing edge.",
@@ -2882,12 +3002,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "cache.go is where this phase works.",
+          "code": "// NewMemo builds a cache that fetches through load, believes an entry for\n// ttl, and reads the clock from now - so tests move time instead of\n// sleeping on it.\nfunc NewMemo(load Loader, ttl time.Duration, now func() time.Time) *Memo {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run, in the Go Persist workspace\nnode --test --test-reporter=tap test/cache.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Open cache.go. Before you change anything, write in a comment what a hit must never call, what Invalidate must drop, and where the second reader of an expired key should wait instead of fetching. Then implement it — NewMemo is three fields; the state you add is the design."
         }
       ],
       "hints": [
-        "A loader error is not an answer — return it, never store it, so the next Get is free to try again.",
+        "A loader error is not an answer — return it, never store it, so the next Get is free to try again. If go is command not found, run the environment check first.",
         "The injected clock is the whole reason tests can prove a TTL without sleeping on one."
       ],
       "misconceptions": [
@@ -2900,7 +3030,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-cache-ask",
       "title": "Reason: who let the stale entry live",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-cache"
@@ -2981,7 +3111,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Open cache.go. NewMemo is three fields — fetch, ttl, clock — and the state you add is yours to design: an entry map under a mutex is the floor.",
+        "Open cache.go. NewMemo is three fields — fetch, ttl, clock — and the state you add is yours to design: an entry map under a mutex is the floor. Run go test ./... and read the name of the test that failed.",
         "An entry is a value plus the time it was stored; freshness is now().Sub(at) < ttl on the injected clock, which is why tests move time instead of sleeping.",
         "Invalidate is a map delete under the same mutex — drop the key and let the next Get miss.",
         "For the herd: keep a per-key flight (a done channel plus the result) that the first miss creates; later readers find it and wait instead of fetching.",
@@ -3069,12 +3199,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "health.go is where this phase works.",
+          "code": "// HealthBody is what the readiness endpoint answers.\ntype HealthBody struct {\n\tOK       bool     `json:\"ok\"`\n\tProblems []string `json:\"problems\"`\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/health.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
-          "body": "In health.go, make Health answer honestly: 200 with an empty problems list when every probe passes, 503 naming each failing probe when one does not, and never the connection string. Run node --test --test-reporter=tap test/health.test.mjs to watch all three demands fail on the starter."
+          "body": "In health.go, make Health answer honestly: 200 with an empty problems list when every probe passes, 503 naming each failing probe when one does not, and never the connection string. Run go test ./... to watch all three demands fail on the starter."
         }
       ],
       "hints": [
-        "A load balancer routes on the status code and a supervisor acts on the exit code; neither of them reads your prose. Everything else in the response is for the human who arrives after the pager.",
+        "A load balancer routes on the status code and a supervisor acts on the exit code; neither of them reads your prose. Everything else in the response is for the human who arrives after the pager. If go is command not found, run the environment check first.",
         "Driver and SDK error strings routinely embed the connection string they failed on, so err.Error() is the classic way a secret reaches a dashboard anybody can open."
       ],
       "misconceptions": [
@@ -3093,7 +3233,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-ops-ask",
       "title": "Reason: what a helpful health endpoint actually routes",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "deployment-ops"
@@ -3161,7 +3301,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "health.go is the file you own, and Health in it is the answer the suite reads. Walk the probes once, remembering only two things: which ones failed, by name.",
+        "health.go is the file you own, and Health in it is the answer the suite reads. Walk the probes once, remembering only two things: which ones failed, by name. Run go test ./... and read the name of the test that failed.",
         "A failed probe appends its Name to body.Problems and flips body.OK to false. The error value tells you it failed; the caller is owed the name, not the text.",
         "The status depends on the result: 200 when OK survived the loop, 503 the moment any probe failed. http.StatusServiceUnavailable is the constant.",
         "Read back the line that appends to Problems and check what you are appending — p.Name belongs there and err.Error() does not, because driver errors begin with the DSN they failed to dial.",
@@ -3249,12 +3389,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "logging.go is where this phase works.",
+          "code": "// RequestLog returns a logger carrying the request id in every line it\n// writes. A nil base never panics: it falls back to the default logger, so\n// helper code can ask for a request logger without knowing whether logging\n// was configured.\nfunc RequestLog(base *slog.Logger, requestID string) *slog.Logger {\n\treturn base\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/logging.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Open logging.go. Before you change anything, write in a comment what a line written through RequestLog(base, \"r-1\") must contain, and what RequestLog(nil, \"r-1\") must do instead of crashing. Then implement it."
         }
       ],
       "hints": [
-        "base.With returns a new logger; the base itself is unchanged and stays clean for other requests.",
+        "base.With returns a new logger; the base itself is unchanged and stays clean for other requests. If go is command not found, run the environment check first.",
         "A nil *slog.Logger has no methods to call — decide the fallback before the first dot."
       ],
       "misconceptions": [
@@ -3273,7 +3423,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-logging-ask",
       "title": "Reason: whose secret is it",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-logging"
@@ -3333,7 +3483,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Open logging.go. One With call does the carrying; the question is only what it is called on.",
+        "Open logging.go. One With call does the carrying; the question is only what it is called on. Run go test ./... and read the name of the test that failed.",
         "base.With(\"request_id\", requestID) returns the logger every later line needs.",
         "A nil *slog.Logger cannot take a method call. Check for nil first and fall back to slog.Default().",
         "Run go test and read the failing test name first: the id line, then the nil edge.",
@@ -3426,12 +3576,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "go.mod is where this phase works.",
+          "code": "module example.com/ledger\n\ngo 1.22\n\nrequire golang.org/x/crypto v0.33.0 // indirect\n"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "cd depsdemo && go mod tidy   # the command you run: it writes the pair\nnode --test --test-reporter=tap test/deps.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In depsdemo/, main.go already imports github.com/google/uuid while go.mod declares nothing. Run go mod tidy to write the pair, then open go.mod and go.sum and name the two lines it added. If go is missing, run the environment check first."
         }
       ],
       "hints": [
-        "The two files answer different questions: go.mod says what to fetch, go.sum says what must arrive."
+        "The two files answer different questions: go.mod says what to fetch, go.sum says what must arrive. If go is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Hand-editing go.mod and skipping tidy — the next build finds a pair the tool no longer recognises.",
@@ -3452,7 +3612,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-deps-ask",
       "title": "Reason: what does tidy add to the pair",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-deps"
@@ -3522,7 +3682,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Open depsdemo/main.go first and read its imports; then open depsdemo/go.mod and compare what is declared against what is imported.",
+        "Open depsdemo/main.go first and read its imports; then open depsdemo/go.mod and compare what is declared against what is imported. Run go test ./... and read the name of the test that failed.",
         "go mod tidy reads the imports of every package in the module and rewrites the pair to match — that is the one command this task is built around.",
         "Tidy needs to fetch the module it has never seen, so this is the one step in the Go track that reaches the module proxy; offline it stops rather than guessing, and if go is not installed the environment check names the install.",
         "A solved pair looks like this: a require line naming the imported module at a released version, and a go.sum line carrying that version's hash.",
@@ -3620,12 +3780,22 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "retry.go is where this phase works.",
+          "code": "// DoWithRetry runs op up to attempts times. It returns nil the moment op\n// succeeds, and if op never succeeds it returns the error from the final call.\n// It must call op at most attempts times and stop as soon as op returns nil.\nfunc DoWithRetry(attempts int, op func() error) error {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/retry.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
-          "body": "In retry.go, implement DoWithRetry(attempts int, op func() error) error: call op up to attempts times, return nil the moment op returns nil, and if op never succeeds return the error from the final call. It must call op at most attempts times. Run node --test --test-reporter=tap test/retry.test.mjs to watch the starter fail."
+          "body": "In retry.go, implement DoWithRetry(attempts int, op func() error) error: call op up to attempts times, return nil the moment op returns nil, and if op never succeeds return the error from the final call. It must call op at most attempts times. Run go test ./... to watch the starter fail."
         }
       ],
       "hints": [
-        "A retry is a bounded loop: call the operation, return the moment it succeeds, and give up after a fixed number of attempts instead of looping forever or once.",
+        "A retry is a bounded loop: call the operation, return the moment it succeeds, and give up after a fixed number of attempts instead of looping forever or once. If go is command not found, run the environment check first.",
         "Two rules make a retry safe: cap the attempts so a hard-down dependency cannot be hammered forever, and grow the delay between them (backoff) so you stop adding load to something already failing."
       ],
       "misconceptions": [
@@ -3643,7 +3813,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-resilience-ask",
       "title": "Reason: which retry helper do you actually trust",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "resilience"
@@ -3711,7 +3881,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "retry.go is the file you own, and DoWithRetry in it is what the suite calls. Keep the last error in a variable declared outside the loop, so that after the loop ends you still have the failure from the final attempt to return.",
+        "retry.go is the file you own, and DoWithRetry in it is what the suite calls. Keep the last error in a variable declared outside the loop, so that after the loop ends you still have the failure from the final attempt to return. Run go test ./... and read the name of the test that failed.",
         "The loop runs at most as many times as the caller allowed, and the suite counts those calls: one more than that fails the count it keeps.",
         "Inside the loop call op once, assign its result to your error variable, and if it is nil return nil immediately — do not call op again after it succeeded.",
         "A suite calls op and counts the calls: success on try one must make exactly one call, and failure on all four of four attempts must make exactly four before you give up.",
@@ -3785,7 +3955,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "A container is not a slim VM — it is a file that names a base image, a toolchain version, and the exact commands, so the next machine that builds your service is the machine you tested on.",
+        "A container is not a slim VM — it is a file that names a base image, a toolchain version, and the exact commands, so the next machine that builds your service is the machine you tested on. If go is command not found, run the environment check first.",
         "Two FROM lines are the whole idea: the first stage owns the toolchain and the compile, the last stage owns only what runs."
       ],
       "misconceptions": [
@@ -3807,6 +3977,10 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "body": "Read that file as two images. The builder owns the toolchain and the compile: go.mod and go.sum are copied first so the module download gets a layer of its own, and only a source edit invalidates it — a changed .go file never re-downloads the dependency tree. The last FROM opens the runtime stage, and it owns nothing but the artifact: a static binary (CGO_ENABLED=0, so it carries no C-library dependency and runs on a base image that has none) copied out of the builder with COPY --from, started as a user that is not root. The toolchain never reaches production, and neither does the source — what ships is exactly what was proved."
         },
         {
+          "kind": "prose",
+          "body": "The binary that comes out of the builder is built from ./cmd/ledger: that directory holds the ledger's own program, a package main whose func main starts the HTTP server. It is the one thing the image has to be able to run, and the runtime stage runs nothing else."
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
@@ -3817,8 +3991,18 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "Dockerfile is where this phase works.",
+          "code": "# Starter for the go-ship lab: one stage, the toolchain shipped as the\n# runtime, and every edit re-downloading every module. Replace it with a\n# multi-stage build: a cacheable builder that compiles a static binary, and a\n# minimal runtime that runs that binary as a non-root user. Run\n# `go test ./...` to watch the checks.\nFROM golang:1.26\nWORKDIR /src\nCOPY . .\nRUN go build -o ledger ./cmd/ledger\nCMD [\"/src/ledger\"]\n"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/ship.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
-          "body": "In Dockerfile, replace the single stage with a multi-stage build: a NAMED builder stage (FROM golang:1.26 AS builder) that copies go.mod and go.sum first, downloads modules, copies the source, and builds a static binary; then a runtime stage on a minimal base that copies only that binary and runs it as a non-root user. In workflow.yml, give the workflow a push trigger and a go test ./... step behind actions/checkout and actions/setup-go. Run node --test --test-reporter=tap test/ship.test.mjs to watch the starter fail."
+          "body": "In Dockerfile, replace the single stage with a multi-stage build: a NAMED builder stage (FROM golang:1.26 AS builder) that copies go.mod and go.sum first, downloads modules, copies the source, and builds a static binary; then a runtime stage on a minimal base that copies only that binary and runs it as a non-root user. In workflow.yml, give the workflow a push trigger and a go test ./... step behind actions/checkout and actions/setup-go. Run go test ./... to watch the starter fail."
         }
       ]
     },
@@ -3826,7 +4010,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-ship-ask",
       "title": "Reason: an image that builds is not an image that ships",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "deployment-ops"
@@ -3863,7 +4047,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "deployment-ops"
       ],
       "hints": [
-        "Start from the bottom of the file you want, not the top of the file you have: a second FROM line is what turns one image into two — everything before the last FROM is the builder, everything after it is what ships.",
+        "Open Dockerfile. Start from the bottom of the file you want, not the top of the file you have: a second FROM line is what turns one image into two — everything before the last FROM is the builder, everything after it is what ships. Run go test ./... and read the name of the test that failed.",
         "Copy go.mod and go.sum on their own line before anything else, then run go mod download: that gives the module cache a layer of its own, so editing a .go file never re-downloads your dependencies.",
         "The runtime stage must not mention go at all. Copy the binary out of the builder with COPY --from=builder, point the final FROM at a minimal base, and build with CGO_ENABLED=0 so the binary needs no C library to run there.",
         "Two checks look at who the process runs as: a USER line in the final stage naming someone who is not root. And the workflow needs a push trigger with actions/setup-go and a go test step — the same commands this machine runs.",

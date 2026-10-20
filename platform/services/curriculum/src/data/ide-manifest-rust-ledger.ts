@@ -3,14 +3,14 @@
 export const IDE_MANIFEST_RUST_LEDGER: unknown = {
   "id": "rust-ledger",
   "title": "Rust Ledger",
-  "description": "A second main line: the ledger from the Go track, rebuilt in Rust and taken to a tested Axum service. Ownership, borrowing and lifetimes are taught as one idea in three phases, each judged by code that will not compile without it. Then threads, async, Tokio, HTTP, SQLx, tracing and a release you can ship. Every phase is Learn, then Solve, then Review.",
+  "description": "A second main line: the ledger rebuilt in Rust, from the tools up. It opens with rustup, cargo and the first value, then follows the Rust Programming Language chapter by chapter, running the ledger's own money, accounts and transactions through each idea. Then threads, async, Tokio, HTTP, SQLx and a release you can ship. Every phase is Learn, then Solve, then Review, and every phase names the file it works in and the suite that judges it.",
   "version": 1,
   "role": "main",
   "phases": [
     {
       "id": "rust-values",
-      "title": "Rust values",
-      "goal": "One project, two tools, and money that is an integer before it is a string.",
+      "title": "Rust, cargo, and your first value",
+      "goal": "The toolchain first, then a value: a binding, a type, and money as whole cents.",
       "level": 1,
       "tier": "free",
       "authored": true,
@@ -18,8 +18,8 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-ownership",
-      "title": "Rust ownership",
-      "goal": "Moves, Copy and Clone: who owns a value when a function takes it — and why the compiler enforces one owner at a time to prevent double-free bugs.",
+      "title": "One owner at a time",
+      "goal": "Moves, copies and returns: how a value changes hands without two owners freeing it.",
       "level": 1,
       "tier": "free",
       "authored": true,
@@ -27,8 +27,8 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-borrowing",
-      "title": "Rust borrowing",
-      "goal": "Read without taking, change through &mut, and return a slice safely — the borrow checker enforces one mutable borrow at a time to prevent data races.",
+      "title": "Look without taking",
+      "goal": "Read with a shared borrow, change with a mutable one, and hand back a slice safely.",
       "level": 1,
       "tier": "free",
       "authored": true,
@@ -36,7 +36,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-structs",
-      "title": "Rust structs",
+      "title": "One door into the type",
       "goal": "Private fields, a constructor that refuses bad data, and derives that earn their place.",
       "level": 1,
       "tier": "free",
@@ -45,8 +45,8 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-enums",
-      "title": "Rust enums",
-      "goal": "One type that is exactly one of its shapes, and a match that proves it.",
+      "title": "A value that is one of several shapes",
+      "goal": "One type that is exactly one of its shapes, and a match that has to answer every one.",
       "level": 2,
       "tier": "pro",
       "authored": true,
@@ -54,7 +54,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-errors",
-      "title": "Rust errors",
+      "title": "A failure is a value",
       "goal": "Failures as values: Result, the question mark, and errors a caller can match on.",
       "level": 2,
       "tier": "pro",
@@ -63,8 +63,8 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-modules",
-      "title": "Rust modules",
-      "goal": "A crate is a tree with a public edge: modules, visibility, and the lib/bin split.",
+      "title": "The public edge of a crate",
+      "goal": "A crate is a tree with a public edge: modules, visibility, and the paths a caller may use.",
       "level": 2,
       "tier": "pro",
       "authored": true,
@@ -72,7 +72,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-traits",
-      "title": "Rust traits",
+      "title": "A contract a type signs",
       "goal": "Behaviour as a contract: trait bounds, generics, and one boxed decision at runtime.",
       "level": 2,
       "tier": "pro",
@@ -81,8 +81,8 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-lifetimes",
-      "title": "Lifetimes",
-      "goal": "Say how long a borrow lives, so a returned reference still points at something real — the lifetime parameter records how long the borrow stays valid relative to its owner.",
+      "title": "A borrow has a length",
+      "goal": "Say how long a borrow lives, so a returned reference still points at something real.",
       "level": 2,
       "tier": "pro",
       "authored": true,
@@ -90,7 +90,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-collections",
-      "title": "Collections",
+      "title": "Order, keys, and absence",
       "goal": "Choose an ordered map or a keyed one, and read a missing key as absent instead of zero.",
       "level": 2,
       "tier": "pro",
@@ -99,8 +99,8 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-closures",
-      "title": "Closures",
-      "goal": "Carry state into a function value, and let the captures choose the call trait.",
+      "title": "A function that carries values, and the iterators that walk a list",
+      "goal": "Carry state into a function value, then walk a list with the adapters that do the work.",
       "level": 2,
       "tier": "pro",
       "authored": true,
@@ -108,7 +108,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-tests",
-      "title": "Tests",
+      "title": "A test is a named claim",
       "goal": "Write tests that name a behaviour and fail when it breaks, not just when the text changes.",
       "level": 2,
       "tier": "pro",
@@ -117,7 +117,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-pointers",
-      "title": "Rust pointers",
+      "title": "One value, several owners",
       "goal": "Box, Rc, RefCell and Arc: which owner a value needs, and what each one costs.",
       "level": 2,
       "tier": "pro",
@@ -126,16 +126,16 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-threads",
-      "title": "Rust threads",
+      "title": "Work on another thread",
       "goal": "Move work to other threads, share a counter safely, and pass results back through a channel.",
-      "level": 2,
+      "level": 3,
       "tier": "pro",
       "authored": true,
       "activityCount": 4
     },
     {
       "id": "rust-async",
-      "title": "Rust async",
+      "title": "A future is a plan, not a run",
       "goal": "Futures that do nothing until polled, tasks that interleave, and the blocking call that stops them all.",
       "level": 3,
       "tier": "pro",
@@ -144,7 +144,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-tokio",
-      "title": "Tokio",
+      "title": "A task the runtime owns",
       "goal": "Spawn tasks, race them safely, bound them with timeouts, and stop them on purpose.",
       "level": 3,
       "tier": "pro",
@@ -154,7 +154,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     {
       "id": "rust-axum",
       "title": "Axum: a typed door",
-      "goal": "Routes, extractors and JSON: the library becomes a service.",
+      "goal": "Routes, extractors and JSON: the ledger becomes a service with a door.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -172,7 +172,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     {
       "id": "rust-sqlx",
       "title": "SQLx: the ledger survives a restart",
-      "goal": "A pool, a migration, and parameterised queries over SQLite.",
+      "goal": "A pool, a migration and bound parameters over SQLite.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -189,8 +189,8 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-observability",
-      "title": "Rust observability",
-      "goal": "Read configuration once, redact what must not be logged, and make tracing say what happened.",
+      "title": "Configuration at the edge, redaction in the middle",
+      "goal": "Read the configuration once at startup, and keep a password out of every log line.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -199,7 +199,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     {
       "id": "rust-ship",
       "title": "Rust ship",
-      "goal": "Make the workspace releasable: format, lint, audit, pin the toolchain, and let CI prove it.",
+      "goal": "Make the workspace releasable: format, lint, a pinned toolchain and a gate in CI.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -207,8 +207,8 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-review",
-      "title": "Rust review",
-      "goal": "Read a library file the way a reviewer does: find the panic, the copy, and the rule written twice.",
+      "title": "Read a library file the way a reviewer does",
+      "goal": "Find the panic, the copy and the rule written twice.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -217,7 +217,7 @@ export const IDE_MANIFEST_RUST_LEDGER: unknown = {
     {
       "id": "rust-takehome",
       "title": "Rust take-home",
-      "goal": "Work from a written brief, judged by a suite you are not holding.",
+      "goal": "Work from a written brief, judged by a suite the course holds and you do not.",
       "level": 3,
       "tier": "pro",
       "authored": true,

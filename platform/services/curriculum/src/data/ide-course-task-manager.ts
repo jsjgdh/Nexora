@@ -37,8 +37,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "activities": [
         "fund-learn-values",
         "fund-learn-collections",
-        "fund-ask-predict",
         "fund-do-values",
+        "fund-ask-predict",
         "fund-review-transfer"
       ],
       "interviewQuestions": [
@@ -57,8 +57,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "activities": [
         "web-learn-basics",
         "web-learn-errors",
-        "web-ask-status",
         "web-do-fetch",
+        "web-ask-status",
         "web-review-transfer"
       ],
       "interviewQuestions": [
@@ -76,8 +76,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "crud-learn-ops",
-        "crud-ask-verb",
         "crud-do-list",
+        "crud-ask-verb",
         "crud-review-transfer"
       ],
       "interviewQuestions": [
@@ -94,8 +94,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "regex-learn-pattern",
-        "regex-ask-anchor",
         "regex-do-validate",
+        "regex-ask-anchor",
         "regex-review-transfer"
       ],
       "interviewQuestions": [
@@ -186,8 +186,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "project": "unfamiliar-codebase",
       "activities": [
         "navigate-learn-search",
-        "navigate-ask-callsite",
         "navigate-do-find",
+        "navigate-ask-callsite",
         "navigate-review-transfer"
       ],
       "interviewQuestions": [
@@ -223,8 +223,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "activities": [
         "api-learn-promise",
         "api-learn-connect",
-        "api-ask-outcome",
         "api-do-load",
+        "api-ask-outcome",
         "api-review-transfer"
       ],
       "interviewQuestions": [
@@ -242,8 +242,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "api-server-learn-serve",
-        "api-server-ask-status",
         "api-server-do-handle",
+        "api-server-ask-status",
         "api-server-review-patch"
       ],
       "interviewQuestions": [
@@ -260,8 +260,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "testing-learn-fail",
-        "testing-ask-vacuous",
         "testing-do-cart",
+        "testing-ask-vacuous",
         "testing-review-transfer"
       ],
       "interviewQuestions": [
@@ -278,8 +278,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "review-learn-gate",
-        "review-ask-verdict",
         "review-do-gate",
+        "review-ask-verdict",
         "review-review-transfer"
       ],
       "interviewQuestions": [
@@ -296,8 +296,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "pr-review-learn-loop",
-        "pr-review-ask-thread",
         "pr-review-do-batch",
+        "pr-review-ask-thread",
         "pr-review-transfer-gate"
       ],
       "interviewQuestions": [
@@ -314,8 +314,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "ai-audit-learn-verify",
-        "ai-audit-ask-claim",
         "ai-audit-do-sync",
+        "ai-audit-ask-claim",
         "ai-audit-transfer-page"
       ],
       "interviewQuestions": [
@@ -332,8 +332,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "authored": true,
       "activities": [
         "independent-learn-brief",
-        "independent-ask-ambiguity",
         "independent-do-brief",
+        "independent-ask-ambiguity",
         "independent-review-alone"
       ],
       "interviewQuestions": [
@@ -385,7 +385,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "You can show or hide each region with a shortcut. This phase has 8 steps: 4 short reads, 2 quick questions, 1 hands-on Solve where you bring the project up, and 1 Review you do alone. Each read ends with Mark as Complete, which unlocks the next step. A read that watches what you do finishes itself, and Mark as Complete is still there when you need it."
+          "body": "You can show or hide each region with a shortcut. This phase has 8 steps: 5 short reads, a hands-on Solve where you bring the project up, one question on what you just did, and 1 Review you do alone."
+        },
+        {
+          "kind": "prose",
+          "body": "Each read ends with Mark as Complete, which unlocks the next step. A read that watches what you do finishes itself, and Mark as Complete is still there when you need it."
         },
         {
           "kind": "example",
@@ -418,7 +422,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "The work folder opens by itself on first run: NEXORA/Task-Manager in your home directory. If the window is empty instead, run NEXORA: Setup Workspace from the palette and reopen there. Then expand one folder, click a file to open it, press Ctrl+` to show the terminal and again to hide it, then close the tab you opened. You touched all three regions and changed nothing."
+          "body": "On first run the IDE asks where the project should live. The default is NEXORA/Task-Manager in your home directory: choose it and the project is created there and opened. If you skip the ask, run NEXORA: Setup Workspace from the palette and reopen there. Then expand one folder, click a file to open it, press Ctrl+` to show the terminal and again to hide it, then close the tab you opened. You touched all three regions and changed nothing."
         }
       ],
       "hints": [
@@ -613,7 +617,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "setup-ask-toolchain",
       "title": "Reason: what proves the tools work",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "project-setup"
@@ -682,7 +686,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Two files carry this one: package.json declares the scripts, and src/main.jsx is the entry that has to be created beside the components in src/.",
+        "Two files carry this one: package.json declares the scripts, and src/main.jsx is the entry that has to be created beside the components in src/. Run node --test --test-reporter=tap test/setup.test.mjs and read the name of the check that failed.",
         "The suite names its three demands in order: a declared dev script, an entry file beside the components, and an entry that reaches the page's root element. Run it and read which name is still failing.",
         "A script entry is a name and a command in the scripts block, sitting beside the test one. The entry file is short: find the root element first, then render the app inside it, and nothing else belongs in it.",
         "The third check is the edge: a file that exists but never looks up the root element fails it. Ask what your entry does with that element before it renders anything.",
@@ -745,12 +749,22 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "package.json is where this phase works.",
+          "code": "{\n  \"name\": \"task-manager-stub\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"scripts\": {\n    \"test\": \"node --test\"\n  }\n}\n"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/setup.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open the Explorer, find package.json, and read the scripts section. It declares test today; a dev entry is the piece this phase adds, and you write it in the Solve step. Notice the shape while you are here: components under src/, tests beside them."
         }
       ],
       "hints": [
-        "The manifest sits at the project root — the folder you opened, not a subfolder."
+        "The manifest sits at the project root — the folder you opened, not a subfolder. If node is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Running commands from the wrong folder — the terminal's location is part of every command.",
@@ -759,32 +773,68 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
     },
     "setup-ask-terminal": {
       "id": "setup-ask-terminal",
-      "title": "Reason: where commands run",
-      "kind": "question",
+      "resources": [
+        {
+          "label": "VS Code: Integrated terminal",
+          "url": "https://code.visualstudio.com/docs/terminal/terminal"
+        }
+      ],
+      "title": "Learn: where commands run",
+      "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
         "project-setup"
       ],
+      "objectives": [
+        "Name the folder a declared script has to run in, and say why the terminal decides.",
+        "Use a command that reports whether you are standing in the project folder, and read what it says.",
+        "Explain what a script means when the command runs in some other folder."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node -e \"console.log(require('fs').existsSync('package.json') ? 'project folder' : 'somewhere else')\"",
+          "expect": [
+            "project folder"
+          ],
+          "shows": "project folder"
+        }
+      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A declared script means what it says only when the command runs in the right place with the right files present."
+          "body": "A declared script means what it says only when the command runs in the right place with the right files present. The terminal is the one that decides: it reads the folder it is standing in, and that is the folder package.json has to be in."
+        },
+        {
+          "kind": "example",
+          "body": "One command that says where you are standing:",
+          "code": "node -e \"console.log(require('fs').existsSync('package.json') ? 'project folder' : 'somewhere else')\""
+        },
+        {
+          "kind": "prose",
+          "body": "Run it in the project folder and it prints project folder. Run it in your home folder and it prints somewhere else, because no manifest is there to read the script from."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A script resolves in the folder that holds package.json.",
+            "The terminal decides, not the file you have open.",
+            "Any other folder finds no project to run."
+          ]
+        },
+        {
+          "kind": "task",
+          "body": "Open a terminal in the project folder, run the command above, and read what it prints. Then open a terminal in your home folder, run it there, and read what it prints. If node is command not found, run the environment check first."
         }
       ],
-      "options": [
-        "The project folder containing package.json.",
-        "The src/ folder, next to the code.",
-        "The home folder, then find the project by browsing for it.",
-        "Any folder — npm finds the project on its own."
-      ],
-      "answer": 0,
-      "explanation": "Scripts belong to the manifest that declares them, so a command means what it says only in the folder that holds that package.json. Run it in src/ or in your home folder and there is no manifest there to read the dev script from — the tool cannot see a project it was never pointed at. \"Any folder\" is the tempting shortcut: a command can only act on the project it finds where it runs, and if that is the wrong project it silently does the wrong work. Stand in the folder that contains package.json, and the script resolves exactly as written.",
       "hints": [
-        "Ask which file declares the dev script, then stand next to it."
+        "The project folder is the one that holds package.json, and the terminal has to be standing in it."
       ],
       "misconceptions": [
-        "The terminal follows the open file — it follows the folder it was opened in."
+        "The terminal follows the open file — it follows the folder it was opened in.",
+        "The terminal is the environment — the shell inherits a snapshot of it when it launches, and the snapshot is the part that goes stale."
       ]
     },
     "setup-review-transfer": {
@@ -797,8 +847,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "project-setup"
       ],
       "files": [
-        "extras/package.json",
-        "extras/index.js"
+        "extras/package.json"
       ],
       "testCommand": "node --test --test-reporter=tap test/extras-shape.test.mjs",
       "checks": [
@@ -816,7 +865,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the start command points at a file that is really there"
           ],
-          "feedback": "The script names a file the folder does not contain. Write extras/index.js and let the command point at it, the way the project's dev script points at its entry — a script and the file it runs are two halves of one shape, and either one alone starts nothing."
+          "feedback": "The script names a file the folder does not contain. Write that file beside the manifest and point the command at it, the way the project's dev script points at its entry — a script and the file it runs are two halves of one shape, and either one alone starts nothing."
         },
         {
           "id": "edge-setup-untouched",
@@ -861,7 +910,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every later phase assumes these words. Each one gets a plain definition and a small runnable program."
+          "body": "Every later phase assumes these words."
         },
         {
           "kind": "prose",
@@ -938,6 +987,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/foundations.js is where this phase works.",
+          "code": "// Return the greeting \"Hello, <name>!\" — Hello, a comma, a space, the name, a bang.\nexport function greet(name) {\n\t// TODO: build the string from the name you were given.\n\tthrow new Error('greet is not implemented yet');\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/foundations.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Trace the loop on paper: nums is [1, 2, 3]. Write what total holds after each pass (start at 0). Then change one number and predict the new total before checking; when prediction matches arithmetic, you have understood the loop."
         }
@@ -964,7 +1023,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Read a call as its result: wherever you see greet(\"Ada\"), picture \"Hello, Ada!\" replacing it.",
+        "Read a call as its result: wherever you see greet(\"Ada\"), picture \"Hello, Ada!\" replacing it. If node is command not found, run the environment check first.",
         "Index 0 is the first item, so the last item of a list of length n is always at index n - 1."
       ],
       "misconceptions": [
@@ -1076,7 +1135,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "fund-ask-predict",
       "title": "Reason: what does this program print",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "programming-fundamentals"
@@ -1157,7 +1216,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/foundations.js: it owns all three functions, and every one of them throws today — that throw line is the placeholder standing where your return belongs.",
+        "Open src/foundations.js: it owns all three functions, and every one of them throws today — that throw line is the placeholder standing where your return belongs. Run node --test --test-reporter=tap test/foundations.test.mjs and read the name of the check that failed.",
         "The failing names are the spec: a greeting built from the name it was handed, a total over every number in the list, the longest entry, and an empty list that still totals zero.",
         "sum wants a running total and a walk over the list; longestWord wants a best-so-far plus one length comparison per word; greet just builds its sentence from the name it was given.",
         "The edge is the empty list: whatever the walk starts from is also the answer when there is nothing to walk, so ask what your total holds before the loop ever runs.",
@@ -1250,7 +1309,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every later phase uses requests, responses, status codes, JSON, and endpoints as if you knew the words. Each gets a plain definition and something small to run, so when a phase says \"check the status code,\" you know who that number blames."
+          "body": "Every later phase uses requests, responses, status codes, JSON, and endpoints as if you knew the words. Each gets a plain definition and something small to run."
         },
         {
           "kind": "example",
@@ -1294,6 +1353,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/web-basics.js is where this phase works.",
+          "code": "// Given a status number, say which band it lives in: 'success' for 200-299,\n// 'redirect' for 300-399, 'client-error' for 400-499, 'server-error' for 500-599.\nexport function statusClass(code) {\n\t// TODO: compare code against the number each band starts at, and return its label.\n\tthrow new Error('statusClass is not implemented yet');\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/web-basics.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Before any code, in your own words, write the request you would send to read the list of tasks and the response that says it worked, then the same pair for a list already deleted on the server. Name a method, an endpoint, a status, and what the body holds in each."
         }
@@ -1322,7 +1391,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Say a status out loud as its band, not its number: \"a 4xx\" already means the trouble is in what was sent.",
+        "Say a status out loud as its band, not its number: \"a 4xx\" already means the trouble is in what was sent. If node is command not found, run the environment check first.",
         "Parse turns text into data, and write turns data into text. Every JSON example here crosses that bridge one way or the other."
       ],
       "misconceptions": [
@@ -1401,7 +1470,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "web-ask-status",
       "title": "Reason: who owns the problem this status describes",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "web-http-json"
@@ -1478,7 +1547,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/web-basics.js: statusClass names a status band, parseJson reads JSON text back into data, and buildRequest shapes a request — all three throw today where your real return belongs.",
+        "Open src/web-basics.js: statusClass names a status band, parseJson reads JSON text back into data, and buildRequest shapes a request — all three throw today where your real return belongs. Run node --test --test-reporter=tap test/web-basics.test.mjs and read the name of the check that failed.",
         "The failing names are the spec: text read back into data, a 201 called a success, a 404 called a client error, the method and the path both named, and a 300 that is not a success.",
         "statusClass compares the number against the point each band starts at and returns that word; parseJson is one standard call that reads the text into data; buildRequest hands back the method, the path, and the two joined into a single request line.",
         "The edge sits at the top of the success band: a number that begins the next band must not be labelled with the one before it. Ask what your comparison does at exactly 300.",
@@ -1593,6 +1662,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/crud.js is where this phase works.",
+          "code": "// Create: hand back a new list with `task` added at the end. Leave the input untouched.\nexport function addTask(tasks, task) {\n\t// TODO: return the old list with the new task appended.\n\tthrow new Error('addTask is not implemented yet');\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/crud.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Before any code, write the four operations as you would do them to a to-do list: add a task, look one up, mark one finished, remove one. For each, say which record it targets and what the list looks like when it is done. Then name the HTTP verb that carries each one from the last phase. If all eight line up, you hold the whole idea of this phase."
         }
@@ -1618,7 +1697,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Read each operation as a before and an after: the list it starts with, and the one list it hands back changed.",
+        "Read each operation as a before and an after: the list it starts with, and the one list it hands back changed. If node is command not found, run the environment check first.",
         "Create and delete change how many records there are. Read and update leave the count alone and touch only one."
       ],
       "misconceptions": [
@@ -1631,7 +1710,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "crud-ask-verb",
       "title": "Reason: which of the four is this action",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "data-crud"
@@ -1715,7 +1794,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/crud.js: it owns all four operations — add a task, find one by id, mark one done, remove one — and each throws today where your return belongs.",
+        "Open src/crud.js: it owns all four operations — add a task, find one by id, mark one done, remove one — and each throws today where your return belongs. Run node --test --test-reporter=tap test/crud.test.mjs and read the name of the check that failed.",
         "The failing names are the spec, one per operation: a new task at the end, a lookup that finds the named id, only the named task marked done, and a removed id gone from the list.",
         "All four hand back a new list instead of editing the one they were given: create adds one to a copy, update rebuilds the list changing only the matching id, delete keeps every task whose id is not the one to drop.",
         "The edge is an id that is nowhere on the list: dropping something absent is not an error and must leave every task standing. Ask what your delete returns when nothing matches.",
@@ -1839,6 +1918,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/regex.js is where this phase works.",
+          "code": "// True only when the entire string is one or more digits and nothing else.\n// Use a regular expression object with a test call. Anchors make it about the\n// whole string: ^ pins the start, $ pins the end, \\d+ is a run of digits.\nexport function isDigits(text) {\n\t// TODO: return true when the whole string is digits, using ^ ... $ around \\d+.\n\tthrow new Error('isDigits is not implemented yet');\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/regex.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Before any code, read three patterns aloud as sentences, saying which strings each takes and which it turns away: a caret, a digit run of two to four, a dollar; a hash that may be absent then six hex characters; and a bare digit alone. Ask of each: is it anchored, and what slips past if it is not. That act of reading is the whole phase."
         }
@@ -1867,7 +1956,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Read a pattern as a sentence from its anchor: what must come first, what repeats, what must come last.",
+        "Read a pattern as a sentence from its anchor: what must come first, what repeats, what must come last. If node is command not found, run the environment check first.",
         "Anchored at both ends asks about the whole string; with no anchors it only asks whether the shape shows up somewhere inside."
       ],
       "misconceptions": [
@@ -1880,7 +1969,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "regex-ask-anchor",
       "title": "Reason: which pattern means only digits",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "regex-basics"
@@ -1964,7 +2053,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/regex.js: it owns the three shape checks — the whole string is digits, a digit appears anywhere, and the string is a hash plus six hex characters — and each throws today where your pattern call belongs.",
+        "Open src/regex.js: it owns the three shape checks — the whole string is digits, a digit appears anywhere, and the string is a hash plus six hex characters — and each throws today where your pattern call belongs. Run node --test --test-reporter=tap test/regex.test.mjs and read the name of the check that failed.",
         "The failing names are the spec: a whole run of digits accepted, a value holding a letter rejected, a digit found anywhere in text, the hash-and-six shape accepted, and the empty string rejected.",
         "Each function returns the answer of one test call on its pattern: the whole-string checks pin both ends so only a complete match passes, while the check that looks for a digit anywhere is deliberately left unpinned.",
         "The edges are where the anchors and the quantifiers disagree: a stray letter and an empty value must both fail the whole-string checks, so ask which quantifier refuses nothing at all — the one meaning at least one, or the one meaning none.",
@@ -2054,7 +2143,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Static UI shows data; behavior changes it. An event (a click, a submit) calls a handler, the handler updates state, and the update re-renders the interface. The chain always runs in that order — event, state, render — which is why a screen that does not change means one of the three links broke."
+          "body": "Static UI shows data; behavior changes it. An event (a click, a submit) calls a handler, the handler updates state, and the update re-renders the interface. The chain always runs in that order — event, state, render — so a screen that does not change means one of the three links broke."
         },
         {
           "kind": "prose",
@@ -2062,11 +2151,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A handler carries more than its code: it also carries the names it could see where it was written, kept alive as long as the handler can still be called. That pairing is what a closure is."
+          "body": "A handler carries more than its code: it carries the names it could see where it was written, kept alive as long as the handler can still be called. That pairing is what a closure is."
         },
         {
           "kind": "prose",
-          "body": "A local variable usually disappears when its function returns; a closure keeps it, because the inner function still reaches for it. That is why a row can call onDelete(task.id) later, long after the code that built it finished."
+          "body": "A local variable usually disappears when its function returns; a closure keeps it, because the inner function still reaches for it. That is why a row can call onDelete(task.id) later, long after the code that built it."
         },
         {
           "kind": "example",
@@ -2075,7 +2164,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "One thing decides what that inner function treats as this. An arrow function has no this of its own; it borrows the one from where it was written, usually the object that owns the state. A plain function gets its this from whoever calls it, which is how a handler ends up changing nothing."
+          "body": "One thing decides what that inner function treats as this. An arrow function has no this of its own; it borrows the one from where it was written, usually the object owning the state. A plain function gets its this from whoever calls it, which is how a handler changes nothing."
         },
         {
           "kind": "keypoints",
@@ -2096,8 +2185,28 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "code": "input holds draft → submit calls onAdd(draft) → App appends → list re-renders"
         },
         {
+          "kind": "example",
+          "body": "src/components/TaskItem.jsx is where this phase works.",
+          "code": "export function TaskItem({ task, onDelete }) {\n\treturn '<li class=\"task-item\"></li>';\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/behavior.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open src/App.jsx and src/components/TaskItem.jsx. Trace one delete: what the row calls, what the parent does with it, and where the smaller list comes from. Write the three links in the Notes."
+        },
+        {
+          "kind": "example",
+          "body": "src/components/TaskItem.jsx is where this phase works.",
+          "code": "export function TaskItem({ task, onDelete }) {\n\treturn '<li class=\"task-item\"></li>';\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/behavior.test.mjs"
         },
         {
           "kind": "task",
@@ -2116,7 +2225,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Follow one keystroke: input event, state variable, submit handler, parent list."
+        "Follow one keystroke: input event, state variable, submit handler, parent list. If node is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Updating a variable re-renders — only state updates schedule a render; plain variables change silently.",
@@ -2129,7 +2238,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "behavior-ask-state",
       "title": "Reason: predicting renders",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "web-behavior"
@@ -2197,7 +2306,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Two files share this: src/components/TaskItem.jsx owns one row and the delete button inside it, and src/App.jsx owns the array and the function that shrinks it. Each file already receives what it needs — the acting half is what is missing.",
+        "Two files share this: src/components/TaskItem.jsx owns one row and the delete button inside it, and src/App.jsx owns the array and the function that shrinks it. Each file already receives what it needs — the acting half is what is missing. Run node --test --test-reporter=tap test/behavior.test.mjs and read the name of the check that failed.",
         "Three failing names, in the order they lead: the delete button reports the task id, deleting a task removes it from the list, and deleting the only task empties the list cleanly.",
         "The row reports and the parent decides, so an id travels up and the decision stays down. In the parent, the next array is the old one with that id left out — state is replaced, never edited in place.",
         "The boundary is the last task: one row left is still a list, and nothing about it needs a guard. Ask what your function returns once every task is gone, and let an empty list render like any other.",
@@ -2277,11 +2386,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Your list disappears when the program runs again, and that is not a bug in your code — it is the difference between two kinds of memory. State lives in memory: it exists while the process runs, and a reload throws it away. Storage survives, but nothing reads it unless you tell the app to. Persistence is the bridge, and you build it yourself."
+          "body": "Your list disappears when the program runs again, and that is not a bug in your code — it is the difference between two kinds of memory. State lives in memory: it exists while the process runs, and a reload throws it away. Storage survives, but nothing reads it unless you tell the app to. Persistence is the bridge, and you build it."
         },
         {
           "kind": "prose",
-          "body": "The instinct is to keep two copies and edit both; resist it. Keep one truth — the array in state — and treat storage as a copy you write after every change and read once, at start. One direction: state → storage. If you ever edit storage first and hope state follows, you have two truths that can disagree and no way to tell which one is right."
+          "body": "The instinct is to keep two copies and edit both; resist it. Keep one truth — the array in state — and treat storage as a copy you write after every change and read once, at start. One direction: state → storage. If you ever edit storage first and hope state follows, you have two truths that can disagree and no way to tell which is right."
         },
         {
           "kind": "example",
@@ -2290,7 +2399,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Storage holds text, so objects travel through JSON: JSON.stringify to write, JSON.parse to read. That conversion is lossy on purpose — functions, undefined and class instances do not survive it, only data does. Which is useful: what you persist is data, and data is the thing you can reason about."
+          "body": "Storage holds text, so objects travel through JSON: JSON.stringify to write, JSON.parse to read. That conversion is lossy on purpose — functions, undefined and class instances do not survive it, only data does. What you persist is data, and data is the thing you can reason about."
         },
         {
           "kind": "prose",
@@ -2313,8 +2422,28 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/App.jsx is where this phase works.",
+          "code": "export function App({ tasks, onDelete }) {\n\treturn `<ul class=\"task-list\">${tasks.map((task) => TaskItem({ task, onDelete })).join(\"\")}</ul>`;\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/persistence.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open src/App.jsx and find the array the list is drawn from. Nothing writes it anywhere, so a fresh import starts from nothing, with the tasks gone. Then run test/persistence.test.mjs and read the failure; if `node` is command not found, run the environment check first."
+        },
+        {
+          "kind": "example",
+          "body": "src/App.jsx is where this phase works.",
+          "code": "export function App({ tasks, onDelete }) {\n\treturn `<ul class=\"task-list\">${tasks.map((task) => TaskItem({ task, onDelete })).join(\"\")}</ul>`;\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/persistence.test.mjs"
         },
         {
           "kind": "task",
@@ -2334,7 +2463,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "The array in state is the truth; anything else is a copy of it.",
+        "The array in state is the truth; anything else is a copy of it. If node is command not found, run the environment check first.",
         "localStorage is a key and a string. Anything with getItem and setItem behaves the same way — which is exactly what makes this testable without a browser.",
         "Writing during a render is not a change event: renders happen for other reasons too, so a save tied to how often the screen draws is a save you cannot predict."
       ],
@@ -2349,7 +2478,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "data-ask-shape",
       "title": "Reason: the smallest correct change",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "data-state"
@@ -2418,7 +2547,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Two files are in play: src/storage.js is the module you write and it owns storage and nothing else, and src/App.jsx is where it gets wired in — read once for the starting array, saved after every change.",
+        "Two files are in play: src/storage.js is the module you write and it owns storage and nothing else, and src/App.jsx is where it gets wired in — read once for the starting array, saved after every change. Run node --test --test-reporter=tap test/persistence.test.mjs and read the name of the check that failed.",
         "Three failing names from test/persistence.test.mjs: a new task is saved to storage, the saved list is loaded at start, and a corrupt saved value does not crash the app. The suite drives your module with a stand-in storage object, so no browser is involved.",
         "One key holds the whole array as text: stringify on the way out, parse on the way back. The suite imports a factory named createTaskStore that hands back an object with a load and a save, so that name and that shape are already fixed for you.",
         "The boundary is a value that will not parse — truncated, or written by an older version of your own app. Ask what the caller gets when the read fails, and answer it inside the module rather than letting the throw escape.",
@@ -2514,6 +2643,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "code": "App                   // owns the list, and maps one row per task\n  └─ TaskItem × many   // owns one row, and nothing else"
         },
         {
+          "kind": "example",
+          "body": "src/components/TaskItem.jsx is where this phase works.",
+          "code": "export function TaskItem({ task, onDelete }) {\n\treturn '<li class=\"task-item\"></li>';\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/taskitem.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open src/App.jsx and src/components/TaskItem.jsx. Say which file owns the list and which owns one row, and what each function receives — then check your answer against what each one actually takes."
         }
@@ -2535,7 +2674,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Start from the leaves: what does one task row need to show and do?"
+        "Start from the leaves: what does one task row need to show and do? If node is command not found, run the environment check first."
       ],
       "misconceptions": [
         "A component per visual box regardless of reuse — boxes that appear once are not components, they are markup.",
@@ -2622,7 +2761,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "ui-ask-design",
       "title": "Reason: component design",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "ui-components"
@@ -2690,7 +2829,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Two files own this: src/components/TaskItem.jsx owns one row and src/App.jsx owns the list. The row already takes task and onDelete and returns an empty li — what it shows is the unwritten half.",
+        "Two files own this: src/components/TaskItem.jsx owns one row and src/App.jsx owns the list. The row already takes task and onDelete and returns an empty li — what it shows is the unwritten half. Run node --test --test-reporter=tap test/taskitem.test.mjs and read the name of the check that failed.",
         "The suite names what it wants: the list renders one TaskItem per task, a single row shows the title of the task it was handed rather than a fixed one, and twenty tasks still render twenty rows. Read the failing names before the file.",
         "The title reaches the row on the task it was handed, so it is read from props and nothing is looked up. Then check the list itself: one of the checks is about a row per task, not about the row.",
         "Twenty tasks is the boundary: the count has to come from the array the list was handed, not from anything a row remembers between calls. A row that repeats one title twenty times is the failure this check catches.",
@@ -2781,12 +2920,22 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/takehome-subject.js is where this phase works.",
+          "code": "/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\n/* The take-home.\n *\n * The brief is in the panel. That is the whole of the specification.\n *\n * This file exists and contains nothing. That is deliberate and it is the point:\n * every previous phase handed you a file with something in it, so you could read\n * the shape before you wrote it. Here the shape has to come from the sentence.\n * The only clue in the repository is this file's name, and the brief names the\n * export — which is exactly as much as a real hiring task gives you."
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap acceptance/takehome.acceptance.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Without opening any other file, write down four questions the brief leaves unanswered. For each, say what you would *assume* if you had to assume. Do not resolve them yet — naming them is the work, and you will check them against your own code before you submit."
         }
       ],
       "hints": [
-        "Read the brief once for what it says, then a second time for what it skipped.",
+        "Read the brief once for what it says, then a second time for what it skipped. If node is command not found, run the environment check first.",
         "Every brief has an implicit contract. Ask what happens when the input is empty, incomplete, or much larger than the example you imagined."
       ],
       "misconceptions": [
@@ -2798,7 +2947,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "independent-ask-ambiguity",
       "title": "Reason: which assumption is the acceptance suite making",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 3,
       "competencyIds": [
         "independent-delivery"
@@ -3005,6 +3154,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/cart.js is where this phase works.",
+          "code": "/** Cart total. Ignores the threshold and does not round. */\nexport function cartTotal(items, opts = {}) {\n\tconst net = items.reduce((sum, item) => sum + item.price * item.qty, 0);\n\treturn net;\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/cart.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open src/cart.js. Write down three inputs where a broken implementation would give a different answer from the correct one — and say which line each one protects. If you cannot name a broken version for a test, that test is not earning its place."
         }
@@ -3031,7 +3190,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "The spec says a discount applies above a threshold. Ask what happens exactly at the threshold.",
+        "The spec says a discount applies above a threshold. Ask what happens exactly at the threshold. If node is command not found, run the environment check first.",
         "Rounding is part of the contract — a total that comes back as 99.999999 is wrong even if it is nearly right."
       ],
       "misconceptions": [
@@ -3043,7 +3202,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "testing-ask-vacuous",
       "title": "Reason: what a vacuous suite would miss",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 3,
       "competencyIds": [
         "test-authoring"
@@ -3145,7 +3304,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "The file here is test/cart.test.mjs, and you write it yourself against the cart module the project already ships. Run your suite against the broken versions before you run it against the real one: a test you have never seen fail is a guess.",
+        "The file here is test/cart.test.mjs, and you write it yourself against the cart module the project already ships. Run your suite against the broken versions before you run it against the real one: a test you have never seen fail is a guess. Run node --test --test-reporter=tap test/cart.test.mjs and read the name of the check that failed.",
         "Write one assertion per behaviour the spec names. The spec names three: the threshold, the discount, the rounding.",
         "Pick numbers that sit on the boundary, not numbers you happened to see pass.",
         "Run the checks and read which breakage you did not notice — the message names it for you. If the suite cannot start because `node` is command not found, run the environment check first.",
@@ -3249,12 +3408,22 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "vendor/nanoid/index.js is where this phase works.",
+          "code": "import { urlAlphabet } from './url-alphabet/index.js'"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/navigation.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open vendor/nanoid. This is nanoid, a real published library, vendored here at a fixed commit - you can read vendor/PROVENANCE.md for where it came from. Grep it for `urlAlphabet` and write down which file DEFINES it and which files merely import it. Then grep for `customAlphabet` and say why there is more than one answer. Do not open anything else until you have written both down."
         }
       ],
       "hints": [
-        "Ctrl+Shift+F searches every file at once — that is the difference between the editor and scrolling.",
+        "Ctrl+Shift+F searches every file at once — that is the difference between the editor and scrolling. If node is command not found, run the environment check first.",
         "F12 goes to where a symbol was written; Shift+F12 lists everywhere it is used."
       ],
       "misconceptions": [
@@ -3266,7 +3435,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "navigate-ask-callsite",
       "title": "Reason: definition or call site",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "codebase-navigation"
@@ -3342,7 +3511,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "One file: search.mjs at the root of this workspace, which owns the search itself — walking vendor/nanoid and reporting what it finds. Its helpers answer through one another, so a single wrong answer surfaces under three names.",
+        "One file: search.mjs at the root of this workspace, which owns the search itself — walking vendor/nanoid and reporting what it finds. Its helpers answer through one another, so a single wrong answer surfaces under three names. Run node --test --test-reporter=tap test/navigation.test.mjs and read the name of the check that failed.",
         "Four failing names from test/navigation.test.mjs: a search finds the file that defines a symbol, a search finds every file rather than the first, call sites are not definitions, and a search that matches nothing says so instead of guessing.",
         "Two habits have to go: stopping at the first hit, and reading only the top level. The source sits in subdirectories, so the walk has to reach every file before anything is decided; then a definition is the file where the symbol is written, while a call site is a file that mentions it without writing it.",
         "The empty case is the boundary: nothing matched is a real answer, and the caller needs an empty list rather than an error, because a throw stops the next search. Ask what each function returns when no file matches.",
@@ -3444,6 +3613,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/reducer.js is where this phase works.",
+          "code": "export function toggleTask(tasks, id) {\n\tconst index = tasks.findIndex((task) => task.id === id);\n\ttasks[index].done = !tasks[index].done;\n\treturn tasks;\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/reducer.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Run node --test test/reducer.test.mjs in the project and write down, in your own words, what each failing name expects and what it says it got. Do not open src/reducer.js yet. The diagram above traces the trail from the failing assertion down to the line that produced it: that trail is what you are looking for, and you are building it from the names first."
         }
@@ -3460,7 +3639,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Run the suite before you form an opinion about it; a failure you have watched happen is one you can reason about.",
+        "Run the suite before you form an opinion about it; a failure you have watched happen is one you can reason about. If node is command not found, run the environment check first.",
         "The names that failed are a smaller set than the file. Two of them are about the same value, and the third is about a value that is not there.",
         "Pair each failing name with the assertion inside it: the assertion is the expectation, written down where you can check your reading of it."
       ],
@@ -3474,7 +3653,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "debug-ask-first",
       "title": "Reason: the first move that shortens the fix",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 3,
       "competencyIds": [
         "debug-failure-lab"
@@ -3543,7 +3722,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "The cause is in src/reducer.js, which owns the list's state transitions; the failing names come from test/reducer.test.mjs. One function there disagrees with its names while the rest of the file passes, so the search is narrow.",
+        "The cause is in src/reducer.js, which owns the list's state transitions; the failing names come from test/reducer.test.mjs. One function there disagrees with its names while the rest of the file passes, so the search is narrow. Run node --test --test-reporter=tap test/reducer.test.mjs and read the name of the check that failed.",
         "Read the failing names as a group before the file: toggling a task hands back a new list, the list that was passed in is not modified, and toggling an id that is not in the list changes nothing. Two of them are about the same value; the third is about a value that is not there at all.",
         "The caller keeps the list it handed over, so the function has to build the next list rather than edit the one it was given — and the task that changed needs a copy of its own, because a fresh array holding the same old objects still changes what the caller sees.",
         "The unknown id is a separate decision with its own answer: a position lookup hands back a sentinel rather than a position when nothing matches, so decide what the function does then and say it explicitly instead of letting it fall through.",
@@ -3657,6 +3836,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "code": "git init -b main\necho one > f.txt\ngit add -A\ngit commit -m first\ngit switch -c feature\necho two > f.txt\ngit commit -am feature\ngit switch -\necho three > f.txt\ngit commit -am main\ngit merge feature"
         },
         {
+          "kind": "example",
+          "body": "src/merge.js is where this phase works.",
+          "code": "export function taskLabel(task) {\n\treturn `${task.title} (${task.done ? 'done' : 'open'})`;\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/merge.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Stop when Git stops. Then run `git log --graph --oneline --all` and find the commit where the two lanes meet — that is the question this whole phase is about. Leave the scratch folder where it is."
         }
@@ -3717,7 +3906,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "git-ask-recover",
       "title": "Reason: which recovery fits the mistake",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "git-recovery"
@@ -3794,7 +3983,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "src/merge.js is the file the merge stopped on, and it owns both sides of the question: the markers in it are Git asking what the function was meant to do, not two versions of the answer. If the suite cannot run because `node` is command not found, run the environment check first.",
+        "src/merge.js is the file the merge stopped on, and it owns both sides of the question: the markers in it are Git asking what the function was meant to do, not two versions of the answer. If the suite cannot run because `node` is command not found, run the environment check first. Run node --test --test-reporter=tap test/merge.test.mjs and read the name of the check that failed.",
         "Read the two sides as two intents, not two blocks of text — one says what the status is, the other says how the title should read. Both are still wanted.",
         "A branch can add a declaration as well as change one. Look for something that appears on only one side: deleting a whole side can quietly drop it.",
         "The check that catches a lazy resolution is not about the label at all: it calls a name only the feature branch introduced. Read both sides once more and ask which declarations your merged file must contain for every failing name to pass.",
@@ -3942,7 +4131,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "api-integration"
       ],
       "hints": [
-        "Name the state you are looking at before you render: nothing asked yet, asked and waiting, arrived, failed. An empty list while the request is still in flight is the waiting state, not a bug."
+        "Name the state you are looking at before you render: nothing asked yet, asked and waiting, arrived, failed. An empty list while the request is still in flight is the waiting state, not a bug. If node is command not found, run the environment check first."
       ],
       "objectives": [
         "Explain why fetch resolves for an HTTP error status and rejects only when no answer arrives.",
@@ -3953,7 +4142,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "For the whole course the list lived only in memory. Putting it on a server changes one fact and breaks everything you have written: the answer is no longer there when you ask. A call that used to hand back a value now hands back a promise for one, so every line after it runs before the data arrives."
+          "body": "For the whole course the list lived only in memory. Putting it on a server changes one fact and breaks what you have written: the answer is no longer there when you ask. A call that used to hand back a value now hands back a promise for one, so every line after it runs before the data arrives."
         },
         {
           "kind": "prose",
@@ -3974,11 +4163,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Two details in that code are the entire lesson. The loading flag is set before the first await, because the turn ends there: a line written after an await runs in a later turn, so a flag raised on it is a flag no render ever observes."
+          "body": "Two details in that code are the whole lesson. The loading flag is set before the first await, because the turn ends there: a line written after an await runs in a later turn, so a flag raised there is one no render ever observes."
         },
         {
           "kind": "prose",
-          "body": "And the try/catch lives inside load rather than at whatever calls it: a failure the caller has to remember to handle is a failure that goes unhandled in the next screen somebody adds, and the module that owns the request is the one place that cannot forget."
+          "body": "And the try/catch lives inside load rather than at whatever calls it: a failure the caller has to remember to handle goes unhandled in the next screen somebody adds, and the module that owns the request is the one place that cannot forget."
         },
         {
           "kind": "keypoints",
@@ -3989,6 +4178,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "Name every state it can be in, and set it on both paths.",
             "An empty list and failed load look alike; only state keeps them apart."
           ]
+        },
+        {
+          "kind": "example",
+          "body": "src/App.jsx is where this phase works.",
+          "code": "export function App({ tasks, onDelete }) {\n\treturn `<ul class=\"task-list\">${tasks.map((task) => TaskItem({ task, onDelete })).join(\"\")}</ul>`;\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/api.test.mjs"
         },
         {
           "kind": "task",
@@ -4027,7 +4226,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "api-ask-outcome",
       "title": "Reason: what happens when the server says no",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "api-integration"
@@ -4098,7 +4297,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Say the states out loud first: nothing asked yet, asked and waiting, arrived, failed. Anything the code cannot state that it is in, it cannot show — and a screen with no word for failure will display an empty list instead of one.",
+        "Open src/api.js. Say the states out loud first: nothing asked yet, asked and waiting, arrived, failed. Anything the code cannot state that it is in, it cannot show — and a screen with no word for failure will display an empty list instead of one. Run node --test --test-reporter=tap test/api.test.mjs and read the name of the check that failed.",
         "The suite hands your module a stand-in for fetch: a function that takes a URL and returns a promise, answering with an object that has ok, status and an async json(). Nothing here needs a browser, a port, or a real server.",
         "src/api.js should export createTaskApi(fetchImpl) returning one object holding status, tasks and error plus an async load(): raise the status before you await anything, and set it again on every way out of the function — including the way that throws.",
         "Treat one response as two separate questions: did anything answer at all, which is the promise, and was that answer good, which is res.ok. A 503 passes the first and fails the second, so the ok check has to come before json() and its failure has to land in the same error state as a dead network.",
@@ -4171,12 +4370,22 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       ],
       "lesson": [
         {
-          "kind": "prose",
-          "body": "The api phase put you in the seat that asks. Take the other one now. Nothing about the request changes — it still arrives, still leaves, still can be answered well or badly — but the decisions you make here are the ones a caller has to live with afterwards, without ever being able to see you make them."
+          "kind": "example",
+          "body": "test/api-server.test.mjs is the contract you are writing to.",
+          "code": "test(\"a get on the collection answers the tasks with a 200\", async () => {\n  const { createTaskServer } = await loadServer();\n  const server = createTaskServer([{ id: \"t1\", title: \"write it\", done: false }]);\n  const res = server.handle({ method: \"GET\", path: \"/tasks\" });\n  assert.equal(res.status, 200);\n  assert.deepEqual(res.body, [{ id: \"t1\", title: \"write it\", done: false }]);\n});"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite for this phase. If node is command not found, run the environment check first.",
+          "code": "node --test --test-reporter=tap test/api-server.test.mjs"
         },
         {
           "kind": "prose",
-          "body": "Stripped down, a server is a function: request in, answer out. That reduction is not a simplification that loses the subject — it is the subject. Seen that way there are exactly three things you ever do, and every API decision is one of them: which requests you answer at all, what a request must contain before you will act on it, and which answer the situation deserves."
+          "body": "The api phase put you in the seat that asks. Take the other one now. Nothing about the request changes, it still arrives, still leaves, still can be answered well or badly, but the decisions you make here are the ones a caller has to live with, without ever seeing you make them."
+        },
+        {
+          "kind": "prose",
+          "body": "Stripped down, a server is a function: request in, answer out. That reduction is not a simplification that loses the subject, it is the subject. There are exactly three things you ever do, and every API decision is one of them: which requests you answer, what a request must contain before you act on it, and which answer the situation deserves."
         },
         {
           "kind": "prose",
@@ -4189,11 +4398,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The third decision matters more than it looks: the status code is how the caller learns the outcome without reading your prose. A client checks the number before reading the body, and routes on it. Answering 200 for all four rows above tells the caller nothing, and switches off the code path that would flag a problem."
+          "body": "The third decision matters more than it looks: the status code is how the caller learns the outcome without reading your prose. A client checks the number before reading the body, and routes on it. Answering 200 for all four rows above tells the caller nothing, and switches off the path that would flag a problem."
         },
         {
           "kind": "prose",
-          "body": "The second decision has an ordering that is easy to get wrong: a refusal must arrive before anything changes. Check the body, then touch the store. Code that writes first and validates after does not fail cleanly; it fails having already damaged what the user cared about. The safe moment to stop is before you have done anything."
+          "body": "The second decision has an ordering that is easy to get wrong: a refusal must arrive before anything changes. Check the body, then touch the store. Code that writes first and validates after fails having already damaged what the user cared about. The safe moment to stop is before you have done anything."
         },
         {
           "kind": "keypoints",
@@ -4207,7 +4416,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Before the challenge, settle the design on paper. For each of the four example requests, name which of the three decisions it exercises and what you would answer. Then add a fifth case the example omits: a PATCH to /tasks/t9 when no t9 exists. Decide two things separately: what status you return, and whether the store was touched by then. Write both down before writing code."
+          "body": "Before the challenge, settle the design on paper. For each of the four example requests, name which of the three decisions it exercises and what you would answer. Then add a fifth case the example omits: a PATCH to /tasks/t9 when no t9 exists. Decide two things separately: what status you return, and whether the store was touched by then."
         }
       ],
       "visualization": {
@@ -4254,7 +4463,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "api-server-ask-status",
       "title": "Reason: which number the situation deserves",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "api-design"
@@ -4336,7 +4545,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "src/task-server.js is the whole server: it holds the tasks it was constructed with and decides the status and the body of every answer the suite gets. Before writing any of it, say the three decisions out loud for each request — is there a route for this method and path, is the body usable, and which number the situation earned.",
+        "src/task-server.js is the whole server: it holds the tasks it was constructed with and decides the status and the body of every answer the suite gets. Before writing any of it, say the three decisions out loud for each request — is there a route for this method and path, is the body usable, and which number the situation earned. Run node --test --test-reporter=tap test/api-server.test.mjs and read the name of the check that failed.",
         "The suite calls createTaskServer(tasks) and then handle({ method, path, body }) synchronously — no port, no await, no response object, nothing to close. Return { status, body } and no other shape is expected of you.",
         "Match the collection path first and keep the two arms separate: '/tasks' with GET is the read, '/tasks' with POST is the create. Testing the path alone would make a method you never registered look like a route you did, which is the same mistake the fourth check is about.",
         "Validate before you store. If the body carries no usable title, return 400 with a message naming that field and return early without pushing anything; otherwise create the task, give it an id the server chose, and answer 201 with the task itself in the body.",
@@ -4410,11 +4619,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A review is not an opinion about code. It is the last cheap moment to find something before production, where the same defect costs an outage instead of a comment. So the question is never whether you like this, but what it assumes and what happens when that assumption is false somewhere you are not standing."
+          "body": "A review is not an opinion about code. It is the last cheap moment to find something before production, where the same defect costs an outage instead of a comment. The question is never whether you like this, but what it assumes and what happens when that assumption is false somewhere you are not standing."
         },
         {
           "kind": "prose",
-          "body": "One honest limit before anything else: this phase cannot hand you a real deployment. What it can hand you is the part that never goes out of date: the judgement that decides whether shipping is safe, and the habit of making the machine check it."
+          "body": "One honest limit: this phase cannot hand you a real deployment. What it can hand you is the part that never goes out of date: the judgement that decides whether shipping is safe, and the habit of making the machine check it."
         },
         {
           "kind": "prose",
@@ -4431,7 +4640,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "There is a fourth rule, the one that ends careers rather than evenings. A secret is a value you were asked to keep: naming the variable in an error is help, but quoting the value is a leak, and it spreads into every log, tracker, and screenshot downstream. A report must be useful without being a confession."
+          "body": "There is a fourth rule, the one that ends careers rather than evenings. A secret is a value you were asked to keep: naming the variable in an error is help, but quoting the value is a leak, and it spreads into every log, tracker, and screenshot downstream. A report must be useful without confessing."
         },
         {
           "kind": "keypoints",
@@ -4443,6 +4652,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "Environment variables are strings, so build types at the edge.",
             "An error may name a secret. It may never quote one."
           ]
+        },
+        {
+          "kind": "example",
+          "body": "src/deploy.js is where this phase works.",
+          "code": "/**\n * Build the boot configuration from the environment.\n *\n * @param {Record<string, string | undefined>} env\n */\nexport function loadConfig(env = process.env) {\n\tconst port = env.PORT || DEFAULTS.port;\n\tconst databaseUrl = env.DATABASE_URL || DEFAULTS.databaseUrl;\n\tconst sessionSecret = env.SESSION_SECRET || DEFAULTS.sessionSecret;\n\tconst debug = env.DEBUG || DEFAULTS.debug;\n\n\tif (sessionSecret.length < 32) {\n\t\tthrow new Error(`SESSION_SECRET must be at least 32 characters, got \"${sessionSecret}\"`);\n\t}\n\n\treturn { port, databaseUrl, sessionSecret, debug };\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/deploy.test.mjs"
         },
         {
           "kind": "task",
@@ -4463,7 +4682,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Read the diagram left to right and notice where the boxes sit: nothing reaches the app until it has been through validate, and ship comes after the app boots rather than instead of it."
+        "Read the diagram left to right and notice where the boxes sit: nothing reaches the app until it has been through validate, and ship comes after the app boots rather than instead of it. If node is command not found, run the environment check first."
       ],
       "misconceptions": [
         "A review is a matter of taste and seniority — it is a list of assumptions and what breaks when each one is wrong, which anyone can write down and argue with.",
@@ -4475,7 +4694,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "review-ask-verdict",
       "title": "Reason: what a review is allowed to conclude",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 3,
       "competencyIds": [
         "release-readiness"
@@ -4553,7 +4772,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Start by reading rather than writing. List what src/deploy.js assumes about the machine it runs on, and for each assumption ask what happens when it is false somewhere you cannot see. That list is the review; the code change is only what the review concluded.",
+        "Start by reading rather than writing. List what src/deploy.js assumes about the machine it runs on, and for each assumption ask what happens when it is false somewhere you cannot see. That list is the review; the code change is only what the review concluded. Run node --test --test-reporter=tap test/deploy.test.mjs and read the name of the check that failed.",
         "The app needs a report, not a value: loadConfig(env) returns { ok, problems, config }, where ok is false when anything required is missing or wrong, problems holds one sentence per problem naming the variable, and config is the typed configuration or null. Return it rather than throwing — the caller decides whether to exit, and it can only exit once if it is told everything at once.",
         "Required and optional are two lists you write deliberately, and the test is what a wrong value costs. A wrong port costs a restart, so PORT may default. A wrong database address costs a silent write to nowhere, so DATABASE_URL may not, and neither may a session secret that everybody can read in the repository.",
         "Build the types at the edge instead of trusting them: turn the port text into a number and refuse anything that is not a positive whole number, read the words true and 1 explicitly rather than trusting truthiness, and give the secret a length rule. Then read your own bad-secret sentence back — the variable name belongs in it and the value does not.",
@@ -4642,6 +4861,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/task-batch.js is where this phase works.",
+          "code": "/* Pull request under review: batch task import (C6 — Work with others).\n *\n * A teammate opened this PR to import tasks in bulk. Three review comments are\n * attached below from the team lead:\n *\n *   [Review Comment 1 — Contract]: \"Existing v1 callers destructure\n *     `{ imported, rejected, count }` from `importBatch(existing, incoming)`."
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/pr-review.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open src/task-batch.js and read all three review comments at the top of the file. Run node --test --test-reporter=tap test/pr-review.test.mjs to see how each comment corresponds to a failing behavioral check."
         }
@@ -4666,7 +4895,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Follow the event-flow diagram from left to right: every review comment maps to a concrete invariant the caller relies on."
+        "Follow the event-flow diagram from left to right: every review comment maps to a concrete invariant the caller relies on. If node is command not found, run the environment check first."
       ],
       "misconceptions": [
         "Addressing a review comment means editing only the single line the reviewer highlighted — a contract comment requires checking every return path and caller assumption.",
@@ -4678,7 +4907,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "pr-review-ask-thread",
       "title": "Reason: which review change breaks existing callers",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 3,
       "competencyIds": [
         "code-review-collaboration"
@@ -4750,7 +4979,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Read the three review comments at the top of src/task-batch.js: each names one invariant the exported importBatch must keep, and the suite stays red until all three hold. If the suite cannot run because `node` is command not found, run the environment check first.",
+        "Read the three review comments at the top of src/task-batch.js: each names one invariant the exported importBatch must keep, and the suite stays red until all three hold. If the suite cannot run because `node` is command not found, run the environment check first. Run node --test --test-reporter=tap test/pr-review.test.mjs and read the name of the check that failed.",
         "The failing names are the contract: one object carrying the imported tasks, the refused incoming positions and a count; blank titles turned away; and nothing the caller handed you altered.",
         "Build the answer as new data rather than as edits: two fresh lists, one for what you accept and one for what you refuse, and a single walk over the incoming items by position.",
         "The edge check asks what the caller still holds afterwards. Which step of yours grows a list it was handed, or writes a trimmed value back onto an object it was given? Neither may happen.",
@@ -4838,6 +5067,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/ai-sync.js is where this phase works.",
+          "code": "/* AI-generated sync client under audit (C7 — Work with AI output).\n *\n * Notice: This code and its confident summary below were authored by NEXORA to\n * simulate an AI coding assistant's pull request.\n *\n * === AI Assistant PR Summary (UNVERIFIED) ===\n * \"Implemented `syncTasksWithRemote(remoteFn, filter, fallbackCache)`:\n *  1. Strictly surfaces remote HTTP/network failures as `ok: false`.\n *  2. Returns a defensive copy of `fallbackCache` so callers cannot mutate\n *     shared cache state.\n *  3. Safely encodes the `filter.tag` parameter into the query string.\"\n * ============================================\n */\n\nexport async function syncTasksWithRemote(remoteFn, filter = {}, fallbackCache = []) {\n\tconst query = filter.tag ? `?tag=${filter.tag}` : '';\n\ttry {\n\t\tconst res = await remoteFn(`/tasks${query}`);\n\t\tif (!res || res.status >= 500) {\n\t\t\treturn { ok: true, fromCache: true, tasks: fallbackCache };\n\t\t}\n\t\treturn { ok: true, fromCache: false, tasks: res.tasks ?? [] };"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/ai-audit.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open src/ai-sync.js and compare the three numbered claims in the header comment against the implementation. Run node --test --test-reporter=tap test/ai-audit.test.mjs to watch all three claims fail against the tests."
         }
@@ -4870,7 +5109,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Compare each line in the \"What the AI summary claimed\" box with the actual return statements in src/ai-sync.js."
+        "Compare each line in the \"What the AI summary claimed\" box with the actual return statements in src/ai-sync.js. If node is command not found, run the environment check first."
       ],
       "misconceptions": [
         "If the generated code is clean, well-commented, and passes a happy-path test, the summary accurately describes its edge cases — prose and code are generated token-by-token without executing the edge cases.",
@@ -4882,7 +5121,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "id": "ai-audit-ask-claim",
       "title": "Reason: spot the false claim in the generated diff",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 3,
       "competencyIds": [
         "ai-output-audit"
@@ -4954,7 +5193,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Read the three numbered claims at the top of src/ai-sync.js: every one of them is currently a lie in the implementation below it. If the suite cannot run because `node` is command not found, run the environment check first.",
+        "Read the three numbered claims at the top of src/ai-sync.js: every one of them is currently a lie in the implementation below it. If the suite cannot run because `node` is command not found, run the environment check first. Run node --test --test-reporter=tap test/ai-audit.test.mjs and read the name of the check that failed.",
         "Take the three claims in the order they are numbered: the first is about the string a tag becomes, the second about what a failed call reports, and the third about who ends up owning the objects you hand back.",
         "For the tag, send the value through the encoding function rather than gluing it into the path yourself. For the cache, make one copying step and route every fallback answer through it.",
         "A refused call must not read as success. Decide what a caller should see when no reply arrives at all, and when the reply comes back carrying a failure status, and make both of those roads reach the same answer.",

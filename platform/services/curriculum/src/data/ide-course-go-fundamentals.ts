@@ -8,6 +8,26 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
   "freePhases": 0,
   "phases": [
     {
+      "id": "go-program",
+      "title": "Go program",
+      "goal": "A Go program is a package main with a func main: the package clause, the entry point, and the two commands that run and build it.",
+      "level": 2,
+      "authored": true,
+      "project": "go-ledger",
+      "activities": [
+        "go-program-learn",
+        "go-program-do",
+        "go-program-ask",
+        "go-program-review"
+      ],
+      "interviewQuestions": [
+        "What does the package clause on the first line of a Go file declare, and why must every file in a directory agree on it?",
+        "Why does a Go program need a func main, and what is the go tool doing when it runs one?",
+        "What is the difference between go run and go build, and which of them leaves something behind on your disk?",
+        "What does go.mod hold, and why does the module path on its first line decide how the packages inside it are imported?"
+      ]
+    },
+    {
       "id": "go-values",
       "title": "Go values",
       "goal": "Zero values, integers, and strings: what a variable holds before you touch it.",
@@ -16,8 +36,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-values-learn",
-        "go-values-ask",
         "go-values-do",
+        "go-values-ask",
         "go-values-review"
       ],
       "interviewQuestions": [
@@ -35,8 +55,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-control-flow-learn",
-        "go-control-flow-ask",
         "go-control-flow-do",
+        "go-control-flow-ask",
         "go-control-flow-review"
       ],
       "interviewQuestions": [
@@ -54,8 +74,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-functions-learn",
-        "go-functions-ask",
         "go-functions-do",
+        "go-functions-ask",
         "go-functions-review"
       ],
       "interviewQuestions": [
@@ -73,8 +93,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-structs-learn",
-        "go-structs-ask",
         "go-structs-do",
+        "go-structs-ask",
         "go-structs-review"
       ],
       "interviewQuestions": [
@@ -92,8 +112,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-methods-learn",
-        "go-methods-ask",
         "go-methods-do",
+        "go-methods-ask",
         "go-methods-review"
       ],
       "interviewQuestions": [
@@ -111,8 +131,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-interfaces-learn",
-        "go-interfaces-ask",
         "go-interfaces-do",
+        "go-interfaces-ask",
         "go-interfaces-review"
       ],
       "interviewQuestions": [
@@ -130,8 +150,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-packages-learn",
-        "go-packages-ask",
         "go-packages-do",
+        "go-packages-ask",
         "go-packages-review"
       ],
       "interviewQuestions": [
@@ -149,8 +169,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-collections-learn",
-        "go-collections-ask",
         "go-collections-do",
+        "go-collections-ask",
         "go-collections-review"
       ],
       "interviewQuestions": [
@@ -168,8 +188,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-pointers-learn",
-        "go-pointers-ask",
         "go-pointers-do",
+        "go-pointers-ask",
         "go-pointers-review"
       ],
       "interviewQuestions": [
@@ -187,8 +207,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-embedding-learn",
-        "go-embedding-ask",
         "go-embedding-do",
+        "go-embedding-ask",
         "go-embedding-review"
       ],
       "interviewQuestions": [
@@ -206,8 +226,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-errors-learn",
-        "go-errors-ask",
         "go-errors-do",
+        "go-errors-ask",
         "go-errors-review"
       ],
       "interviewQuestions": [
@@ -226,8 +246,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-lifecycle-learn",
-        "go-lifecycle-ask",
         "go-lifecycle-do",
+        "go-lifecycle-ask",
         "go-lifecycle-review"
       ],
       "interviewQuestions": [
@@ -245,8 +265,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-generics-learn",
-        "go-generics-ask",
         "go-generics-do",
+        "go-generics-ask",
         "go-generics-review"
       ],
       "interviewQuestions": [
@@ -265,8 +285,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-modules-learn",
-        "go-modules-ask",
         "go-modules-do",
+        "go-modules-ask",
         "go-modules-review"
       ],
       "interviewQuestions": [
@@ -278,6 +298,210 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
     }
   ],
   "activities": {
+    "go-program-learn": {
+      "id": "go-program-learn",
+      "title": "Learn: what a program is",
+      "kind": "lesson",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "go-program"
+      ],
+      "objectives": [
+        "Explain what the package clause on the first line of a Go file declares, and why every file in a directory has to agree on it.",
+        "State what package main and func main are, and why a program needs exactly one of each.",
+        "Build a program with go build and run it with go run, and say what each command leaves behind on your disk.",
+        "Write a program that prints one line, and prove it by running the program and reading what it printed."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Every Go file begins with a package clause, and the clause names the package the file belongs to. A package is a directory of Go files that agree on that name, and the compiler builds one package at a time: it reads the directory, checks the clauses match, and treats the files as one unit."
+        },
+        {
+          "kind": "example",
+          "body": "The file you are about to open, with its package clause, its import and its main:",
+          "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"TODO\")\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "`package main` is the one package name the tool treats specially: it is a program, not a library. A program has exactly one `func main`, and that function is where execution starts. The tool finds it, calls it, and everything the program does happens inside it."
+        },
+        {
+          "kind": "prose",
+          "body": "`go run ./cmd/balance` compiles the program and runs it, and leaves nothing behind on your disk. `go build ./cmd/balance` compiles it and writes an executable instead of running it. One command shows your work; the other produces the artifact you ship."
+        },
+        {
+          "kind": "prose",
+          "body": "`go.mod` is the file that makes the directory a module. It names the module, declares the Go version the code is written for, and lists the versions the code builds against. The module path on its first line is the prefix every import inside the module uses."
+        },
+        {
+          "kind": "example",
+          "body": "The module file your program belongs to:",
+          "code": "module example.com/ledger\n\ngo 1.22\n\nrequire golang.org/x/crypto v0.33.0 // indirect"
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A package clause names the package; a directory is one package.",
+            "package main is a program; func main is where it starts.",
+            "go run compiles and runs; go build leaves a binary.",
+            "go.mod names the module and pins what it builds against."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "The commands you run, and the one the Run button calls for you:",
+          "code": "go run ./cmd/balance                                 # compile it and run it\ngo build ./cmd/balance                               # compile it and write a binary\ngo test ./...                                         # run every test in the module\nnode --test --test-reporter=tap test/program.test.mjs   # what the Run button calls"
+        },
+        {
+          "kind": "task",
+          "body": "Open cmd/balance/main.go and make the program print the ledger's opening balance, and nothing else: \"ledger opens with 199 cents\". Then run go run ./cmd/balance and read the line it printed."
+        }
+      ],
+      "hints": [
+        "Say what the program has to print before you open the file, and write it in a comment. A wrong guess costs a comment, not a run. If go is command not found, run the environment check first.",
+        "The file already carries the package clause, the import and the func main. What it does not have is the line you were asked for, and one Println inside func main writes it."
+      ],
+      "misconceptions": [
+        "Reading the package clause as a label or a comment. It is the first line of every file, and the compiler reads it to decide which package the file belongs to.",
+        "Thinking func main is optional. A package main without one has nowhere to start, and the compiler says so before anything runs.",
+        "Believing go run and go build are the same command. One runs the program and leaves nothing on your disk, the other writes the binary you ship.",
+        "Thinking go.mod is a lock file the toolchain writes for you. It names the module and declares what the code builds against, and you edit it."
+      ],
+      "resources": [
+        {
+          "label": "Go spec: the package clause",
+          "url": "https://go.dev/ref/spec#Package_clauses"
+        },
+        {
+          "label": "Go modules reference: go.mod files",
+          "url": "https://go.dev/ref/mod#go-mod-files"
+        }
+      ]
+    },
+    "go-program-ask": {
+      "id": "go-program-ask",
+      "title": "Reason: a main package with no main",
+      "kind": "question",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "go-program"
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "You point the go tool at a directory whose only file says `package main` and has no func main in it. What happens?"
+        }
+      ],
+      "options": [
+        "It compiles the package and warns that there is nothing to run.",
+        "It treats the directory as a library and adds it to the module.",
+        "It does not compile: a package main needs exactly one func main.",
+        "It compiles and runs, and the program exits at once with no output."
+      ],
+      "answer": 2,
+      "explanation": "Go compiles a package main before it runs anything, and the compiler is the one that insists: a main package without a func main has nowhere to start, so the build fails and no program ever runs. The other three answers each describe a tool that does not exist. There is no warning for a program with nothing to run, because a program with nothing to run is not a program yet. A directory is a library or a program by the package clause in its files, and the module file has no say in it. And a program that exits at once with no output is a program that ran, which is not what happened here.",
+      "hints": [
+        "The go tool never runs a program it could not compile, so ask what the compiler does with a main package that has no func main inside it."
+      ],
+      "misconceptions": [
+        "Believing the tool runs a package main with no entry point and simply does nothing. The compiler refuses it first, which is why the failure arrives before any run.",
+        "Assuming a directory is a program because it has a go.mod. The module file names the module; the package clause in each file says whether that package is a program."
+      ]
+    },
+    "go-program-do": {
+      "id": "go-program-do",
+      "title": "Solve: the first program",
+      "kind": "challenge",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "go-program"
+      ],
+      "files": [
+        "cmd/balance/main.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/program.test.mjs",
+      "checks": [
+        {
+          "id": "prints",
+          "label": "The program prints the opening balance",
+          "tests": [
+            "the program prints the opening balance"
+          ],
+          "feedback": "The program must print exactly \"ledger opens with 199 cents\". It prints a placeholder for now, so the check has nothing to read. One Println inside func main writes the line, and the amount is whole cents, so it is 199 and not 1.99."
+        },
+        {
+          "id": "built",
+          "label": "The built binary prints the same line",
+          "tests": [
+            "go build leaves a binary that prints the same line"
+          ],
+          "feedback": "go build compiles the program and writes the binary instead of running it. Build it with `go build ./cmd/balance`, run the binary it leaves behind, and it has to print the same line go run printed. One program, two commands, one output."
+        },
+        {
+          "id": "edge-one-line",
+          "label": "The program prints one line and nothing else",
+          "tests": [
+            "the program prints one line and nothing else"
+          ],
+          "feedback": "The program owes the ledger one line: the balance, and no second line after it. A debug print left in the program is a second line, and the placeholder left in the file is not the balance at all.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open cmd/balance/main.go. It already carries the package clause, the import and the func main; what it does not have is the line you were asked for. Run go run ./cmd/balance and read what it printed before you change anything. If go is command not found, run the environment check first.",
+        "The line is a sentence: the words, the number of cents, and the word cents. The amount is 199, because this course keeps money in whole cents rather than in a float.",
+        "fmt.Println writes the line and ends it with a newline. One call, one line: the balance, and nothing after it.",
+        "Run go run ./cmd/balance again and read the line. If it still says TODO, your Println is not inside func main, or it prints something other than the balance.",
+        "The line is exactly: ledger opens with 199 cents. One Println inside func main, and no second line after it."
+      ],
+      "misconceptions": [
+        "Printing the amount as dollars because a ledger shows dollars to people. The value is whole cents; 199 is the number, and 1.99 is a different number that cannot be added to itself.",
+        "Leaving a second print in the program to show your working. The program owes the ledger one line, and a line of debug output is a line the ledger never asked for."
+      ]
+    },
+    "go-program-review": {
+      "id": "go-program-review",
+      "title": "Review: a second program",
+      "kind": "retrieval",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "go-program"
+      ],
+      "files": [
+        "cmd/audit/main.go"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/audit.test.mjs",
+      "checks": [
+        {
+          "id": "audit-line",
+          "label": "The audit program prints the audit line",
+          "tests": [
+            "the audit program prints the audit line"
+          ],
+          "feedback": "A program is a directory of its own, a package clause that says package main, and a func main the tool can call. cmd/audit needs all three, and the line it owes the ledger is \"audit found 0 discrepancies\"."
+        },
+        {
+          "id": "edge-audit-one-line",
+          "label": "The audit program prints one line and nothing else",
+          "tests": [
+            "the audit program prints one line and nothing else"
+          ],
+          "feedback": "One line, and it is the audit line. A second print is a second thing the program says, and the placeholder left in the file is not an audit at all. If the suite cannot run because `go` is command not found, run the environment check first.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Copying the first program instead of writing the second one. cmd/audit is its own package main in its own directory, and the line it prints is a different line.",
+        "Thinking a program needs a go.mod of its own. The module file belongs to the directory at the top, and every program inside it is already part of that module."
+      ]
+    },
     "go-values-learn": {
       "id": "go-values-learn",
       "title": "Learn: a variable already has a value",
@@ -288,7 +512,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-values"
       ],
       "hints": [
-        "Say what FormatCents(0) and FormatCents(-5) must print before you open the file, and write both answers in a comment — a wrong guess costs a comment, not a run.",
+        "Say what FormatCents(0) and FormatCents(-5) must print before you open the file, and write both answers in a comment — a wrong guess costs a comment, not a run. If go is command not found, run the environment check first.",
         "Whole cents means two digits after the dot: divide for the dollars, take the remainder for the cents, and pad that remainder to two places."
       ],
       "misconceptions": [
@@ -307,7 +531,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Two tools run here. The compiler and tester is `go`; the suite you press Run on is a small Node wrapper that calls it and reports TAP, the same format the JavaScript phases used. If `go` is command not found, run the environment check before you touch any Go code."
+          "body": "Two tools run here. The compiler and tester is `go`, and `go test ./...` is the command that runs the tests; the suite you press Run on is a small Node wrapper that calls it and reports TAP, the same format the JavaScript phases used. If `go` is command not found, run the environment check before you touch any Go code."
         },
         {
           "kind": "prose",
@@ -330,6 +554,16 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
             "Store money as whole cents. Formatting is a view, not a second truth.",
             "A negative amount is still an amount; the sign belongs in the string."
           ]
+        },
+        {
+          "kind": "example",
+          "body": "values.go is where this phase works. It sits in the project root, so its package clause says `package ledger`: the ledger's own library, not a program.",
+          "code": "// FormatCents renders whole cents as a decimal amount.\n// 0 is \"0.00\". 199 is \"1.99\". -5 is \"-0.05\".\nfunc FormatCents(n int) string {\n\treturn \"\"\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/values.test.mjs   # what the Run button calls for this phase"
         },
         {
           "kind": "task",
@@ -368,7 +602,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-values-ask",
       "title": "Reason: what does a fresh int hold",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-values"
@@ -405,7 +639,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-values"
       ],
       "hints": [
-        "Open values.go. It owns one function, FormatCents, and the whole job is turning a count of whole cents into the string a person reads.",
+        "Open values.go. It owns one function, FormatCents, and the whole job is turning a count of whole cents into the string a person reads. Run go test ./... and read the name of the test that failed.",
         "Split the absolute value into dollars and the leftover cents, then decide the sign separately.",
         "Print the leftover with two digits. A remainder of 5 is 05, not 5.",
         "Run go test and read the name of the test that failed before changing anything else.",
@@ -536,12 +770,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "status.go is where this phase works.",
+          "code": "// StatusWord maps a status code to a word.\n// 200 ok, 404 missing, 500 down, anything else unknown.\nfunc StatusWord(code int) string {\n\treturn \"\"\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/status.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In status.go, list every status code the lesson named and write the word you expect beside it, including one code the lesson did not name. Then make StatusWord return those words. Check the unnamed code against default before you run the tests."
         }
       ],
       "hints": [
-        "Write the word for a code the lesson named and the word for one it did not — the second is the case you are really testing.",
+        "Write the word for a code the lesson named and the word for one it did not — the second is the case you are really testing. If go is command not found, run the environment check first.",
         "Every switch still has to answer when no case matches; that answer lives in default, and so does every typo."
       ],
       "misconceptions": [
@@ -570,7 +814,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-control-flow-ask",
       "title": "Reason: where an unlisted code goes",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-control-flow"
@@ -638,7 +882,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open status.go. The function already exists and returns the wrong word for every code.",
+        "Open status.go. The function already exists and returns the wrong word for every code. Run go test ./... and read the name of the test that failed.",
         "Write a switch on the code. One case per word you were given.",
         "Put unknown in default, not in a case for 0.",
         "Run the suite. If 201 comes back as ok, that case is too wide.",
@@ -738,12 +982,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "parse.go is where this phase works.",
+          "code": "// ParseQty parses a whole decimal quantity.\n// The entire string must be the number. Failure returns a non-nil error.\nfunc ParseQty(s string) (int, error) {\n\treturn -1, nil\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/parse.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Call ParseQty(\"\") and ParseQty(\"3\") in your head and write down both return pairs. Then implement the function so those pairs are what the tests observe. Do not print the error — return it."
         }
       ],
       "hints": [
-        "Call ParseQty(\"\") in your head first: with nothing to parse, the pair it returns should say so instead of quietly claiming zero.",
+        "Call ParseQty(\"\") in your head first: with nothing to parse, the pair it returns should say so instead of quietly claiming zero. If go is command not found, run the environment check first.",
         "Success is (n, nil); failure is (0, err). The number beside a non-nil error is a placeholder the caller must not use."
       ],
       "misconceptions": [
@@ -761,7 +1015,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-functions-ask",
       "title": "Reason: what the zero beside an error means",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-functions"
@@ -829,7 +1083,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open parse.go. It owns ParseQty, whose signature already hands back an int and an error, and the tests read both results — so keep both.",
+        "Open parse.go. It owns ParseQty, whose signature already hands back an int and an error, and the tests read both results — so keep both. Run go test ./... and read the name of the test that failed.",
         "An empty string fails before you try to parse it.",
         "strconv.Atoi rejects trailing junk. Use it, and return its error rather than replacing it with nil.",
         "When Atoi fails, return 0 and that error. When it works, return the number and nil.",
@@ -888,7 +1142,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-structs"
       ],
       "hints": [
-        "Write the Order struct before the loop: a Cents on its own cannot say which order it belongs to.",
+        "Write the Order struct before the loop: a Cents on its own cannot say which order it belongs to. If go is command not found, run the environment check first.",
         "Total(nil) is not an error case — range over nil runs zero times, so the accumulator you started with is the answer."
       ],
       "misconceptions": [
@@ -936,6 +1190,16 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "order.go is where this phase works.",
+          "code": "// Total sums Cents. A nil or empty slice totals 0.\nfunc Total(orders []Order) int {\n\treturn -1\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/order.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Write the Order struct in order.go with ID and Cents before you write Total. Then say what Total of a nil slice is, and implement the loop so that answer holds."
         }
@@ -951,7 +1215,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-structs-ask",
       "title": "Reason: what a nil list of orders totals to",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-structs"
@@ -992,7 +1256,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-structs"
       ],
       "hints": [
-        "The file order.go already owns the Order type the tests construct, with its ID and Cents fields — read it, then make Total add up a slice of them.",
+        "The file order.go already owns the Order type the tests construct, with its ID and Cents fields — read it, then make Total add up a slice of them. Run go test ./... and read the name of the test that failed.",
         "Total takes []Order and returns an int. Start the sum at 0.",
         "Range the slice. Add o.Cents. Ignore the index if you do not need it.",
         "Do not special-case nil. The loop already does the right thing when there is nothing to visit.",
@@ -1122,12 +1386,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "account.go is where this phase works.",
+          "code": "// Balance reports the cents on the account.\nfunc (a Account) Balance() int {\n\treturn -1\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/account.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "On Account, write Balance so it returns Cents, and Deposit so a second call sees the first call's money. Then call Deposit(0) on paper and confirm the balance did not move."
         }
       ],
       "hints": [
-        "Deposit must change the Account the caller holds; check whether the receiver is that value or a copy of it.",
+        "Deposit must change the Account the caller holds; check whether the receiver is that value or a copy of it. If go is command not found, run the environment check first.",
         "Balance can read through a copy, but Deposit cannot write through one — the star in the receiver is the difference."
       ],
       "misconceptions": [
@@ -1166,7 +1440,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-methods-ask",
       "title": "Reason: why the balance did not move",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-methods"
@@ -1234,7 +1508,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open account.go: it declares the Account type, its Cents field, and the two methods you are asked to finish.",
+        "Open account.go: it declares the Account type, its Cents field, and the two methods you are asked to finish. Run go test ./... and read the name of the test that failed.",
         "If the balance stays 0 after Deposit(10), the receiver is a copy. Add the star.",
         "Add n only when n is greater than 0.",
         "Two deposits add. They do not replace the field with n.",
@@ -1333,12 +1607,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "priced.go is where this phase works.",
+          "code": "// SumPriced adds Price() across items. An empty slice totals 0.\nfunc SumPriced(items []Priced) int {\n\treturn -1\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/priced.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Write the Priced interface and SumPriced in priced.go. Do not add an Order type in this file. The tests bring their own types that have Price methods — your function should add those without naming them."
         }
       ],
       "hints": [
-        "Do not name Order in priced.go: if SumPriced needs a concrete type, the interface is not doing its job.",
+        "Do not name Order in priced.go: if SumPriced needs a concrete type, the interface is not doing its job. If go is command not found, run the environment check first.",
         "The test's own types are the proof — if they compile against Priced, the method set is the only contract."
       ],
       "misconceptions": [
@@ -1356,7 +1640,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-interfaces-ask",
       "title": "Reason: what satisfies an interface",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-interfaces"
@@ -1424,7 +1708,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open priced.go: it declares the Priced interface, whose single method is Price() int, and the SumPriced function you are asked to finish.",
+        "Open priced.go: it declares the Priced interface, whose single method is Price() int, and the SumPriced function you are asked to finish. Run go test ./... and read the name of the test that failed.",
         "SumPriced takes []Priced. Range it and add Price().",
         "Do not mention any concrete struct. The tests define their own.",
         "An empty slice: the loop does not run, the sum stays 0.",
@@ -1511,12 +1795,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "money/money.go is where this phase works.",
+          "code": "// Cents renders whole cents. 199 is \"1.99\". -5 is \"-0.05\".\nfunc Cents(n int) string {\n\treturn \"\"\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/money.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Open money/money.go and implement Cents there. Then make Checkout in checkout.go return money.Cents(cents). Run the tests from the module root so both packages are built together."
         }
       ],
       "hints": [
-        "Checkout lives in another package: only a capital letter lets a name cross that boundary, whatever the file is called.",
+        "Checkout lives in another package: only a capital letter lets a name cross that boundary, whatever the file is called. If go is command not found, run the environment check first.",
         "If the compiler says undefined, read the name you wrote — the import path is the directory, the export is the first letter."
       ],
       "misconceptions": [
@@ -1534,7 +1828,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-packages-ask",
       "title": "Reason: why the helper is invisible",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-packages"
@@ -1602,7 +1896,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "The file money/money.go is package money. Its exported function is Cents.",
+        "The file money/money.go is package money. Its exported function is Cents. Run go test ./... and read the name of the test that failed.",
         "Reuse the cents rule from the values phase: sign, dollars, two digits.",
         "checkout.go imports example.com/ledger/money and hands the formatting to that package instead of doing its own.",
         "If Checkout is right and money.Cents is wrong, the formatting is still in the wrong place.",
@@ -1669,7 +1963,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A slice keeps every element in order. A map keeps one value per key, with no order. Indexing orders by SKU is a map, because the question is \"what qty is this SKU\", and a later line for the same SKU replaces the first. Listing SKUs without duplicates in first-seen order is a slice: the map records \"seen\", but only the slice remembers who arrived first."
+          "body": "A slice keeps every element in order. A map keeps one value per key, with no order. Indexing orders by SKU is a map: the question is \"what qty is this SKU\", and a later line for the same SKU replaces the first. Listing SKUs without duplicates in first-seen order is a slice: the map records \"seen\", but only the slice remembers who arrived first."
         },
         {
           "kind": "example",
@@ -1678,7 +1972,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The dedup loop appends safely for one reason: what comes back is stored in the variable that went in. append may write into the array already behind its argument and hand back a wider slice of that same array, so the slice it returns is the one to keep."
+          "body": "The dedup loop appends safely for one reason: what comes back is stored in the variable that went in. append may write into the array behind its argument and hand back a wider slice of that same array, so the slice it returns is the one to keep."
         },
         {
           "kind": "quickcheck",
@@ -1699,11 +1993,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Reading a missing key returns the zero value, here 0, and ok is false if you ask for it. That 0 looks like a SKU whose qty is 0 unless you use the two-result lookup. This index stores only SKUs that appeared, so a SKU that never appeared is absent, not stored as 0. Make the map with map[string]int{} before writing, because writing to a nil map panics."
+          "body": "Reading a missing key returns the zero value, here 0, and ok is false if you ask for it. That 0 looks like a SKU whose qty is 0 unless you use the two-result lookup. This index stores only SKUs that appeared, so a SKU that never appeared is absent, not 0. Make the map with map[string]int{} before writing, because writing to a nil map panics."
         },
         {
           "kind": "prose",
-          "body": "Ranging that map is where the last surprise lives: Go visits its keys in a different order every run, on purpose. Two runs of one binary print two different lists. So never range a map to build a report or a test expectation; range the slice you kept for order, or sort the keys first."
+          "body": "Ranging that map is where the last surprise lives: Go visits its keys in a different order every run, on purpose. Two runs of one binary print two different lists. So never range a map to build a report or a test expectation; range the slice you kept, or sort the keys first."
         },
         {
           "kind": "example",
@@ -1722,12 +2016,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "index.go is where this phase works.",
+          "code": "// IndexBySKU maps each SKU to the qty on its latest line.\n// A SKU that never appears is absent. The returned map is non-nil.\nfunc IndexBySKU(lines []Line) map[string]int {\n\treturn nil\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/index.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In index.go, build a map from SKU to qty where the later line wins. Say what the map contains for a SKU that never appears, then check with the two-result form before you trust a 0. Then write down what order[3] holds after both appends, before running anything. Then run the program twice and note whether the map order held."
         }
       ],
       "hints": [
-        "Look a missing SKU up with the two-result form — the second result is what separates absent from stored 0.",
+        "Look a missing SKU up with the two-result form — the second result is what separates absent from stored 0. If go is command not found, run the environment check first.",
         "After an append, do not trust an index you worked out before it: growth can move the elements to a new array."
       ],
       "misconceptions": [
@@ -1758,7 +2062,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-collections-ask",
       "title": "Reason: what a missing key looks like",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-collections"
@@ -1826,7 +2130,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open index.go: it owns the by-SKU index and the function you are asked to finish. Make the map before the loop, because a nil map panics on write.",
+        "Open index.go: it owns the by-SKU index and the function you are asked to finish. Make the map before the loop, because a nil map panics on write. Run go test ./... and read the name of the test that failed.",
         "Range the lines and record each one under its SKU, rather than collecting them into a fresh list of pairs.",
         "The same SKU written twice keeps the second write. That is what you want here.",
         "Return the map. Do not add a key for SKUs you did not see.",
@@ -1937,12 +2241,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "pointers.go is where this phase works.",
+          "code": "// Reset sets the counter back to zero through the pointer and reports the\n// previous value. A nil counter is a no-op reporting -1, never a panic.\nfunc Reset(c *Counter) int {\n\treturn 0\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/pointers.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Open pointers.go. Before you change anything, write in a comment what Reset(&Counter{N: 7}) must leave behind, and what Bump must leave the caller holding. Then implement both so the comments are true."
         }
       ],
       "hints": [
-        "Read *p as \"the value p is pointing at\", wherever it appears.",
+        "Read *p as \"the value p is pointing at\", wherever it appears. If go is command not found, run the environment check first.",
         "A map is already shared through its header: passing one never copies the entries."
       ],
       "misconceptions": [
@@ -1955,7 +2269,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-pointers-ask",
       "title": "Reason: what sticks and what does not",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-pointers"
@@ -2028,7 +2342,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open pointers.go. Reset receives *Counter: c.N = 0 writes through it, and the old value is what you return.",
+        "Open pointers.go. Reset receives *Counter: c.N = 0 writes through it, and the old value is what you return. Run go test ./... and read the name of the test that failed.",
         "Nudge receives Counter: raise the copy's N by one and return the copy. No star anywhere in that function.",
         "A nil *Counter has no N to read. Check for nil before anything else and return the documented -1.",
         "Run go test and read the failing test name first: each name is the exact behavior still missing.",
@@ -2120,12 +2434,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "embed.go is where this phase works.",
+          "code": "// Sum returns the promoted Twice plus the bonus.\nfunc (s Satellite) Sum() int {\n\treturn -1\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/embed.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In embed.go, Satellite embeds Kernel. Write Sum so it calls the promoted Twice and adds Bonus — do not recompute the doubling yourself."
         }
       ],
       "hints": [
-        "Write both numbers down before you finish the method: Sum of Kernel{5} with a Bonus of 3 is 13, not 8.",
+        "Write both numbers down before you finish the method: Sum of Kernel{5} with a Bonus of 3 is 13, not 8. If go is command not found, run the environment check first.",
         "A promoted method is already on the value. Call s.Twice(); do not write s.N * 2 again."
       ],
       "misconceptions": [
@@ -2169,7 +2493,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-embedding-ask",
       "title": "Reason: which Twice runs",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-embedding"
@@ -2237,7 +2561,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open embed.go: it declares Satellite, embeds Kernel inside it, and holds the Sum method you are asked to finish. Twice is already a method on the value.",
+        "Open embed.go: it declares Satellite, embeds Kernel inside it, and holds the Sum method you are asked to finish. Twice is already a method on the value. Run go test ./... and read the name of the test that failed.",
         "Call s.Twice() to get the doubled count; do not recompute it from s.N.",
         "Sum is the promoted Twice plus the Bonus field the Satellite carries itself.",
         "A bonus of 0 still returns the doubled count; a negative bonus is subtracted.",
@@ -2347,12 +2671,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "errs.go is where this phase works.",
+          "code": "// Lookup returns the cents stored under id, or ErrMissing when it is absent.\nfunc Lookup(id string, book map[string]int) (int, error) {\n\treturn -1, nil\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/errs.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In errs.go, make Lookup return ErrMissing for an absent key and the cents with a nil error for a present one, then make Wrap add context with %w so errors.Is still finds the sentinel inside."
         }
       ],
       "hints": [
-        "A map lookup hands you the value and an ok flag. When ok is false there is nothing to return — hand back the sentinel.",
+        "A map lookup hands you the value and an ok flag. When ok is false there is nothing to return — hand back the sentinel. If go is command not found, run the environment check first.",
         "To keep a caller's errors.Is true, wrap with fmt.Errorf and the %w verb, not %v."
       ],
       "misconceptions": [
@@ -2371,7 +2705,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-errors-ask",
       "title": "Reason: what errors.Is sees",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-errors"
@@ -2439,7 +2773,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open errs.go: it owns the book map, Lookup and Wrap. Lookup hands back a value and an error, and the map tells you whether the key is there.",
+        "Open errs.go: it owns the book map, Lookup and Wrap. Lookup hands back a value and an error, and the map tells you whether the key is there. Run go test ./... and read the name of the test that failed.",
         "When the key is missing, return ErrMissing — the exact sentinel the tests compare against.",
         "A present key returns its cents with a nil error.",
         "Wrap must not return the error unchanged and must not flatten it to text. Use fmt.Errorf with %w.",
@@ -2527,12 +2861,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "lifecycle.go is where this phase works.",
+          "code": "// WithCleanup runs fn, always running cleanup exactly once afterwards —\n// whether fn returns or panics. A panic propagates with its original value;"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/lifecycle.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "Open lifecycle.go. Before you change anything, write in a comment how many times cleanup runs when fn panics, and what value escapes WithCleanup. Then implement it so both comments are true."
         }
       ],
       "hints": [
-        "A deferred call with no arguments runs with the values it closed over, not with anything the return site knows.",
+        "A deferred call with no arguments runs with the values it closed over, not with anything the return site knows. If go is command not found, run the environment check first.",
         "recover() outside a deferred call returns nil and catches nothing — placement is the mechanism."
       ],
       "misconceptions": [
@@ -2551,7 +2895,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-lifecycle-ask",
       "title": "Reason: what the defers leave behind",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-lifecycle"
@@ -2619,7 +2963,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open lifecycle.go. One defer does almost everything: schedule cleanup, then call fn.",
+        "Open lifecycle.go. One defer does almost everything: schedule cleanup, then call fn. Run go test ./... and read the name of the test that failed.",
         "A deferred cleanup runs on return and on panic alike. That is the entire first check.",
         "Do not call recover in WithCleanup. Recovery belongs at a boundary that answers for the panic; this function only guarantees the cleanup.",
         "Run go test and read the failing test name first: calm behavior, then the panic path, then the int-valued edge.",
@@ -2708,12 +3052,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "gen.go is where this phase works.",
+          "code": "// Max returns the largest value in xs, or the zero value of T when xs is empty.\nfunc Max[T cmp.Ordered](xs []T) T {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/gen.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In gen.go, implement Max so it returns the largest value in xs using the comparison cmp.Ordered already grants, and returns the zero value of T for an empty slice."
         }
       ],
       "hints": [
-        "Read the signature first: Max[T cmp.Ordered](xs []T) T means the caller picks a type T, and the body works on values of that T.",
+        "Read the signature first: Max[T cmp.Ordered](xs []T) T means the caller picks a type T, and the body works on values of that T. If go is command not found, run the environment check first.",
         "cmp.Ordered already grants the < and > operators, so you can compare two values of T directly without any assertion."
       ],
       "misconceptions": [
@@ -2731,7 +3085,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-generics-ask",
       "title": "Reason: what the constraint buys",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-generics"
@@ -2799,7 +3153,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open gen.go: it declares the generic Max you are asked to finish — the caller picks the type, and the body sees values of that type.",
+        "Open gen.go: it declares the generic Max you are asked to finish — the caller picks the type, and the body sees values of that type. Run go test ./... and read the name of the test that failed.",
         "Start from var best T, the zero value, so the first element can overwrite it.",
         "Loop over positions rather than values, so the first element can start as the best so far and every later one has something to beat.",
         "An empty slice never enters the loop, so the function returns the zero value of T unchanged.",
@@ -2887,12 +3241,22 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "moddemo/double/double.go is where this phase works.",
+          "code": "// Double returns twice n. It lives in its own package, whose full import path is\n// \"example.com/moddemo/double\" — the module path plus the directory.\nfunc Double(n int) int {\n\treturn -1\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command you run, and the one the Run button calls for you:",
+          "code": "cd moddemo && go test ./...   # the command you run: the tests of that module\nnode --test --test-reporter=tap test/moddemo.test.mjs   # what the Run button calls for this phase"
+        },
+        {
           "kind": "task",
           "body": "In the moddemo module, the app package imports example.com/moddemo/double. Make double.Double return twice n so that app.Use(4) is 8."
         }
       ],
       "hints": [
-        "Every directory with its own go.mod is a separate module; go test ./... in one module never walks into another.",
+        "Every directory with its own go.mod is a separate module; go test ./... in one module never walks into another. If go is command not found, run the environment check first.",
         "A package import path is the module path from go.mod with the directory appended — example.com/moddemo/double, not a folder path."
       ],
       "misconceptions": [
@@ -2910,7 +3274,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "id": "go-modules-ask",
       "title": "Reason: why the sibling import resolves",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "go-modules"
@@ -2978,7 +3342,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "The file to change is moddemo/double/double.go; the app package already imports it and calls it.",
+        "The file to change is moddemo/double/double.go; the app package already imports it and calls it. Run go test ./... and read the name of the test that failed.",
         "The import path example.com/moddemo/double is the module path (example.com/moddemo) plus the directory (double).",
         "Return n * 2 from Double; Use just forwards its argument, so Use(4) becomes Double(4).",
         "Run the tests from inside moddemo — it is its own module, so go test ./... there, not at the ledger root.",

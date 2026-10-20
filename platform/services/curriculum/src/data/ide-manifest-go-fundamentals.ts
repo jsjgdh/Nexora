@@ -8,6 +8,15 @@ export const IDE_MANIFEST_GO_FUNDAMENTALS: unknown = {
   "role": "main",
   "phases": [
     {
+      "id": "go-program",
+      "title": "Go program",
+      "goal": "A Go program is a package main with a func main: the package clause, the entry point, and the two commands that run and build it.",
+      "level": 2,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
       "id": "go-values",
       "title": "Go values",
       "goal": "Zero values, integers, and strings: what a variable holds before you touch it.",

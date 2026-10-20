@@ -28,6 +28,24 @@ checks are the reason the plan is a file rather than a script: a script that
 calls `gcloud` can only be verified by running it against a real project with
 real credentials.
 
+The rest of the folder is one concern each, and each is a pure module the
+suite can read without a cloud account:
+
+| Module | What it owns |
+|---|---|
+| `plan.ts` | the plan, and the checks that keep it honest |
+| `image.ts` | where the image lives, what its tag has to be, and what is running now |
+| `iam.ts` | the two accounts and the roles each one holds |
+| `secrets.ts` | the secret VALUES, which are read from the environment and never written down |
+| `rollback.ts` | reading what is running, and putting it back |
+| `deploy.ts` | the thin thing that hands the plan to `gcloud` |
+
+`scripts/verify-gcp.mjs` in the platform is the gate that says all of it is
+real: the plan matches the code, the deploy refuses an image it could not roll
+back to, every command that creates something checks whether it is already
+there, and the pipeline asks the plan for the image address instead of
+carrying its own copy.
+
 ---
 
 ## The shape
@@ -72,6 +90,8 @@ real credentials.
 | A domain on Cloudflare | the load balancer needs a cert for it | `plan.json` → `loadBalancer.domain` |
 | `gcloud` authenticated | every command below | `gcloud auth login` |
 | Docker, building locally | the image is built here and pushed | `docker build` |
+| A billing account | the budget alert belongs to one, not to a project | `plan.json` → `observability.budget.billingAccountEnv` |
+| The eight secret values | the services mount them, and a secret with no version cannot be mounted | the environment of the deploy, see §2 |
 
 Two facts about the current product that decide the order:
 
@@ -135,15 +155,37 @@ asking the platform. A leaked one would let a caller mint receipts. It lives
 in the environment of `auth` and `execution` and nowhere else — never in the
 image, never in the repository, never in a log.
 
+**How a value reaches the deploy.** The plan names the secret; the VALUE is
+read from the environment of the process that runs the deploy, and the
+variable is named after the secret with one rule: `nexora-internal-api-key`
+becomes `NEXORA_SECRET_INTERNAL_API_KEY`. The GitHub repository secret is
+called that too, so there is one list rather than three, and the suite checks
+that the plan, the deploy and the workflow agree on it.
+
+A secret with no value **stops the deploy**. A service mounted on a secret
+with no version points at nothing, and it fails to start with a message about
+the secret rather than about the missing version.
+
 ### 3. Build and push the image
 
-One image, five services, selected by `--build-arg SERVICE=`:
+One image, five services, selected by `--build-arg SERVICE=`. **The address
+comes from the plan**, and the tag is the commit:
 
 ```sh
-docker build --build-arg SERVICE=gateway -t \
-  us-central1-docker.pkg.dev/nexora-prod/nexora/mesh:latest .
-docker push us-central1-docker.pkg.dev/nexora-prod/nexora/mesh:latest
+# the plan knows the registry; ask it
+IMAGE="$(node infra/gcp/dist/image.js --tag="$(git rev-parse HEAD)")"
+echo "$IMAGE"   # us-central1-docker.pkg.dev/nexora-prod/nexora/mesh:<sha>
+
+docker build --build-arg SERVICE=gateway -t "$IMAGE" .
+gcloud auth configure-docker "$(node infra/gcp/dist/image.js --host)"
+docker push "$IMAGE"
 ```
+
+**The deployed tag names one build.** The moving `:latest` tag is pushed as
+well, for a person looking at the registry, and the deploy **refuses** it: by
+the time a rollback runs, a moving tag points at the image that broke. The
+deploy also refuses an image from any registry the plan does not name, and it
+refuses before it has touched anything — a wrong image costs nothing that way.
 
 The image carries the Go toolchain and a prewarmed standard-library cache, so
 the execution image is the big one. The others share the same layers.
@@ -164,6 +206,21 @@ exist until the service does:
 So the first run of a fresh project leaves the gateway pointing at nothing it
 can reach, and the second run completes it. **Run it twice** on a new project,
 or run it once and re-run the dependents.
+
+**The deploy can be repeated.** Every command that creates something first
+asks whether it is already there, so the second run of the same plan does not
+fail on the first resource that already exists. A deploy that only works once
+is not a deploy.
+
+**The accounts come first.** Two service accounts, and they are not the same
+one: `nexora-deploy` creates the platform, and `nexora-runtime` is what the
+services run as. The roles each one holds are in the plan, with the reason
+each one is there, and the plan check refuses a runtime account that has been
+given `roles/run.admin` — a service that can deploy is a service that can
+replace another service.
+
+**The secrets come before the services.** A secret is created, then a VERSION
+is added with the value, and only then can a service mount it.
 
 **The scaling settings are part of the deploy**, because a plan that states
 them and a deploy that does not apply them are two different plans. Each
@@ -288,12 +345,42 @@ Every service keeps the previous image, and a rollback is a redeploy of the
 previous tag:
 
 ```sh
-gcloud run services update nexora-gateway --image …/mesh:<previous-tag>
+# what is running right now, read from the API rather than remembered
+node infra/gcp/dist/image.js --current
+
+# put every service back on it
+node infra/gcp/dist/deploy.js --rollback --image="<that address>"
 ```
+
+**The address is read, not remembered.** A remembered image is a guess, and a
+rollback made from a guess is a second outage. The rollback also refuses the
+moving tag, for the same reason the deploy does.
 
 Migrations are forward-only, so a rollback never un-runs one. A change that
 needs a destructive migration is two deploys — expand, then contract —
 reviewed as such.
+
+## What the pipeline does
+
+`deploy-platform.yml` is the part that can be repeated, and it does this in
+order:
+
+1. **Compiles the plan** and **checks it against the code**, before an image
+   is built. A plan that has drifted is a deploy that will fail later, and
+   failing here costs a minute.
+2. **Names the image**, by asking the plan where it goes. The workflow does not
+   carry its own copy of the address, and the suite fails if it starts to.
+3. **Builds the image** and **pushes it** to the plan's registry, with the
+   commit as the tag and the moving tag alongside it.
+4. **Reads what is running**, from the Cloud Run API, so the rollback is a
+   fact.
+5. **Applies the plan**, in two passes.
+6. **Verifies itself, from outside**: the health check and the learner
+   journey against the DEPLOYED platform.
+7. **Rolls back** if the verification failed, onto the image it read in step 4.
+
+The compose target does the same seven steps against one host, with the image
+in GHCR and the previous image in a file on the host.
 
 ## What is not done yet, and is not a plan's job to hide
 

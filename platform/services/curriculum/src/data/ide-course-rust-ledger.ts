@@ -3,192 +3,192 @@
 export const IDE_COURSE_RUST_LEDGER: unknown = {
   "id": "rust-ledger",
   "title": "Rust Ledger",
-  "description": "A second main line: the ledger from the Go track, rebuilt in Rust and taken to a tested Axum service. Ownership, borrowing and lifetimes are taught as one idea in three phases, each judged by code that will not compile without it. Then threads, async, Tokio, HTTP, SQLx, tracing and a release you can ship. Every phase is Learn, then Solve, then Review.",
+  "description": "A second main line: the ledger rebuilt in Rust, from the tools up. It opens with rustup, cargo and the first value, then follows the Rust Programming Language chapter by chapter, running the ledger's own money, accounts and transactions through each idea. Then threads, async, Tokio, HTTP, SQLx and a release you can ship. Every phase is Learn, then Solve, then Review, and every phase names the file it works in and the suite that judges it.",
   "version": 1,
   "freePhases": 4,
   "phases": [
     {
       "id": "rust-values",
-      "title": "Rust values",
-      "goal": "One project, two tools, and money that is an integer before it is a string.",
+      "title": "Rust, cargo, and your first value",
+      "goal": "The toolchain first, then a value: a binding, a type, and money as whole cents.",
       "level": 1,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-values-learn",
-        "rust-values-ask",
         "rust-values-do",
+        "rust-values-ask",
         "rust-values-review"
       ],
       "interviewQuestions": [
-        "Why does a ledger store whole cents instead of a floating-point number?",
-        "What does the type of a Rust binding tell the compiler before the program runs?",
-        "How would you format a negative amount so the sign stays with the whole value?"
+        "What do rustup and cargo each do for a Rust project, and which of them runs the tests?",
+        "Why does a ledger keep money as a whole number of cents rather than a floating-point value?",
+        "What does a type annotation tell the compiler about a binding before the program runs?"
       ]
     },
     {
       "id": "rust-ownership",
-      "title": "Rust ownership",
-      "goal": "Moves, Copy and Clone: who owns a value when a function takes it — and why the compiler enforces one owner at a time to prevent double-free bugs.",
+      "title": "One owner at a time",
+      "goal": "Moves, copies and returns: how a value changes hands without two owners freeing it.",
       "level": 1,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-ownership-learn",
-        "rust-ownership-ask",
         "rust-ownership-do",
+        "rust-ownership-ask",
         "rust-ownership-review"
       ],
       "interviewQuestions": [
-        "What does it mean for a Rust value to have one owner at a time? (Only one binding may own the value; the compiler rejects any second owner.)",
-        "When is a value moved rather than copied, and which types can be copied? (i64 is Copy; String is not — copying String allocates a second buffer.)",
-        "Why does returning a value from a function not violate the ownership rule? (Return transfers ownership back to the caller; the function no longer owns it.)"
+        "What does it mean for a value to have exactly one owner at a time in Rust?",
+        "Which types are copied when they are passed to a function, and which ones are moved?",
+        "Why does returning a value from a function keep the ownership rule intact?"
       ]
     },
     {
       "id": "rust-borrowing",
-      "title": "Rust borrowing",
-      "goal": "Read without taking, change through &mut, and return a slice safely — the borrow checker enforces one mutable borrow at a time to prevent data races.",
+      "title": "Look without taking",
+      "goal": "Read with a shared borrow, change with a mutable one, and hand back a slice safely.",
       "level": 1,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-borrowing-learn",
-        "rust-borrowing-ask",
         "rust-borrowing-do",
+        "rust-borrowing-ask",
         "rust-borrowing-review"
       ],
       "interviewQuestions": [
-        "What is the difference between &T and &mut T in Rust? (&T is a shared reference you can read through; &mut T is mutable exclusive. Only one &mut can be alive at a time, and no & can coexist with it.)",
-        "Why can a function return a &str that points into its argument? (The returned borrow's lifetime is tied to the input; the compiler guarantees the input outlives the slice, making zero-copy return safe.)",
-        "How does the borrow checker prevent a value from changing while it is being read? (It tracks which references are alive at compile time and rejects overlaps. A reader must not see bytes change underneath, and a writer must not race with a reader.)"
+        "What does a shared borrow allow a function to do, and what does a mutable borrow allow it to do?",
+        "Why can a function return a slice that points into its argument without copying the text?",
+        "When does a borrow end, and how does that decide whether two borrows may overlap?"
       ]
     },
     {
       "id": "rust-structs",
-      "title": "Rust structs",
+      "title": "One door into the type",
       "goal": "Private fields, a constructor that refuses bad data, and derives that earn their place.",
       "level": 1,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-structs-learn",
-        "rust-structs-ask",
         "rust-structs-do",
+        "rust-structs-ask",
         "rust-structs-review"
       ],
       "interviewQuestions": [
-        "Why keep a struct field private and force callers through a constructor?",
-        "What does returning Result from a constructor change about the caller code?",
-        "Which derives would you add to a value type, and what does each one cost?"
+        "Why keep a struct field private and force every caller through a constructor?",
+        "What does a constructor that returns Result change about the code that calls it?",
+        "Which derives would you add to a small value type, and what does each one cost?"
       ]
     },
     {
       "id": "rust-enums",
-      "title": "Rust enums",
-      "goal": "One type that is exactly one of its shapes, and a match that proves it.",
+      "title": "A value that is one of several shapes",
+      "goal": "One type that is exactly one of its shapes, and a match that has to answer every one.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-enums-learn",
-        "rust-enums-ask",
         "rust-enums-do",
+        "rust-enums-ask",
         "rust-enums-review"
       ],
       "interviewQuestions": [
-        "Why is an enum a better model for a transaction than a struct with a kind field?",
+        "Why is an enum a better model for a ledger row than a struct with a kind field?",
         "What does the compiler do when a match stops covering every variant?",
-        "When would you reach for Option instead of a sentinel value like -1?"
+        "When would you reach for Option and if let instead of a sentinel value like -1?"
       ]
     },
     {
       "id": "rust-errors",
-      "title": "Rust errors",
+      "title": "A failure is a value",
       "goal": "Failures as values: Result, the question mark, and errors a caller can match on.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-errors-learn",
-        "rust-errors-ask",
         "rust-errors-do",
+        "rust-errors-ask",
         "rust-errors-review"
       ],
       "interviewQuestions": [
-        "When does a Rust function return Result, and when is panic the honest choice?",
+        "When does a Rust function return a Result, and when is a panic the honest choice?",
         "Why is an error enum easier for a caller than a formatted string?",
-        "What does the question mark do with an error whose type differs from the function’s?"
+        "What does the question mark do with an error whose type differs from the function it is in?"
       ]
     },
     {
       "id": "rust-modules",
-      "title": "Rust modules",
-      "goal": "A crate is a tree with a public edge: modules, visibility, and the lib/bin split.",
+      "title": "The public edge of a crate",
+      "goal": "A crate is a tree with a public edge: modules, visibility, and the paths a caller may use.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-modules-learn",
-        "rust-modules-ask",
         "rust-modules-do",
+        "rust-modules-ask",
         "rust-modules-review"
       ],
       "interviewQuestions": [
         "What is the difference between a module and a crate in Rust?",
-        "Why do integration tests in tests/ only see the public API?",
-        "When would you re-export an item at the crate root?"
+        "Why can an integration test in tests/ only reach the public API of a library?",
+        "When is a re-export at the crate root the right thing to add, and when is it clutter?"
       ]
     },
     {
       "id": "rust-traits",
-      "title": "Rust traits",
+      "title": "A contract a type signs",
       "goal": "Behaviour as a contract: trait bounds, generics, and one boxed decision at runtime.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-traits-learn",
-        "rust-traits-ask",
         "rust-traits-do",
+        "rust-traits-ask",
         "rust-traits-review"
       ],
       "interviewQuestions": [
-        "What does a trait add that a struct’s inherent methods do not?",
-        "When is a generic parameter better than dyn Trait, and when is it worse?",
-        "Why can a test provide a second Store implementation the library never knew about?"
+        "What does a trait add that the inherent methods of a struct do not?",
+        "When is a generic parameter the better answer, and when is a boxed trait object the better one?",
+        "Why can a test provide a second implementation of a trait the library never knew about?"
       ]
     },
     {
       "id": "rust-lifetimes",
-      "title": "Lifetimes",
-      "goal": "Say how long a borrow lives, so a returned reference still points at something real — the lifetime parameter records how long the borrow stays valid relative to its owner.",
+      "title": "A borrow has a length",
+      "goal": "Say how long a borrow lives, so a returned reference still points at something real.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-lifetimes-learn",
-        "rust-lifetimes-ask",
         "rust-lifetimes-do",
+        "rust-lifetimes-ask",
         "rust-lifetimes-review"
       ],
       "interviewQuestions": [
-        "When does a function need an explicit lifetime parameter rather than elision? (Elision ties one lifetime when one reference is taken and one returned; you name a lifetime when the compiler cannot tell which input the output borrows from, such as two distinct inputs.)",
-        "Why can a struct not store a reference without naming a lifetime? (The struct does not own the data; the lifetime parameter records that the reference cannot outlive the value it points at. Without it, the compiler has no way to enforce the relationship.)",
-        "What does a lifetime annotation promise the caller, and what does it not do? (It promises the borrow ends before the owner does. It does not extend or shorten any lifetime; it only describes an existing relationship.)"
+        "When does a function need an explicit lifetime parameter rather than elision?",
+        "Why can a struct not store a reference without naming a lifetime?",
+        "What does a lifetime annotation promise the caller, and what does it not do?"
       ]
     },
     {
       "id": "rust-collections",
-      "title": "Collections",
+      "title": "Order, keys, and absence",
       "goal": "Choose an ordered map or a keyed one, and read a missing key as absent instead of zero.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-collections-learn",
-        "rust-collections-ask",
         "rust-collections-do",
+        "rust-collections-ask",
         "rust-collections-review"
       ],
       "interviewQuestions": [
@@ -199,15 +199,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-closures",
-      "title": "Closures",
-      "goal": "Carry state into a function value, and let the captures choose the call trait.",
+      "title": "A function that carries values, and the iterators that walk a list",
+      "goal": "Carry state into a function value, then walk a list with the adapters that do the work.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-closures-learn",
-        "rust-closures-ask",
         "rust-closures-do",
+        "rust-closures-ask",
         "rust-closures-review"
       ],
       "interviewQuestions": [
@@ -218,15 +218,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-tests",
-      "title": "Tests",
+      "title": "A test is a named claim",
       "goal": "Write tests that name a behaviour and fail when it breaks, not just when the text changes.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-tests-learn",
-        "rust-tests-ask",
         "rust-tests-do",
+        "rust-tests-ask",
         "rust-tests-review"
       ],
       "interviewQuestions": [
@@ -237,15 +237,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-pointers",
-      "title": "Rust pointers",
+      "title": "One value, several owners",
       "goal": "Box, Rc, RefCell and Arc: which owner a value needs, and what each one costs.",
       "level": 2,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-pointers-learn",
-        "rust-pointers-ask",
         "rust-pointers-do",
+        "rust-pointers-ask",
         "rust-pointers-review"
       ],
       "interviewQuestions": [
@@ -256,15 +256,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-threads",
-      "title": "Rust threads",
+      "title": "Work on another thread",
       "goal": "Move work to other threads, share a counter safely, and pass results back through a channel.",
-      "level": 2,
+      "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-threads-learn",
-        "rust-threads-ask",
         "rust-threads-do",
+        "rust-threads-ask",
         "rust-threads-review"
       ],
       "interviewQuestions": [
@@ -275,15 +275,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-async",
-      "title": "Rust async",
+      "title": "A future is a plan, not a run",
       "goal": "Futures that do nothing until polled, tasks that interleave, and the blocking call that stops them all.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-async-learn",
-        "rust-async-ask",
         "rust-async-do",
+        "rust-async-ask",
         "rust-async-review"
       ],
       "interviewQuestions": [
@@ -294,15 +294,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     },
     {
       "id": "rust-tokio",
-      "title": "Tokio",
+      "title": "A task the runtime owns",
       "goal": "Spawn tasks, race them safely, bound them with timeouts, and stop them on purpose.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-tokio-learn",
-        "rust-tokio-ask",
         "rust-tokio-do",
+        "rust-tokio-ask",
         "rust-tokio-review"
       ],
       "interviewQuestions": [
@@ -314,21 +314,21 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     {
       "id": "rust-axum",
       "title": "Axum: a typed door",
-      "goal": "Routes, extractors and JSON: the library becomes a service.",
+      "goal": "Routes, extractors and JSON: the ledger becomes a service with a door.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-axum-learn",
-        "rust-axum-ask",
         "rust-axum-do",
+        "rust-axum-ask",
         "rust-axum-review"
       ],
       "interviewQuestions": [
-        "Why does Axum reject a request before the handler body runs?",
-        "What is the difference between an extractor that consumes the body and one that reads the path?",
-        "Why keep the router a function you can build in a test?",
-        "What does a 201 say that a 200 does not?"
+        "Why does a request that fails its extractors never reach the handler body?",
+        "What does an extractor give the handler that a hand-written parser would not?",
+        "Why does a create answer 201 while a read answers 200?",
+        "How do you decide which part of a request a handler is allowed to see?"
       ]
     },
     {
@@ -340,35 +340,35 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "project": "rust-ledger",
       "activities": [
         "rust-http-errors-learn",
-        "rust-http-errors-ask",
         "rust-http-errors-do",
+        "rust-http-errors-ask",
         "rust-http-errors-review"
       ],
       "interviewQuestions": [
-        "Why is a 500 without the internal error message better than one with it?",
+        "Why is a 500 without the internal message better than one with it?",
         "What does IntoResponse buy an error type compared with a match in every handler?",
         "How do you decide between 400 and 404 for a request naming an unknown account?",
-        "Why should error bodies have a stable shape of their own?"
+        "Why should the bodies of errors have a shape of their own?"
       ]
     },
     {
       "id": "rust-sqlx",
       "title": "SQLx: the ledger survives a restart",
-      "goal": "A pool, a migration, and parameterised queries over SQLite.",
+      "goal": "A pool, a migration and bound parameters over SQLite.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-sqlx-learn",
-        "rust-sqlx-ask",
         "rust-sqlx-do",
+        "rust-sqlx-ask",
         "rust-sqlx-review"
       ],
       "interviewQuestions": [
-        "Why does a pool have a maximum size, and what does a request do when it is reached?",
-        "What does a migration give you that CREATE TABLE IF NOT EXISTS at startup does not?",
+        "Why does a pool have a maximum size, and what does a request do when every connection is busy?",
+        "What does a migration give you that a CREATE TABLE at startup does not?",
         "Why are bound parameters safer than formatting a query string?",
-        "Why use the runtime query API instead of the compile-time checked macro in a test?"
+        "Why does the runtime query API suit a test better than the compile-time checked macro?"
       ]
     },
     {
@@ -380,70 +380,70 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "project": "rust-ledger",
       "activities": [
         "rust-service-tests-learn",
-        "rust-service-tests-ask",
         "rust-service-tests-do",
+        "rust-service-tests-ask",
         "rust-service-tests-review"
       ],
       "interviewQuestions": [
         "Why is a test that binds a port slower and less reliable than one that calls the router?",
         "What does a fresh app per test protect you from?",
-        "Why assert on status and body instead of on the state map behind the handler?",
-        "What is the difference between an integration test here and a unit test of a handler function?"
+        "Why assert on the status and body instead of on the state map behind the handler?",
+        "What separates an integration test of the router from a unit test of a handler?"
       ]
     },
     {
       "id": "rust-observability",
-      "title": "Rust observability",
-      "goal": "Read configuration once, redact what must not be logged, and make tracing say what happened.",
+      "title": "Configuration at the edge, redaction in the middle",
+      "goal": "Read the configuration once at startup, and keep a password out of every log line.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-observability-learn",
-        "rust-observability-ask",
         "rust-observability-do",
+        "rust-observability-ask",
         "rust-observability-review"
       ],
       "interviewQuestions": [
         "Where should a service read its configuration, and why not inside the functions that use it?",
-        "What must never appear in a log line, and what is the cheapest way to enforce that?",
+        "What must never appear in a log line, and what is the cheapest way to keep it out?",
         "What is the difference between an error a caller can act on and a line in the log?"
       ]
     },
     {
       "id": "rust-ship",
       "title": "Rust ship",
-      "goal": "Make the workspace releasable: format, lint, audit, pin the toolchain, and let CI prove it.",
+      "goal": "Make the workspace releasable: format, lint, a pinned toolchain and a gate in CI.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-ship-learn",
-        "rust-ship-ask",
         "rust-ship-do",
+        "rust-ship-ask",
         "rust-ship-review"
       ],
       "interviewQuestions": [
-        "What does `cargo clippy -- -D warnings` buy a team that a passing test suite does not?",
-        "Why pin an MSRV, and what breaks when a dependency raises its own?",
-        "Which of fmt, clippy, test and audit belongs on every pull request, and which can wait?"
+        "What does cargo clippy with warnings denied buy a team that a passing test suite does not?",
+        "Why state an MSRV, and what breaks when a dependency raises its own?",
+        "Which of fmt, clippy and test belongs on every pull request, and which can wait?"
       ]
     },
     {
       "id": "rust-review",
-      "title": "Rust review",
-      "goal": "Read a library file the way a reviewer does: find the panic, the copy, and the rule written twice.",
+      "title": "Read a library file the way a reviewer does",
+      "goal": "Find the panic, the copy and the rule written twice.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-review-learn",
-        "rust-review-ask",
         "rust-review-do",
+        "rust-review-ask",
         "rust-review-review"
       ],
       "interviewQuestions": [
-        "When is an unwrap acceptable in a library, and when is it a bug waiting for input?",
+        "When is an unwrap acceptable in a library, and when is it a bug waiting for the wrong input?",
         "How do you decide between returning a copy and returning a borrow?",
         "What is the difference between a defect a test would catch and one only a reader catches?"
       ]
@@ -451,14 +451,14 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     {
       "id": "rust-takehome",
       "title": "Rust take-home",
-      "goal": "Work from a written brief, judged by a suite you are not holding.",
+      "goal": "Work from a written brief, judged by a suite the course holds and you do not.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
       "activities": [
         "rust-takehome-learn",
-        "rust-takehome-ask",
         "rust-takehome-do",
+        "rust-takehome-ask",
         "rust-takehome-review"
       ],
       "interviewQuestions": [
@@ -471,12 +471,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
   "activities": {
     "rust-values-learn": {
       "id": "rust-values-learn",
-      "title": "Learn: a new track, stricter rules",
+      "title": "Learn: the tools, then the first value",
       "kind": "lesson",
       "objectives": [
-        "Explain why a ledger stores money as integer cents instead of a floating-point number.",
-        "Read a Rust binding with its type annotation and say what the compiler now knows about it.",
-        "Predict what format_cents prints at zero and at a negative amount before running it."
+        "Name the tool that installs the Rust toolchain and the tool that builds and tests a crate, and say what each one does.",
+        "Read a Rust binding with its type annotation and say what the compiler now knows about that value.",
+        "Predict what format_cents prints for zero and for a negative amount, then implement both in the file this phase names."
       ],
       "mode": "learn",
       "guidance": 1,
@@ -484,44 +484,63 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-values"
       ],
       "hints": [
-        "Read the example block before the prose that follows it, and say what each line would print.",
-        "If cargo is command not found, run the Environment Check first; a missing tool is a setup gap, not a bug in your code."
+        "Read the two manifests before you write a line of Rust, so you know which crate the file you are about to edit belongs to.",
+        "Say what the number means before you say what it prints: 199 is a count of cents, and only the formatter knows what a dollar is."
       ],
       "misconceptions": [
-        "Treating the compiler as an obstacle: in Rust the compiler is the first test, and its message names the fix.",
-        "Thinking a type annotation is bureaucracy rather than the thing that makes a value unambiguous."
+        "Thinking cargo is the language, when cargo is the tool that builds and tests it and rustup is the tool that installs it.",
+        "Believing a binding can be changed whenever you like, when a binding is fixed unless it says mut."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo build",
+          "expect": [
+            "Compiling|Finished"
+          ],
+          "shows": "Finished dev [unoptimized] target(s) in 0.05s"
+        }
       ],
       "lesson": [
+        {
+          "kind": "example",
+          "body": "The workspace you are working in. It is one Cargo workspace with two crates: ledger-core holds the ledger, ledger-api holds the service. cargo build compiles both.",
+          "code": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/ledger-core\", \"crates/ledger-api\"]"
+        },
+        {
+          "kind": "prose",
+          "body": "Two tools do the work. rustup installs the Rust toolchain and switches between versions, and cargo builds, tests and runs a crate. If the terminal says cargo is not found, install the toolchain from https://rustup.rs and run the environment check before you touch any code."
+        },
+        {
+          "kind": "example",
+          "body": "The three commands you will use for the whole course:",
+          "code": "cargo build   # compile the workspace\ncargo test    # run every test in it\ncargo run     # run the program"
+        },
+        {
+          "kind": "prose",
+          "body": "The suite you press Run on is a small Node wrapper around cargo test. It calls cargo, reads the TAP output and reports each check by name, so a red line is a named test rather than a mystery."
+        },
         {
           "kind": "prose",
           "body": "This track builds the same ledger in Rust, one idea per phase. Rust is stricter than the languages you have used: the compiler refuses programs that could read memory twice or change it while another part is reading."
         },
         {
-          "kind": "prose",
-          "body": "The checker is cargo. The Run button calls a small Node wrapper that shells out to cargo and reports TAP. If cargo is missing, run the Environment Check before you touch the code."
-        },
-        {
           "kind": "example",
-          "body": "Three bindings, each with a type the compiler already knows:",
-          "code": "let cents: i64 = 199;       // 199 cents, not 1.99\nlet label: &str = \"ledger\";  // a borrowed string\nconst SYMBOL: char = '$';   // inlined and never reassigned"
+          "body": "The file this phase works in, crates/ledger-core/src/money.rs:",
+          "code": "// Phase 1: money is an integer number of cents.\n\npub fn format_cents(_cents: i64) -> String {\n    todo!(\"implement format_cents\")\n}"
         },
         {
           "kind": "prose",
-          "body": "Money is an integer number of cents, so 199 means one dollar and ninety-nine cents. A float cannot represent every cent exactly, and a ledger that disagrees with itself is not a ledger. format_cents turns the integer into the string a person reads."
+          "body": "A binding names a value, and a type tells the compiler what that value is. Money in this ledger is a whole number of cents, so 199 means one dollar and ninety-nine cents. The readable amount is a string that format_cents builds from the integer."
         },
         {
           "kind": "example",
-          "body": "Overflow is a memory fact, not a style choice:",
-          "code": "let cents: i64 = i64::MAX;\nlet safe = cents.checked_add(1);  // None: nothing to store\nlet wraps = cents + 1;            // panics in debug, wraps in release"
+          "body": "A binding, a binding that may change, and the integer type the ledger uses for money:",
+          "code": "let cents: i64 = 199;        // a whole number of cents\nlet mut balance: i64 = 0;   // a binding that may change\nlet label: &str = \"ledger\";  // a borrowed string, read only"
         },
         {
-          "kind": "keypoints",
-          "body": "Key Points",
-          "items": [
-            "Money is integer cents; formatting is only a view.",
-            "The compiler reads types and refuses ambiguous programs.",
-            "A negative amount is still an amount, sign included."
-          ]
+          "kind": "prose",
+          "body": "A binding is fixed unless it says mut. The integer types are sized, from i8 up to i128, and the ledger uses i64 for money so a balance in cents holds a large number without wrapping. A float would be wrong here, because 0.1 plus 0.2 is not 0.3 in binary floating point."
         },
         {
           "kind": "quickcheck",
@@ -532,11 +551,25 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
             "-5"
           ],
           "answer": 0,
-          "explain": "The sign belongs to the whole amount: minus five cents is minus five hundredths of a dollar, so the string is -0.05. Dropping the sign or leaving the cents unpadded prints a different amount."
+          "explain": "The sign belongs to the whole amount. Five cents below zero is minus five hundredths of a dollar, so the string is -0.05. Dropping the sign, or leaving the cents unpadded, prints a different amount of money."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "rustup installs the toolchain, cargo builds and tests it.",
+            "One workspace, two crates: ledger-core and ledger-api.",
+            "The Run button is a Node wrapper around cargo test.",
+            "Money is a whole number of cents, the string is a view."
+          ]
         },
         {
           "kind": "task",
-          "body": "Open crates/ledger-core/src/money.rs. Write down what format_cents(0) and format_cents(-5) must return, then implement both so the three checks pass."
+          "body": "Open crates/ledger-core/src/money.rs. Write down what format_cents(0) and format_cents(-5) must return, then implement format_cents so all three checks pass."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapters 1.1 (Installation), 1.3 (Hello Cargo), 3.1 (Variables and Mutability) and 3.2 (Data Types), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -562,49 +595,57 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "Rust Book: variables and mutability",
+          "label": "The Rust Programming Language: chapter 1.1 Installation (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch01-01-installation.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 1.3 Hello Cargo (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch01-03-hello-cargo.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 3.1 Variables and Mutability (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html"
         },
         {
-          "label": "Rust Book: data types",
+          "label": "The Rust Programming Language: chapter 3.2 Data Types (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch03-02-data-types.html"
         },
         {
-          "label": "Rust Cookbook: recipes to come back to",
-          "url": "https://rust-lang-nursery.github.io/rust-cookbook/intro.html"
+          "label": "rustup: the toolchain installer",
+          "url": "https://rustup.rs"
         }
       ]
     },
     "rust-values-ask": {
       "id": "rust-values-ask",
-      "title": "Reason: what zero has to print",
+      "title": "Reason: what the ledger keeps",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-values"
       ],
       "hints": [
-        "Ask whether a zero balance is missing information or a real amount, then what a person needs to see on the statement."
+        "Ask what a float does to 0.1 plus 0.2, and what a customer would be told if the ledger stored that result."
       ],
       "misconceptions": [
-        "Treating zero as the absence of a value, when a balance of zero is a fact about the account.",
-        "Believing decimals are cosmetic, when the two digits are the unit of cents being shown."
+        "Believing a decimal amount is more exact because it looks like money, when the smallest unit of the currency is one cent.",
+        "Thinking the printable string is the value itself, when it is only a view of the number the ledger keeps."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "An account opens with nothing in it. A statement is printed for that account before any deposit. What should format_cents(0) return?"
+          "body": "The ledger keeps a balance for each owner. Someone asks what that balance is in dollars and cents. What does the ledger actually hold?"
         }
       ],
       "options": [
-        "0.00: zero is an amount and keeps two decimal places.",
-        "An empty string, because there is nothing to show for zero.",
-        "0, because whole cents carry no fractional part to show.",
-        "00.00, so the width of every amount matches the widest one."
+        "Whole cents, because a float cannot hold every amount of money exactly.",
+        "A decimal number of dollars, because that is the figure a customer reads.",
+        "A whole number of cents, turned into a float before the total is added.",
+        "A text string of dollars, so no formatter is needed to show the amount."
       ],
       "answer": 0,
-      "explanation": "Zero cents is a real balance: an account that opened at zero and never moved still has one. Formatting it as an empty string or as a bare 0 makes the screen disagree with the ledger, and the next phase compares strings. The two decimal places are not decoration; they are the unit, cents, printed as a fraction of a dollar. Negative amounts follow the same rule with one sign in front of the whole value, which is the edge check."
+      "explanation": "A float stores an approximation, and a ledger that adds approximations disagrees with itself: 0.1 plus 0.2 is not 0.3 in binary floating point. Whole cents are exact integers, so every sum is the sum the customer owes. The readable amount comes from a formatter at the edge of the system, not from the arithmetic in the middle."
     },
     "rust-values-do": {
       "id": "rust-values-do",
@@ -616,15 +657,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-values"
       ],
       "hints": [
-        "Open crates/ledger-core/src/money.rs. It owns format_cents, and the job is turning whole cents into the string a person reads.",
-        "Split the absolute value into dollars and leftover cents, then decide the sign separately.",
-        "The remainder is a count of cents, not a fraction: 5 cents prints as 05 after the dot.",
-        "Run the checks and read which named test failed before changing anything else.",
-        "Shape: sign, dollars, a dot, then two digits of cents. Zero is 0.00 and minus five cents is -0.05. If cargo is missing, run the Environment Check first."
+        "Open crates/ledger-core/src/money.rs. It holds format_cents, and the whole job is turning a count of whole cents into the string a person reads.",
+        "Split the amount into the whole units and the leftover count of cents, and decide the sign on its own.",
+        "The leftover is a count of cents, so five cents has to print as 05 after the point and not as 5.",
+        "Run node --test --test-reporter=tap test/values.test.mjs and read the name of the check that failed before you change anything else.",
+        "Shape: a sign, then the whole units, then a dot, then two digits of cents, so zero is 0.00 and minus five cents is -0.05."
       ],
       "misconceptions": [
         "Formatting through a float, which turns exact cents into an approximation of a dollar.",
-        "Putting the minus sign on the dollars only, so five cents prints as -0.05 by accident or 0.-05."
+        "Putting the minus sign on the units only, so five cents prints as -0.05 by accident or as 0.-05."
       ],
       "files": [
         "crates/ledger-core/src/money.rs"
@@ -637,7 +678,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "zero cents formats as 0.00"
           ],
-          "feedback": "Zero is an amount. Print 0.00, with two decimal places, not an empty string and not a bare zero."
+          "feedback": "Zero is an amount, so it prints as 0.00 with two decimal places, not as an empty string and not as a bare zero."
         },
         {
           "id": "positive",
@@ -645,7 +686,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "199 cents formats as 1.99"
           ],
-          "feedback": "199 cents is 1.99. Divide into dollars and the remainder, and always print two digits after the point."
+          "feedback": "199 cents is 1.99, so divide into whole units and a remainder, and always print two digits after the point."
         },
         {
           "id": "edge-sign",
@@ -653,7 +694,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "negative five cents formats as -0.05"
           ],
-          "feedback": "Negative cents are still cents. The minus goes in front of the whole amount, so -5 is -0.05 and not 0.-05.",
+          "feedback": "The minus belongs in front of the whole amount, so five cents below zero prints as -0.05 and not as 0.-05.",
           "edge": true
         }
       ]
@@ -683,7 +724,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "100 cents splits into two equal parts"
           ],
-          "feedback": "One hundred cents in two parts is fifty and fifty. Divide, then hand out the remainder if there is one."
+          "feedback": "One hundred cents in two parts is fifty and fifty. Divide first, then hand out the remainder if there is one."
         },
         {
           "id": "edge-remainder",
@@ -702,7 +743,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "kind": "lesson",
       "objectives": [
         "Explain what it means for a Rust value to have exactly one owner at a time.",
-        "Predict which binding the compiler refuses after a String is passed by value.",
+        "Predict which binding the compiler refuses after a String has been passed by value.",
         "Trace where ownership goes when a function returns the value it was given."
       ],
       "mode": "learn",
@@ -711,22 +752,41 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-ownership"
       ],
       "hints": [
-        "Before running anything, predict which binding is usable after the function returns.",
-        "When the compiler rejects a use, read the note under the error: it usually says the value was moved and where."
+        "Before you run anything, write down which binding still holds the value after each call, and which one the compiler will refuse.",
+        "When the compiler rejects a use, the note under the error says the value was moved and names where it went."
       ],
       "misconceptions": [
-        "Assuming Rust copies everything by default, as a garbage-collected language would let you believe.",
-        "Thinking the compiler is complaining about style rather than about two possible owners of one allocation.",
-        "Crichton, Gray and Krishnamurthi (arxiv.org/abs/2309.04134) built a grounded conceptual model of Rust ownership — a single token that transfers, not a GC-style reference count — and evaluated it as a full pedagogy: average Ownership Inventory scores rose from 48% to 57%, a 9 percentage-point gain. Connecting the compile-time rule to the runtime picture is what the gain came from."
+        "Assuming Rust copies everything by default, the way a garbage-collected language would let you believe.",
+        "Thinking the compiler is complaining about style rather than about two possible owners of one allocation."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo build",
+          "expect": [
+            "Compiling|Finished"
+          ],
+          "shows": "Finished dev [unoptimized] target(s) in 0.05s"
+        }
       ],
       "lesson": [
         {
-          "kind": "prose",
-          "body": "A Rust value has exactly one owner at a time. Passing it by value moves ownership into the function; the caller binding is gone, and the compiler will not let you use it again."
+          "kind": "example",
+          "body": "The file this phase works in, crates/ledger-core/src/ownership.rs. charge is the function that takes the wallet, so the owner is the point.",
+          "code": "// Phase 2: a value has one owner, and moving it hands that ownership over.\n\npub struct Wallet {\n    pub cents: i64,\n}\n\npub fn charge(_wallet: Wallet, _cents: i64) -> Wallet {\n    todo!(\"implement charge\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite for this phase. It is a Node wrapper that calls cargo test. If cargo is not found, run the environment check first.",
+          "code": "node --test --test-reporter=tap test/ownership.test.mjs"
         },
         {
           "kind": "prose",
-          "body": "That sounds restrictive until you see the bug it removes: two parts of the program cannot both believe they may free the same memory, because only one of them owns it."
+          "body": "A Rust value has one owner at a time. Passing it by value moves ownership into the function, and the compiler will not let you use the caller binding afterwards."
+        },
+        {
+          "kind": "prose",
+          "body": "That looks restrictive until you see the bug it removes: two parts of a program cannot both believe they may free the same memory, because only one of them owns it."
         },
         {
           "kind": "example",
@@ -735,51 +795,44 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Fixed-size types with no heap allocation implement Copy, so passing one duplicates its bits and leaves the original usable. String does not, because copying it would allocate a second buffer."
+          "body": "Types with no heap allocation implement Copy, so passing one duplicates its bits and leaves the original usable. String does not, because copying it would allocate a second buffer."
         },
         {
           "kind": "prose",
-          "body": "Ownership is also the release plan. When the owning binding goes out of scope, Rust drops the value exactly once: it frees the String buffer, closes the file. A move hands that obligation to the new binding, which is why the old one may not be touched."
+          "body": "Ownership is also the release plan. When the owning binding goes out of scope, Rust drops the value exactly once: it frees the buffer, closes the file. A move hands that obligation to the new binding, which is why the old one may not be touched."
         },
         {
           "kind": "example",
-          "body": "A node that owns its tail: the compiler needs a size before it can lay the value out.",
-          "code": "enum List {\n    Nil,\n    Node(i64, Box<List>),  // Box makes the recursive type sized\n}\n\n// Dropping the head frees every node behind it, one owner at a time."
+          "body": "The test for this phase, crates/ledger-core/tests/ownership.rs, is where the move is written down:",
+          "code": "#[test]\nfn charge_returns_the_wallet_it_took() {\n    let wallet = Wallet { cents: 100 };\n    let wallet = charge(wallet, 30);\n    assert_eq!(wallet.cents, 70);\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Which line fails to compile after the move?",
+          "items": [
+            "The line that reads a again, because the value moved to b.",
+            "The line that reads b, because b never received the value at all.",
+            "The line that copies an integer, because integers cannot be moved."
+          ],
+          "answer": 0,
+          "explain": "A moved String has one owner, and b is it. The compiler refuses any later use of a, so the mistake never becomes a running program. Copy types such as i64 keep both bindings usable, which is why a copied integer behaves differently."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "Passing by value moves ownership into the call.",
-            "Copy types duplicate; String moves instead.",
+            "Copy types duplicate, String moves instead.",
             "Returning a moved value gives ownership back."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "After let b = a for a String, what is true?",
-          "items": [
-            "Both bindings stay usable.",
-            "Only b is usable; a was moved.",
-            "The program panics at runtime."
-          ],
-          "answer": 1,
-          "explain": "Assigning a String moves it. The compiler rejects any later use of a, so there is no runtime panic to catch: the mistake never becomes a program. Copy types such as i64 behave differently and keep both bindings usable."
-        },
-        {
-          "kind": "quickcheck",
-          "body": "Which line fails to compile after the move?",
-          "items": [
-            "`let b = a;` followed by `println!(\"{a}\")`.",
-            "`let b = a;` followed by `println!(\"{b}\")`.",
-            "`let n = 5; let m = n; println!(\"{n}\")`."
-          ],
-          "answer": 0,
-          "explain": "After `let b = a`, the String has one owner: b. Printing a is a use after the move, and the compiler rejects it at that line, naming a as moved. Copy types like i64 keep both bindings usable, which is why the third line compiles."
-        },
-        {
           "kind": "task",
           "body": "Open crates/ledger-core/src/ownership.rs. Implement charge, copy_cents and rename so the caller either gets the owned value back or keeps a copied one, then run the checks."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 4.1 (What is Ownership?), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -817,12 +870,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "Rust Book: ownership",
+          "label": "The Rust Programming Language: chapter 4.1 What is Ownership? (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html"
         },
         {
-          "label": "Too Many Lists: ownership 101 and the drop chain",
-          "url": "https://rust-unofficial.github.io/too-many-lists/first-ownership.html"
+          "label": "The Rust Programming Language: chapter 4.2 References and Borrowing (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html"
         }
       ]
     },
@@ -830,7 +883,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-ownership-ask",
       "title": "Reason: what happens to a String",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-ownership"
@@ -840,13 +893,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "misconceptions": [
         "Believing a call always leaves the caller with the value, which is true only for Copy types.",
-        "Thinking a clone happens behind the scenes, when Rust makes the cost visible in the source.",
-        "Treating the compiler’s move error as style advice rather than an ownership fact. The interactive Rust Book at rust-book.cs.brown.edu (Brown’s Cognitive Engineering Lab) draws ownership and borrow state with Aquascope diagrams precisely so learners can predict the error before the compiler reports it."
+        "Thinking a clone happens behind the scenes, when Rust makes the cost visible in the source."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "You pass a String to a function that takes it by value. The function returns nothing. What does the caller have left?"
+          "body": "You hand a String to a function that takes it by value, and the function gives nothing back. What is the caller left with?"
         }
       ],
       "options": [
@@ -856,7 +908,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "It is cloned automatically whenever the caller still needs it."
       ],
       "answer": 1,
-      "explanation": "Passing a String by value transfers ownership to the function. When the function ends, the String is dropped, and the caller binding is no longer valid; the compiler refuses to compile a use after that point. Borrowing is what keeps the caller usable, and it is written with an ampersand at the call site. Clone is explicit for the same reason a move is: the cost belongs in the code, not in a hidden copy. Returning the value is the other way to hand it back."
+      "explanation": "Passing a String by value transfers ownership to the function. When the function ends, the String is dropped, and the caller binding is no longer valid, so the compiler refuses to compile a use after that point. Borrowing is what keeps the caller usable, and it is written with an ampersand at the call site. Clone is explicit for the same reason a move is: the cost belongs in the code, not in a hidden copy. Returning the value is the other way to hand it back."
     },
     "rust-ownership-do": {
       "id": "rust-ownership-do",
@@ -868,11 +920,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-ownership"
       ],
       "hints": [
-        "Open crates/ledger-core/src/ownership.rs. Three functions, each showing one way a value crosses a call boundary.",
-        "charge takes a Wallet and returns one. Look at what it does with the value it was given before returning it.",
-        "copy_cents takes an i64. Write down whether the caller still has its own cents after the call.",
-        "rename takes a String and returns it. The returned binding is the caller new owner; the old one is gone.",
-        "If a check fails because the compiler rejected a use after a move, the fix is to move the value back or borrow it, not to clone at random."
+        "Open crates/ledger-core/src/ownership.rs. Three functions, each showing one way a value crosses a call boundary. Run node --test --test-reporter=tap test/ownership.test.mjs and read the name of the check that failed.",
+        "charge takes a Wallet and gives one back, so the wallet the caller receives is the wallet the function was given, less the charge.",
+        "copy_cents takes an i64. i64 is Copy, so the caller still holds its own cents after the call and the function cannot take them away.",
+        "Run the suite and read the name of the failing check before you change anything, because a use after a move is named in the compiler message rather than in the test.",
+        "Shape: charge takes a Wallet and gives one back, copy_cents takes an i64 and gives a number back, and rename takes a String and gives that String back, so the caller always ends up owning the value it needs."
       ],
       "misconceptions": [
         "Cloning to silence the compiler, which hides the ownership question instead of answering it.",
@@ -964,17 +1016,36 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [
         "For each function, ask whether it needs to own the text or only to read part of it.",
-        "When a borrow error appears, the note names the function that returns the reference; start the fix there."
+        "When a borrow error appears, the note names the function that returns the reference, so start the fix there."
       ],
       "misconceptions": [
         "Believing a borrow is a copy with extra syntax, when it points at the original bytes.",
-        "Thinking a borrow lasts until its variable goes out of scope, when it ends at its last use.",
-        "Brown University’s Cognitive Engineering Lab hosts an experimental interactive fork of the Rust Book (rust-book.cs.brown.edu) whose ownership chapter uses Aquascope diagrams to visualize borrow-checker state as code runs. Reading the rule as a picture of live borrows — a token that vanishes at its last use — is what turns \"the compiler said no\" into a prediction you can make before compiling."
+        "Thinking a borrow lasts until its variable goes out of scope, when it ends at its last use."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo build",
+          "expect": [
+            "Compiling|Finished"
+          ],
+          "shows": "Finished dev [unoptimized] target(s) in 0.05s"
+        }
       ],
       "lesson": [
         {
+          "kind": "example",
+          "body": "The file this phase works in, crates/ledger-core/src/borrowing.rs. first_word hands back a borrow instead of a copy.",
+          "code": "// Phase 3: borrow a value to read it, a mutable borrow to change it.\n\npub fn first_word(_line: &str) -> &str {\n    todo!(\"implement first_word\")\n}\n\npub fn push_owner(_owner: &mut String, _name: &str) {\n    todo!(\"implement push_owner\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite for this phase. It is a Node wrapper that calls cargo test. If cargo is not found, run the environment check first.",
+          "code": "node --test --test-reporter=tap test/borrowing.test.mjs"
+        },
+        {
           "kind": "prose",
-          "body": "A borrow is a reference that does not take ownership. &T reads, &mut T changes, and the compiler enforces that a mutable borrow is never alive at the same time as another borrow."
+          "body": "A borrow is a reference that does not take ownership. &T reads, &mut T changes, and the compiler refuses a mutable borrow that is alive at the same time as another borrow."
         },
         {
           "kind": "prose",
@@ -982,57 +1053,50 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         },
         {
           "kind": "example",
-          "body": "A shared borrow, then a mutable one:",
-          "code": "let line = String::from(\"ada deposits 5\");\nlet word = first_word(&line);  // borrows line\nprintln!(\"{word}\");            // line is still here\n\nlet mut owner = String::from(\"ada\");\npush_owner(&mut owner, \"lovelace\");"
+          "body": "The test for this phase, crates/ledger-core/tests/borrowing.rs, shows both kinds of borrow in one file:",
+          "code": "#[test]\nfn first_word_borrows_the_start_of_the_line() {\n    let line = String::from(\"ada deposits 5\");\n    let word = first_word(&line);\n    assert_eq!(word, \"ada\");\n    assert_eq!(line, \"ada deposits 5\");\n}"
         },
         {
           "kind": "prose",
-          "body": "A &str is a view into UTF-8 bytes owned by someone else. Slicing by index can panic on a character boundary, which is why splitting on whitespace is safer than counting bytes."
+          "body": "A &str is a view into bytes someone else owns. The line above still exists after first_word returns, because the function borrowed it rather than taking it."
         },
         {
           "kind": "prose",
-          "body": "A borrow ends at its last use, not at the closing brace. Two mutable borrows are therefore legal when the first is finished before the second begins, which is what makes a loop that takes &mut each pass compile."
+          "body": "A borrow ends at its last use, not at the closing brace. Two mutable borrows are therefore legal when the first is finished before the second begins, which is what lets a loop that takes &mut each pass compile."
         },
         {
           "kind": "example",
-          "body": "One slice, two mutable halves: the split is what makes both borrows legal.",
-          "code": "let mut cents = [10, 20, 30, 40];\nlet (left, right) = cents.split_at_mut(2);\nleft[0] += 1;   // two &mut, different elements\nright[0] += 1;  // the compiler can see they do not overlap"
+          "body": "A mutable borrow changes the caller value in place, and the caller keeps it:",
+          "code": "#[test]\nfn push_owner_mutates_the_callers_string() {\n    let mut owner = String::from(\"ada\");\n    push_owner(&mut owner, \"lovelace\");\n    assert_eq!(owner, \"ada lovelace\");\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Can a &mut and a & to one value be alive together?",
+          "items": [
+            "No, the compiler rejects the overlap.",
+            "Yes, if both of them only read in practice.",
+            "Only inside a single function body, never across two."
+          ],
+          "answer": 0,
+          "explain": "Shared and mutable borrows exclude each other, and the rule is checked at compile time. It exists because a reader holding a reference must not see the bytes change underneath it. The error appears before the program runs, so there is no race to reproduce."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Borrow to read; borrow mutably to change.",
+            "Borrow to read, borrow mutably to change.",
             "A slice points into memory someone else owns.",
             "A borrow ends at its last use.",
             "Overlap between borrows is what the compiler refuses."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "Can a &mut and a & to one value be alive together?",
-          "items": [
-            "Yes, if both only read in practice.",
-            "No: the compiler rejects it.",
-            "Only inside a single function body."
-          ],
-          "answer": 1,
-          "explain": "Shared and mutable borrows exclude each other, and the rule is checked at compile time. It exists because a reader holding a reference must not see the bytes change underneath it. The error appears before the program runs, so there is no race to reproduce."
-        },
-        {
-          "kind": "quickcheck",
-          "body": "Two shared borrows, then one mutable borrow. What happens?",
-          "items": [
-            "Both shared borrows end before the mutable one begins.",
-            "The compiler refuses: &mut cannot overlap them.",
-            "It compiles and the last write wins at runtime."
-          ],
-          "answer": 1,
-          "explain": "A shared borrow and a mutable borrow cannot be live at the same time. The rule is the whole safety story: no reader can observe a write, and no write can invalidate a reader. If the shared borrows are still used after the &mut begins, the program does not compile."
-        },
-        {
           "kind": "task",
-          "body": "Open crates/ledger-core/src/borrowing.rs. Implement first_word, total and push_owner so each borrows rather than owns, and the caller value is still usable afterward."
+          "body": "Open crates/ledger-core/src/borrowing.rs. Implement first_word, total and push_owner so each borrows rather than owns, and the caller value is still usable afterwards."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 4.2 (References and Borrowing) and section 4.4 (The Slice Type) inside chapter 4.3, which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -1049,7 +1113,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
                   "owns": "#1"
                 },
                 {
-                  "name": "name",
+                  "name": "word",
                   "value": "&owner"
                 }
               ]
@@ -1064,22 +1128,22 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           ],
           "borrows": [
             {
-              "from": "name",
+              "from": "word",
               "to": "#1",
               "kind": "shared"
             }
           ],
-          "note": "name may read the bytes; it may not free or grow them"
+          "note": "word may read the bytes; it may not free or grow them"
         }
       },
       "resources": [
         {
-          "label": "Rust Book: references and borrowing",
+          "label": "The Rust Programming Language: chapter 4.2 References and Borrowing (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html"
         },
         {
-          "label": "Too Many Lists: peek — inspect without taking ownership",
-          "url": "https://rust-unofficial.github.io/too-many-lists/second-peek.html"
+          "label": "The Rust Programming Language: chapter 4.3 Slices, section 4.4 The Slice Type (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch04-03-slices.html"
         }
       ]
     },
@@ -1087,7 +1151,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-borrowing-ask",
       "title": "Reason: a returned slice",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-borrowing"
@@ -1097,13 +1161,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "misconceptions": [
         "Believing a returned &str owns its bytes, when it only points into the argument.",
-        "Expecting the compiler to insert a copy because the function returns a reference.",
-        "Believing a returned &str is independent of its input, when the lifetime of that reference is tied to the reference it was derived from. Borrow checker research shows this is the most common failure mode: once learners see the output borrows from a specific input, they far more reliably predict when the compiler will accept or reject the code. In Crichton, Gray and Krishnamurthi’s study of a redesigned ownership pedagogy (arxiv.org/abs/2309.04134), average Ownership Inventory scores rose from 48% to 57% — the gain came from the whole approach, visualizations and rewritten chapter together."
+        "Expecting the compiler to insert a copy because the function returns a reference."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A function takes &str and returns a &str pointing at part of it. Why is that allowed without copying the text?"
+          "body": "A function takes &str and gives back a &str that points at part of it. Why is that allowed without copying the text?"
         }
       ],
       "options": [
@@ -1113,7 +1176,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Because the caller keeps the original alive for the whole program run."
       ],
       "answer": 2,
-      "explanation": "The returned reference points into the bytes owned by the caller, so the compiler ties its lifetime to the input reference. That is enough to guarantee the owner outlives the slice, which is what makes a zero-copy return safe. Nothing is copied and nothing becomes static; a reference that escaped its owner would be a dangling pointer, and the lifetime rule is the check that stops it. This is why the signature can return a slice at all."
+      "explanation": "The returned reference points into the bytes owned by the caller, so the compiler ties its lifetime to the input reference. That is enough to guarantee the owner outlives the slice, which is what makes a zero-copy return safe. Nothing is copied and nothing becomes static: a reference that escaped its owner would be a dangling pointer, and the lifetime rule is the check that stops it. This is why the signature can return a slice at all."
     },
     "rust-borrowing-do": {
       "id": "rust-borrowing-do",
@@ -1125,11 +1188,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-borrowing"
       ],
       "hints": [
-        "Open crates/ledger-core/src/borrowing.rs. Three functions, each borrowing a different way.",
-        "first_word returns a slice of its input, so the lifetime comes from the argument, not from a new String.",
-        "total takes a slice of numbers, which is a borrow of the caller slice; loop or use iter().sum().",
-        "push_owner takes &mut String and appends the name. Decide what happens when the owner is empty.",
-        "If the compiler mentions a missing lifetime specifier, the returned reference needs to be tied to one input."
+        "Open crates/ledger-core/src/borrowing.rs. Three functions, each borrowing in a different way. Run node --test --test-reporter=tap test/borrowing.test.mjs and read the name of the check that failed.",
+        "first_word returns a slice of its input, so the lifetime comes from the argument and not from a new String.",
+        "total takes a slice of numbers, which is a borrow of the caller slice, so add the values and return the sum without consuming the vector.",
+        "Run the suite and read which check failed before you change anything, because each of the three checks names one borrowing mistake.",
+        "Shape: first_word returns a slice of the line it was given, total adds up a slice without taking it, and push_owner appends to the string it was handed through a mutable borrow."
       ],
       "misconceptions": [
         "Returning a new String where a &str is required, which changes the signature instead of solving it.",
@@ -1154,7 +1217,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "total reads a slice without taking it"
           ],
-          "feedback": "A slice is already a borrow. Add its values and return the sum; do not consume the vector to do it."
+          "feedback": "A slice is already a borrow. Add its values and return the sum, and do not consume the vector to do it."
         },
         {
           "id": "edge-mutate",
@@ -1162,7 +1225,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "push_owner mutates the caller string"
           ],
-          "feedback": "A &mut String can be appended to directly. Do not return a new string: the caller must see the change.",
+          "feedback": "A &mut String can be appended to directly. Do not return a new string, because the caller must see the change.",
           "edge": true
         }
       ]
@@ -1210,8 +1273,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "title": "Learn: one door into the type",
       "kind": "lesson",
       "objectives": [
-        "Explain how private fields make a constructor the only door into a type.",
-        "Read a method receiver and say whether it reads, changes, or consumes the value.",
+        "Explain how private fields make the constructor the only door into a type.",
+        "Read a method receiver and say whether it reads the value, changes it, or consumes it.",
         "Choose which derives a small value type earns and what each one costs."
       ],
       "mode": "learn",
@@ -1220,44 +1283,75 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-structs"
       ],
       "hints": [
-        "Before writing new, list the two inputs that must be refused and what error each one earns.",
-        "Read the compiler error on a private field access as a design note, not an accident."
+        "Before you write new, list the two inputs that have to be refused and the error each one earns.",
+        "Read a compiler error on a private field access as a design note rather than an accident."
       ],
       "misconceptions": [
-        "Leaving fields public and validating at each call site, which gives the invariant many owners.",
+        "Leaving the fields public and validating at each call site, which gives the invariant many owners.",
         "Returning a default Account for bad input, which turns a refusal into silent data loss."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo build",
+          "expect": [
+            "Compiling|Finished"
+          ],
+          "shows": "Finished dev [unoptimized] target(s) in 0.05s"
+        }
       ],
       "lesson": [
         {
-          "kind": "prose",
-          "body": "A struct groups fields under one name, and impl gives that type behaviour. Keeping the fields private means every Account was built through new, so the invariant is checked in one place."
-        },
-        {
-          "kind": "prose",
-          "body": "A constructor that returns Result makes the refusal part of the type. The caller cannot receive an Account and a possible error separately; they must handle the error before they get a value."
+          "kind": "example",
+          "body": "The file this phase works in, crates/ledger-core/src/account.rs. Account::new and Account::deposit are the two functions that can refuse.",
+          "code": "// Phase 4: a struct owns its fields, and a constructor can refuse bad ones.\n\n#[derive(Debug, Clone, PartialEq, Eq)]\npub struct Account {\n    owner: String,\n    cents: i64,\n}\n\nimpl Account {\n    pub fn new(_owner: &str, _opening_cents: i64) -> Result<Account, AccountError> {\n        todo!(\"implement Account::new\")\n    }\n}"
         },
         {
           "kind": "example",
-          "body": "A constructor with two refusals:",
-          "code": "pub struct Account { owner: String, cents: i64 }\n\nimpl Account {\n    pub fn new(owner: &str, cents: i64) -> Result<Account, AccountError> {\n        if owner.trim().is_empty() { return Err(AccountError::EmptyOwner); }\n        if cents < 0 { return Err(AccountError::NegativeOpening); }\n        Ok(Account { owner: owner.to_string(), cents })\n    }\n}"
+          "body": "The command that runs the suite for this phase. It is a Node wrapper that calls cargo test. If cargo is not found, run the environment check first.",
+          "code": "node --test --test-reporter=tap test/account.test.mjs"
+        },
+        {
+          "kind": "prose",
+          "body": "A struct groups fields under one name, and an impl block gives that type its behaviour. The fields of Account are private, so every Account in the program was built through new and the invariant is checked in one place."
+        },
+        {
+          "kind": "prose",
+          "body": "A constructor that returns Result makes the refusal part of the type. The caller cannot receive an Account and a possible error separately, so the error has to be handled before the value is used."
         },
         {
           "kind": "example",
-          "body": "What derive writes, and the one method it cannot:",
-          "code": "#[derive(Debug, Clone, PartialEq)]\npub struct Entry { memo: String, cents: i64 }\n\nimpl Default for Entry {\n    fn default() -> Entry {\n        Entry { memo: String::new(), cents: 0 }\n    }\n}"
+          "body": "The refusals are named in the error enum, so a caller can match on them:",
+          "code": "#[derive(Debug, Clone, Copy, PartialEq, Eq)]\npub enum AccountError {\n    EmptyOwner,\n    NegativeOpening,\n    NegativeDeposit,\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The test for this phase, crates/ledger-core/tests/account.rs, shows a refusal and its named error:",
+          "code": "#[test]\nfn refuses_an_empty_owner() {\n    assert_eq!(Account::new(\"  \", 0), Err(AccountError::EmptyOwner));\n}"
         },
         {
           "kind": "prose",
-          "body": "Deriving Debug, Clone, PartialEq and Eq joins a type to the rest of the language: printable in a failure message, comparable in a test, copyable when it is small. Each derive is a decision."
+          "body": "Deriving Debug, Clone, PartialEq and Eq joins a type to the rest of the language: printable in a failure message, comparable in a test, copyable when it is small. Each derive is a decision, and a derive the type does not need is code nobody asked for."
         },
         {
           "kind": "prose",
-          "body": "The receiver in the method signature decides what a method may do with the value: &self reads it, &mut self changes it, self takes it away. That is the borrow rule written where every caller can see it before calling."
+          "body": "The receiver in a method signature decides what the method may do with the value: &self reads it, &mut self changes it, self takes it away. That is the borrow rule written where every caller reads it before calling."
         },
         {
           "kind": "example",
           "body": "Three receivers, three promises to the caller:",
-          "code": "impl Account {\n    pub fn owner(&self) -> &str { &self.owner }      // reads\n    pub fn balance(&self) -> i64 { self.cents }      // reads a copy\n    pub fn deposit(&mut self, c: i64) { self.cents += c }  // changes it\n}\n// A method that takes self by value would consume the account:\n// pub fn into_owner(self) -> String { self.owner }"
+          "code": "impl Account {\n    pub fn owner(&self) -> &str { &self.owner }      // reads\n    pub fn balance(&self) -> i64 { self.cents }      // reads a copy\n    pub fn deposit(&mut self, c: i64) { self.cents += c }  // changes it\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Who can build an Account whose balance is negative?",
+          "items": [
+            "Nobody: new returns an error instead.",
+            "Anyone, because the field is public.",
+            "Only a test inside the same crate module."
+          ],
+          "answer": 0,
+          "explain": "The fields are private, so code outside the module can only call new, and new refuses a negative opening. A helper inside the module could still build one, which is why the rule is enforced where the fields live rather than at every call site."
         },
         {
           "kind": "keypoints",
@@ -1269,30 +1363,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "Who can build an Account with cents set to -1?",
-          "items": [
-            "Anyone: the field is public.",
-            "Only a test inside the same crate module.",
-            "Nobody: new returns an error instead."
-          ],
-          "answer": 2,
-          "explain": "The fields are private, so code outside the module can only call new, and new refuses a negative opening. Inside the module a helper could still build one, which is why the rule is enforced where the fields live rather than at every call site."
-        },
-        {
-          "kind": "quickcheck",
-          "body": "Why can every later function trust an Account's fields?",
-          "items": [
-            "Because every field is public and callers check it.",
-            "Because the constructor is the only way in.",
-            "Because Rust validates values at runtime before use."
-          ],
-          "answer": 1,
-          "explain": "The invariant is enforced where the value is created. If new is the only constructor and it rejects a negative opening balance, every Account that exists has passed that check. Public fields would reopen the hole, because a caller could assign a negative number afterwards."
-        },
-        {
           "kind": "task",
           "body": "Open crates/ledger-core/src/account.rs. Implement new and deposit. new refuses an empty owner and a negative opening balance; deposit refuses a negative amount."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 5.1 (Defining and Instantiating Structs) and chapter 5.3 (Method Syntax), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -1327,11 +1403,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "Rust Book: defining and instantiating structs",
+          "label": "The Rust Programming Language: chapter 5.1 Defining and Instantiating Structs (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch05-01-defining-structs.html"
         },
         {
-          "label": "Rust Book: method syntax",
+          "label": "The Rust Programming Language: chapter 5.3 Method Syntax (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch05-03-method-syntax.html"
         }
       ]
@@ -1340,7 +1416,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-structs-ask",
       "title": "Reason: what a fallible constructor buys",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-structs"
@@ -1355,17 +1431,17 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Account keeps its fields private and its constructor returns Result. What does that buy the rest of the program?"
+          "body": "Account keeps its fields private and its constructor returns a Result. What does that buy the rest of the program?"
         }
       ],
       "options": [
-        "It reports a bad opening balance as a value the caller must handle.",
-        "It panics on bad input, which stops the program before any state changes.",
-        "It checks the balance each time the account is read.",
-        "It makes an invalid account impossible to build without noticing."
+        "No Account exists in a state the constructor would refuse.",
+        "The balance is rechecked every time the account is read.",
+        "A bad opening balance stops the program before it starts.",
+        "The caller can rebuild the account from public fields at will."
       ],
-      "answer": 3,
-      "explanation": "The value of a fallible constructor is not the error message; it is that no Account can exist in a state new would have refused, because every path to the value goes through that check. A panic also stops bad data, but it removes the caller choice of how to recover, which is why libraries prefer Result. Rechecking on every read does not prevent the bad value from existing. The invariant belongs at the door."
+      "answer": 0,
+      "explanation": "The value of a fallible constructor is not the error message; it is that no Account can exist in a state new would have refused, because every path to the value goes through that check. A panic also stops bad data, but it removes the caller choice of how to recover, which is why libraries prefer Result. Rechecking on every read does not stop the bad value from existing. The invariant belongs at the door."
     },
     "rust-structs-do": {
       "id": "rust-structs-do",
@@ -1377,11 +1453,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-structs"
       ],
       "hints": [
-        "Open crates/ledger-core/src/account.rs. The struct is already declared; the two functions are the work.",
-        "new returns Ok(Account { .. }) on the happy path and Err with the named variant otherwise.",
-        "An owner made only of spaces is empty for this rule. Trim before deciding.",
-        "deposit mutates self.cents. A negative amount is refused and must leave the balance unchanged.",
-        "Run the checks and read the label of the failing one: it names which refusal is missing. If cargo is missing, run the Environment Check first."
+        "Open crates/ledger-core/src/account.rs. The struct is already declared, so the two functions are the work. Run node --test --test-reporter=tap test/account.test.mjs and read the name of the check that failed.",
+        "new returns Ok(Account { .. }) on the happy path and Err with the named variant otherwise, so a refusal is a value the caller can match.",
+        "An owner made only of spaces is empty for this rule, so trim the name before deciding, and a negative opening is a refusal in its own right.",
+        "Run the checks and read the label of the failing one, because the label names which refusal is missing and where it belongs.",
+        "Shape: new refuses an empty owner and a negative opening and stores the owner and the balance otherwise, while deposit adds a positive amount to the balance and refuses a negative one."
       ],
       "misconceptions": [
         "Returning a default Account when the input is bad, which hides the refusal from the caller.",
@@ -1398,7 +1474,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "an account is created with its opening balance"
           ],
-          "feedback": "Return an Account holding the owner exactly as given and the opening balance. owner() must read it back."
+          "feedback": "Return an Account holding the owner exactly as given and the opening balance, so owner() and balance() read it back."
         },
         {
           "id": "refuse-negative",
@@ -1462,9 +1538,9 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "title": "Learn: a value that is one of several shapes",
       "kind": "lesson",
       "objectives": [
-        "Explain why an enum models a transaction better than a struct with a kind field.",
-        "Predict what the compiler reports when a new variant leaves a match uncovered.",
-        "Read a match and say whether every variant has an arm that can answer it."
+        "Explain why an enum models a ledger row better than a struct with a kind field.",
+        "Predict what the compiler reports when a match leaves a variant uncovered.",
+        "Read a match over Transaction and say whether every variant has an arm."
       ],
       "mode": "learn",
       "guidance": 1,
@@ -1472,35 +1548,66 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-enums"
       ],
       "hints": [
-        "Before you open the file, predict what Transfer { to: \"ada\", cents: 50 } should print.",
-        "describe is one match that returns a String; is_credit can be a matches! call."
+        "Before you open the file, write the sentence each variant would print, and notice which words only one of them has.",
+        "describe is one match that returns a String, and is_credit can be written as a matches! call."
       ],
       "misconceptions": [
-        "Reaching for a kind string beside a struct — the variant already knows which fields exist.",
-        "Adding a wildcard arm to quiet the compiler — it also hides the next variant someone adds."
+        "Reaching for a kind string beside a struct, when the variant already knows which fields exist.",
+        "Adding a wildcard arm to quiet the compiler, when it also hides the next variant someone adds."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo build",
+          "expect": [
+            "Compiling|Finished"
+          ],
+          "shows": "Finished dev [unoptimized] target(s) in 0.05s"
+        }
       ],
       "lesson": [
         {
-          "kind": "prose",
-          "body": "A ledger row is a deposit, a withdrawal, or a transfer: three shapes sharing one column. Rust says that with an enum, and each variant carries exactly the data its shape needs."
-        },
-        {
-          "kind": "prose",
-          "body": "A match has to answer every variant. Add a fourth kind next month and the compiler lists every place that forgot it, which is cheaper than a test that never ran."
+          "kind": "example",
+          "body": "The file this phase works in, crates/ledger-core/src/tx.rs. describe is the function that turns one variant into a sentence.",
+          "code": "// Phase module (stub): the starter must fail its own tests.\n\n#[derive(Debug, Clone, PartialEq, Eq)]\npub enum Transaction {\n    Deposit { cents: i64 },\n    Withdrawal { cents: i64 },\n    Transfer { to: String, cents: i64 },\n}\n\nimpl Transaction {\n    pub fn describe(&self) -> String {\n        todo!(\"describe each variant as a sentence\")\n    }\n}"
         },
         {
           "kind": "example",
-          "body": "One enum, three shapes; each variant owns its fields:",
-          "code": "enum Transaction {\n\tDeposit { cents: i64 },\n\tWithdrawal { cents: i64 },\n\tTransfer { to: String, cents: i64 },\n}"
-        },
-        {
-          "kind": "example",
-          "body": "Parsing lives on the type, so every caller meets the same refusal:",
-          "code": "impl std::str::FromStr for Status {\n    type Err = String;\n    fn from_str(s: &str) -> Result<Status, String> {\n        match s.to_ascii_lowercase().as_str() {\n            \"open\" => Ok(Status::Open),\n            \"closed\" => Ok(Status::Closed),\n            other => Err(format!(\"unknown status: {other}\")),\n        }\n    }\n}"
+          "body": "The command that runs the suite for this phase. It is a Node wrapper that calls cargo test. If cargo is not found, run the environment check first.",
+          "code": "node --test --test-reporter=tap test/tx.test.mjs"
         },
         {
           "kind": "prose",
-          "body": "Option is an enum too: Some(value) or None. That is why a lookup cannot be ignored by accident — there is no value to use until you answer which one you hold."
+          "body": "A ledger row is a deposit, a withdrawal or a transfer: three shapes sharing one column. Rust says that with an enum, and each variant carries exactly the data its own shape needs."
+        },
+        {
+          "kind": "prose",
+          "body": "A match has to answer every variant. Add a fourth kind next month and the compiler names every place that forgot it, which is cheaper than a test that never ran."
+        },
+        {
+          "kind": "example",
+          "body": "The test for this phase, crates/ledger-core/tests/tx.rs, shows what each arm has to produce:",
+          "code": "#[test]\nfn a_transfer_names_its_recipient() {\n    let tx = Transaction::Transfer {\n        to: \"ada\".to_string(),\n        cents: 50,\n    };\n    assert_eq!(tx.describe(), \"transfer to ada 0.50\");\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "Option is an enum too: Some(value) or None. That is why a lookup cannot be ignored by accident, because there is no value to use until you answer which one you hold. if let is the short form that reads one of the two cases."
+        },
+        {
+          "kind": "example",
+          "body": "Two forms of the same decision, one exhaustive and one for a single case:",
+          "code": "match store.balance(owner) {\n    Some(cents) => format!(\"{owner} has {cents} cents\"),\n    None => format!(\"{owner} has no balance\"),\n}\n\nif let Some(cents) = store.balance(owner) {\n    println!(\"{owner} has {cents} cents\");\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does the compiler do when a match forgets the Transfer arm?",
+          "items": [
+            "The build stops and it names the variant.",
+            "It adds an arm that does nothing.",
+            "It panics when a transfer reaches the match."
+          ],
+          "answer": 0,
+          "explain": "Exhaustiveness is checked at compile time, so the missing arm is an error before the program can run. That is the point of matching on an enum instead of comparing an integer code."
         },
         {
           "kind": "keypoints",
@@ -1508,34 +1615,16 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "items": [
             "An enum value is exactly one variant.",
             "Each variant carries its own fields.",
-            "match must cover every variant, or the build stops."
+            "A match must cover every variant, or the build stops."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "What does the compiler do when a match forgets Transfer?",
-          "items": [
-            "It adds an arm that does nothing.",
-            "It fails to compile, naming the variant.",
-            "It panics when a transfer reaches the match."
-          ],
-          "answer": 1,
-          "explain": "Exhaustiveness is checked at compile time, so the missing arm is an error before the program can run. That is the point of matching on an enum instead of an integer code."
-        },
-        {
-          "kind": "quickcheck",
-          "body": "You add a Refund variant. What does the existing match do?",
-          "items": [
-            "Compiles, with the new variant falling into a `_` arm.",
-            "Fails unless it has `_` or names Refund.",
-            "Panics only when a Refund is constructed later on."
-          ],
-          "answer": 1,
-          "explain": "A match on an enum is checked for exhaustiveness. Without a wildcard arm, the compiler names the missing variant and refuses the build; with one, the new behaviour is silently swallowed until someone remembers to handle it. That is the trade the wildcard makes."
-        },
-        {
           "kind": "task",
-          "body": "Open tx.rs. Describe each variant as a sentence, make deposits the only credit, and parse a kind case-insensitively. Run the suite and fix the variant the compiler names."
+          "body": "Open crates/ledger-core/src/tx.rs. Implement describe, is_credit and parse_kind so each variant is described in one sentence, a deposit is the only credit, and a kind is parsed in any case."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 6.1 (Defining an Enum), chapter 6.2 (The match Control Flow Construct) and chapter 6.3 (if let and let...else), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -1561,41 +1650,49 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Rust Book: enums and pattern matching",
-          "url": "https://doc.rust-lang.org/book/ch06-00-enums.html"
+          "label": "The Rust Programming Language: chapter 6.1 Defining an Enum (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 6.2 The match Control Flow Construct (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch06-02-match.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 6.3 if let and let...else (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch06-03-if-let.html"
         }
       ]
     },
     "rust-enums-ask": {
       "id": "rust-enums-ask",
-      "title": "Reason: what a new variant breaks",
+      "title": "Reason: what an enum gives the row",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-enums"
       ],
       "hints": [
-        "Ask where exhaustiveness is checked: while the program runs, or before it is allowed to run."
+        "Ask what fields a transfer row would carry if every row had to hold every field of every shape."
       ],
       "misconceptions": [
-        "Believing a match has a hidden default — Rust refuses to invent behaviour for a variant you did not name.",
-        "Treating a new variant as a runtime concern — the compiler rejects the old match before any input arrives."
+        "Believing a match has a hidden default, when Rust refuses to invent behaviour for a variant you did not name.",
+        "Treating a new variant as a runtime concern, when the compiler rejects the old match before any input arrives."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "You add Dispute { cents } to the enum. What happens to a match written before that variant existed?"
+          "body": "The ledger records a deposit, a withdrawal and a transfer. What does one enum with three variants give you that three separate structs do not?"
         }
       ],
       "options": [
-        "It fails to compile until a Dispute arm says what a dispute does.",
-        "Nothing: the old match still compiles and treats the dispute as a no-op.",
-        "It panics at runtime when a dispute reaches the match, like a missing case.",
-        "It falls through to the default arm that Rust generates for new variants."
+        "Every row is checked at compile time before it is stored.",
+        "Three separate types can be stored in one map without a shared struct.",
+        "A row can hold every field of every shape at once.",
+        "One row is one variant, carrying only the fields it needs."
       ],
-      "answer": 0,
-      "explanation": "Exhaustiveness is a compile-time promise: the old match no longer covers every variant, so the build stops and names the arm you owe. That is not a nuisance — it is why an enum survives a new state without a silent fallthrough. A runtime panic would move the discovery to production, and Rust generates no default arm for you."
+      "answer": 3,
+      "explanation": "An enum gives a value one shape at a time. A deposit carries cents, a transfer carries cents and a recipient, and no row can hold a recipient it never used. A struct with a kind string would carry every field of every shape on every row, and a row with the wrong combination would compile and then mean nothing. The match that reads the row is checked for every variant, so a new kind cannot slip past the code that prints it."
     },
     "rust-enums-do": {
       "id": "rust-enums-do",
@@ -1607,15 +1704,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-enums"
       ],
       "hints": [
-        "Open tx.rs. Every public item is already named; the bodies are the work.",
-        "describe is one match, and each arm returns a String.",
-        "Use crate::money::format_cents so 50 cents prints 0.50.",
-        "is_credit is true for deposits only; withdrawals and transfers move money out.",
-        "If cargo is not installed, run the Environment Check, then run the suite again."
+        "Open crates/ledger-core/src/tx.rs. Every public item is already named, so the bodies are the work. Run node --test --test-reporter=tap test/tx.test.mjs and read the name of the check that failed.",
+        "describe is one match with an arm for each variant, and each arm returns a sentence that names the shape and the amount.",
+        "Use crate::money::format_cents for the amount, so fifty cents prints as 0.50, and read the to field only in the transfer arm.",
+        "Run the suite and read which check failed before you change anything, and if the compiler names a variant your match does not cover, add the arm for it.",
+        "Shape: describe is a match over the three variants, is_credit is true for a deposit alone, and parse_kind normalises the text before it compares it with the three names."
       ],
       "misconceptions": [
-        "Reaching for a kind string beside a struct — the variant already knows which fields exist.",
-        "Adding a wildcard arm to quiet the compiler — it also hides the next variant someone adds."
+        "Reaching for a kind string beside a struct, when the variant already knows which fields exist.",
+        "Adding a wildcard arm to quiet the compiler, when it also hides the next variant someone adds."
       ],
       "files": [
         "crates/ledger-core/src/tx.rs"
@@ -1644,7 +1741,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "a withdrawal is not a credit"
           ],
-          "feedback": "Only a deposit adds money. A withdrawal is money out, so is_credit must answer false for it.",
+          "feedback": "Only a deposit adds money. A withdrawal is money out, so is_credit has to answer false for it.",
           "edge": true
         }
       ]
@@ -1660,8 +1757,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Comparing the raw string without lowering it — a user typing Transfer should still be understood.",
-        "Returning a default kind for anything unknown — absence is the honest answer to input you do not know."
+        "Comparing the raw string without lowering it, when a user typing Transfer should still be understood.",
+        "Returning a default kind for anything unknown, when absence is the honest answer to input you do not know."
       ],
       "files": [
         "crates/ledger-core/src/tx.rs"
@@ -1692,8 +1789,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "title": "Learn: a failure is a value",
       "kind": "lesson",
       "objectives": [
-        "Explain what Result carries and why a caller cannot ignore the error by accident.",
-        "Trace where the question mark sends an error and what it converts on the way out.",
+        "Explain what a Result carries and why a caller cannot ignore the error by accident.",
+        "Trace where the question mark sends an error and what it does on the way out.",
         "Choose an error enum over a formatted string and say what the caller gains."
       ],
       "mode": "learn",
@@ -1702,27 +1799,46 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-errors"
       ],
       "hints": [
-        "Before opening the file, write the three kinds of bad input a money parser must name.",
-        "Let the question mark carry the error out; match only where you add meaning."
+        "Before you open the file, write down the three kinds of bad input a money parser has to name.",
+        "Let the question mark carry the error out, and match only where you add meaning of your own."
       ],
       "misconceptions": [
-        "Using panic for input a user can type — a bad request is an ordinary answer, not a crash.",
-        "Returning a formatted string as the error — the caller can read it, but cannot match on it.",
-        "The Cookbook (rust-cookbook errors.html) has the two recipes this rests on: \"Chain fallible operations with Result\" for the ? pipeline, and \"Composing errors with an enum\" for a named error type — so callers can distinguish network-down from malformed-input and retry appropriately instead of matching on strings."
+        "Using panic for input a user can type, when a bad request is an ordinary answer rather than a crash.",
+        "Returning a formatted string as the error, when the caller can read it but cannot match on it."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo build",
+          "expect": [
+            "Compiling|Finished"
+          ],
+          "shows": "Finished dev [unoptimized] target(s) in 0.05s"
+        }
       ],
       "lesson": [
+        {
+          "kind": "example",
+          "body": "The file this phase works in, crates/ledger-core/src/parse.rs. parse_amount returns a Result instead of panicking.",
+          "code": "// Phase module (stub): the starter must fail its own tests.\n\n#[derive(Debug, PartialEq, Eq)]\npub enum MoneyError {\n    Empty,\n    NotANumber,\n    TooLarge,\n}\n\npub fn parse_amount(_s: &str) -> Result<i64, MoneyError> {\n    todo!(\"parse whole cents out of text\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite for this phase. It is a Node wrapper that calls cargo test. If cargo is not found, run the environment check first.",
+          "code": "node --test --test-reporter=tap test/parse.test.mjs"
+        },
         {
           "kind": "prose",
           "body": "A parser can fail, and the failure is part of the answer. Rust spells that Result<T, E>: Ok(value) or Err(reason), and a caller cannot use the value without deciding about the reason."
         },
         {
           "kind": "prose",
-          "body": "The question mark is the shortcut. Inside a function that also returns Result, it unwraps Ok and returns Err early, converting the error when the two types differ."
+          "body": "The question mark is the shortcut. Inside a function that also returns a Result, it unwraps Ok and returns Err early, converting the error when the two types differ."
         },
         {
           "kind": "example",
-          "body": "Two parses, two question marks; the first failure ends the function:",
-          "code": "fn parse_pair(text: &str) -> Result<(i64, i64), MoneyError> {\n\tlet (left, right) = text.split_once(',').ok_or(MoneyError::NotANumber)?;\n\tOk((parse_amount(left)?, parse_amount(right)?))\n}"
+          "body": "Two parses, two question marks, and the first failure ends the function:",
+          "code": "pub fn parse_pair(_s: &str) -> Result<(i64, i64), MoneyError> {\n    todo!(\"parse two amounts separated by a comma\")\n}"
         },
         {
           "kind": "prose",
@@ -1730,43 +1846,36 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         },
         {
           "kind": "example",
-          "body": "One enum can absorb the parser it wraps, so the question mark converts instead of matching:",
-          "code": "#[derive(Debug, thiserror::Error)]\nenum LedgerError {\n\t#[error(\"not a number: {0}\")]\n\tMoney(#[from] MoneyError),\n\t#[error(\"amount too large\")]\n\tTooLarge,\n}\n\nfn total(text: &str) -> Result<i64, LedgerError> {\n\tOk(parse_amount(text)? + 1)\n}"
+          "body": "The error type in this file also describes itself, so a person reading a failure gets a sentence:",
+          "code": "impl fmt::Display for MoneyError {\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {\n        todo!(\"describe the error for a person\")\n    }\n}\n\nimpl std::error::Error for MoneyError {}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What must a function return before it can use the question mark?",
+          "items": [
+            "A Result or Option whose error can convert.",
+            "A plain integer, because the mark unwraps the value.",
+            "Nothing special; the mark works in every function."
+          ],
+          "answer": 0,
+          "explain": "The question mark has to return an error to its caller, so the return type of the function has to be able to hold one. A plain integer has nowhere to put the reason."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Result carries either a value or a reason.",
-            "? returns the error early and converts it.",
-            "An error enum is matchable; a string is only readable."
+            "A Result carries either a value or a reason.",
+            "The mark returns the error early and converts it.",
+            "An error enum is matchable, a string is only readable."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "What must a function return before it can use the ? operator?",
-          "items": [
-            "A plain integer, because ? unwraps the value.",
-            "A Result or Option whose error can convert.",
-            "Nothing special; ? works in every function."
-          ],
-          "answer": 1,
-          "explain": "The question mark has to return an error to its caller, so the function’s own return type must be able to hold one. A plain integer has nowhere to put the reason."
-        },
-        {
-          "kind": "quickcheck",
-          "body": "parse_pair uses ?. What reaches the caller on a bad second value?",
-          "items": [
-            "The MoneyError from the failing parse.",
-            "A panic, because `?` cannot cross a function.",
-            "`None`, because the pair could not be built."
-          ],
-          "answer": 0,
-          "explain": "The ? operator returns the error value early, converted to the function's own error type. It does not panic and it does not invent an Option: the signature says Result<(i64, i64), MoneyError>, so the caller must handle exactly that error."
-        },
-        {
           "kind": "task",
-          "body": "Open parse.rs. Parse whole cents, name each failure, and turn an overflow into TooLarge. Compose the pair parser with the question mark instead of matching every step."
+          "body": "Open crates/ledger-core/src/parse.rs. Parse whole cents, name each failure, describe each error in one sentence, and use the question mark so a pair parser stops at the first bad amount."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 9.1 (Unrecoverable Errors with the panic macro), chapter 9.2 (Recoverable Errors with Result) and chapter 9.3 (To panic or Not to panic), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -1785,19 +1894,19 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
             "lines": [
               "Ok(199)",
               "the number is whole cents",
-              "the error type is still part of the signature"
+              "the error type is still in the signature"
             ]
           }
         }
       },
       "resources": [
         {
-          "label": "The Rust Book: error handling",
-          "url": "https://doc.rust-lang.org/book/ch09-00-error-handling.html"
+          "label": "The Rust Programming Language: chapter 9.2 Recoverable Errors with Result (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html"
         },
         {
-          "label": "Rust Cookbook: composing errors with an enum, chaining with ?",
-          "url": "https://rust-lang-nursery.github.io/rust-cookbook/errors.html"
+          "label": "The Rust Programming Language: chapter 9.3 To panic or Not to panic (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html"
         }
       ]
     },
@@ -1805,22 +1914,22 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-errors-ask",
       "title": "Reason: what the question mark returns",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-errors"
       ],
       "hints": [
-        "Ask what the caller receives when the inner parse fails: a value and a reason, or only a reason?"
+        "Ask what the caller receives when the inner parse fails: a value and a reason, or only a reason."
       ],
       "misconceptions": [
-        "Thinking the question mark swallows the failure — it returns it, which is why the caller must also return Result.",
-        "Assuming the question mark panics — it propagates, leaving the decision to the code that can act on it."
+        "Thinking the question mark swallows the failure, when it returns it, which is why the caller must also return a Result.",
+        "Assuming the question mark panics, when it propagates and leaves the decision to the code that can act on it."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A caller writes let cents = parse_amount(input)? inside a function returning Result<(), MoneyError>. What does the question mark do when the input is empty?"
+          "body": "A caller writes let cents = parse_amount(input)? inside a function that returns Result<(), MoneyError>. What does the question mark do when the input is empty?"
         }
       ],
       "options": [
@@ -1830,7 +1939,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "It logs the error and lets the caller continue with an unset value."
       ],
       "answer": 1,
-      "explanation": "The question mark is early return with conversion: on Err it returns that error from the enclosing function, so the caller never executes the rest of its body with a missing value. On Ok it hands back the value and the function continues. There is no panic here, because bad input is expected, and no silent zero, because zero cents is a real amount."
+      "explanation": "The question mark is an early return with conversion: on Err it returns that error from the enclosing function, so the caller never executes the rest of its body with a missing value. On Ok it hands back the value and the function continues. There is no panic here, because bad input is expected, and no silent zero, because zero cents is a real amount."
     },
     "rust-errors-do": {
       "id": "rust-errors-do",
@@ -1842,15 +1951,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-errors"
       ],
       "hints": [
-        "Open parse.rs. The error enum and the signatures are already written for you.",
-        "Trim first: whitespace around a number is not a reason to reject it.",
-        "An empty string after trimming is Empty, not NotANumber — the two failures differ to a caller.",
-        "Map the parse failure by its kind so an overflow becomes TooLarge.",
-        "If cargo is missing, run the Environment Check first; a missing tool is a setup gap, not a failing test."
+        "Open crates/ledger-core/src/parse.rs. The error enum and the signatures are already written for you. Run node --test --test-reporter=tap test/parse.test.mjs and read the name of the check that failed.",
+        "parse_amount returns a Result, so the happy path is Ok(cents) and every refusal is an Err with a named variant.",
+        "Trim the text first, because whitespace around a number is not a reason to reject it, and an empty string after trimming is Empty and not NotANumber.",
+        "Run the checks and read the label of the failing one, because it names the failure you still owe, and map the parse failure by its kind so an overflow becomes TooLarge.",
+        "Shape: trim, then return Empty for nothing, NotANumber for text, TooLarge for a number that does not fit, and Ok(cents) for the rest."
       ],
       "misconceptions": [
-        "Using unwrap on user input — a panic turns a rejected form into a crashed process.",
-        "Collapsing every failure into one variant — the caller then cannot tell retryable input from unreadable input."
+        "Using unwrap on user input, when a panic turns a rejected form into a crashed process.",
+        "Collapsing every failure into one variant, when the caller then cannot tell retryable input from unreadable input."
       ],
       "files": [
         "crates/ledger-core/src/parse.rs"
@@ -1863,7 +1972,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "parses whole cents"
           ],
-          "feedback": "Trim the text, then parse it as an i64. “ 199 ” is 199 cents, not a rejected amount."
+          "feedback": "Trim the text, then parse it as an i64. \" 199 \" is 199 cents and not a rejected amount."
         },
         {
           "id": "empty",
@@ -1895,8 +2004,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Writing one vague sentence for every variant — the enum exists so the reason survives.",
-        "Reaching for format! when the answer is a static sentence — a borrowed string is enough and allocates nothing."
+        "Writing one vague sentence for every variant, when the enum exists so the reason survives.",
+        "Reaching for format! when the answer is a static sentence, because a borrowed string is enough and allocates nothing."
       ],
       "files": [
         "crates/ledger-core/src/parse.rs"
@@ -1909,7 +2018,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "describes an empty amount"
           ],
-          "feedback": "The Empty arm should say an amount is required. A person reading it should know what to type next."
+          "feedback": "The Empty arm should say that an amount is required. A person reading it should know what to type next."
         },
         {
           "id": "edge-describe-overflow",
@@ -1917,7 +2026,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "describes an overflow without panicking"
           ],
-          "feedback": "TooLarge names a real limit. Describe it in words; never unwrap while explaining an error.",
+          "feedback": "TooLarge names a real limit. Describe it in words, and never unwrap while explaining an error.",
           "edge": true
         }
       ]
@@ -1929,7 +2038,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "objectives": [
         "Explain how a file becomes a module and what pub opens that was private before.",
         "Read a crate tree and trace the path an outside caller uses to reach a public item.",
-        "Predict what an integration test in tests/ can see and why a private helper stays invisible."
+        "Predict what an integration test in tests/ can see, and why a private helper stays invisible."
       ],
       "mode": "learn",
       "guidance": 1,
@@ -1937,60 +2046,83 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-modules"
       ],
       "hints": [
-        "Before opening the tests, trace one path from lib.rs to money::format_cents.",
-        "If a test cannot name an item, ask whether a caller outside the crate could."
+        "Before you open the tests, trace one path from the crate root to money::format_cents.",
+        "If a test cannot name an item, ask whether a caller outside the crate could name it either."
       ],
       "misconceptions": [
-        "Believing every file is automatically public — a module exists once it is declared, and an item is private until pub.",
-        "Putting integration tests beside the code — files in tests/ are separate crates, not children of the library.",
-        "Exposing more than the boundary needs: the Rust Book modules chapter (ch07) makes visibility the design tool — a config module with a single pub struct and a storage module with concrete pub types, everything else crate-private. The narrow API is what lets you swap an implementation without breaking a caller, because no caller ever saw the wide one."
+        "Believing every file is automatically public, when a module exists once it is declared and an item is private until pub.",
+        "Putting integration tests beside the code, when the files in tests/ are separate crates and not children of the library."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo build",
+          "expect": [
+            "Compiling|Finished"
+          ],
+          "shows": "Finished dev [unoptimized] target(s) in 0.05s"
+        }
       ],
       "lesson": [
         {
-          "kind": "prose",
-          "body": "A crate is a tree of modules, and visibility is the edge of each branch. pub opens an item to code outside its module; nothing else does."
-        },
-        {
-          "kind": "prose",
-          "body": "A file becomes a module when it is declared with mod. lib.rs is the crate root: what it exposes is the library’s public surface."
+          "kind": "example",
+          "body": "The file this phase works in, crates/ledger-core/src/lib.rs. The crate root decides what the outside world may name.",
+          "code": "//! The ledger, as a library. Every phase adds one idea to this crate.\n\npub mod account;\npub mod money;\n\n/// A re-export: the same function under a shorter path.\npub use money::format_cents;"
         },
         {
           "kind": "example",
-          "body": "Two lines in the crate root: one opens the module, one shortens the path.",
-          "code": "// crates/ledger-core/src/lib.rs\npub mod money;\npub use money::format_cents;"
-        },
-        {
-          "kind": "example",
-          "body": "pub(crate) lets a sibling module reach an item; pub would open it to every dependent:",
-          "code": "// crates/ledger-core/src/store.rs\npub(crate) struct Entry { pub memo: String }\n\n// crates/ledger-core/src/report.rs\nuse crate::store::Entry;\n\npub fn count(entries: &[Entry]) -> usize { entries.len() }"
+          "body": "The command that runs the suite for this phase. It is a Node wrapper that calls cargo test. If cargo is not found, run the environment check first.",
+          "code": "node --test --test-reporter=tap test/modules.test.mjs"
         },
         {
           "kind": "prose",
-          "body": "Integration tests in tests/ compile as separate crates. They are your first real user: if a test cannot reach it, a caller cannot either."
+          "body": "A crate is a tree of modules, and visibility is the edge of each branch. pub opens an item to code outside its module, and nothing else does."
         },
         {
-          "kind": "keypoints",
-          "body": "Key Points",
-          "items": [
-            "mod declares a module; pub opens it.",
-            "lib.rs is the crate’s public surface.",
-            "Tests in tests/ use the crate as a dependency."
-          ]
+          "kind": "prose",
+          "body": "A file becomes a module when it is declared with mod. lib.rs is the crate root, and what it exposes is the public surface of the library."
+        },
+        {
+          "kind": "example",
+          "body": "The test for this phase, crates/ledger-core/tests/modules.rs, is written as a caller would write it:",
+          "code": "use ledger_core::account::Account;\nuse ledger_core::money;\n\n#[test]\nfn reaches_money_through_its_public_module() {\n    assert_eq!(money::format_cents(199), \"1.99\");\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "Integration tests in tests/ compile as separate crates. They are your first real user, so if a test cannot reach an item, a caller cannot either."
+        },
+        {
+          "kind": "example",
+          "body": "A re-export gives the same item a second public path, and it is one line in the crate root:",
+          "code": "pub use money::format_cents;\n\n// a caller may now write ledger_core::format_cents(199)"
         },
         {
           "kind": "quickcheck",
           "body": "What does pub use money::format_cents add at the crate root?",
           "items": [
-            "A shorter public path to it.",
-            "A second copy of the function for tests.",
-            "Nothing visible; it only hides the module."
+            "A shorter public path to the same function.",
+            "A second copy of the function for the tests.",
+            "Nothing visible, it only hides the module."
           ],
           "answer": 0,
           "explain": "A re-export publishes an item under another path. There is still one function; the crate root now names it too, which lets callers choose the shorter spelling."
         },
         {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "mod declares a module, pub opens it.",
+            "lib.rs is the public surface of the crate.",
+            "Tests in tests/ use the crate as a dependency."
+          ]
+        },
+        {
           "kind": "task",
-          "body": "Open the crate root and the modules suite. Reach money through its module, the account constructor across the boundary, and format_cents through the re-export."
+          "body": "Open crates/ledger-core/src/lib.rs. Make the crate root name the account type and its error as well as the money module, so a caller can reach them without spelling out the module path."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapters 7.1 to 7.5 (Packages and Crates, Modules and Scope, Paths, the use Keyword, and Separating Modules into Files), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -2006,8 +2138,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Rust Book: packages, crates and modules",
-          "url": "https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html"
+          "label": "The Rust Programming Language: chapter 7.1 Packages and Crates (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 7.4 Bringing Paths into Scope with the use Keyword (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch07-04-bringing-paths-into-scope-with-the-use-keyword.html"
         }
       ]
     },
@@ -2015,7 +2151,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-modules-ask",
       "title": "Reason: what an integration test can see",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-modules"
@@ -2024,20 +2160,20 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Ask what a separate crate can depend on: a public name, or any name it knows the spelling of."
       ],
       "misconceptions": [
-        "Assuming tests live inside the library — each tests/ file is its own crate, linked against the library.",
-        "Reaching for a deeper path to dodge visibility — a private item stays unreachable however it is spelled."
+        "Assuming tests live inside the library, when each file in tests/ is its own crate linked against the library.",
+        "Reaching for a deeper path to dodge visibility, when a private item stays unreachable however it is spelled."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "An integration test calls a helper marked fn only_here, without pub. Why does the module suite need a public function instead?"
+          "body": "An integration test calls a helper marked fn only_here, without pub. Why does the modules suite need a public function instead?"
         }
       ],
       "options": [
         "Because integration tests are compiled into the library crate automatically.",
         "Because private items are renamed when the crate is built for tests.",
         "Because each file in tests/ is a separate crate using only public API.",
-        "Because the test file runs before the library’s modules are initialised."
+        "Because the test file runs before the library modules are initialised."
       ],
       "answer": 2,
       "explanation": "A tests/ file is its own crate. It links against ledger-core the way any dependent would, so it can only name items the library made public. That is not a testing quirk: it is the same wall a real caller meets, which makes the suite an honest check of the API rather than a friend with special access."
@@ -2052,18 +2188,18 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-modules"
       ],
       "hints": [
-        "Open lib.rs and the tests/modules.rs file. The test compiles as a separate crate.",
-        "Use the module path for the first test: ledger_core::money::format_cents.",
-        "The account type is reached through its own module, not the crate root.",
-        "The re-export exists so format_cents can be called without the money path.",
-        "If cargo is missing, run the Environment Check before reading a failing suite."
+        "Open crates/ledger-core/src/lib.rs. The crate root is where the public surface is decided. Run node --test --test-reporter=tap test/modules.test.mjs and read the name of the check that failed.",
+        "The first check uses the module path, so the money module and the formatter inside it both have to be public.",
+        "The second check builds an account from another crate, so the account module and its constructor have to be public as well.",
+        "Run the checks and read which one failed. The third check reads the crate root, so it names the missing public path instead of stopping the build.",
+        "Shape: one pub mod line for each module the crate exposes, and a pub use line for each item the crate root should name itself, so a caller can spell it either way."
       ],
       "misconceptions": [
-        "Believing every file is automatically public — a module exists once it is declared, and an item is private until pub.",
-        "Deleting the re-export to make a test pass — the test is asking whether the shorter public path exists."
+        "Believing every file is automatically public, when a module exists once it is declared and an item is private until pub.",
+        "Deleting the existing re-export to make a check pass, when the check is asking whether a second public path exists."
       ],
       "files": [
-        "crates/ledger-core/tests/modules.rs"
+        "crates/ledger-core/src/lib.rs"
       ],
       "testCommand": "node --test --test-reporter=tap test/modules.test.mjs",
       "checks": [
@@ -2081,22 +2217,22 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "reaches the account constructor across the crate boundary"
           ],
-          "feedback": "Account and its constructor need to be public from the account module for a separate crate to build one."
+          "feedback": "Account and its constructor have to be public from the account module for a separate crate to build one."
         },
         {
           "id": "edge-crate-root",
-          "label": "The re-export is a public path too",
+          "label": "The account type is named at the crate root",
           "tests": [
-            "reaches format cents through the crate root"
+            "the crate root names the account type"
           ],
-          "feedback": "pub use money::format_cents makes the crate root a second valid path. Keep it public.",
+          "feedback": "The crate root has to name the account type itself and not only its module. Add a re-export so the shorter path exists. The check reads the crate root, because the public surface is a list of names.",
           "edge": true
         }
       ]
     },
     "rust-modules-review": {
       "id": "rust-modules-review",
-      "title": "Review: module paths and a public store",
+      "title": "Review: the paths a caller may use",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -2105,30 +2241,29 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Assuming an integration test sees private items — tests/ is a separate crate, so only the public API exists.",
-        "Flattening every module into the crate root — a short path is a choice, not a requirement."
+        "Assuming an integration test sees private items, when the files in tests/ are separate crates with only the public API.",
+        "Flattening every module into the crate root, when a short path is a choice and not a requirement."
       ],
       "files": [
-        "crates/ledger-core/src/store.rs",
-        "crates/ledger-core/src/account.rs"
+        "crates/ledger-core/src/lib.rs"
       ],
       "testCommand": "node --test --test-reporter=tap test/modules_review.test.mjs",
       "checks": [
         {
-          "id": "version",
-          "label": "The store answers through its own module",
+          "id": "re-export-error",
+          "label": "The crate root names the account error too",
           "tests": [
-            "the public store answers through its module"
+            "the crate root names the account error too"
           ],
-          "feedback": "A path like ledger_core::store::MemoryStore must resolve from outside the crate. Expose the module and the type it names."
+          "feedback": "A caller that names AccountError from the crate root needs the error type re-exported there beside the account type. The check reads the crate root, so it reports the missing name."
         },
         {
-          "id": "edge-nested-type",
-          "label": "A nested module can be named directly",
+          "id": "edge-direct-path",
+          "label": "A module can be named without its parent",
           "tests": [
             "a module can be named without its parent"
           ],
-          "feedback": "A path like ledger_core::store::MemoryStore must resolve from outside. Expose the module and the type it names.",
+          "feedback": "A path like ledger_core::money::format_cents has to resolve from outside the crate. Expose the module and the item it names.",
           "edge": true
         }
       ]
@@ -2138,9 +2273,9 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "title": "Learn: a contract a type signs",
       "kind": "lesson",
       "objectives": [
-        "Explain what a trait promises a caller that a struct’s inherent methods do not.",
-        "Read a generic bound and say whether dispatch happens at compile time or through a boxed value.",
-        "Choose between a generic parameter and dyn Trait for a function that takes a store."
+        "Explain what a trait promises a caller that the inherent methods of a struct do not.",
+        "Read a generic bound and say whether the call is resolved at compile time or at runtime.",
+        "Choose between a generic parameter and a trait object for a function that takes a store."
       ],
       "mode": "learn",
       "guidance": 1,
@@ -2148,60 +2283,87 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-traits"
       ],
       "hints": [
-        "Before opening the file, write the two methods a store must offer in one sentence each.",
-        "Ask what the caller needs: a concrete type, or only the behaviour it promised."
+        "Before you open the file, write the two methods a store has to offer, one sentence each.",
+        "Ask what the caller needs: a concrete type it can name, or only the behaviour it promised."
       ],
       "misconceptions": [
-        "Thinking a trait carries state — fields belong to the type; the trait only names behaviour.",
-        "Reaching for dyn everywhere — a boxed call costs a lookup and hides the concrete type from the compiler.",
-        "Reaching for dyn when every caller already knows the concrete type: generics are resolved at compile time and can inline, while dyn dispatches through a vtable at runtime. The Cookbook does hold one real recipe of this shape — \"Store different types in one vector with Box<dyn Trait>\" (rust-cookbook mem.html) — and that is exactly the case dyn is for: one data structure, types unknown until runtime."
+        "Thinking a trait carries state, when the fields belong to the type and the trait only names behaviour.",
+        "Reaching for dyn everywhere, when a boxed call costs a lookup and hides the concrete type from the compiler."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo build",
+          "expect": [
+            "Compiling|Finished"
+          ],
+          "shows": "Finished dev [unoptimized] target(s) in 0.05s"
+        }
       ],
       "lesson": [
+        {
+          "kind": "example",
+          "body": "The file this phase works in, crates/ledger-core/src/store.rs. balance_of is the generic function that asks only for a Store.",
+          "code": "// Phase module (stub): the starter must fail its own tests.\n\npub trait Store {\n    fn balance(&self, owner: &str) -> Option<i64>;\n    fn deposit(&mut self, owner: &str, cents: i64);\n}\n\npub fn balance_of<S: Store>(store: &S, owner: &str) -> Option<i64> {\n    store.balance(owner)\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite for this phase. It is a Node wrapper that calls cargo test. If cargo is not found, run the environment check first.",
+          "code": "node --test --test-reporter=tap test/store.test.mjs"
+        },
         {
           "kind": "prose",
           "body": "A trait is a contract: the methods a type promises, with no fields and no constructor. A function written against the contract works for every type that signs it."
         },
         {
           "kind": "prose",
-          "body": "Generics pick the concrete type at compile time, so a call is a direct call. dyn Trait boxes the decision until runtime, which buys one list of mixed types."
+          "body": "The bound in balance_of is a generic parameter. The compiler picks the concrete type, writes a copy of the function for it, and the call is a direct call that can be inlined."
         },
         {
           "kind": "example",
-          "body": "The contract the ledger’s callers depend on:",
-          "code": "pub trait Store {\n\tfn balance(&self, owner: &str) -> Option<i64>;\n\tfn deposit(&mut self, owner: &str, cents: i64);\n}"
-        },
-        {
-          "kind": "example",
-          "body": "Two ways to accept any Display value, and what each costs at the call:",
-          "code": "fn log<T: std::fmt::Display>(value: T) {\n    println!(\"{value}\");\n}\n\nfn log_dyn(value: &dyn std::fmt::Display) {\n    println!(\"{value}\");\n}"
+          "body": "A trait object is the other answer: the concrete type is decided at runtime, behind a pointer:",
+          "code": "pub fn boxed_store() -> Box<dyn Store> {\n    todo!(\"return a store behind a trait object\")\n}"
         },
         {
           "kind": "prose",
-          "body": "The trait belongs in the library so a second implementation — a database, a fake in a test — can join without touching the function that uses it."
+          "body": "The difference is when the decision is made. A generic parameter is resolved at compile time for each type that uses it, and a trait object is resolved at runtime through a table of function pointers. A trait object is what lets one list hold stores of different kinds, and it costs an indirection on every call."
+        },
+        {
+          "kind": "example",
+          "body": "The test for this phase, crates/ledger-core/tests/store.rs, provides a second implementation the library never knew about:",
+          "code": "struct FixedStore;\n\nimpl Store for FixedStore {\n    fn balance(&self, _owner: &str) -> Option<i64> {\n        Some(420)\n    }\n\n    fn deposit(&mut self, _owner: &str, _cents: i64) {}\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "That is the reason a trait belongs in the library. A database store, a memory store and a fake in a test all satisfy the same contract, and the function that reads a balance does not change when one of them joins."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does impl Store for MemoryStore promise?",
+          "items": [
+            "That it provides every method the trait names.",
+            "That MemoryStore is the only store the crate allows.",
+            "That MemoryStore can be converted into any other store."
+          ],
+          "answer": 0,
+          "explain": "The impl block is a signature on a contract: each method the trait declares has to exist with a compatible signature. It does not restrict other types, and it does not convert anything."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "A trait names behaviour, never stored fields.",
-            "impl Store for X is X’s promise to the contract.",
-            "Generic calls are static; dyn calls are boxed."
+            "impl Store for X is the promise X signs.",
+            "Generic calls are static, dyn calls are boxed."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "What does impl Store for MemoryStore actually promise?",
-          "items": [
-            "That MemoryStore is the only store the crate allows.",
-            "That MemoryStore can be converted into any other store.",
-            "That MemoryStore provides every method the trait names."
-          ],
-          "answer": 2,
-          "explain": "The impl block is a signature on a contract: each method the trait declares must exist with a compatible signature. It does not restrict other types, and it does not convert anything."
+          "kind": "task",
+          "body": "Open crates/ledger-core/src/store.rs. Give MemoryStore a field to keep its balances, make the generic function accept any Store, and return a store behind a trait object."
         },
         {
-          "kind": "task",
-          "body": "Open store.rs. Keep balances in a map, make the generic function accept any Store, and return a boxed store. Add a second implementation in the test and watch it pass unchanged."
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 10.1 (Generic Data Types), chapter 10.2 (Defining Shared Behaviour with Traits) and chapter 18.2 (Trait Objects), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -2210,16 +2372,16 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "before": {
             "title": "fn balance_of<S: Store>(s: &S)",
             "lines": [
-              "monomorphized per type",
-              "static dispatch, no vtable",
+              "one copy per type",
+              "static dispatch, no table",
               "the bound is checked at compile time"
             ]
           },
           "after": {
             "title": "Box<dyn Store>",
             "lines": [
-              "one vtable behind the pointer",
-              "chosen at runtime",
+              "one table behind the pointer",
+              "the type is chosen at runtime",
               "same methods, one indirection"
             ]
           }
@@ -2227,45 +2389,49 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Rust Book: traits",
+          "label": "The Rust Programming Language: chapter 10.1 Generic Data Types (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch10-01-syntax.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 10.2 Defining Shared Behaviour with Traits (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch10-02-traits.html"
         },
         {
-          "label": "Rust Cookbook: store different types in one vector with Box<dyn Trait>",
-          "url": "https://rust-lang-nursery.github.io/rust-cookbook/mem.html"
+          "label": "The Rust Programming Language: chapter 18.2 Trait Objects (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch18-02-trait-objects.html"
         }
       ]
     },
     "rust-traits-ask": {
       "id": "rust-traits-ask",
-      "title": "Reason: why a boxed store still satisfies S: Store",
+      "title": "Reason: what a store parameter asks for",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-traits"
       ],
       "hints": [
-        "Ask what Box<dyn Store> implements, rather than what it contains."
+        "Ask what a function needs to know about the store it is given, and what it may leave unknown."
       ],
       "misconceptions": [
-        "Believing dyn erases the trait — the box still implements Store, which is why it can be passed on.",
-        "Thinking generics and trait objects are the same mechanism — one is resolved at compile time, the other through a vtable."
+        "Believing dyn erases the trait, when the box still implements it and can be passed on.",
+        "Thinking generics and trait objects are one mechanism, when one is resolved at compile time and the other through a table at runtime."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A function is written as fn total<S: Store>(store: &S). Why does calling it with Box<dyn Store> compile?"
+          "body": "A ledger function needs a store, and the caller may hold a database one, a memory one, or a fake in a test. What does the function ask for?"
         }
       ],
       "options": [
-        "Because the compiler inlines every trait object into a concrete type first.",
-        "Because dyn Store is only another spelling for the concrete MemoryStore.",
-        "Because generic parameters are erased at runtime, exactly like a trait object.",
-        "Because Box<dyn Store> itself implements Store, so S can be the box."
+        "The behaviour it needs, and nothing about how the store keeps it.",
+        "A concrete type with a field for every balance the ledger holds.",
+        "A pointer to the store, so the function can move the data around.",
+        "The size of the store, so it can be copied into the caller frame."
       ],
-      "answer": 3,
-      "explanation": "Box<T> implements the traits T implements, so a Box<dyn Store> is itself a Store. That makes S = Box<dyn Store> a legal instantiation, and the call goes through the box to the vtable. The generic parameter is still chosen at compile time; what is deferred is the concrete implementation behind dyn."
+      "answer": 0,
+      "explanation": "A trait is a promise about behaviour, and a generic function asks for exactly that promise, so the same code serves a database store, a memory store and a test fake without knowing which one it holds. A trait object, written dyn Store, asks for the same promise but decides the concrete type at runtime, which is what lets one list hold stores of different kinds. The size of a store is never what a caller should depend on."
     },
     "rust-traits-do": {
       "id": "rust-traits-do",
@@ -2277,15 +2443,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-traits"
       ],
       "hints": [
-        "Open store.rs. The trait and the signatures are given; only the bodies and the field are yours.",
-        "A HashMap<String, i64> is enough for the in-memory store.",
-        "Use the entry API so a first deposit creates the balance instead of returning None.",
-        "boxed_store returns Box<dyn Store>, so the concrete MemoryStore never escapes.",
-        "If cargo is not found, run the Environment Check; the suite cannot judge code it never ran."
+        "Open crates/ledger-core/src/store.rs. The trait and the signatures are given, so the bodies and the field of the store are yours. Run node --test --test-reporter=tap test/store.test.mjs and read the name of the check that failed.",
+        "MemoryStore is a unit struct today, so it has nowhere to keep a balance, and a HashMap<String, i64> gives it one.",
+        "Use the entry API so a first deposit creates the balance instead of leaving the owner absent from the map.",
+        "Run the checks and read the label of the failing one, because it names the behaviour that is still missing rather than the line that is wrong.",
+        "Shape: MemoryStore keeps a map of balances, balance_of takes any type that signs the Store contract, and boxed_store hands back a Box<dyn Store> that holds one."
       ],
       "misconceptions": [
-        "Thinking a trait carries state — fields belong to the type; the trait only names behaviour.",
-        "Making the generic function take a concrete MemoryStore — then the second implementation cannot be passed at all."
+        "Thinking a trait carries state, when the fields belong to the type and the trait only names behaviour.",
+        "Making the generic function take a concrete MemoryStore, when the second implementation then cannot be passed at all."
       ],
       "files": [
         "crates/ledger-core/src/store.rs"
@@ -2306,7 +2472,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "a generic function works with any store"
           ],
-          "feedback": "balance_of must be bound by the trait, not by MemoryStore. The test passes its own implementation."
+          "feedback": "balance_of must be bound by the trait and not by MemoryStore, because the test passes a store of its own."
         },
         {
           "id": "edge-boxed",
@@ -2330,8 +2496,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Printing cents as a bare integer — the ledger’s formatter is the one place the money format lives.",
-        "Returning an empty string for a missing owner — the caller cannot tell that from a real zero balance."
+        "Printing cents as a bare integer, when the ledger formatter is the one place the money format lives.",
+        "Returning an empty string for a missing owner, when the caller cannot tell that from a real zero balance."
       ],
       "files": [
         "crates/ledger-core/src/store.rs"
@@ -2372,19 +2538,28 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-lifetimes"
       ],
       "hints": [
-        "Before reading on, say which value a reference must not outlive, and write that sentence down.",
-        "Look at the signature and ask which input the returned reference could have come from.",
-        "When the compiler rejects a signature, predict which rule it applied first, then run cargo build with RUSTC_BOOTSTRAP=1 rustc --explain E0106 (or open doc.rust-lang.org/error_codes/) and check your guess against its own words."
+        "Before reading on, say which value a reference must not outlive, and write that sentence down. If cargo is command not found, run the environment check first.",
+        "Look at the signature and ask which input the returned reference could have come from."
       ],
       "misconceptions": [
-        "Thinking a lifetime extends a value so it can be used later — it only describes a relation that already holds.",
-        "Adding a lifetime parameter because the compiler asked, without deciding which input the output borrows from.",
-        "Crichton and Krishnamurthi’s study of textbook interventions (cs.brown.edu/people/sk/Publications/Papers/Published/ck-prof-prog-lang-learn) found that interactive additions to the Rust Book improved scores on the questions they targeted by about 20% on average — the interventions that worked were the ones tied to a specific question, not general extra reading. The habit that transfers: write which input the output borrows from, and why, before asking the compiler."
+        "Thinking a lifetime extends a value so it can be used later, when it only describes a relation that already holds.",
+        "Adding a lifetime parameter because the compiler asked, without deciding which input the output borrows from."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo test -p ledger-core",
+          "expect": [
+            "test result",
+            "running \\d+ tests"
+          ],
+          "shows": "test result: ok. 3 passed; 0 failed"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A reference points at a value someone else owns. The compiler needs to know how long that pointer stays valid, and that is what a lifetime records: a promise that the borrow ends before the value does."
+          "body": "A reference points at a value someone else owns. The compiler needs to know how long that pointer stays valid, and that is what a lifetime records: the borrow ends before the owner does."
         },
         {
           "kind": "prose",
@@ -2402,15 +2577,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         {
           "kind": "example",
           "body": "A struct that holds a reference says which owner it may not outlive:",
-          "code": "struct Iter<'a> {\n    rest: &'a [i64],\n}\n\nimpl<'a> Iter<'a> {\n    fn new(rest: &'a [i64]) -> Self {\n        Self { rest }\n    }\n}"
+          "code": "struct Statement<'a> {\n    owner: &'a str,\n    lines: Vec<String>,\n}"
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "A lifetime is how long a borrow stays valid.",
-            "A returned reference must outlive its owner’s scope.",
-            "Annotations describe relationships; they never extend a value."
+            "A returned reference must not outlive its owner.",
+            "Annotations describe relationships, they never extend a value."
           ]
         },
         {
@@ -2425,19 +2600,22 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "explain": "The struct holds a borrow, so it is valid only while the owner it points at is alive. Copying would remove the lifetime parameter entirely, which is a different design rather than a different rule."
         },
         {
-          "kind": "quickcheck",
-          "body": "Which signature can return a borrow of a or b?",
-          "items": [
-            "`fn pick(a: &str, b: &str) -> &str` — elision decides which.",
-            "`fn pick<'a>(a: &'a str, b: &'a str) -> &'a str`",
-            "`fn pick(a: &str, b: &str) -> String` avoids the question."
-          ],
-          "answer": 1,
-          "explain": "Elision cannot choose between two input lifetimes, so the bare signature is rejected. The named version says the result lives at most as long as the shorter input, which is exactly what the caller needs to know. Returning String is a different design: it moves the data out instead of borrowing it."
+          "kind": "example",
+          "body": "crates/ledger-core/src/statement.rs is where this phase works.",
+          "code": "    pub fn new(_owner: &'a str) -> Self {\n        todo!(\"implement Statement::new\")\n    }"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/statement.test.mjs"
         },
         {
           "kind": "task",
           "body": "Open statement.rs. Make Statement::new borrow the owner instead of cloning it, render the owner and one line, and write a comment saying what the lifetime parameter promises the caller."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 10.3 (Validating References with Lifetimes), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -2488,16 +2666,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Rust Book: validating references with lifetimes",
+          "label": "The Rust Programming Language: chapter 10.3 Validating References with Lifetimes (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html"
         },
         {
-          "label": "Too Many Lists: an iterator earns its lifetime annotations",
-          "url": "https://rust-unofficial.github.io/too-many-lists/second-iter.html"
-        },
-        {
-          "label": "rustc error index: E0106 and friends",
-          "url": "https://doc.rust-lang.org/error_codes/"
+          "label": "The Rust Programming Language: chapter 4.2 References and Borrowing (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html"
         }
       ]
     },
@@ -2505,7 +2679,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-lifetimes-ask",
       "title": "Reason: who owns the text a statement points at",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-lifetimes"
@@ -2514,23 +2688,23 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Ask what the struct stores: the characters themselves, or the address of text someone else owns."
       ],
       "misconceptions": [
-        "Believing the struct copies the owner so the original can be dropped safely at any point.",
+        "Believing the struct copies the owner, so the original can be dropped safely at any point.",
         "Assuming a lifetime parameter makes the struct own its data, when ownership did not change."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A Statement borrows its owner. The borrow ends when the owner is dropped, not when the Statement is, so the two lifetimes are linked."
+          "body": "A Statement borrows its owner. The borrow ends when the owner is dropped, not when the statement is, so the two are linked."
         }
       ],
       "options": [
-        "The caller’s String, borrowed for as long as the Statement lives.",
-        "A copy the Statement makes when it is constructed, freed with it.",
+        "A copy the statement makes when it is constructed, freed with it.",
+        "Nothing at all: the field is only a length and an offset.",
         "A global buffer the standard library owns and never frees.",
-        "Nothing: the field is only a length and an offset into the binary."
+        "The caller’s String, borrowed for as long as the statement lives."
       ],
-      "answer": 0,
-      "explanation": "The struct stores a reference, so it never owns the text. The String named owner remains the owner for its whole scope, and the lifetime parameter records that the borrow cannot outlive it. Copying into the struct would remove the need for a lifetime, which is a different design, not a different rule. Dropping the String while the Statement is alive is exactly what the compiler refuses."
+      "answer": 3,
+      "explanation": "The struct stores a reference, so it never owns the text. The String named owner remains the owner for its whole scope, and the lifetime parameter records that the borrow cannot outlive it. Copying into the struct would remove the need for a lifetime, which is a different design, not a different rule. Dropping the String while the statement is alive is exactly what the compiler refuses."
     },
     "rust-lifetimes-do": {
       "id": "rust-lifetimes-do",
@@ -2542,11 +2716,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-lifetimes"
       ],
       "hints": [
-        "Open crates/ledger-core/src/statement.rs; the struct and signatures are there, and the bodies are the work.",
-        "The struct already has a lifetime parameter; use it on the owner field and on new.",
-        "render can build a Vec<String>, push the owner, extend with the lines, and join on a newline.",
-        "For longest, compare lengths and return the greater input; when they are equal, return the first.",
-        "If `cargo` is missing, run the Environment Check; the suite shells out to it and cannot judge without it."
+        "Open crates/ledger-core/src/statement.rs. The struct and the signatures are there, and the bodies are the work. Run node --test --test-reporter=tap test/statement.test.mjs and read the name of the check that failed.",
+        "The struct already has a lifetime parameter, so use it on the owner field and on new.",
+        "render can build a Vec<String>, push the owner, extend it with the lines, and join on a newline.",
+        "For longest, compare the lengths and return the greater input. When the lengths are equal, return the first one.",
+        "In one sentence: new borrows the owner, render prints the owner then every line, and longest hands back one of its two inputs."
       ],
       "misconceptions": [
         "Cloning the owner into the struct to silence the compiler, which removes the borrow being taught.",
@@ -2617,7 +2791,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "an empty statement has no first line"
           ],
-          "feedback": "A statement with no lines returns None. Do not invent an empty string; absence is not a blank line, and the Option says which one happened.",
+          "feedback": "A statement with no lines returns None. Do not invent an empty string, because absence is not a blank line and the Option says which one happened.",
           "edge": true
         }
       ]
@@ -2637,12 +2811,23 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-collections"
       ],
       "hints": [
-        "Ask what the caller needs from the map: sorted iteration, or the fastest possible lookup by key.",
+        "Ask what the caller needs from the map: sorted iteration, or the fastest possible lookup by key. If cargo is command not found, run the environment check first.",
         "Before reading, predict what a lookup for a month with no rows returns, and why zero would be a lie."
       ],
       "misconceptions": [
         "Inserting a zero default for a missing key, which makes an untraded month look like a real total.",
         "Believing HashMap iteration order is stable, then printing a report that changes between runs."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo test -p ledger-core",
+          "expect": [
+            "test result",
+            "running \\d+ tests"
+          ],
+          "shows": "test result: ok. 3 passed; 0 failed"
+        }
       ],
       "lesson": [
         {
@@ -2685,11 +2870,25 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
             "The last key inserted, whatever its value."
           ],
           "answer": 0,
-          "explain": "max_by_key compares the values you point it at and returns the entry with the greatest one, or None for an empty map. It does not sort or clone; ties are resolved by iteration order."
+          "explain": "max_by_key compares the values you point it at and returns the entry with the greatest one, or None for an empty map. It does not sort or clone, and ties are resolved by iteration order."
+        },
+        {
+          "kind": "example",
+          "body": "crates/ledger-core/src/collections.rs is where this phase works.",
+          "code": "pub fn monthly_totals(_rows: &[(String, i64)]) -> BTreeMap<String, i64> {\n    todo!(\"implement monthly_totals\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/collections.test.mjs"
         },
         {
           "kind": "task",
           "body": "Open collections.rs. Implement monthly_totals, then last_by_owner with Entry, then owners_above. Check that a month with no rows is absent from the map rather than present as zero."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapters 8.1 (Vectors), 8.2 (Strings) and 8.3 (Hash Maps), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -2707,12 +2906,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "std: BTreeMap",
-          "url": "https://doc.rust-lang.org/std/collections/struct.BTreeMap.html"
+          "label": "The Rust Programming Language: chapter 8.3 Hash Maps (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch08-03-hash-maps.html"
         },
         {
-          "label": "std: Entry",
-          "url": "https://doc.rust-lang.org/std/collections/hash_map/enum.Entry.html"
+          "label": "The Rust Programming Language: chapter 8.1 Vectors (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch08-01-vectors.html"
         }
       ]
     },
@@ -2720,7 +2919,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-collections-ask",
       "title": "Reason: why Entry beats two lookups",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-collections"
@@ -2745,7 +2944,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "It refuses duplicate keys, which keeps a total from being written twice."
       ],
       "answer": 1,
-      "explanation": "entry looks the key up once and returns either a vacant slot to fill or an occupied one to update. Two calls hash the key twice and hold a borrow across both, which is exactly the shape the compiler rejects when you then insert. The Entry API is not about speed alone; it states the operation as one decision. Sorting and duplicate refusal are properties of other collections, not of entry."
+      "explanation": "entry looks the key up once and returns either a vacant slot to fill or an occupied one to update. Two calls hash the key twice and hold a borrow across both, which is exactly the shape the compiler rejects when you then insert. The Entry API is not about speed alone, because it states the operation as one decision. Sorting and duplicate refusal are properties of other collections, not of entry."
     },
     "rust-collections-do": {
       "id": "rust-collections-do",
@@ -2757,11 +2956,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-collections"
       ],
       "hints": [
-        "Open crates/ledger-core/src/collections.rs; four functions are declared and all four are yours.",
+        "Open crates/ledger-core/src/collections.rs. Four functions are declared there and all four are yours. Run node --test --test-reporter=tap test/collections.test.mjs and read the name of the check that failed.",
         "In monthly_totals, clone the month as the key and add into *entry.or_insert(0).",
-        "In last_by_owner, a later row must replace the earlier amount rather than add to it; Entry::Occupied can insert the new value.",
-        "owners_above filters on a value strictly greater than the floor and maps each key to an owned String.",
-        "If `cargo` is missing, run the Environment Check; the wrapper reports every check as failed without it."
+        "In last_by_owner, a later row must replace the earlier amount rather than add to it, so the entry is overwritten.",
+        "Run node --test --test-reporter=tap test/collections.test.mjs and read the failing test name before you change any code.",
+        "In one sentence: monthly_totals adds the rows of each month, last_by_owner keeps the newest amount per owner, and owners_above lists the owners whose total beats the floor."
       ],
       "misconceptions": [
         "Using insert for totals, which overwrites the earlier rows instead of adding them together.",
@@ -2786,7 +2985,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "the last write for an owner wins"
           ],
-          "feedback": "Insert with the Entry API so a later row replaces the earlier amount instead of adding to it; the map keeps one value per owner."
+          "feedback": "Write with the Entry API so a later row replaces the earlier amount instead of adding to it. The map keeps one value per owner."
         },
         {
           "id": "edge-missing",
@@ -2842,9 +3041,9 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "title": "Learn: a function that carries values",
       "kind": "lesson",
       "objectives": [
-        "Explain how a closure’s captures decide whether it implements Fn, FnMut or FnOnce.",
+        "Explain how a closure captures its environment and what the captures decide about calling it.",
         "Predict which calls the compiler refuses when a closure mutates or moves a captured value.",
-        "Read a generic F: Fn bound and say what it promises the function that takes it."
+        "Trace what make_counter hands back and which trait bound each helper in the file needs."
       ],
       "mode": "learn",
       "guidance": 1,
@@ -2852,31 +3051,41 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-closures"
       ],
       "hints": [
-        "Before reading, predict whether a counter closure can be called twice without a mut binding, and say why.",
+        "Before reading, write down whether a counter closure can be called twice without a mut binding, and why. If cargo is command not found, run the environment check first.",
         "Ask what the closure captures and whether the body reads it, changes it, or moves it out."
       ],
       "misconceptions": [
         "Thinking the trait is chosen by the author, when the compiler infers it from what the body does to its captures.",
-        "Believing every closure can be called many times, when one that moves a captured value out can only run once.",
-        "A callback parameter typed FnOnce is the common case: the thing doing the calling does not promise to keep the callback alive, so converting to Fn or FnMut just to avoid a one-call limit hides the cost. The Rust Book (ch13) shows the rule is decided by what the closure does with its captures — a closure that moves out of a capture can only be FnOnce, whatever the caller would prefer."
+        "Believing every closure can be called many times, when one that moves a captured value out can only run once."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo test -p ledger-core",
+          "expect": [
+            "test result",
+            "running \\d+ tests"
+          ],
+          "shows": "test result: ok. 4 passed; 0 failed"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A closure is a function that carries values from where it was written. The compiler infers three traits from how it is used: Fn reads, FnMut changes captured state, and FnOnce consumes it."
+          "body": "A closure is a function value that carries the names it used from where it was written. The ledger uses one to hold a threshold next to a rule, so the threshold travels with the rule instead of being passed again."
         },
         {
           "kind": "prose",
-          "body": "The trait choice is not decoration. A function that takes Fn can be called many times; FnMut needs a mutable binding; FnOnce can be called once because it may move a captured value out."
+          "body": "The compiler infers three call traits from the captures. Fn reads them, FnMut changes them, and FnOnce consumes them. A closure that changes a captured count cannot be called through a shared binding, and the compiler says so before the program runs."
         },
         {
           "kind": "example",
-          "body": "A counter captures its count and changes it, so it is FnMut and its binding must be mut.",
+          "body": "A counter captures its count and changes it, so it is FnMut and its binding must be mut:",
           "code": "fn make_counter() -> impl FnMut() -> i64 {\n    let mut count = 0;\n    move || {\n        count += 1;\n        count\n    }\n}"
         },
         {
           "kind": "prose",
-          "body": "Returning a closure means returning an opaque type, because its name is unnameable. `impl FnMut() -> i64` names the behaviour the caller needs, not the type the compiler generated."
+          "body": "Returning a closure means returning an opaque type, because the name of the type the compiler made is unnameable. `impl FnMut() -> i64` names the behaviour the caller needs, not the type behind it."
         },
         {
           "kind": "example",
@@ -2884,28 +3093,61 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "code": "fn consume<F: FnOnce() -> i64>(f: F) -> i64 {\n\tf()\n}\n\nfn twice<F: FnMut() -> i64>(mut f: F) -> i64 {\n\tf() + f() // FnOnce would refuse the second call\n}\n\nfn many<F: Fn() -> i64>(f: F) -> i64 {\n\tf() + f()\n}"
         },
         {
+          "kind": "prose",
+          "body": "The same idea carries a list. crates/ledger-core/src/iterators.rs holds the adapters that walk a slice and answer a question about it."
+        },
+        {
+          "kind": "example",
+          "body": "The three functions the iterators module offers:",
+          "code": "pub fn total(values: &[i64]) -> i64 {\n    todo!(\"implement total\")\n}\n\npub fn first_at_least(values: &[i64], floor: i64) -> Option<i64> {\n    todo!(\"implement first_at_least\")\n}\n\npub fn above(values: &[i64], floor: i64) -> Vec<i64> {\n    todo!(\"implement above\")\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "An iterator borrows the slice and hands one value at a time to a chain of adapters. The chain is lazy: nothing is counted until the last adapter asks for a result, and the slice itself is never copied."
+        },
+        {
+          "kind": "example",
+          "body": "A chain reads left to right, and each adapter takes what the one before it produced:",
+          "code": "pub fn above(values: &[i64], floor: i64) -> Vec<i64> {\n    values\n        .iter()\n        .copied()\n        .filter(|value| *value > floor)\n        .collect()\n}"
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
+            "A closure carries the names it used where it was written.",
             "Fn reads, FnMut changes, FnOnce consumes.",
-            "A closure’s captures decide which trait it implements.",
+            "The captures decide the trait, not the author.",
             "impl Trait names a returned closure without naming its type."
           ]
         },
         {
           "kind": "quickcheck",
-          "body": "make_counter returns a closure that increments a private count. Which trait must it implement?",
+          "body": "first_at_least returns Option<i64>. What does it return when every value is below the floor?",
           "items": [
-            "Fn, because callers only read the count.",
-            "FnMut, because each call mutates it.",
-            "FnOnce, because the counter is created once."
+            "Some(0), because zero is the smallest value.",
+            "None, because no value reached the floor.",
+            "An empty vector, because nothing qualified."
           ],
           "answer": 1,
-          "explain": "Each call mutates the captured count, so the closure implements FnMut and must be bound with mut. FnOnce would allow only one call, and Fn would forbid the mutation entirely."
+          "explain": "The function answers one of two questions: a value reached the floor, or none did. The Option carries that difference, and a zero would be indistinguishable from a real zero sitting on the floor."
+        },
+        {
+          "kind": "example",
+          "body": "crates/ledger-core/src/closures.rs is where this phase works.",
+          "code": "pub fn sum_with<F: Fn(i64) -> i64>(_values: &[i64], _f: F) -> i64 {\n    todo!(\"implement sum_with\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/closures.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Open closures.rs. Implement sum_with and apply_twice with a generic F: Fn bound, then make_counter with FnMut. Call one counter twice and show in a comment why a second counter starts again at one."
+          "body": "Open closures.rs. Implement sum_with, make_counter and apply_twice, then sum_above. Call one counter twice and write in a comment why a second counter starts again at one. Then open iterators.rs and implement total, first_at_least and above."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapters 13.1 (Closures) and 13.2 (Processing a Series of Items with Iterators), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -2931,8 +3173,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Rust Book: closures that capture their environment",
+          "label": "The Rust Programming Language: chapter 13.1 Closures (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch13-01-closures.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 13.2 Processing a Series of Items with Iterators (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch13-02-iterators.html"
         }
       ]
     },
@@ -2940,13 +3186,13 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-closures-ask",
       "title": "Reason: why a counter needs mut",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-closures"
       ],
       "hints": [
-        "Ask what the call does to the captured count, and what kind of access a mutation requires."
+        "Ask what the call does to the captured count, and what kind of access a mutation needs."
       ],
       "misconceptions": [
         "Believing mut on the binding chooses the closure trait, when the captures already decided it.",
@@ -2955,17 +3201,17 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "The binding is `let mut next = make_counter();` and two calls follow. The closure itself is the value being mutated, not the number it returns."
+          "body": "A ledger needs a running count of the entries it has accepted. The counter lives inside the closure, and the program calls that closure to read the number."
         }
       ],
       "options": [
         "It lets the closure be cloned before each call to it.",
         "It makes the captured count a reference instead of a value.",
-        "It permits the call to mutate state the closure captured.",
-        "It allows the returned closure to be stored in a Box."
+        "It permits the call to mutate the state the closure captured.",
+        "It tells the compiler to inline the closure body at every call site."
       ],
       "answer": 2,
-      "explanation": "Calling an FnMut closure changes captured state, so the closure value itself must be mutable and the binding must be mut. Without it the call is a mutation through a shared value, which the compiler rejects. The mut does not choose FnMut; the closure’s captures do, and the binding has to match. Cloning and boxing are unrelated to the call."
+      "explanation": "A call to an FnMut closure changes the state it captured, so the closure value itself is being written to through the binding. The binding must therefore be declared with mut, or the compiler rejects the call. The mut keyword does not pick the trait: the captures decide that, and the binding only has to match what they decided. Cloning, borrowing and inlining are separate matters and none of them is what mut means here."
     },
     "rust-closures-do": {
       "id": "rust-closures-do",
@@ -2977,11 +3223,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-closures"
       ],
       "hints": [
-        "Open crates/ledger-core/src/closures.rs; the signatures already fix which trait each function accepts.",
-        "sum_with maps each value through f and sums the results; the closure is the transformation.",
-        "make_counter captures a local count by move and returns a closure that increments it.",
-        "apply_twice calls f on the value, then calls f again on the result.",
-        "If `cargo` is missing, run the Environment Check first; the wrapper cannot judge a suite it could not launch."
+        "Open crates/ledger-core/src/closures.rs. The signatures are already there, so only the bodies are yours. Run node --test --test-reporter=tap test/closures.test.mjs and read the name of the check that failed.",
+        "sum_with maps every value through f and adds the mapped values, so the closure is the transformation.",
+        "make_counter captures a local count by move and returns a closure that increments it on each call.",
+        "apply_twice calls f on the value and then calls f again on the result, so the second call sees the first output.",
+        "In one sentence: sum_with maps and sums, make_counter returns a counting FnMut closure, and apply_twice feeds its own output back in."
       ],
       "misconceptions": [
         "Summing the original values beside the closure, which applies the transformation and then ignores it.",
@@ -3021,7 +3267,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
     },
     "rust-closures-review": {
       "id": "rust-closures-review",
-      "title": "Review: sum above a floor",
+      "title": "Review: the adapters that walk a list",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -3030,29 +3276,37 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Counting the values that qualify instead of adding them, which answers a different question.",
-        "Comparing with greater-than-or-equal, which includes the floor the question excludes."
+        "Counting the values that qualify instead of collecting them, which answers a different question.",
+        "Comparing with a strict greater-than, which drops the floor the check keeps."
       ],
       "files": [
-        "crates/ledger-core/src/closures.rs"
+        "crates/ledger-core/src/iterators.rs"
       ],
-      "testCommand": "node --test --test-reporter=tap test/closures_review.test.mjs",
+      "testCommand": "node --test --test-reporter=tap test/iterators.test.mjs",
       "checks": [
         {
-          "id": "above",
-          "label": "Only values over the floor are summed",
+          "id": "total",
+          "label": "The total adds every value",
           "tests": [
-            "only values at or above the floor are summed"
+            "the total adds every value"
           ],
-          "feedback": "Capture the floor in a closure and filter with a strict greater-than. The floor itself is not included, so 50 does not qualify under floor 50."
+          "feedback": "Sum the chain of values. If the total is short by one entry, the adapter was applied to a filtered set rather than to every value."
         },
         {
-          "id": "edge-zero",
-          "label": "Nothing over the floor sums to zero",
+          "id": "first",
+          "label": "The first value at or above the floor is found",
           "tests": [
-            "nothing over the floor sums to zero"
+            "the first value at or above the floor is found"
           ],
-          "feedback": "An empty selection sums to zero, the identity for addition. Do not return None; an empty sum is an answer, not a missing one.",
+          "feedback": "Use find with a greater-than-or-equal comparison, so the value sitting exactly on the floor qualifies and the search stops at the first match."
+        },
+        {
+          "id": "edge-above",
+          "label": "The values above the floor are collected",
+          "tests": [
+            "the values above the floor are collected"
+          ],
+          "feedback": "Filter with a strict greater-than and collect into a vector. Keep the order of the slice, and leave the floor itself out.",
           "edge": true
         }
       ]
@@ -3072,12 +3326,23 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-tests"
       ],
       "hints": [
-        "Before reading, name the property a split must keep even when the parts look plausible.",
+        "Before reading, name the property a split must keep even when the parts look plausible. If cargo is command not found, run the environment check first.",
         "Ask what each test would do if the implementation were silently changed to a wrong answer."
       ],
       "misconceptions": [
         "Believing coverage is the goal, when a suite can call everything and still pass a broken implementation.",
         "Testing only the happy path, so a lost remainder or a zero total is never asked about."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo test -p ledger-core",
+          "expect": [
+            "test result",
+            "running \\d+ tests"
+          ],
+          "shows": "test result: ok. 5 passed; 0 failed"
+        }
       ],
       "lesson": [
         {
@@ -3087,6 +3352,19 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         {
           "kind": "prose",
           "body": "Integration tests live in tests/ and use the crate the way a caller does. Unit tests sit beside private code. Both run with cargo test, and both should fail for the right reason before they pass."
+        },
+        {
+          "kind": "prose",
+          "body": "A property test goes further. It states a rule that must hold for many inputs, then loops over them, so one wrong case is enough to fail the suite."
+        },
+        {
+          "kind": "example",
+          "body": "The rule is that the parts still add up to the total, whatever the total and the number of parts are:",
+          "code": "#[test]\nfn every_split_keeps_the_total() {\n    for total in [-1000i64, -37, 0, 1, 99, 100, 250, 1000] {\n        for parts in 1..=8usize {\n            let split = split_evenly(total, parts);\n            assert_eq!(split.iter().sum::<i64>(), total, \"total {total} in {parts} parts\");\n        }\n    }\n}"
+        },
+        {
+          "kind": "prose",
+          "body": "The suite checks the behaviour of the code, not the text of the code. It cannot tell you the code is well written, but it can tell you the parts stopped adding up."
         },
         {
           "kind": "example",
@@ -3123,8 +3401,22 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "explain": "A split that loses a cent is wrong even when each part looks plausible. Asserting the sum catches the lost remainder, which is the bug splitting code actually has."
         },
         {
+          "kind": "example",
+          "body": "crates/ledger-core/src/rounding.rs is where this phase works.",
+          "code": "pub fn round_to_cents(_amount: f64) -> i64 {\n    todo!(\"implement round_to_cents\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/rounding.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open rounding.rs. Implement round_to_cents, split_evenly, and percent. Before you run anything, write in a comment what 100 split three ways must sum to, then make the suite agree."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapters 11.1 (How to Write Tests), 11.2 (Controlling How Tests Are Run) and 11.3 (Test Organization), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -3150,11 +3442,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Rust Book: writing tests",
-          "url": "https://doc.rust-lang.org/book/ch11-00-testing.html"
+          "label": "The Rust Programming Language: chapter 11.1 How to Write Tests (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch11-01-writing-tests.html"
         },
         {
-          "label": "The Rust Book: test organization",
+          "label": "The Rust Programming Language: chapter 11.3 Test Organization (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch11-03-test-organization.html"
         }
       ]
@@ -3163,7 +3455,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-tests-ask",
       "title": "Reason: what makes a test worth keeping",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-tests"
@@ -3182,12 +3474,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         }
       ],
       "options": [
+        "It fails when the named behaviour breaks, not when text changes.",
         "It calls every public function in the module at least once, including helpers.",
         "It runs quickly, so the suite can be repeated often.",
-        "It asserts the exact output of one known input value.",
-        "It fails when the named behaviour breaks, not when text changes."
+        "It asserts the exact output of one known input value."
       ],
-      "answer": 3,
+      "answer": 0,
       "explanation": "A test earns its place by failing for the reason it names. Coverage, speed, and exact-output assertions can all be true of a test that keeps passing after the behaviour breaks, which makes them evidence of activity rather than of correctness. The useful test is tied to a property: a split sums to its total, a rounded half goes away from zero. That is also why the name matters, because it states the property."
     },
     "rust-tests-do": {
@@ -3200,11 +3492,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-tests"
       ],
       "hints": [
-        "Open crates/ledger-core/src/rounding.rs; three small functions stand between you and a green suite.",
-        "round_to_cents multiplies by 100 and calls round; f64::round takes halves away from zero.",
-        "For split_evenly, divide for the base part and put the remainder on the last part so the sum is unchanged.",
-        "percent divides part by total, multiplies by 100, and rounds before the cast; a zero total returns 0.",
-        "If `cargo` is missing, run the Environment Check; the wrapper runs the crate’s own suite and nothing else."
+        "Open crates/ledger-core/src/rounding.rs. Three small functions stand between you and a green suite. Run node --test --test-reporter=tap test/rounding.test.mjs and read the name of the check that failed.",
+        "round_to_cents multiplies by 100 and calls round, and f64::round takes halves away from zero.",
+        "For split_evenly, divide for the base part and put the remainder on the last part so the parts still sum to the total.",
+        "Run node --test --test-reporter=tap test/rounding.test.mjs again and read the failing test name before you change any code.",
+        "In one sentence: round_to_cents multiplies and rounds, split_evenly divides and gives the remainder to the last part, and percent divides, multiplies by 100 and rounds."
       ],
       "misconceptions": [
         "Truncating instead of rounding, so 1.239 becomes 123 cents and the half-cent rule is silently broken.",
@@ -3233,11 +3525,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         },
         {
           "id": "edge-split",
-          "label": "An uneven split keeps the total",
+          "label": "Every split keeps the total",
           "tests": [
-            "an even split does not lose a cent"
+            "every split keeps the total"
           ],
-          "feedback": "Divide for the base part, then add the remainder to the last part so the parts still sum to the total. 100 three ways is 33, 33, 34.",
+          "feedback": "The property test loops over totals and part counts, so the rule must hold for all of them. Divide for the base part and add the remainder to the last part, or the parts sum short.",
           "edge": true
         }
       ]
@@ -3284,47 +3576,57 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-pointers-learn",
       "title": "Learn: one value, several owners",
       "kind": "lesson",
+      "objectives": [
+        "Explain which guarantee each pointer type carries: one owner, shared ownership, run-time borrows, or thread safety.",
+        "Distinguish Rc from Arc, and RefCell from Mutex, by the problem each one actually solves.",
+        "Trace a counter shared through two Rc handles and predict what each handle can see."
+      ],
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
         "rust-pointers"
       ],
-      "objectives": [
-        "Explain which guarantee each pointer type carries: one owner, shared ownership, run-time borrows, or thread safety.",
-        "Distinguish Rc from Arc, and RefCell from Mutex, by the problem each one actually solves.",
-        "Trace a counter shared through two Rc handles and predict when the value is dropped."
-      ],
       "hints": [
-        "Name the owner you need before you pick a type: one owner, several readers, or several threads.",
+        "Name the owner you need before you pick a type: one owner, several readers, or several threads. If cargo is command not found, run the environment check first.",
         "Read the error message for a wrong choice and say which guarantee the compiler is protecting."
       ],
       "misconceptions": [
-        "Believing Rc makes a value thread-safe. Rc is single-threaded; sharing across threads needs Arc with a lock or atomics.",
-        "Thinking Rc::clone copies the data. It increments a count; the data stays in one place on the heap.",
-        "The Cookbook holds a recipe for each half of this choice — \"Share mutable structure between owners with Rc<RefCell<T>>\" (mem.html) and \"Guard compound state with Arc<Mutex<T>>\" (concurrency.html): Arc gives the thread-safe strong count and Mutex serialises access, so no two threads write the same slot at once. Using Rc where threads share data (or Arc without Mutex for shared writes) is exactly what the type system refuses or the runtime panics on."
+        "Believing Rc makes a value thread-safe, when Rc is single-threaded and sharing across threads needs Arc with a lock.",
+        "Thinking Rc::clone copies the data, when it increments a count and the data stays in one place on the heap."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo test -p ledger-core",
+          "expect": [
+            "test result",
+            "running \\d+ tests"
+          ],
+          "shows": "test result: ok. 3 passed; 0 failed"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A pointer is a value that names another value. Rust makes you choose which guarantee you need, and the type carries that choice."
+          "body": "A pointer is a value that names another value. Rust makes you choose which guarantee you need, and the type carries that choice: one owner, several owners, checked borrows, or checked borrows across threads."
         },
         {
           "kind": "prose",
-          "body": "Box owns one heap value. Rc lets several owners share one value. RefCell moves the borrow check to run time. Arc is Rc for threads."
+          "body": "Box owns one heap value. Rc lets several owners share one value. RefCell moves the borrow check to run time. Arc is Rc for threads, and Mutex is the lock that lets one thread at a time write."
         },
         {
           "kind": "example",
-          "body": "Four choices, each carrying a different promise:",
-          "code": "let boxed = Box::new(250);              // one owner, on the heap\nlet counter = Rc::new(RefCell::new(0));\nlet second = Rc::clone(&counter);       // two owners, one value\nlet shared = Arc::new(Mutex::new(0));   // safe across threads"
+          "body": "Three choices, each carrying a different promise, all of them in the ledger:",
+          "code": "let counter = Counter::new();   // Rc<RefCell<Counter>>, two owners, one value\nlet boxed = boxed_balance(250); // Box<i64>, one owner on the heap\nlet log = SharedLog::new();    // Arc<Mutex<Vec<String>>>, shared across threads"
         },
         {
           "kind": "example",
-          "body": "A strong edge back to the parent would keep both alive forever; a Weak back-reference breaks that cycle:",
-          "code": "struct Node {\n    next: Option<Rc<RefCell<Node>>>,\n    prev: Weak<RefCell<Node>>, // a back edge that does not own\n}\n\nlet parent = Rc::new(RefCell::new(Node { next: None, prev: Weak::new() }));\nlet child = Rc::new(RefCell::new(Node { next: None, prev: Weak::new() }));\nparent.borrow_mut().next = Some(Rc::clone(&child)); // parent owns child\nchild.borrow_mut().prev = Rc::downgrade(&parent);  // child only points back"
+          "body": "The log is a handle around a handle around a vector, and every clone of the log points at the same vector:",
+          "code": "#[derive(Clone)]\npub struct SharedLog {\n    entries: Arc<Mutex<Vec<String>>>,\n}"
         },
         {
           "kind": "prose",
-          "body": "The compiler stops you before you reach for the wrong one. An Rc cannot cross a thread boundary, and a RefCell can panic when two borrows overlap."
+          "body": "The compiler stops you before you reach for the wrong one. An Rc cannot cross a thread boundary, and a RefCell panics when two borrows overlap at run time, which is later than a compile error and no worse."
         },
         {
           "kind": "keypoints",
@@ -3341,26 +3643,28 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "items": [
             "A second owner of the value",
             "A deep copy on a new heap box",
-            "A weak pointer that cannot read",
-            "A boxed copy on the heap"
+            "A weak pointer that cannot read"
           ],
           "answer": 0,
           "explain": "Rc::clone increments the strong count and hands back another handle. The value stays where it is, and it is dropped when the last handle goes away."
         },
         {
-          "kind": "quickcheck",
-          "body": "Two Rc handles exist. When is the value dropped?",
-          "items": [
-            "When the last handle is dropped.",
-            "When the first handle is dropped.",
-            "At the end of every function that read it."
-          ],
-          "answer": 0,
-          "explain": "Rc keeps a strong count and drops the allocation when the count reaches zero. Cloning a handle increments it; dropping one decrements it. That is shared ownership with one free, not a garbage collector and not a copy."
+          "kind": "example",
+          "body": "crates/ledger-core/src/pointers.rs is where this phase works.",
+          "code": "pub fn shared_total(_counters: &[Rc<RefCell<Counter>>]) -> i64 {\n    todo!(\"implement shared_total\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/pointers.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Open pointers.rs. Implement Counter::new, increment and value, then shared_total. A clone of the Rc must see an increment made through the first handle."
+          "body": "Open pointers.rs. Implement Counter::new, increment and value, then shared_total and boxed_balance. A clone of the Rc must see an increment made through the first handle."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapters 15.1 (Using Box<T> to Point to Data on the Heap), 15.4 (Rc<T>, the Reference Counted Smart Pointer) and 15.5 (RefCell<T> and the Interior Mutability Pattern), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -3397,16 +3701,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Rust Book: smart pointers",
-          "url": "https://doc.rust-lang.org/book/ch15-00-smart-pointers.html"
+          "label": "The Rust Programming Language: chapter 15.1 Using Box<T> to Point to Data on the Heap (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch15-01-box.html"
         },
         {
-          "label": "std: Rc",
-          "url": "https://doc.rust-lang.org/std/rc/struct.Rc.html"
-        },
-        {
-          "label": "Learn Rust With Entirely Too Many Linked Lists: Rc, RefCell and cycles",
-          "url": "https://rust-unofficial.github.io/too-many-lists/index.html"
+          "label": "The Rust Programming Language: chapter 15.4 Rc<T>, the Reference Counted Smart Pointer (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch15-04-rc.html"
         }
       ]
     },
@@ -3414,7 +3714,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-pointers-ask",
       "title": "Reason: choosing the right owner",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-pointers"
@@ -3423,8 +3723,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Ask what the second handle must be able to do: read, mutate, or cross a thread boundary."
       ],
       "misconceptions": [
-        "Believing Rc makes a value thread-safe. Rc is single-threaded; sharing across threads needs Arc with a lock or atomics.",
-        "Thinking Rc::clone copies the data. It increments a count; the data stays in one place on the heap."
+        "Believing Rc makes a value thread-safe, when Rc is single-threaded and threads need Arc with a lock.",
+        "Thinking Rc::clone copies the data, when it increments a count and the data stays in one place."
       ],
       "lesson": [
         {
@@ -3433,12 +3733,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         }
       ],
       "options": [
-        "So two owners share one counter and either may mutate it.",
         "So the counter lives on the heap and is copied at every call site.",
         "Because RefCell makes the counter safe to share between threads.",
-        "Because a plain struct cannot hold an integer without a wrapper."
+        "Because a plain struct cannot hold an integer without a wrapper.",
+        "So two owners share one counter and either may mutate it."
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "Rc gives the value more than one owner, and RefCell allows mutation through a shared handle by checking borrows at run time. Together they describe a counter that two parts of one thread can change. Box would give a single owner. RefCell alone still needs one owner to hold it. Arc is the thread-safe sibling, but there is no thread here, and Arc would add atomic overhead for a guarantee nobody asked for."
     },
     "rust-pointers-do": {
@@ -3451,15 +3751,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-pointers"
       ],
       "hints": [
-        "Open pointers.rs. Counter::new returns the shared handle, so the struct is built inside Rc::new(RefCell::new(...)).",
-        "increment takes &mut self because it changes the value. value returns a copy of the integer.",
-        "shared_total walks the slice, borrows each cell, and adds value(). Different cells can be borrowed at the same time.",
-        "Run the suite and read which test failed. A panic inside borrow_mut usually means you borrowed the same cell twice.",
-        "Shape: Rc::new(RefCell::new(Counter { value: 0 })), then *self.value += 1. If cargo is missing, run the Environment Check."
+        "Open crates/ledger-core/src/pointers.rs. Counter::new hands back the shared handle, so the struct is built inside Rc::new(RefCell::new(...)). Run node --test --test-reporter=tap test/pointers.test.mjs and read the name of the check that failed.",
+        "increment takes &mut self because it changes the value, and value returns a copy of the integer.",
+        "shared_total walks the slice, borrows each cell for reading, and adds what it finds.",
+        "Run node --test --test-reporter=tap test/pointers.test.mjs and read the failing test name. A panic inside borrow_mut means the same cell was borrowed twice.",
+        "In one sentence: Counter::new returns an Rc<RefCell<Counter>>, increment adds one to the value, and shared_total adds up every counter it is given."
       ],
       "misconceptions": [
-        "Believing Rc makes a value thread-safe. Rc is single-threaded; sharing across threads needs Arc with a lock or atomics.",
-        "Thinking Rc::clone copies the data. It increments a count; the data stays in one place on the heap."
+        "Believing Rc makes a value thread-safe, when Rc is single-threaded and threads need Arc with a lock.",
+        "Thinking Rc::clone copies the data, when it increments a count and the data stays in one place."
       ],
       "files": [
         "crates/ledger-core/src/pointers.rs"
@@ -3480,7 +3780,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "a boxed value is read through its box"
           ],
-          "feedback": "Box<i64> owns one integer on the heap. Dereference it to read the number; the test compares the pointed-to value, not the box."
+          "feedback": "Box<i64> owns one integer on the heap. Dereference it to read the number, because the test compares the pointed-to value and not the box."
         },
         {
           "id": "edge-shared-total",
@@ -3504,8 +3804,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Believing Rc makes a value thread-safe. Rc is single-threaded; sharing across threads needs Arc with a lock or atomics.",
-        "Thinking a struct that holds an Arc is expensive to clone. The clone copies the handle and increments a count."
+        "Believing Rc makes a value thread-safe, when Rc is single-threaded and threads need Arc with a lock.",
+        "Thinking a struct that holds an Arc is expensive to clone, when the clone copies the handle and counts it."
       ],
       "files": [
         "crates/ledger-core/src/pointers.rs"
@@ -3535,23 +3835,34 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-threads-learn",
       "title": "Learn: work on another thread",
       "kind": "lesson",
-      "mode": "learn",
-      "guidance": 1,
-      "competencyIds": [
-        "rust-threads"
-      ],
       "objectives": [
         "Explain why a spawned closure must own what it names, and what move does to an Arc handle.",
         "Trace an Arc<Mutex<i64>> through two threads and say which step must hold the lock.",
         "Predict which borrows a scoped thread may take, and when the scope releases them."
       ],
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "rust-threads"
+      ],
       "hints": [
-        "Say which data each thread must own before you write the spawn call.",
+        "Say which data each thread must own before you write the spawn call. If cargo is command not found, run the environment check first.",
         "Ask whether the thread needs to outlive the function or may finish inside it."
       ],
       "misconceptions": [
-        "Thinking a moved Arc is a moved counter. Moving the handle is cheap; the counter stays in one place.",
-        "Believing a Mutex makes code slow by definition. The lock is taken for the update, then released."
+        "Thinking a moved Arc is a moved counter, when moving the handle is cheap and the counter stays in one place.",
+        "Believing a Mutex makes code slow by definition, when the lock is taken for the update and released after it."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo test -p ledger-core",
+          "expect": [
+            "test result",
+            "running \\d+ tests"
+          ],
+          "shows": "test result: ok. 3 passed; 0 failed"
+        }
       ],
       "lesson": [
         {
@@ -3560,7 +3871,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A move closure takes ownership of what it names. To share a counter, each thread takes its own Arc handle, locks the Mutex, and releases the lock before it returns."
+          "body": "A move closure takes ownership of what it names. To share a counter, each thread takes its own Arc handle, locks the Mutex, changes the value, and releases the lock before it returns."
         },
         {
           "kind": "example",
@@ -3572,18 +3883,13 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "body": "A scoped thread may borrow a slice because the scope joins every thread before it returns. That removes the clones when the data is only needed for the loop."
         },
         {
-          "kind": "example",
-          "body": "Inside a scope, workers may borrow the caller's slice; the scope waits for all of them first:",
-          "code": "let mut counts = vec![0; 4];\nthread::scope(|s| {\n    for slot in counts.chunks_mut(1) {\n        s.spawn(move || slot[0] += 1);\n    }\n}); // every scoped thread has finished here\nassert_eq!(counts, vec![1, 1, 1, 1]);"
-        },
-        {
           "kind": "prose",
-          "body": "Results come back through a channel. The receiver can only loop while a sender exists, so the loop ends on its own once every sending handle is dropped — no counter, no sentinel value."
+          "body": "Results come back through a channel. The receiver can only loop while a sender exists, so the loop ends on its own once every sending handle is dropped, with no counter and no sentinel value."
         },
         {
           "kind": "example",
-          "body": "The loop ends when the last sender does:",
-          "code": "let (tx, rx) = mpsc::channel();\nlet worker = tx.clone();\nthread::spawn(move || { worker.send(42); });\ndrop(tx);                       // the original handle is gone\nlet got: Vec<usize> = rx.iter().collect();  // ends when every sender drops\nassert_eq!(got, vec![42]);"
+          "body": "One sender per worker, and the original handle dropped so the loop can end:",
+          "code": "let (tx, rx) = mpsc::channel();\nfor id in 0..count {\n    let worker = tx.clone();\n    thread::spawn(move || { worker.send(id).unwrap(); });\n}\ndrop(tx); // the original handle is gone\nlet mut ids: Vec<usize> = rx.iter().collect();\nids.sort();"
         },
         {
           "kind": "keypoints",
@@ -3599,17 +3905,30 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "kind": "quickcheck",
           "body": "What does move do to a captured Arc handle?",
           "items": [
-            "It copies the whole counter",
+            "It copies the whole counter, so each thread gets its own",
             "It moves the handle into the closure",
-            "It locks the mutex for the thread",
-            "It makes the closure run immediately"
+            "It locks the mutex for the thread"
           ],
           "answer": 1,
           "explain": "move takes the handle into the closure. The Arc inside still points at the one counter, and cloning before the move is how two threads each get a handle."
         },
         {
+          "kind": "example",
+          "body": "crates/ledger-core/src/threads.rs is where this phase works.",
+          "code": "pub fn sum_in_parallel(_values: &[i64], _workers: usize) -> i64 {\n    todo!(\"implement sum_in_parallel\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/threads.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Open threads.rs. Implement sum_in_parallel, bump_shared and collect_ids. Run the suite and name which test failed before you change the locking."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapters 16.1 (Using Threads to Run Code Simultaneously), 16.2 (Transfer Data Between Threads with Message Passing) and 16.3 (Shared-State Concurrency), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -3651,16 +3970,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Rust Book: using threads to run code in parallel",
+          "label": "The Rust Programming Language: chapter 16.1 Using Threads to Run Code Simultaneously (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch16-01-threads.html"
         },
         {
-          "label": "std: thread::scope",
-          "url": "https://doc.rust-lang.org/std/thread/fn.scope.html"
-        },
-        {
-          "label": "Rust Cookbook: guard compound state with Arc<Mutex<T>>, pass data with mpsc",
-          "url": "https://rust-lang-nursery.github.io/rust-cookbook/concurrency.html"
+          "label": "The Rust Programming Language: chapter 16.2 Transfer Data Between Threads with Message Passing (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch16-02-message-passing.html"
         }
       ]
     },
@@ -3668,7 +3983,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-threads-ask",
       "title": "Reason: why the handle is cloned",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-threads"
@@ -3677,8 +3992,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Ask what the spawned closure would own if the Arc were not cloned first."
       ],
       "misconceptions": [
-        "Thinking a moved Arc is a moved counter. Moving the handle is cheap; the counter stays in one place.",
-        "Believing the Mutex is optional because the counter is inside Arc. Arc shares ownership; it does not make writes safe."
+        "Thinking a moved Arc is a moved counter, when moving the handle is cheap and the counter stays in one place.",
+        "Believing the Mutex is optional because the counter is inside Arc, when Arc shares ownership and does not make writes safe."
       ],
       "lesson": [
         {
@@ -3693,7 +4008,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Because closures cannot read local variables without a copy."
       ],
       "answer": 1,
-      "explanation": "The spawned closure must own everything it names, so each thread gets a handle it can keep. Cloning the Arc increments the count and produces a second owner of the same allocation; the counter itself is not copied. The original handle stays with the caller, and the last handle to drop frees the value. Borrowing instead of cloning is what the compiler refuses, because the thread could outlive the borrow. A Mutex is still required for writes: Arc only shares ownership."
+      "explanation": "The spawned closure must own everything it names, so each thread gets a handle it can keep. Cloning the Arc increments the count and produces a second owner of the same allocation, and the counter itself is not copied. The original handle stays with the caller, and the last handle to drop frees the value. Borrowing instead of cloning is what the compiler refuses, because the thread could outlive the borrow. A Mutex is still required for writes, since Arc only shares ownership."
     },
     "rust-threads-do": {
       "id": "rust-threads-do",
@@ -3705,15 +4020,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-threads"
       ],
       "hints": [
-        "Open threads.rs. sum_in_parallel splits the slice into chunks, one per worker, and adds each chunk on its own thread.",
+        "Open crates/ledger-core/src/threads.rs. sum_in_parallel splits the slice into chunks, one per worker, and adds each chunk on its own thread. Run node --test --test-reporter=tap test/threads.test.mjs and read the name of the check that failed.",
         "Use std::thread::scope so the threads may borrow the slice. No Arc is needed for read-only data.",
         "Send each partial sum through an mpsc channel, drop the original sender, then add what the receiver yields.",
-        "bump_shared locks the mutex inside each thread and releases it before the thread ends. Holding the lock across a join is how a test hangs.",
-        "collect_ids sends every id once, then sorts the received ids. Treat workers 0 as one worker. If cargo is missing, run the Environment Check."
+        "Run node --test --test-reporter=tap test/threads.test.mjs and read the failing test name. Holding the lock across a join is how a test hangs.",
+        "In one sentence: sum_in_parallel adds one partial sum per worker, bump_shared locks the mutex around every increment, and collect_ids sends each id through a channel and sorts them."
       ],
       "misconceptions": [
-        "Thinking a moved Arc is a moved counter. Moving the handle is cheap; the counter stays in one place.",
-        "Believing sum_in_parallel is correct if the threads compile. A sum that drops a partial result passes no test that checks the total."
+        "Thinking a moved Arc is a moved counter, when moving the handle is cheap and the counter stays in one place.",
+        "Believing sum_in_parallel is correct if the threads compile, when a sum that drops a partial result passes no test that checks the total."
       ],
       "files": [
         "crates/ledger-core/src/threads.rs"
@@ -3758,8 +4073,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Thinking a channel receiver blocks forever once every sender is gone. It ends when the last sender drops.",
-        "Believing the received order is the spawn order. Threads finish when they finish; sort if order matters."
+        "Thinking a channel receiver blocks forever once every sender is gone, when it ends when the last sender drops.",
+        "Believing the received order is the spawn order, when threads finish when they finish and the ids must be sorted."
       ],
       "files": [
         "crates/ledger-core/src/threads.rs"
@@ -3789,24 +4104,34 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-async-learn",
       "title": "Learn: a future is a plan, not a run",
       "kind": "lesson",
+      "objectives": [
+        "Explain why calling an async function builds a future instead of running its body.",
+        "Predict how far a future runs before its first await, and what a pending poll leaves behind.",
+        "Diagnose a blocking call that stalls every task sharing one executor thread."
+      ],
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
         "rust-async"
       ],
-      "objectives": [
-        "Explain why calling an async function builds a future instead of running its body.",
-        "Predict how far a future's body runs before its first await, and what a pending poll leaves behind.",
-        "Diagnose a blocking call that stalls every task sharing one executor thread."
-      ],
       "hints": [
-        "Call an async function and store the result without awaiting it. Ask whether its body has run.",
+        "Call an async function and store the result without awaiting it. Ask whether its body has run. If cargo is command not found, run the environment check first.",
         "Name what the executor is doing while your future waits: it polls other futures on the same thread."
       ],
       "misconceptions": [
-        "Thinking awaiting is the same as blocking. Await yields the thread so other tasks can run.",
-        "Believing async runs the body at call time. The call builds a future; the executor polls it.",
-        "The Cookbook shows that a blocking call (std::thread::sleep, file I/O on the executor thread) parks the whole thread and blocks every other task on it. The fix is an async timer or spawning the blocking work, which the Cookbook patterns demonstrate for async I/O and network waits."
+        "Thinking awaiting is the same as blocking, when an await yields the thread so other tasks can run.",
+        "Believing async runs the body at call time, when the call builds a future and the executor polls it."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo test -p ledger-api",
+          "expect": [
+            "test result",
+            "running \\d+ tests"
+          ],
+          "shows": "test result: ok. 3 passed; 0 failed"
+        }
       ],
       "lesson": [
         {
@@ -3820,7 +4145,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         {
           "kind": "example",
           "body": "The body runs on the first poll, not at the call:",
-          "code": "let future = add(2, 3);   // nothing has been added yet\nlet total = future.await; // now the body runs\n\nlet (a, b) = tokio::join!(first(), second());"
+          "code": "let future = lazy_add(flag, 2, 3); // nothing has been added yet\nlet total = future.await;             // now the body runs"
         },
         {
           "kind": "example",
@@ -3836,7 +4161,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "body": "Key Points",
           "items": [
             "A future is lazy until something polls it.",
-            "Await yields the thread; it does not block it.",
+            "An await yields the thread, it does not block it.",
             "join! polls two futures on one task."
           ]
         },
@@ -3846,26 +4171,28 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "items": [
             "The body runs to the first await",
             "The body runs on another thread",
-            "Nothing yet: a future is built",
-            "The body runs and then blocks"
+            "Nothing yet: a future is built"
           ],
           "answer": 2,
           "explain": "The call produces a future. The body starts on the first poll, which the executor performs when the future is awaited or spawned."
         },
         {
-          "kind": "quickcheck",
-          "body": "You build a future and never await it. What has run?",
-          "items": [
-            "Nothing in its body.",
-            "The body ran, but the result was discarded.",
-            "It ran on a background thread anyway."
-          ],
-          "answer": 0,
-          "explain": "An async block builds a state machine and returns it. No code inside runs until a poll reaches it, and a future that is never polled never starts. This is why an un-awaited future is a warning in real programs: the work was described and then forgotten."
+          "kind": "example",
+          "body": "crates/ledger-api/src/async_basics.rs is where this phase works.",
+          "code": "pub fn lazy_add(flag: Arc<AtomicBool>, a: i64, b: i64) -> impl Future<Output = i64> {\n    async move {\n        let _ = (flag, a, b);\n        todo!(\"implement lazy_add\")\n    }\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/async_basics.test.mjs"
         },
         {
           "kind": "task",
           "body": "Open async_basics.rs. Implement lazy_add so the flag changes only when the future is awaited, then tally and count_above. Run the suite and read which test failed."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 17.1 (Futures and the Async Syntax), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -3891,11 +4218,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "The Async Book: why async?",
-          "url": "https://rust-lang.github.io/async-book/01_getting_started/02_why_async.html"
+          "label": "The Rust Programming Language: chapter 17.1 Futures and the Async Syntax (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch17-01-futures-and-syntax.html"
         },
         {
-          "label": "Tokio tutorial: spawning",
+          "label": "Tokio tutorial: spawning tasks",
           "url": "https://tokio.rs/tokio/tutorial/spawning"
         }
       ]
@@ -3904,7 +4231,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-async-ask",
       "title": "Reason: when the body actually runs",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-async"
@@ -3913,8 +4240,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Ask what value the async call returns before anything awaits it."
       ],
       "misconceptions": [
-        "Thinking awaiting is the same as blocking. Await yields the thread so other tasks can run.",
-        "Believing an async fn starts eagerly because it looks like a normal call. The call returns a future."
+        "Thinking awaiting is the same as blocking, when an await yields the thread so other tasks can run.",
+        "Believing an async fn starts eagerly because it looks like a normal call, when the call returns a future."
       ],
       "lesson": [
         {
@@ -3929,7 +4256,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Because an await blocks the thread until the value is ready."
       ],
       "answer": 2,
-      "explanation": "An async fn compiles into a function that returns a future. Building the future runs none of the body; it records the state needed to continue later. The body starts when an executor polls it, which is what await arranges. That laziness is why an async call can be stored, combined with join, or never run at all without anyone noticing. The other options describe eager execution, thread copying, or blocking, all of which are the opposite of how a future behaves."
+      "explanation": "An async fn compiles into a function that returns a future. Building the future runs none of the body, it records the state needed to continue later. The body starts when an executor polls it, which is what await arranges. That laziness is why an async call can be stored, combined with join, or never run at all without anyone noticing. The other options describe eager execution, thread copying, or blocking, all of which are the opposite of how a future behaves."
     },
     "rust-async-do": {
       "id": "rust-async-do",
@@ -3941,15 +4268,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-async"
       ],
       "hints": [
-        "Open async_basics.rs. lazy_add returns a future; put the flag update and the addition inside an async move block.",
+        "Open crates/ledger-api/src/async_basics.rs. lazy_add returns a future, so the flag update and the addition belong inside an async move block. Run node --test --test-reporter=tap test/async_basics.test.mjs and read the name of the check that failed.",
         "Counters shared by two joined futures are a reference, not an Arc. Both futures run on the same task.",
         "bump_then_read must yield between the increment and the read. Without the yield there is no interleaving to observe.",
-        "Run the suite. If the laziness test fails, the flag was set before the future was awaited.",
-        "Shape: async move { flag.store(true, Ordering::SeqCst); a + b }. If cargo is missing, run the Environment Check."
+        "Run node --test --test-reporter=tap test/async_basics.test.mjs and read the failing test name. If the laziness test fails, the flag was set before the future was awaited.",
+        "In one sentence: lazy_add sets the flag and adds inside the async block, bump_then_read increments then yields then reads, and count_above counts the values over the floor."
       ],
       "misconceptions": [
-        "Thinking an awaited future runs on a new thread. The executor may keep it on the same thread.",
-        "Believing join runs the two futures in sequence. It polls both, so one can make progress while the other waits."
+        "Thinking an awaited future runs on a new thread, when the executor may keep it on the same thread.",
+        "Believing join runs the two futures in sequence, when it polls both so one can make progress while the other waits."
       ],
       "files": [
         "crates/ledger-api/src/async_basics.rs"
@@ -3995,8 +4322,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Thinking an async function needs spawn to be useful. Awaiting it is enough when the caller already runs on a task.",
-        "Believing an empty slice is a special case. A loop over nothing yields zero naturally."
+        "Thinking an async function needs spawn to be useful, when awaiting it is enough when the caller already runs on a task.",
+        "Believing an empty slice is a special case, when a loop over nothing yields zero naturally."
       ],
       "files": [
         "crates/ledger-api/src/async_basics.rs"
@@ -4027,23 +4354,34 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-tokio-learn",
       "title": "Learn: a task the runtime owns",
       "kind": "lesson",
+      "objectives": [
+        "Explain why tokio::spawn requires a Send and static future, and what the caller gives up.",
+        "Predict what happens to the losing branch of a race and to the work it had already started.",
+        "Diagnose an operation that is unsafe to cancel because it committed only half its work."
+      ],
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
         "rust-tokio"
       ],
-      "objectives": [
-        "Explain why tokio::spawn requires a Send and static future, and what the caller gives up.",
-        "Predict what happens to the losing branch of a select! and to work it had already started.",
-        "Diagnose an operation that is unsafe to cancel because it committed only half its work."
-      ],
       "hints": [
-        "Ask who owns the future after spawn returns, and whether the caller can borrow from it.",
-        "Name what happens to the losing branch of a select! when the winner fires."
+        "Ask who owns the future after spawn returns, and whether the caller can borrow from it. If cargo is command not found, run the environment check first.",
+        "Name what happens to the losing branch of a race when the winner fires."
       ],
       "misconceptions": [
-        "Thinking a cancelled future is a failed future. Cancellation drops the future; no error is produced.",
-        "Believing select! runs both branches. It polls them and keeps the first result, dropping the rest."
+        "Thinking a cancelled future is a failed future, when cancellation drops the future and no error is produced.",
+        "Believing select! runs both branches, when it polls them and keeps the first result and drops the rest."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "cargo test -p ledger-api",
+          "expect": [
+            "test result",
+            "running \\d+ tests"
+          ],
+          "shows": "test result: ok. 3 passed; 0 failed"
+        }
       ],
       "lesson": [
         {
@@ -4057,11 +4395,11 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         {
           "kind": "example",
           "body": "A bounded call, and a race whose loser is dropped:",
-          "code": "let result = tokio::time::timeout(\n    Duration::from_millis(50), slow_call(),\n).await;\n\ntokio::select! {\n    line = rx.recv() => handle(line),\n    _ = shutdown.recv() => return,\n}"
+          "code": "let result = with_timeout(50, slow_call()).await;\n\ntokio::select! {\n    line = rx.recv() => handle(line),\n    _ = shutdown.recv() => return,\n}"
         },
         {
           "kind": "prose",
-          "body": "That makes cancellation safety a property of the work, not the syntax. A future that moved money halfway is not safe to drop unless the move is atomic or can be resumed."
+          "body": "That makes cancellation safety a property of the work, not of the syntax. A future that moved money halfway is not safe to drop unless the move is atomic or can be resumed."
         },
         {
           "kind": "example",
@@ -4072,7 +4410,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "spawn needs Send + static because tasks move.",
+            "spawn needs Send and static because tasks move.",
             "A timeout cancels by dropping the future.",
             "select! keeps one branch and drops the others."
           ]
@@ -4083,15 +4421,28 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "items": [
             "It keeps running in the background",
             "It is retried after the winner",
-            "It is dropped at its next await",
-            "It returns an error to its caller"
+            "It is dropped at its next await"
           ],
           "answer": 2,
-          "explain": "select! polls the branches and returns the first ready one. The others are dropped where they stand, so any partial work they held is abandoned, not reported."
+          "explain": "select! polls the branches and returns the first ready one. The others are dropped where they stand, so any partial work they held is abandoned and not reported."
+        },
+        {
+          "kind": "example",
+          "body": "crates/ledger-api/src/tokio_ops.rs is where this phase works.",
+          "code": "pub async fn with_timeout<F>(_millis: u64, _future: F) -> Result<F::Output, &'static str>\nwhere\n    F: Future,\n{\n    todo!(\"implement with_timeout\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/tokio_ops.test.mjs"
         },
         {
           "kind": "task",
           "body": "Open tokio_ops.rs. Implement with_timeout, spawn_workers and wait_for_shutdown. Run the suite, then explain why the timeout returns a value of its own."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 17.2 (Applying Concurrency with Async), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -4117,12 +4468,12 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "Tokio tutorial: select",
-          "url": "https://tokio.rs/tokio/tutorial/select"
+          "label": "The Rust Programming Language: chapter 17.2 Applying Concurrency with Async (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch17-02-concurrency-with-async.html"
         },
         {
-          "label": "Tokio: timeouts and cancellation",
-          "url": "https://docs.rs/tokio/latest/tokio/time/fn.timeout.html"
+          "label": "Tokio tutorial: select",
+          "url": "https://tokio.rs/tokio/tutorial/select"
         }
       ]
     },
@@ -4130,7 +4481,7 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-tokio-ask",
       "title": "Reason: why spawn needs static",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-tokio"
@@ -4139,8 +4490,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Ask whether the spawned task is guaranteed to finish before the spawning function returns."
       ],
       "misconceptions": [
-        "Thinking a cancelled future is a failed future. Cancellation drops the future; no error is produced.",
-        "Believing spawn joins the task before returning. The handle must be awaited or the task may be dropped with the runtime."
+        "Thinking a cancelled future is a failed future, when cancellation drops the future and no error is produced.",
+        "Believing spawn joins the task before returning, when the handle must be awaited or the task may be dropped with the runtime."
       ],
       "lesson": [
         {
@@ -4149,13 +4500,13 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         }
       ],
       "options": [
+        "Because a spawned task may outlive the call that spawned it.",
         "Because spawn runs the future on the current thread and forgets it.",
         "Because every future is already Send and static by default.",
-        "Because a spawned task is scheduled by the runtime and may run later.",
-        "Because a spawned task may outlive the call that spawned it."
+        "Because a spawned task is scheduled by the runtime and may run later."
       ],
-      "answer": 3,
-      "explanation": "A spawned task is owned by the runtime, not by the stack frame that created it. Nothing forces it to finish before the function returns, so every value it names must be able to live independently of that frame. That is what static means here. Send is the other half: the task may be moved to another worker thread. The other options either describe a different guarantee or deny the bounds that spawn enforces."
+      "answer": 0,
+      "explanation": "A spawned task is owned by the runtime, not by the stack frame that created it. Nothing forces it to finish before the function returns, so every value it names must be able to live independently of that frame. That is what static means here. Send is the other half, because the task may be moved to another worker thread. The other options either describe a different guarantee or deny the bounds that spawn enforces."
     },
     "rust-tokio-do": {
       "id": "rust-tokio-do",
@@ -4167,15 +4518,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-tokio"
       ],
       "hints": [
-        "Open tokio_ops.rs. with_timeout wraps the future in tokio::time::timeout and maps the elapsed case to Err.",
+        "Open crates/ledger-api/src/tokio_ops.rs. with_timeout wraps the future in tokio::time::timeout and maps the elapsed case to Err. Run node --test --test-reporter=tap test/tokio_ops.test.mjs and read the name of the check that failed.",
         "spawn_workers returns what each task produced. Collect the JoinHandles, await them, and sort the results so the order is stable.",
         "wait_for_shutdown races the receiver against a short timer and returns false when the timer wins.",
-        "A dropped sender resolves the receiver with an error, not a hang. Treat it as a stop signal.",
-        "Shape: match timeout(Duration::from_millis(ms), fut).await { Ok(v) => Ok(v), Err(_) => Err(\"timed out\") }. If cargo is missing, run the Environment Check."
+        "Run node --test --test-reporter=tap test/tokio_ops.test.mjs and read the failing test name. A dropped sender resolves the receiver with an error, not a hang.",
+        "In one sentence: with_timeout wraps the future and returns Err when the deadline passes, spawn_workers awaits every handle and sorts the ids, and wait_for_shutdown maps a sent signal to true."
       ],
       "misconceptions": [
-        "Thinking a timed-out operation reports an error from inside the future. The timeout reports its own elapsed error.",
-        "Believing a spawned task that panics takes the process down silently. Await the handle to observe the join error."
+        "Thinking a timed-out operation reports an error from inside the future, when the timeout reports its own elapsed error.",
+        "Believing a spawned task that panics takes the process down silently, when awaiting the handle observes the join error."
       ],
       "files": [
         "crates/ledger-api/src/tokio_ops.rs"
@@ -4221,8 +4572,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Thinking a oneshot receiver waits forever when the sender is dropped. It resolves immediately with an error.",
-        "Believing a shutdown signal must carry a value. The unit value is enough when the fact of the signal is the message."
+        "Thinking a oneshot receiver waits forever when the sender is dropped, when it resolves immediately with an error.",
+        "Believing a shutdown signal must carry a value, when the unit value is enough when the fact of the signal is the message."
       ],
       "files": [
         "crates/ledger-api/src/tokio_ops.rs"
@@ -4264,37 +4615,53 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Predict the status a create, a successful read and a rejected body each answer with."
       ],
       "hints": [
-        "Before you read the code, say what a request must contain for the owner route to run at all.",
+        "Say what a request must carry before the owner route can run at all. If cargo is command not found, run the environment check first.",
         "An extractor is an argument type. If the type cannot be built from the request, the handler never runs."
       ],
       "misconceptions": [
-        "A handler receives a raw request and parses it by hand — extractors do that work before the body runs.",
-        "A route parameter is a string the handler must parse — Path<T> deserializes it into the type you asked for.",
-        "Returning 200 for a create is harmless — 201 says a resource now exists, and clients cache and retry differently.",
-        "Returning 500 for every failure: HTTP itself draws the line the service should follow — 400 when the body failed validation, 201 with a Location header on create, 404 when the owner is absent (RFC 9110 sections 15.3.2, 15.5.1, 15.5.5; the status semantics are MDN and the RFC, not a framework default). The enum error type is what maps each domain failure to the right status instead of blanket-catching 500s."
+        "Thinking the handler receives a raw request and parses it by hand, when the extractors do that work.",
+        "Thinking a route parameter arrives as a string the handler must parse, when Path<T> deserializes it."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node --test --test-reporter=tap test/api.test.mjs",
+          "expect": [
+            "# tests \\d+",
+            "# fail \\d+"
+          ],
+          "shows": "# tests 3\n# fail 3"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "The ledger has been a library for several phases. A service is the same domain with a door: requests arrive, handlers take typed values out of them, and responses go back."
+          "body": "The ledger has been a library for many phases. A service is the same domain with a door: a request arrives, handlers take typed values out of it, and a response goes back."
         },
         {
           "kind": "prose",
-          "body": "Axum maps a path to a handler. An extractor is an argument whose type states what it needs. The handler runs only after every extractor has succeeded, so a malformed request never reaches your logic."
+          "body": "Axum maps a path to a handler. An extractor is an argument whose type says what it needs, so a malformed request is turned away before your logic runs."
         },
         {
           "kind": "example",
-          "body": "A route with a captured segment and a shared state:",
+          "body": "A route with a captured segment, a shared state and a body extractor:",
           "code": "let app = Router::new()\n    .route(\"/accounts/{owner}\", get(read_account))\n    .with_state(state);\n\nasync fn read_account(\n    State(state): State<Arc<AppState>>,\n    Path(owner): Path<String>,\n) -> Response { /* ... */ }"
         },
         {
           "kind": "prose",
-          "body": "The path syntax matters. Axum 0.8 writes a capture as {owner}; the older colon form is a different framework version, and a stale route reads as a 404 that looks like a missing account."
+          "body": "The path syntax matters. Axum 0.8 writes a capture as {owner}, and a stale route reads as a 404 that looks like a missing account."
         },
         {
-          "kind": "example",
-          "body": "The body extractor must come last because it consumes the request, while the others only read parts of it.",
-          "code": "async fn create_account(\n    State(state): State<Arc<AppState>>,\n    Json(body): Json<NewAccount>,\n) -> impl IntoResponse {\n    (StatusCode::CREATED, Json(state.insert(body)))\n}"
+          "kind": "quickcheck",
+          "body": "What does the {owner} segment in a route pattern become?",
+          "items": [
+            "A typed path capture for the handler.",
+            "A query parameter the handler has to read itself.",
+            "A header value copied into the response.",
+            "The response body of the reply."
+          ],
+          "answer": 0,
+          "explain": "A brace names a capture. Axum matches that segment of the path and builds a Path<T> for it, so the handler receives a typed value instead of a slice of the URL."
         },
         {
           "kind": "keypoints",
@@ -4302,23 +4669,27 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "items": [
             "A route maps a path pattern to a handler.",
             "Extractors turn a request into typed arguments.",
-            "A rejected extraction never runs the handler."
+            "A rejected extraction never runs the handler.",
+            "A create answers 201, a missing account answers 404."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "What does {owner} mean inside a route pattern?",
-          "items": [
-            "A captured path segment, typed.",
-            "A literal path whose name is owner.",
-            "A query parameter the handler must read."
-          ],
-          "answer": 0,
-          "explain": "A brace names a capture. Axum matches that segment, then builds a Path<T> for it; a literal segment would match only the exact word."
+          "kind": "example",
+          "body": "crates/ledger-api/src/api.rs is where this phase works.",
+          "code": "pub fn app(_state: Arc<AppState>) -> Router {\n    todo!(\"build the router: create, read and deposit\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/api.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Open api.rs. Add the three routes and their handlers, then run the suite. Read the first failing status before you change any handler."
+          "body": "Open crates/ledger-api/src/api.rs. Add the create, read and deposit routes with their handlers, then run the suite. Read the first failing status before you change a handler."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 12.0 (An I/O Project) and chapter 7.5 (Separating Modules into Different Files), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -4327,43 +4698,43 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "steps": [
             {
               "side": "client",
+              "label": "POST /accounts"
+            },
+            {
+              "side": "server",
+              "label": "extract Json<NewAccount>"
+            },
+            {
+              "side": "server",
+              "label": "201 with the account"
+            },
+            {
+              "side": "client",
               "label": "GET /accounts/ada"
             },
             {
               "side": "server",
-              "label": "extract Path<String>"
-            },
-            {
-              "side": "server",
-              "label": "200 {owner, cents}"
-            },
-            {
-              "side": "client",
-              "label": "POST /accounts/ada/deposits"
-            },
-            {
-              "side": "server",
-              "label": "400 negative cents"
+              "label": "404 when nobody owns it"
             }
           ]
         }
       },
       "resources": [
         {
-          "label": "Axum: routing and handlers",
-          "url": "https://docs.rs/axum/latest/axum/#routing"
+          "label": "The Rust Programming Language: chapter 12.0 An I/O Project (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch12-00-an-io-project.html"
         },
         {
-          "label": "Axum: extractors",
-          "url": "https://docs.rs/axum/latest/axum/extract/index.html"
+          "label": "Axum: routing, extractors and handlers",
+          "url": "https://docs.rs/axum/latest/axum/"
         }
       ]
     },
     "rust-axum-ask": {
       "id": "rust-axum-ask",
-      "title": "Reason: which extractor carries the owner",
+      "title": "Reason: which part of the request carries the owner",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-axum"
@@ -4372,8 +4743,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Ask which part of a request a path segment belongs to, and which extractor is typed for it."
       ],
       "misconceptions": [
-        "Query reads the path — it reads the query string, which is the part after the question mark.",
-        "State carries request data — it carries the application values you put there, not the URL."
+        "Thinking Query reads the path, when it reads the query string after the question mark.",
+        "Thinking State carries request data, when it carries the application values you installed on the router."
       ],
       "lesson": [
         {
@@ -4382,17 +4753,17 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         }
       ],
       "options": [
-        "Path<String>: it deserializes the captured segment named in the route pattern.",
-        "Query<String>: it reads the whole request URL, so the owner arrives from there.",
-        "Json<String>: it decodes the request body into an owner name automatically.",
-        "State<String>: the shared application state holds this request's path segments."
+        "It reads the query string after the question mark.",
+        "It reads the request body as JSON, so the owner arrives from the payload.",
+        "It holds the shared state that every route was given.",
+        "It deserializes the segment the route pattern captured."
       ],
-      "answer": 0,
-      "explanation": "Path<T> extracts the captures declared in the route pattern, in declaration order, and deserializes each into T. Query<T> reads only the query string. Json<T> reads the body, which a GET usually does not have. State<T> is application data installed with with_state, and it is the same for every request, so it cannot carry one request's owner. Choosing Path is not a shortcut; it is how the type system states which part of the request the handler needs."
+      "answer": 3,
+      "explanation": "Path<T> builds the captures the route pattern declares, in order, and deserializes each into the type the handler asked for. Query<T> reads only the query string, so it never sees the path. Json<T> reads the body, which a GET does not carry. State<T> is the application state installed with with_state, the same for every request, so it cannot hold one request owner. Choosing Path is not a shortcut: it is the extractor whose type matches the part of the request the owner was written in."
     },
     "rust-axum-do": {
       "id": "rust-axum-do",
-      "title": "Solve: three routes over the ledger",
+      "title": "Solve: create, read and deposit",
       "kind": "challenge",
       "mode": "solve",
       "guidance": 2,
@@ -4400,16 +4771,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-axum"
       ],
       "hints": [
-        "Open crates/ledger-api/src/api.rs. The router owns three routes and the state holds the accounts map.",
-        "Give each request body its own struct with serde derive, and let Json<T> do the decoding for you.",
-        "Axum 0.8 writes a capture as {owner}. If the pattern is wrong, every request is a 404 before the handler runs.",
-        "Run node --test --test-reporter=tap test/api.test.mjs and read which status differed before editing.",
-        "Shape: POST inserts and returns 201, GET reads through Path and returns 200 or 404, a deposit validates before it mutates."
+        "Open crates/ledger-api/src/api.rs. The router is built in app, which takes the shared state. Run node --test --test-reporter=tap test/api.test.mjs and read the name of the check that failed.",
+        "A create route takes a Json body and answers 201; a read route takes Path<String> and answers 200 with the same shape.",
+        "A negative opening balance is rejected before it is stored, so the handler answers 400 and writes nothing.",
+        "Run the suite and read the status the failing check expected. A 404 on a create usually means the path pattern does not match.",
+        "Shape: Router::new() with three routes, then .with_state(state) so the handlers can reach AppState. If cargo is missing, run the Environment Check."
       ],
       "misconceptions": [
-        "Returning 200 from a create — 201 is the status that says a new resource now exists.",
-        "Parsing the owner out of the raw URI inside the handler — Path does that before the handler body.",
-        "Reading the body twice — an extractor that consumes the body must be the last argument."
+        "Thinking a handler receives a raw request and parses it by hand, when the extractors do that work.",
+        "Thinking a create may answer 200, when 201 says the resource now exists."
       ],
       "files": [
         "crates/ledger-api/src/api.rs"
@@ -4419,34 +4789,34 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "checks": [
         {
           "id": "create",
-          "label": "Creating an account returns 201 with the owner",
+          "label": "A create answers 201 with the new account",
           "tests": [
             "creates an account and returns 201"
           ],
-          "feedback": "Post the JSON body with a content type, insert into the state, and answer 201 with the created account."
+          "feedback": "A create that stored the account must answer 201 and return the owner and the cents it opened. A 200 is not the same promise, and an empty body hides the stored value."
         },
         {
           "id": "read",
-          "label": "Reading an account returns its JSON",
+          "label": "A read answers 200 with the account as JSON",
           "tests": [
             "reads an account as JSON"
           ],
-          "feedback": "GET /accounts/{owner} answers with the owner and cents you stored. A missing key is a 404, not an empty object."
+          "feedback": "The read route has to answer with the same JSON shape the create returned, so a client can read either reply the same way. The owner and the cents both belong in the body."
         },
         {
-          "id": "edge-negative-opening",
-          "label": "A negative opening balance is refused with 400",
+          "id": "edge-negative",
+          "label": "A negative opening balance is refused",
           "tests": [
             "rejects a negative opening balance"
           ],
-          "feedback": "Validate the opening balance before inserting. A ledger that accepts a negative opening has invented money.",
+          "feedback": "A negative opening balance is refused with 400 before it is stored. Writing the row first and answering later leaves a balance nobody asked for.",
           "edge": true
         }
       ]
     },
     "rust-axum-review": {
       "id": "rust-axum-review",
-      "title": "Review: an unknown owner and a deposit",
+      "title": "Review: an unknown account and a deposit",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -4455,8 +4825,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "A missing account is an empty 200 — a 404 is the honest answer, and clients already understand it.",
-        "A deposit on an unknown account creates it — that hides a typo instead of reporting one."
+        "Thinking a missing account is a 400, when the request was well formed and the name was not found.",
+        "Thinking a deposit creates a second account, when it changes the balance the account already holds."
       ],
       "files": [
         "crates/ledger-api/src/api.rs"
@@ -4465,27 +4835,27 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "timeoutMs": 300000,
       "checks": [
         {
-          "id": "missing-404",
-          "label": "An unknown account answers 404",
+          "id": "unknown",
+          "label": "An account nobody owns answers 404",
           "tests": [
             "an unknown account is 404"
           ],
-          "feedback": "Look the owner up, and answer NOT_FOUND when the map has no entry. Do not invent a zero balance."
+          "feedback": "The request named a resource that is not there, so the read route answers 404. A 500 would blame a healthy server for a name the client chose."
         },
         {
           "id": "edge-deposit",
-          "label": "A deposit changes the stored balance",
+          "label": "A deposit changes the balance that is read next",
           "tests": [
             "a deposit changes the balance"
           ],
-          "feedback": "The deposit route reads the owner from the path, adds the cents, and the next read sees the new total.",
+          "feedback": "The deposit route has to add to the stored balance and answer 200, so the next read shows the new total. A deposit that creates a second account leaves the first balance untouched.",
           "edge": true
         }
       ]
     },
     "rust-http-errors-learn": {
       "id": "rust-http-errors-learn",
-      "title": "Learn: one error, one status mapping",
+      "title": "Learn: one error, one status",
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -4494,17 +4864,27 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "objectives": [
         "Explain why each error variant owns exactly one HTTP status and one public message.",
-        "Trace a handler that returns Result and say how the question mark turns its error into a response.",
+        "Trace a handler that returns a Result and say how the question mark turns its error into a response.",
         "Choose between 400, 404 and 500 for a given failure, and say what the body may reveal."
       ],
       "hints": [
-        "Before reading, decide what a client should be told when the database fails versus when the account is missing.",
+        "Decide what a client should be told when the database fails, and what it should be told when the account is missing. If cargo is command not found, run the environment check first.",
         "An error type that implements IntoResponse lets the question mark operator end a handler early."
       ],
       "misconceptions": [
-        "Every error deserves a 500 — a missing account is the client's information, not a server fault.",
-        "The response may include the store's message — it can name hosts, queries and users, so it stays in the log.",
-        "Matching on errors in each handler is clearer — it is the same mapping copied, and one copy will drift."
+        "Thinking every error deserves a 500, when a missing account is information for the client and not a server fault.",
+        "Thinking the response may carry the store message, when it can name hosts, queries and users."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node --test --test-reporter=tap test/http_errors.test.mjs",
+          "expect": [
+            "# tests \\d+",
+            "# fail \\d+"
+          ],
+          "shows": "# tests 3\n# fail 3"
+        }
       ],
       "lesson": [
         {
@@ -4513,45 +4893,56 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "An error enum makes the mapping explicit: each variant owns one status and one public message. Handlers return Result, and the question mark operator ends the handler with that error."
+          "body": "An error enum makes the mapping explicit: each variant owns one status and one public message. Handlers return a Result, and the question mark operator ends the handler with that error."
         },
         {
           "kind": "example",
           "body": "The mapping lives once, beside the error:",
-          "code": "#[derive(Debug)]\npub enum AppError {\n    NotFound,\n    Invalid(String),\n    Store(String),\n}\n\nimpl IntoResponse for AppError {\n    fn into_response(self) -> Response { /* map variant -> status + body */ }\n}"
+          "code": "impl IntoResponse for AppError {\n    fn into_response(self) -> Response {\n        let (status, public) = match &self {\n            AppError::NotFound => (StatusCode::NOT_FOUND, \"account not found\"),\n            AppError::Invalid(reason) => (StatusCode::BAD_REQUEST, reason.as_str()),\n            AppError::Store(_) => (StatusCode::INTERNAL_SERVER_ERROR, \"internal error\"),\n        };\n        (status, Json(json!({ \"error\": public }))).into_response()\n    }\n}"
         },
         {
           "kind": "prose",
-          "body": "The store variant keeps its message for the log and sends a plain one to the caller. Leaking a query or a host name in a 500 is how an outage becomes a security report."
+          "body": "The store variant keeps its message for the log and sends a plain one to the caller. A 500 that carries the internal text is how an outage turns into a security report."
         },
         {
-          "kind": "example",
-          "body": "Store keeps its message for the log, so the body names no host, query or user.",
-          "code": "fn into_response(self) -> Response {\n    let (status, public) = match &self {\n        ApiError::NotFound => (StatusCode::NOT_FOUND, \"account not found\"),\n        ApiError::Invalid(reason) => (StatusCode::BAD_REQUEST, reason.as_str()),\n        ApiError::Store(_) => (StatusCode::INTERNAL_SERVER_ERROR, \"internal error\"),\n    };\n    (status, Json(json!({ \"error\": public }))).into_response()\n}"
+          "kind": "quickcheck",
+          "body": "A store fails with a message that names the database host. What does the 500 body carry?",
+          "items": [
+            "The store message, so the client can see what actually failed.",
+            "A short public line, with the detail kept in the log.",
+            "Nothing at all, so the body is empty.",
+            "The status text only, with no body."
+          ],
+          "answer": 1,
+          "explain": "The client learns that the request failed and nothing about the host, the query or the user. The store message still reaches the log, where the person reading it is the one who can act on it."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "One status per error variant, decided once.",
-            "Public messages are short; internal detail is logged.",
+            "A 500 keeps the internal message in the log.",
+            "Bad input is 400, a missing record is 404.",
             "IntoResponse lets ? end a handler with the right status."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "A lookup for an account that does not exist should answer with which status?",
-          "items": [
-            "500, because the server could not find the row.",
-            "404, because no such account exists.",
-            "400, because the client sent a bad owner name."
-          ],
-          "answer": 1,
-          "explain": "The request was well formed and the server is healthy. The named resource is absent, which is exactly what 404 states; a 500 would blame the server."
+          "kind": "example",
+          "body": "crates/ledger-api/src/http_errors.rs is where this phase works.",
+          "code": "pub fn status_for(_error: &AppError) -> StatusCode {\n\ttodo!(\"map each variant to a status\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/http_errors.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Open http_errors.rs. Implement the status mapping and IntoResponse, then run the suite. Each failing check names the status it expected."
+          "body": "Open crates/ledger-api/src/http_errors.rs. Implement status_for and IntoResponse, then run the suite. Each failing check names the status it expected and the body it expected."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 9.2 (Recoverable Errors with Result) and chapter 9.3 (To panic or Not to panic), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording in this lesson is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -4560,56 +4951,60 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "steps": [
             "Result<T, AppError>",
             "IntoResponse",
-            "status 400/404/500",
-            "JSON body"
+            "status 400, 404 or 500",
+            "a JSON body with one error field"
           ]
         }
       },
       "resources": [
         {
-          "label": "Axum: error handling",
-          "url": "https://docs.rs/axum/latest/axum/error_handling/index.html"
+          "label": "The Rust Programming Language: chapter 9.2 Recoverable Errors with Result (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html"
         },
         {
-          "label": "MDN: HTTP response status codes",
-          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status"
+          "label": "The Rust Programming Language: chapter 9.3 To panic or Not to panic (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html"
+        },
+        {
+          "label": "Axum: the framework this ledger answers through",
+          "url": "https://docs.rs/axum/latest/axum/"
         }
       ]
     },
     "rust-http-errors-ask": {
       "id": "rust-http-errors-ask",
-      "title": "Reason: who turns an error into a response",
+      "title": "Reason: what a 500 is allowed to say",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-http-errors"
       ],
       "hints": [
-        "Ask which trait the framework calls when a handler returns something that is not already a response."
+        "Ask who is allowed to read a store error message, and who is not."
       ],
       "misconceptions": [
-        "Axum sends the Debug output of any error — it sends what IntoResponse produced, and nothing else.",
-        "Result is not a response — the Ok side must be a response and the Err side must implement IntoResponse."
+        "Thinking the client needs the store message, when it names hosts and queries it has no business knowing.",
+        "Thinking an empty body is the safe answer, when a short public line tells the client what happened."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A handler is declared as Result<Json<AccountView>, AppError>. Which piece of code decides that the Err half becomes a 404 or a 500?"
+          "body": "The store fails and the error carries the message \"disk on fire\". The handler turns it into a 500. What should the response body contain?"
         }
       ],
       "options": [
-        "Nobody: the handler must match on the error and return a Response by hand.",
-        "IntoResponse: the error implements it, so ? can return the error from the handler.",
-        "Serde: it serializes the error, and Axum sends every field the type declares.",
-        "The router: it catches every error that escapes and replies with 500 by default always."
+        "The store message, so the client can see exactly what went wrong.",
+        "A short public message, with the detail kept in the log.",
+        "Nothing at all: the body carries only the status code.",
+        "The full error chain, so the client can file a good bug report."
       ],
       "answer": 1,
-      "explanation": "Axum requires a handler's error type to implement IntoResponse. The question mark operator converts an inner error into that type and returns it early, and the framework calls into_response on it. Serde only controls the JSON inside the body; the status is yours to choose. The router does not catch arbitrary errors, which is why a handler that returns Result compiles only when AppError says how it becomes a response. One mapping beside the type beats the same match repeated in ten handlers."
+      "explanation": "The status already tells the client that the server failed. The body is for the caller, and a store message names a host, a query and sometimes a user, which is information a stranger should not read. The detail belongs in the log, where the person who can fix it will look. An empty body leaves the client guessing, and sending the whole error chain turns one outage into a disclosure."
     },
     "rust-http-errors-do": {
       "id": "rust-http-errors-do",
-      "title": "Solve: three failures, three statuses",
+      "title": "Solve: the status each failure deserves",
       "kind": "challenge",
       "mode": "solve",
       "guidance": 2,
@@ -4617,16 +5012,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-http-errors"
       ],
       "hints": [
-        "Open crates/ledger-api/src/http_errors.rs. The enum is declared; the mapping and IntoResponse are yours.",
-        "Implement status_for first: one match, three variants, three status codes.",
-        "IntoResponse builds a JSON body with an error field. For Store, the message is the generic one, not the stored string.",
-        "Run node --test --test-reporter=tap test/http_errors.test.mjs and read the status each failure reported.",
-        "Shape: NotFound to 404, Invalid keeps its reason in the body, Store to 500 with internal detail kept out."
+        "Open crates/ledger-api/src/http_errors.rs. status_for takes a reference to the error, and IntoResponse builds the reply. Run node --test --test-reporter=tap test/http_errors.test.mjs and read the name of the check that failed.",
+        "Match on the three variants: NotFound is 404, Invalid is 400, and Store is 500 whatever its message says.",
+        "The Invalid variant carries the reason the client should read. The Store variant keeps its message and sends a plain one instead.",
+        "Run the suite and read what the failing body contained. A 500 whose body still names the store is the failure the third check looks for.",
+        "Shape: status_for returns a StatusCode per variant, and into_response pairs that status with a short public message. If cargo is missing, run the Environment Check."
       ],
       "misconceptions": [
-        "Sending the store message in the 500 body — that message is for the log, and it can name internal hosts.",
-        "Using 400 for a missing account — the request was valid; the resource is absent, which is 404.",
-        "Implementing IntoResponse with a default 500 — then an invalid body also reads as a server fault."
+        "Thinking the client needs the store message, when it names hosts and queries it has no business knowing.",
+        "Thinking a missing account is a 400, when the request was well formed and the record was not there."
       ],
       "files": [
         "crates/ledger-api/src/http_errors.rs"
@@ -4635,35 +5029,35 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "timeoutMs": 300000,
       "checks": [
         {
-          "id": "missing",
+          "id": "not-found",
           "label": "A missing account answers 404",
           "tests": [
             "a missing account is 404"
           ],
-          "feedback": "NotFound maps to 404. Check the mapping before the body: a correct body under a 500 is still the wrong answer."
+          "feedback": "The NotFound variant answers 404. A 500 here would blame a healthy server for a name the client chose, and a 400 would say the request was malformed."
         },
         {
           "id": "invalid",
-          "label": "An invalid request answers 400 with its reason",
+          "label": "A rejected body answers 400 and says why",
           "tests": [
             "an invalid body is 400 with the reason"
           ],
-          "feedback": "Invalid carries the reason and answers 400. The caller needs to read what was wrong, so keep that string in the body."
+          "feedback": "The Invalid variant answers 400 and its reason reaches the body, so the client can correct the request. A reason that never leaves the server leaves the client guessing."
         },
         {
           "id": "edge-store",
-          "label": "A store failure is 500 without the internal message",
+          "label": "A store failure answers 500 without its message",
           "tests": [
             "a store failure is 500 without the internal message"
           ],
-          "feedback": "Store maps to 500 and its body says only that something failed. The stored message stays out of the response.",
+          "feedback": "The Store variant answers 500 and the body must not contain the internal message. Keep that text for the log, where the person on call needs it.",
           "edge": true
         }
       ]
     },
     "rust-http-errors-review": {
       "id": "rust-http-errors-review",
-      "title": "Review: the status table",
+      "title": "Review: the mapping on its own",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -4672,8 +5066,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Every error variant maps to 500 — the mapping is the whole point, and it must distinguish the cases.",
-        "The status and the body are independent — a 400 with a 500 body tells the client two different stories."
+        "Thinking status_for needs the store message to choose a status, when the variant alone decides it.",
+        "Thinking a 500 and a 404 are interchangeable, when one blames the client and the other blames the server."
       ],
       "files": [
         "crates/ledger-api/src/http_errors.rs"
@@ -4687,22 +5081,22 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "maps not found to 404"
           ],
-          "feedback": "status_for takes a reference and returns the matching StatusCode. Start with the simplest variant."
+          "feedback": "status_for matches on the variant, so NotFound answers 404 whatever else the error carries. Read the message off the variant, not off the text."
         },
         {
-          "id": "edge-store-status",
+          "id": "edge-store",
           "label": "A store failure maps to 500",
           "tests": [
             "maps a store failure to 500"
           ],
-          "feedback": "The store variant is a server-side fault. Map it to INTERNAL_SERVER_ERROR, regardless of the message it carries.",
+          "feedback": "Any Store error answers 500. The message inside it changes nothing about the status, and it must not reach the body.",
           "edge": true
         }
       ]
     },
     "rust-sqlx-learn": {
       "id": "rust-sqlx-learn",
-      "title": "Learn: a pool, a migration, a query",
+      "title": "Learn: a pool, a migration, a bound parameter",
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -4711,82 +5105,107 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "objectives": [
         "Explain what a connection pool bounds and what a request does when every connection is busy.",
-        "Trace a value from a handler through a bound parameter to a stored row and back.",
-        "Read a migration and a query and say what would break if the migration never ran."
+        "Trace one value from a bound parameter to a stored row and back into a typed answer.",
+        "Read a migration and say what would break if it never ran against the test database."
       ],
       "hints": [
-        "Before reading, ask what has to exist before the first INSERT can succeed.",
-        "A pool is created once and cloned into handlers; each query borrows a connection briefly."
+        "Say what has to exist before the first INSERT can succeed. If cargo is command not found, run the environment check first.",
+        "A pool is built once and cloned into the handlers; each query borrows a connection briefly."
       ],
       "misconceptions": [
-        "Opening a connection per request is fine — it is slow and a burst can exhaust the database.",
-        "SQL is safe when the input looks like an owner name — only bound parameters make it safe.",
-        "Migrations are only for production — they are how a test database gets the same shape as the real one."
+        "Thinking a connection per request is fine, when it is slow and a burst can exhaust the database.",
+        "Thinking SQL is safe when the input looks like an owner name, when only bound parameters make it safe."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node --test --test-reporter=tap test/db.test.mjs",
+          "expect": [
+            "# tests \\d+",
+            "# fail \\d+"
+          ],
+          "shows": "# tests 3\n# fail 3"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Until now the ledger lived in a map. A map forgets everything when the process ends, so the next phase of the service is a database that remembers."
+          "body": "Until now the ledger lived in a map, and a map forgets everything when the process ends. A database is the part of the ledger that survives a restart."
         },
         {
           "kind": "prose",
-          "body": "SQLx connects through a pool: a bounded set of open connections that requests borrow and return. The pool is built once, cloned cheaply, and shared through the router state."
+          "body": "SQLx reaches the database through a pool: a bounded set of open connections that requests borrow and return. The pool is built once, cloned cheaply, and shared through the router state."
         },
         {
           "kind": "example",
-          "body": "Connect, migrate, then query with bound parameters:",
+          "body": "Connect, migrate, then read with a bound parameter:",
           "code": "let pool = SqlitePoolOptions::new()\n    .max_connections(1)\n    .connect(\"sqlite::memory:\")\n    .await?;\nsqlx::migrate!(\"./migrations\").run(&pool).await?;\n\nlet cents: Option<i64> = sqlx::query_scalar(\n    \"SELECT cents FROM accounts WHERE owner = ?1\")\n    .bind(\"ada\")\n    .fetch_optional(&pool)\n    .await?;"
         },
         {
           "kind": "prose",
-          "body": "The bind is the safety: the driver sends the value separately from the statement, so a name containing quotes is data and never SQL. Formatting a query with a string is how injection starts."
+          "body": "A migration gives you the schema and a record of what already ran. Without it the first insert fails on a missing table, and a test database is not the shape of the real one."
         },
         {
-          "kind": "example",
-          "body": "An early return drops the transaction, and the uncommitted insert is rolled back with it.",
-          "code": "let mut tx = pool.begin().await?;\nsqlx::query(\"INSERT INTO accounts (owner, cents) VALUES (?1, ?2)\")\n    .bind(owner)\n    .bind(cents)\n    .execute(&mut *tx)\n    .await?;\ntx.commit().await?;"
+          "kind": "prose",
+          "body": "The bind is the safety. The driver sends the value apart from the statement, so a name holding a quote is data and never SQL. Formatting a query with a string is how injection starts."
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Why does the in-memory test pool ask for one connection?",
+          "items": [
+            "Each memory connection is its own database.",
+            "One connection makes every query faster.",
+            "SQLx refuses to open more than one connection in a test.",
+            "A pool has to name a size of at least one."
+          ],
+          "answer": 0,
+          "explain": "An in-memory SQLite database belongs to the connection that opened it. A second connection would see an empty database, so the pool is capped at one to keep the schema and the rows in view."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "A pool caps connections and shares them.",
-            "Migrations create the schema before any query.",
-            "Bind parameters; never format SQL strings."
+            "A pool caps the connections and shares them.",
+            "A migration creates the schema before any query.",
+            "Bind parameters; never format SQL strings.",
+            "One in-memory connection keeps one database in view."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "Why does the in-memory test pool set max_connections to one?",
-          "items": [
-            "Each memory connection is its own database.",
-            "One connection makes every query much faster.",
-            "SQLx refuses more than one in tests."
-          ],
-          "answer": 0,
-          "explain": "An in-memory SQLite database belongs to its connection. A second connection would see an empty database, so the pool is capped at one to keep the schema and rows visible."
+          "kind": "example",
+          "body": "crates/ledger-api/src/db.rs is where this phase works.",
+          "code": "pub async fn connect(_url: &str) -> Result<SqlitePool, sqlx::Error> {\n\ttodo!(\"build the pool and run the migration\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/db.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Open db.rs. Create the pool, run the migration, and implement the three queries. Run the suite and read the first SQLx error it reports."
+          "body": "Open crates/ledger-api/src/db.rs. Build the pool, run the migration and implement the six queries. Run the suite and read the first SQLx error it reports."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 7.1 (Packages and Crates) and chapter 9.2 (Recoverable Errors with Result), which the Rust project publishes under the MIT and Apache-2.0 licences. The words here are our own, and so is the ledger."
         }
       ],
       "visualization": {
         "type": "state-compare",
         "spec": {
           "before": {
-            "title": "process starts",
+            "title": "the process starts",
             "lines": [
               "the pool is lazy",
-              "zero connections open",
-              "the migration has not run"
+              "no connection is open",
+              "the schema does not exist yet"
             ]
           },
           "after": {
-            "title": "first query",
+            "title": "the first query",
             "lines": [
               "one connection checked out",
-              "migrations recorded",
+              "the migration has run",
               "the row is on disk, not in memory"
             ]
           }
@@ -4794,53 +5213,53 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       },
       "resources": [
         {
-          "label": "SQLx: getting started with SQLite",
+          "label": "The Rust Programming Language: chapter 7.1 Packages and Crates (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 9.2 Recoverable Errors with Result (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html"
+        },
+        {
+          "label": "SQLx: the crate this ledger stores its rows with",
           "url": "https://docs.rs/sqlx/latest/sqlx/"
-        },
-        {
-          "label": "SQLx: migrations",
-          "url": "https://docs.rs/sqlx/latest/sqlx/macro.migrate.html"
-        },
-        {
-          "label": "Rust Cookbook: transactions in SQLx",
-          "url": "https://rust-lang-nursery.github.io/rust-cookbook/database.html"
         }
       ]
     },
     "rust-sqlx-ask": {
       "id": "rust-sqlx-ask",
-      "title": "Reason: what a pool actually does",
+      "title": "Reason: why a bound parameter is safer",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-sqlx"
       ],
       "hints": [
-        "Ask what happens to the hundredth request when ten connections are already busy."
+        "Ask what the driver sends to the database when the value is bound, and what it sends when the value is pasted into the text."
       ],
       "misconceptions": [
-        "A pool opens one connection and serializes everything — it holds several and hands them out.",
-        "A pool makes queries faster in the database — it removes connection setup cost and bounds concurrency."
+        "Thinking a bound parameter is only about speed, when it decides where the value stops being code.",
+        "Thinking quoting the value by hand is enough, when a quote inside the value still ends the string."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A service receives more requests than the database can serve at once. What does the pool do with the extra work instead of opening a connection for each request?"
+          "body": "One query reads a balance by owner. Why is binding the owner safer than building the SQL text with format!?"
         }
       ],
       "options": [
-        "It keeps one connection forever, serializing every query through a single channel.",
-        "It compiles every SQL statement at build time, so no schema is read at runtime.",
-        "It reuses a bounded set of connections, so a request waits for a slot.",
-        "It spreads each query across every open connection, then merges the rows."
+        "They let the database plan the statement once and reuse that plan for every row.",
+        "They let the database cache the statement by its name.",
+        "The driver sends the value apart from the statement, so it stays data.",
+        "They remove the need for a transaction around every insert."
       ],
       "answer": 2,
-      "explanation": "A pool holds a fixed maximum of open connections. A query borrows one, uses it, and returns it; when all are busy the caller waits for one to come back. That bounds the load the database sees and removes the cost of a handshake per request. It does not split a single query across connections, and it does not compile SQL: the compile-time checking that SQLx offers is a separate feature, and the service uses the runtime query API so a test can build without a live database."
+      "explanation": "A bound value travels beside the statement, so the database never parses it as SQL. That is what makes an owner called ada; drop table safe. A formatted query pastes the value into the text the parser reads, and any quote in the value closes the string early. Binding does not make a query faster or replace a transaction; it decides where the value stops being code and starts being data."
     },
     "rust-sqlx-do": {
       "id": "rust-sqlx-do",
-      "title": "Solve: store and read the ledger",
+      "title": "Solve: the schema, the rows and the totals",
       "kind": "challenge",
       "mode": "solve",
       "guidance": 2,
@@ -4848,16 +5267,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-sqlx"
       ],
       "hints": [
-        "Open crates/ledger-api/src/db.rs. The migration file already declares accounts and transactions.",
-        "connect builds the pool and runs sqlx::migrate! before returning it. The in-memory database needs one connection.",
-        "Use query_scalar for one value and fetch_optional for a row that may be absent.",
-        "Run node --test --test-reporter=tap test/db.test.mjs and read the SQLx error, not just the failed assertion.",
-        "Shape: INSERT with two binds, SELECT cents WHERE owner = ?1, SUM for the total, and no string formatting."
+        "Open crates/ledger-api/src/db.rs. connect builds the pool and runs the migration, and the other five functions are the queries. Run node --test --test-reporter=tap test/db.test.mjs and read the name of the check that failed.",
+        "Build the pool with SqlitePoolOptions, cap it at one connection for the in-memory database, and run the migration before the first query.",
+        "balance returns Option<i64>: fetch_optional gives None for an owner with no row, and Some for the row it found.",
+        "Run the suite and read the SQLx error it names. A missing table means the migration never ran, not that the query is wrong.",
+        "Shape: pool, migration, then one bound query per function, and a sum or a count for the two totals. If cargo is missing, run the Environment Check."
       ],
       "misconceptions": [
-        "Creating the schema by hand in each test — the migration is the one definition, and the pool runs it.",
-        "Using query! without a database — the macro needs a live schema, so this service uses the runtime API.",
-        "Returning 0 for a missing owner — Option says absent and keeps zero a real balance."
+        "Thinking a query can be built by pasting the owner into the SQL text, when a bound value never reaches the parser.",
+        "Thinking an owner with no row is a zero balance, when a missing row and a row of zero are different answers."
       ],
       "files": [
         "crates/ledger-api/src/db.rs"
@@ -4866,35 +5284,35 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "timeoutMs": 300000,
       "checks": [
         {
-          "id": "store",
-          "label": "The schema exists and an account is stored",
+          "id": "schema",
+          "label": "The schema is created and an account is stored",
           "tests": [
             "creates the schema and stores an account"
           ],
-          "feedback": "Run the migration on the pool before querying, then insert the owner and cents with bound parameters."
+          "feedback": "The pool has to be open and the migration has to have run before the insert, or the table is missing. Then the row has to carry the owner and the opening cents."
         },
         {
           "id": "missing",
-          "label": "A missing owner reads as None",
+          "label": "An owner with no row reads as None",
           "tests": [
             "a missing owner is none"
           ],
-          "feedback": "fetch_optional returns Option. A row that is absent must be None, not a zero the caller cannot distinguish."
+          "feedback": "A missing owner is None, not Some(0). A zero balance and no balance are different facts, and the caller decides what to do with each."
         },
         {
-          "id": "edge-sum",
-          "label": "Recorded transactions sum for their owner",
+          "id": "edge-total",
+          "label": "Recorded transactions are summed per owner",
           "tests": [
             "sums recorded transactions"
           ],
-          "feedback": "The total is a SUM over the transactions table for one owner. Bind the owner; do not compute it in Rust from every row.",
+          "feedback": "The sum covers the rows of one owner only, with the sign of each row kept. A sum over every row in the table counts another owner money as yours.",
           "edge": true
         }
       ]
     },
     "rust-sqlx-review": {
       "id": "rust-sqlx-review",
-      "title": "Review: counting rows",
+      "title": "Review: the count of rows",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -4903,8 +5321,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "COUNT returns nothing when there are no rows — COUNT returns zero, which is the answer.",
-        "Fetching every row to count them — let the database count, and read one number."
+        "Thinking a count is a sum, when one counts rows and the other adds their amounts.",
+        "Thinking an owner with no rows counts one, when nothing was recorded at all."
       ],
       "files": [
         "crates/ledger-api/src/db.rs"
@@ -4914,19 +5332,19 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "checks": [
         {
           "id": "count",
-          "label": "Counting returns the number of recorded rows",
+          "label": "Every recorded row of an owner is counted",
           "tests": [
             "counts recorded transactions"
           ],
-          "feedback": "Use COUNT(*) with a bound owner and query_scalar. Record two rows and expect two, not the sum of their cents."
+          "feedback": "Count the rows where the owner matches, with a bound parameter. Two records for one owner are two transactions, whatever their amounts."
         },
         {
-          "id": "edge-zero",
+          "id": "edge-empty",
           "label": "An owner with no rows counts zero",
           "tests": [
             "an owner with no rows counts zero"
           ],
-          "feedback": "COUNT over no rows is zero, which is a real answer. It is not None and it is not an error.",
+          "feedback": "A count over no rows is zero, and the query still asks for that owner rather than counting every row in the table.",
           "edge": true
         }
       ]
@@ -4943,21 +5361,31 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "objectives": [
         "Explain what a oneshot request exercises that a direct handler call skips.",
         "Trace one request through the router, its extractors and the handler to a response.",
-        "Design a test-app factory that gives every test its own fresh state."
+        "Design a factory that gives every test its own fresh state and its own seeded balance."
       ],
       "hints": [
-        "Before reading, ask what a test would have to do to exercise routing, extraction and the handler together.",
-        "Build the app in a function so a test can call it and get a fresh one every time."
+        "Ask what a test would have to do to exercise routing, extraction and the handler together. If cargo is command not found, run the environment check first.",
+        "Build the app inside a function, so a test can call it and get a fresh one every time."
       ],
       "misconceptions": [
-        "A service test must bind a port — oneshot sends the request through the router without a socket.",
-        "Testing the handler function alone covers routing — it skips the path match and the extractors.",
-        "Sharing one app across tests is faster — it also lets one test's rows decide another test's result."
+        "Thinking a service test must bind a port, when oneshot sends the request through the router without a socket.",
+        "Thinking one shared app is faster, when it also lets one test decide another test result."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node --test --test-reporter=tap test/service.test.mjs",
+          "expect": [
+            "# tests \\d+",
+            "# fail \\d+"
+          ],
+          "shows": "# tests 3\n# fail 3"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A service has more moving parts than a function: a route, an extractor, a handler, a state. Testing the handler alone proves one of those, and the other three are where the bugs live."
+          "body": "A service has more parts than a function: a route, an extractor, a handler and a state. Calling the handler proves one of them, and the other three are where the bugs live."
         },
         {
           "kind": "prose",
@@ -4966,40 +5394,50 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         {
           "kind": "example",
           "body": "One request, no port:",
-          "code": "let response = test_app()\n    .oneshot(\n        Request::builder()\n            .method(\"POST\")\n            .uri(\"/accounts/ada/deposits\")\n            .header(\"content-type\", \"application/json\")\n            .body(Body::from(r#\"{\"cents\":50}\"#))?\n    )\n    .await?;"
+          "code": "let app = test_app();\nlet response = app\n    .clone()\n    .oneshot(\n        Request::builder()\n            .method(\"POST\")\n            .uri(\"/accounts/ada/deposits\")\n            .header(\"content-type\", \"application/json\")\n            .body(Body::from(r#\"{\"cents\":50}\"#))\n            .unwrap(),\n    )\n    .await\n    .unwrap();"
         },
         {
           "kind": "prose",
-          "body": "A factory that returns a fresh app per test is what keeps tests independent. A shared app carries rows between them, and the failure then depends on the order the runner chose."
+          "body": "A factory that returns a fresh app per test is what keeps tests independent. One shared app carries rows from a test into the next, and then the failure depends on the order the runner picked."
         },
         {
-          "kind": "example",
-          "body": "A test that calls the router sees the path match and extractors a client would hit; a handler call sees neither.",
-          "code": "let app = app_with_balance(500);\nlet response = app\n    .oneshot(Request::get(\"/accounts/ada\").body(Body::empty())?)\n    .await?;\nassert_eq!(response.status(), StatusCode::OK);"
+          "kind": "quickcheck",
+          "body": "What does a fresh app for every test protect you from?",
+          "items": [
+            "One test seeing another test rows.",
+            "The router from being built twice.",
+            "The JSON body from being parsed.",
+            "The response from being serialized on the way out."
+          ],
+          "answer": 0,
+          "explain": "The state is created with the app. A new app means new accounts, so every test starts from the same empty ledger and its result does not depend on the order the runner chose."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "oneshot drives the router without a network port.",
-            "A fresh app per test keeps rows independent.",
+            "A fresh app per test keeps the rows apart.",
             "Assert on the response a client would receive."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "What does a fresh app per test prevent?",
-          "items": [
-            "One test seeing another test’s rows.",
-            "The router from being compiled twice.",
-            "The JSON body from being parsed."
-          ],
-          "answer": 0,
-          "explain": "State is created with the app. A new app means new accounts, so each test starts from the same empty ledger and its result does not depend on execution order."
+          "kind": "example",
+          "body": "crates/ledger-api/src/service.rs is where this phase works.",
+          "code": "pub fn test_app() -> Router {\n\ttodo!(\"build a fresh in-memory app\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/service.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Open service.rs. Build the test factories, then write the two flows the suite names. Run it and read the status of the first failing request."
+          "body": "Open crates/ledger-api/src/service.rs. Build the two factories, then run the suite. Read the status of the first failing request before you change a route."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 11.3 (Test Organization), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -5012,64 +5450,72 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
             },
             {
               "side": "server",
-              "label": "Router::call"
+              "label": "the router matches"
             },
             {
               "side": "server",
-              "label": "handler + state"
+              "label": "the extractors decode"
+            },
+            {
+              "side": "server",
+              "label": "the handler answers"
             },
             {
               "side": "client",
-              "label": "response body"
+              "label": "status and body"
             }
           ]
         }
       },
       "resources": [
         {
-          "label": "Tower: ServiceExt and oneshot",
+          "label": "The Rust Programming Language: chapter 11.3 Test Organization (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch11-03-test-organization.html"
+        },
+        {
+          "label": "Tower: ServiceExt and the oneshot helper",
           "url": "https://docs.rs/tower/latest/tower/trait.ServiceExt.html"
         },
         {
-          "label": "Axum: testing",
-          "url": "https://docs.rs/axum/latest/axum/#testing"
+          "label": "Axum: the router this ledger tests",
+          "url": "https://docs.rs/axum/latest/axum/"
         }
       ]
     },
     "rust-service-tests-ask": {
       "id": "rust-service-tests-ask",
-      "title": "Reason: what oneshot exercises",
+      "title": "Reason: why a fresh app for every test",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-service-tests"
       ],
       "hints": [
-        "Ask which layers a request passes before a handler body runs, and which of them a direct call would skip."
+        "Ask what a test result would depend on if two tests shared one ledger."
       ],
       "misconceptions": [
-        "oneshot opens a socket — it drives the service in memory and returns the response future.",
-        "A direct handler call proves the route — the route is exactly what a direct call does not test."
+        "Thinking shared state makes a test faster, when the saving is a few milliseconds and the cost is a flaky result.",
+        "Thinking the router cannot be built twice, when each build makes its own state."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A test calls ServiceExt::oneshot with a Request and awaits a Response. What did that request actually pass through before the handler ran?"
+          "body": "The suite has three tests over the same router. Why does each one ask the factory for its own app?"
         }
       ],
       "options": [
-        "It starts a real TCP listener and sends the request through the network stack.",
-        "It calls a handler directly with a typed request, bypassing routing and extractors.",
-        "It skips the router and asserts on the state left behind after a handler call.",
-        "It sends one request through the real router in memory, then awaits the response."
+        "Each test then starts from the same empty ledger state.",
+        "Because a router may only be built once per process.",
+        "So the assertions can read the state map instead of the response.",
+        "Because the balances inside the router are held behind a lock."
       ],
-      "answer": 3,
-      "explanation": "oneshot is a Service method: it takes one request and returns a future of the response, with no socket involved. Because the service is the router, the request is matched against the real routes, the real extractors decode it, and the real handler runs. A direct handler call would skip the route and the extractors, which is where a wrong path syntax or a missing content type shows up. Asserting on the state map instead of the response also skips the serialization the client depends on."
+      "answer": 0,
+      "explanation": "The state lives with the app, so a new app is a new ledger. That makes each test start from the same place and lets the runner choose any order it likes. A shared app would let one test deposit money and make another one fail, which is a bug in the tests rather than in the service. Reading the state map directly would also skip the route and the extractors, which is exactly what a service test exists to cover."
     },
     "rust-service-tests-do": {
       "id": "rust-service-tests-do",
-      "title": "Solve: a deposit, a 404, a zero",
+      "title": "Solve: a deposit, a 404 and a zero",
       "kind": "challenge",
       "mode": "solve",
       "guidance": 2,
@@ -5077,16 +5523,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-service-tests"
       ],
       "hints": [
-        "Open crates/ledger-api/src/service.rs. The factories are yours; the routes already come from api.rs.",
-        "Build the router with api::app over a fresh Arc<AppState>. app_with_balance inserts ada before returning it.",
-        "Send the create and deposit requests through clone()d routers, because oneshot consumes the service it is given.",
-        "Run node --test --test-reporter=tap test/service.test.mjs and read which request returned the wrong status.",
-        "Shape: create, deposit, then read. Assert on status and the JSON cents, not on the map."
+        "Open crates/ledger-api/src/service.rs. The two factories build routers over the real routes in api.rs. Run node --test --test-reporter=tap test/service.test.mjs and read the name of the check that failed.",
+        "test_app builds the router with new empty state, and app_with_balance seeds one owner with the cents it is given, in a state of its own.",
+        "A request that names an owner nobody has must answer 404, and a deposit of zero is accepted and leaves the balance where it was.",
+        "Run the suite and read the status of the failing response. A 500 usually means the factory built a router without the state the route needs.",
+        "Shape: build the state, seed it if the test needs a balance, call api::app with it, and return the router. If cargo is missing, run the Environment Check."
       ],
       "misconceptions": [
-        "Reusing one router value for three oneshot calls — oneshot takes ownership, so clone it first.",
-        "Asserting on AppState after the call — the response is what the client experiences.",
-        "Creating the account in each test through the map — go through the routes so the test covers insertion too."
+        "Thinking a factory may keep one shared state, when that is how one test decides another test result.",
+        "Thinking a deposit of zero is an error, when a deposit of nothing is a request the service can accept."
       ],
       "files": [
         "crates/ledger-api/src/service.rs"
@@ -5100,30 +5545,30 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "tests": [
             "a deposit is visible on the next read"
           ],
-          "feedback": "Create the account, post the deposit, then GET it. The read must see the new total through the same router."
+          "feedback": "The deposit route has to change the stored balance, so the next read of the same owner shows the old balance plus the deposit."
         },
         {
-          "id": "missing",
-          "label": "An unknown owner is 404",
+          "id": "unknown",
+          "label": "An owner nobody has answers 404",
           "tests": [
             "an unknown owner is 404"
           ],
-          "feedback": "A fresh app has no rows, so the read of a name nobody created must answer NOT_FOUND."
+          "feedback": "The read route answers 404 for an owner it does not hold. A 200 with an empty body would tell the client that a missing account is a real one."
         },
         {
           "id": "edge-zero",
-          "label": "A zero deposit is accepted and changes nothing",
+          "label": "A deposit of zero is accepted and changes nothing",
           "tests": [
             "a zero deposit is accepted and changes nothing"
           ],
-          "feedback": "Zero is a valid amount: answer 200 and leave the balance as it was. Rejecting it invents a rule.",
+          "feedback": "A zero deposit is a valid request: answer 200 and leave the balance as it was. Refusing it would make a client that rounds a payment fail.",
           "edge": true
         }
       ]
     },
     "rust-service-tests-review": {
       "id": "rust-service-tests-review",
-      "title": "Review: seeds and isolation",
+      "title": "Review: a seeded balance that stays put",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -5132,8 +5577,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Seeding one shared app is enough — each app must own its state or the tests interfere.",
-        "A seeded balance is global — it lives in the app that was built, and nowhere else."
+        "Thinking a seeded balance may live in one shared state, when then the second test sees the first seed.",
+        "Thinking the seed belongs in the router, when it belongs in the state the router is given."
       ],
       "files": [
         "crates/ledger-api/src/service.rs"
@@ -5143,26 +5588,26 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "checks": [
         {
           "id": "seeded",
-          "label": "A seeded balance is returned",
+          "label": "A seeded balance is the one that was seeded",
           "tests": [
             "a seeded balance is returned"
           ],
-          "feedback": "app_with_balance inserts ada with the given cents before returning the router. Read her balance through a request."
+          "feedback": "app_with_balance seeds the owner it names with the cents it is given, and the read route returns that number."
         },
         {
-          "id": "edge-isolation",
-          "label": "Seeded balances do not leak between apps",
+          "id": "edge-leak",
+          "label": "Two seeded apps do not see each other",
           "tests": [
             "seeded balances do not leak between apps"
           ],
-          "feedback": "Build two apps with different seeds and read each. If one sees the other's number, the state is shared somewhere.",
+          "feedback": "Each call has to build its own state. A seed written into a shared state makes the second app answer with the first seed.",
           "edge": true
         }
       ]
     },
     "rust-observability-learn": {
       "id": "rust-observability-learn",
-      "title": "Learn: configuration at the edge, tracing through the middle",
+      "title": "Learn: the configuration is read once",
       "kind": "lesson",
       "mode": "learn",
       "guidance": 1,
@@ -5170,40 +5615,67 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-observability"
       ],
       "objectives": [
-        "Explain why configuration is read as a typed value before the server binds, not inside each handler.",
-        "Predict what a service should do with a missing, defaulted and malformed port.",
-        "Read a log line and identify what must be redacted before it is written."
+        "Explain why configuration is parsed into a typed value before the server binds its port.",
+        "Predict what a service should do with a missing, a defaulted and a malformed port.",
+        "Inspect a connection string and say which part of it must never reach a log line."
       ],
       "hints": [
-        "Say what the service should do when APP_PORT is set to eighty before you read the implementation.",
+        "Say what the service should do when APP_PORT is set to eighty, before you read the implementation. If cargo is command not found, run the environment check first.",
         "Configuration is parsed once, at startup, into a typed value. Every later lookup is a field read."
       ],
       "misconceptions": [
-        "Reading environment variables all over the code - configuration is parsed once at the edge.",
-        "Logging the full database URL on startup - a password in a log outlives the incident that produced it."
+        "Thinking the environment should be read in every function, when the values are fixed before the first request.",
+        "Thinking the whole database URL is safe to print, when it often carries a password."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node --test --test-reporter=tap test/config.test.mjs",
+          "expect": [
+            "# tests \\d+",
+            "# fail \\d+"
+          ],
+          "shows": "# tests 3\n# fail 3"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A service that cannot say where its port came from is a service you debug at 3am. Configuration belongs in the environment: one binary runs on your laptop and in a container, and only the values change."
+          "body": "A service that cannot say where its port came from is a service you debug at three in the morning. Configuration belongs in the environment: one binary runs on a laptop and in a container, and only the values change."
         },
         {
           "kind": "prose",
-          "body": "`parse_config` takes the environment as a slice of pairs instead of reading the process directly. That choice makes it testable: a test hands it `APP_PORT=9090` and checks the answer, without touching the machine it runs on."
+          "body": "parse_config takes the environment as a list of pairs instead of reading the process itself. A test then hands it APP_PORT=9090 and reads the answer, without touching the machine it runs on."
         },
         {
           "kind": "example",
-          "body": "The environment as data: no globals, no hidden reads.",
-          "code": "let config = parse_config(&[\n    (\"APP_PORT\".into(), \"9090\".into()),\n    (\"RUST_LOG\".into(), \"info\".into()),\n])?;"
+          "body": "The environment as data, with no global and no hidden read:",
+          "code": "let config = parse_config(&[\n    (\"APP_PORT\".into(), \"9090\".into()),\n    (\"DATABASE_URL\".into(), \"postgres://ada:secret@db.example/ledger\".into()),\n])?;"
         },
         {
           "kind": "prose",
-          "body": "Defaults are part of the contract. A missing port is 8080, a missing database URL is in-memory SQLite, and a missing filter is `info`. A malformed port is an error, never a panic - configuration fails at startup, where a clear message costs a restart instead of a mystery."
+          "body": "Defaults are part of the contract. A missing port is 8080, a missing database URL is in-memory SQLite, and a missing filter is info. A malformed port is an error, never a panic: configuration fails at startup, where a clear message costs a restart."
+        },
+        {
+          "kind": "prose",
+          "body": "A connection string often holds a password. The redaction belongs in the string itself, so every log line that carries the URL shows a masked password and not the real one."
         },
         {
           "kind": "example",
-          "body": "The pool is skipped: it is not data the log should carry, and every query would repeat the same handle.",
-          "code": "#[tracing::instrument(skip(pool))]\nasync fn deposit(pool: &SqlitePool, req: Deposit) -> Result<Receipt, ApiError> {\n    tracing::info!(owner = %req.owner, cents = req.cents, \"deposit\");\n    // ...\n}"
+          "body": "Mask the password between the user and the host, and leave a URL without one alone:",
+          "code": "fn redact_url(url: &str) -> String {\n    match url.split_once(\"://\") {\n        Some((scheme, rest)) => match rest.split_once('@') {\n            Some((userinfo, host)) => match userinfo.split_once(':') {\n                Some((user, _password)) => format!(\"{scheme}://{user}:***@{host}\"),\n                None => url.to_string(),\n            },\n            None => url.to_string(),\n        },\n        None => url.to_string(),\n    }\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "APP_PORT is set to eighty. What should the process do?",
+          "items": [
+            "Panic before the listener starts.",
+            "Fall back to 8080 and log a warning.",
+            "Start, then fail on the first request.",
+            "Refuse to start, naming the bad value."
+          ],
+          "answer": 3,
+          "explain": "A port that cannot be parsed is a startup error, with the offending value named. Falling back would hide the typo until something else looks wrong, and a panic names no value at all."
         },
         {
           "kind": "keypoints",
@@ -5211,41 +5683,48 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "items": [
             "Read configuration once, at startup, into a typed value.",
             "A missing value has a stated default; a bad one is an error.",
-            "Never log a connection string that carries a password."
+            "Never log a connection string that carries a password.",
+            "Redaction is a property of the string, not of the logger."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "`APP_PORT` is set to `eighty`. What should the process do?",
-          "items": [
-            "Panic before the listener starts.",
-            "Fall back to 8080 and log a warning.",
-            "Start, then fail on the first request.",
-            "Refuse to start, naming the error."
-          ],
-          "answer": 3,
-          "explain": "A port that cannot parse is a startup error, with the offending value named. Falling back would hide the typo until something else looks wrong, and a panic names no value."
+          "kind": "example",
+          "body": "crates/ledger-api/src/config.rs is where this phase works.",
+          "code": "//! Configuration read once, at startup.\n//!\n//! The stub compiles and fails its checks. `parse_config` takes the environment\n//! as data so a test can decide what the process sees.\n\n#[derive(Debug, Clone, PartialEq, Eq)]\npub struct Config {\n    pub port: u16,\n    pub database_url: String,\n    pub log_filter: String,\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/config.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Open `crates/ledger-api/src/config.rs`. Implement `parse_config` so the three defaults hold, `APP_PORT` sets the port, and a non-numeric port returns `ConfigError::BadPort`. Then implement `redact_url` and run the checks."
+          "body": "Open crates/ledger-api/src/config.rs. Implement parse_config so the defaults hold and a bad port returns ConfigError::BadPort, then implement redact_url and run the suite."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 9.2 (Recoverable Errors with Result), which the Rust project publishes under the MIT and Apache-2.0 licences. The sentences here are ours, and so is the ledger."
         }
       ],
       "visualization": {
         "type": "event-flow",
         "spec": {
           "steps": [
-            "request",
-            "span request{id}",
-            "event deposit",
-            "response"
+            "the environment, as pairs",
+            "parse_config, once",
+            "a typed Config",
+            "a redacted URL for the log"
           ]
         }
       },
       "resources": [
         {
-          "label": "tracing: structured diagnostics for Rust",
-          "url": "https://docs.rs/tracing/latest/tracing/"
+          "label": "The Rust Programming Language: chapter 9.2 Recoverable Errors with Result (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html"
+        },
+        {
+          "label": "The standard library: reading the environment as pairs",
+          "url": "https://doc.rust-lang.org/std/env/fn.vars.html"
         }
       ]
     },
@@ -5253,36 +5732,36 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "id": "rust-observability-ask",
       "title": "Reason: where the port comes from",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-observability"
       ],
       "hints": [
-        "Ask which of these can change per deployment without rebuilding the binary."
+        "Ask which of these a deployment can change without rebuilding the binary."
       ],
       "misconceptions": [
-        "Reading environment variables all over the code - configuration is parsed once at the edge.",
-        "Logging the full database URL on startup - a password in a log outlives the incident that produced it."
+        "Thinking the environment has to be read where it is used, when the values are fixed before the first request.",
+        "Thinking a file inside the image is configuration, when a change there exists in no version control."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Your service starts from a container image that also runs on your laptop. Where should the listening port come from?"
+          "body": "The same binary runs on your laptop and in a container. Where should the listening port come from?"
         }
       ],
       "options": [
-        "The environment, parsed once at startup into a typed value.",
-        "A constant in the source, rebuilt for each environment that needs a different one.",
-        "The first command-line argument, with no default when it is missing.",
-        "A file in the image that someone edits after the image is built."
+        "Inside each handler, so a change takes effect at once.",
+        "In a global that every module reads directly.",
+        "From a file inside the container image, edited after the build.",
+        "Once at startup, from the environment, into a typed value."
       ],
-      "answer": 0,
-      "explanation": "One binary should run everywhere; only values differ. A constant forces a rebuild, an argument with no default fails on a bare start, and editing a file inside an image creates a change that exists in no version control. The environment is the one source a deployment can set without touching the artefact, and parsing it once into a typed `Config` keeps string lookups out of the rest of the program."
+      "answer": 3,
+      "explanation": "One binary should run everywhere and only the values differ. Reading the environment at startup and parsing it into a typed Config keeps string lookups out of the rest of the program, and a bad value is reported before the server accepts a request. A constant forces a rebuild, a global hides the source of a value, and a file edited inside an image is a change that exists in no version control."
     },
     "rust-observability-do": {
       "id": "rust-observability-do",
-      "title": "Solve: parse the environment and redact a URL",
+      "title": "Solve: parse the environment and mask a password",
       "kind": "challenge",
       "mode": "solve",
       "guidance": 2,
@@ -5290,15 +5769,15 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-observability"
       ],
       "hints": [
-        "Open `crates/ledger-api/src/config.rs`; it owns `parse_config` and `redact_url`, and the checks run `cargo` through a Node wrapper.",
-        "Iterate the pairs, match on the key, and leave the three defaults in place before the loop.",
-        "`value.parse::<u16>()` returns a `Result`; map its error to `ConfigError::BadPort(value.clone())` and use `?`.",
-        "For redaction, split the authority at `://` and at `@`, then replace what follows the first colon with three asterisks.",
-        "Run the checks and read the failing name before changing anything else. A missing `cargo` is an environment check, not a code bug."
+        "Open crates/ledger-api/src/config.rs. parse_config takes the environment as data, and redact_url prepares a URL for a log line. Run node --test --test-reporter=tap test/config.test.mjs and read the name of the check that failed.",
+        "Start from the defaults, then let each pair in the list override the field it names. A pair nobody supplied keeps its default.",
+        "A port that does not parse is ConfigError::BadPort carrying the text that failed, not a panic and not a silent fallback.",
+        "Run the suite and read the value the failing check expected. A default that never applies shows up as a wrong port, not as an error.",
+        "Shape: defaults, then overrides, then a parse of the port into u16, and a masked password in the URL. If cargo is missing, run the Environment Check."
       ],
       "misconceptions": [
-        "Reading environment variables all over the code - configuration is parsed once at the edge.",
-        "Logging the full database URL on startup - a password in a log outlives the incident that produced it."
+        "Thinking a missing value is an error, when a stated default is part of the contract.",
+        "Thinking a bad port may be replaced by the default, when that hides the typo until something else looks wrong."
       ],
       "files": [
         "crates/ledger-api/src/config.rs"
@@ -5308,40 +5787,34 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "checks": [
         {
           "id": "port",
-          "label": "APP_PORT sets the listening port",
+          "label": "The port comes from the environment",
           "tests": [
             "reads the port from the environment"
           ],
-          "feedback": "Match the key, parse it as u16, and return it in Config.port. The default of 8080 is for absence, not for a bad value."
+          "feedback": "Look for APP_PORT among the pairs and parse that value into the port field. A port hard-coded in the source ignores the environment."
         },
         {
           "id": "defaults",
-          "label": "Missing values fall back to stated defaults",
+          "label": "An empty environment falls back to the defaults",
           "tests": [
             "falls back to defaults"
           ],
-          "feedback": "An empty environment is port 8080, sqlite::memory: and info. Set those before the loop so a missing key is not an error."
+          "feedback": "With no pairs at all, the port is 8080, the database URL is sqlite::memory: and the filter is info. Defaults that only apply when a pair is half present are not defaults."
         },
         {
           "id": "edge-bad-port",
-          "label": "A malformed port is an error, not a panic",
+          "label": "A malformed port is an error and not a panic",
           "tests": [
             "a malformed port is an error, not a panic"
           ],
-          "feedback": "Return ConfigError::BadPort holding the original text. unwrap or expect here turns a typo into a crash that names no value.",
+          "feedback": "Return ConfigError::BadPort carrying the offending text. A panic takes the process down, and a silent fallback hides the typo.",
           "edge": true
-        }
-      ],
-      "resources": [
-        {
-          "label": "tracing-subscriber: EnvFilter",
-          "url": "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html"
         }
       ]
     },
     "rust-observability-review": {
       "id": "rust-observability-review",
-      "title": "Review: the password in the connection string",
+      "title": "Review: the URL that goes into the log",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -5350,8 +5823,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Reading environment variables all over the code - configuration is parsed once at the edge.",
-        "Logging the full database URL on startup - a password in a log outlives the incident that produced it."
+        "Thinking a URL without a password still needs masking, when there is nothing to hide in it.",
+        "Thinking the redaction belongs in the log call, when the string itself has to carry the mask."
       ],
       "files": [
         "crates/ledger-api/src/config.rs"
@@ -5360,20 +5833,20 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "timeoutMs": 300000,
       "checks": [
         {
-          "id": "redacts",
-          "label": "A password inside a URL is replaced, not printed",
+          "id": "redact",
+          "label": "A password in a URL is masked",
           "tests": [
             "redacts a password in a url"
           ],
-          "feedback": "Keep the scheme and the user, replace the password with three asterisks, keep the host and path. The whole point is that the log line survives review."
+          "feedback": "Keep the scheme, the user and the host, and replace the password between the user and the host with three stars. The rest of the URL has to stay readable."
         },
         {
           "id": "edge-no-password",
-          "label": "A URL without a password comes back unchanged",
+          "label": "A URL without a password is left alone",
           "tests": [
             "leaves a url without a password unchanged"
           ],
-          "feedback": "Only touch the authority when it actually holds a colon. Rewriting every string would corrupt sqlite::memory: and turn a working path into a broken one.",
+          "feedback": "A URL with no userinfo password is returned as it came in. Masking a URL that has nothing to hide changes a string for no reason.",
           "edge": true
         }
       ]
@@ -5388,95 +5861,134 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-ship"
       ],
       "objectives": [
-        "Explain what fmt, clippy, test and audit each prove, and what none of them proves.",
+        "Explain what a formatting check, a lint and a test each prove, and what none of them proves.",
         "Read a release profile and say what each knob trades away for the binary it builds.",
-        "Design a CI workflow that runs the same commands a developer runs locally."
+        "Design a workflow that runs the same commands a developer runs on the same machine."
       ],
       "hints": [
-        "Say which of the four checks would have caught the last bug you fixed, then read the phase.",
-        "Formatting is a diff problem, clippy is a correctness problem, audit is a supply-chain problem. They fail for different reasons."
+        "Say which of these checks would have caught the last bug you fixed, then read the phase. If cargo is command not found, run the environment check first.",
+        "Formatting is a diff problem, linting is a correctness problem, and the tests are a behaviour problem."
       ],
       "misconceptions": [
-        "Trusting a green test suite as a shipping signal - tests say the behaviour you wrote still works, not that the code is maintainable.",
-        "Treating clippy warnings as suggestions - a warning in CI is a merge that waits, and that is the only way it stays at zero."
+        "Trusting a green test suite as a shipping signal, when tests say the behaviour still works and nothing about how it reads.",
+        "Treating lint warnings as suggestions, when a warning that does not deny anything is advice and not a gate."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node --test --test-reporter=tap test/ship.test.mjs",
+          "expect": [
+            "# tests \\d+",
+            "# fail \\d+"
+          ],
+          "shows": "# tests 3\n# fail 3"
+        }
       ],
       "lesson": [
         {
-          "kind": "prose",
-          "body": "A test suite answers one question: does the behaviour still hold? It says nothing about formatting, a redundant clone, a known advisory in a dependency, or whether the crate still builds on the version the team supports."
+          "kind": "example",
+          "body": "The workflow this course ships runs the tests and nothing else. The lint and the format step are yours to add.",
+          "code": "name: rust\non: [push, pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: dtolnay/rust-toolchain@stable\n      - run: cargo test --workspace"
         },
         {
           "kind": "prose",
-          "body": "Those are separate checks because they fail for separate reasons. `cargo fmt --check` keeps diffs about behaviour. `clippy -D warnings` turns a class of review comment into a build failure. `cargo audit` reads the advisory database."
+          "body": "A test suite answers one question: does the behaviour still hold? It says nothing about formatting, a redundant clone, or whether the crate still builds on the version the team supports."
+        },
+        {
+          "kind": "prose",
+          "body": "Those are separate checks because they fail for separate reasons. A format check keeps the diff about behaviour, and clippy with denied warnings turns a class of review comment into a build failure."
         },
         {
           "kind": "example",
           "body": "The local loop and the gate run the same commands:",
-          "code": "cargo fmt --check\ncargo clippy --all-targets -- -D warnings\ncargo test --locked\ncargo audit"
+          "code": "cargo fmt --check\ncargo clippy --all-targets -- -D warnings\ncargo test --locked"
         },
         {
           "kind": "prose",
-          "body": "CI is where these stop being advice. A workflow that runs them on every pull request makes the rules legible: the same command fails locally and remotely, and nobody has to remember the list. Pin the toolchain so a release does not change under you."
+          "body": "CI is where these stop being advice. A workflow that runs them on every pull request makes the rules legible: the same command fails locally and remotely, and nobody has to remember the list."
+        },
+        {
+          "kind": "prose",
+          "body": "Each knob of a release profile trades build time or debuggability for a smaller, faster binary, so the profile is a decision and not a default."
         },
         {
           "kind": "example",
-          "body": "Each knob trades build time or debuggability for a smaller, faster binary.",
+          "body": "The profile a shipped binary is built with:",
           "code": "[profile.release]\nlto = \"thin\"          # link across crates: slower build, smaller binary\ncodegen-units = 1     # one unit: more optimisation, less parallelism\nstrip = true          # no symbols: smaller artefact, harder backtraces"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "A workflow runs only cargo test. What does it not tell you?",
+          "items": [
+            "Whether the code is formatted.",
+            "Whether the tests pass.",
+            "Whether the crate compiles.",
+            "Whether the tests are meaningful."
+          ],
+          "answer": 0,
+          "explain": "The test command says the behaviour still holds. Formatting is a separate check, and a workflow that runs only the tests leaves the shape of the code to whoever remembers to look."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Format checks protect the diff; lint checks protect the code.",
-            "An advisory check is supply chain, not style.",
-            "Pin the toolchain and state the MSRV you support."
+            "CI runs the commands a developer runs.",
+            "Formatting protects the diff; linting protects the code.",
+            "The release profile is a decision, not a default.",
+            "A stated MSRV says which Rust the project supports."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "A new dependency has a known advisory. Which check fails first?",
-          "items": [
-            "`cargo audit`",
-            "`cargo fmt --check`",
-            "`cargo test`",
-            "`cargo clippy`"
-          ],
-          "answer": 0,
-          "explain": "The advisory lives in the lockfile, not in your code. audit reads it against the advisory database, so it is the check that fails before anything is compiled."
+          "kind": "example",
+          "body": "Cargo.toml is where this phase works.",
+          "code": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/ledger-core\", \"crates/ledger-api\"]\n\n[workspace.package]\nversion = \"0.1.0\"\nedition = \"2024\"\nrust-version = \"1.85\"\nlicense = \"MIT\"\n"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/ship.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Add a release profile to `Cargo.toml` with thin LTO and stripped symbols, then add `.github/workflows/rust.yml` that runs fmt, clippy with denied warnings, `cargo test --locked`, and audit. The checks read those files."
+          "body": "Open Cargo.toml and .github/workflows/rust.yml. Add the release profile, the format step and the lint step with warnings denied, then run the suite and read what it still wants."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 14.1 (Customizing Builds with Release Profiles) and chapter 14.3 (Cargo Workspaces), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "visualization": {
         "type": "event-flow",
         "spec": {
           "steps": [
-            "fmt --check",
-            "clippy -D warnings",
-            "test",
-            "audit + deny",
-            "release build"
+            "a pull request is opened",
+            "cargo fmt --check",
+            "cargo clippy -D warnings",
+            "cargo test --locked",
+            "a release build"
           ]
         }
       },
       "resources": [
         {
-          "label": "Cargo Book: profiles",
-          "url": "https://doc.rust-lang.org/cargo/reference/profiles.html"
+          "label": "The Rust Programming Language: chapter 14.1 Customizing Builds with Release Profiles (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch14-01-customizing-builds-with-release-profiles.html"
         },
         {
-          "label": "RustSec advisory database",
-          "url": "https://rustsec.org/"
+          "label": "The Rust Programming Language: chapter 14.3 Cargo Workspaces (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html"
+        },
+        {
+          "label": "The Cargo Book: what each profile knob does",
+          "url": "https://doc.rust-lang.org/cargo/reference/profiles.html"
         }
       ]
     },
     "rust-ship-ask": {
       "id": "rust-ship-ask",
-      "title": "Reason: which gate catches a style rule",
+      "title": "Reason: which gate catches a needless clone",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-ship"
@@ -5485,27 +5997,27 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "Ask which check reads the shape of the code rather than its behaviour."
       ],
       "misconceptions": [
-        "Trusting a green test suite as a shipping signal - tests say the behaviour you wrote still works, not that the code is maintainable.",
-        "Treating clippy warnings as suggestions - a warning in CI is a merge that waits, and that is the only way it stays at zero."
+        "Believing the test suite notices a needless clone, when the program still returns the right value.",
+        "Believing a review comment is a gate, when a gate is a command that fails on its own."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A change compiles and every test passes, but it introduces a needless clone and a pattern the team agreed to forbid. Which check catches it before a reviewer has to?"
+          "body": "A change compiles and every test passes, but it introduces a needless clone. Which check catches it before a reviewer has to?"
         }
       ],
       "options": [
         "The test suite, because formatting is part of the expected output.",
-        "cargo clippy, run with warnings denied in CI before merge.",
-        "A code review comment that asks for the lint to be run.",
+        "cargo clippy, run with warnings denied before the merge.",
+        "A review comment that asks for the lint to be run.",
         "The release profile, which refuses to build unformatted code."
       ],
       "answer": 1,
-      "explanation": "Tests execute behaviour, so a needless clone is invisible to them: the program still returns the right value. clippy reads the code itself, and denying warnings in CI turns its advice into a gate that cannot be forgotten. A review comment depends on a person noticing and on the reviewer remembering the rule; a release profile controls optimisation, not style. The rule has to live in a command that fails."
+      "explanation": "Tests execute behaviour, so a needless clone is invisible to them: the program still returns the right value. clippy reads the code itself, and denying its warnings in CI turns advice into a gate that cannot be forgotten. A review comment depends on a person noticing and on the reviewer remembering the rule. The release profile controls optimisation, not style. The rule has to live in a command that fails."
     },
     "rust-ship-do": {
       "id": "rust-ship-do",
-      "title": "Solve: the release profile and the workflow",
+      "title": "Solve: the release profile and the gate",
       "kind": "challenge",
       "mode": "solve",
       "guidance": 2,
@@ -5513,60 +6025,45 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-ship"
       ],
       "hints": [
-        "The files are `Cargo.toml` and `.github/workflows/rust.yml`; the checks read both, so a missing workflow fails every named test.",
-        "Add `[profile.release]` with `lto = \"thin\"`, `codegen-units = 1` and `strip = \"symbols\"` at the end of the workspace manifest.",
-        "In the workflow, check out the repository, install a stable toolchain, then run fmt, clippy, test and audit as separate steps.",
-        "Clippy needs `--all-targets` and a trailing `-- -D warnings`; without the separator the flags go to clippy, not rustc.",
-        "Run the checks and read the failing name. If `cargo` is missing, use the Environment Check; a missing workflow is your file to add."
+        "The files are Cargo.toml and .github/workflows/rust.yml, and the checks read both. Run node --test --test-reporter=tap test/ship.test.mjs and read the name of the check that failed.",
+        "The manifest gains a [profile.release] table with lto and codegen-units. The workspace already names the Rust version it supports, so the version is not your work: the release settings are.",
+        "The workflow gains a step that runs cargo clippy with -D warnings, so a lint is a failure and not a note in the log.",
+        "Run the suite and read which file the failing check complained about. A check that reads the workflow fails on a missing word, not on a broken build.",
+        "Shape: a release profile in the manifest, and a lint step in the workflow, with the same commands you run locally. If cargo is missing, run the Environment Check."
       ],
       "misconceptions": [
-        "Trusting a green test suite as a shipping signal - tests say the behaviour you wrote still works, not that the code is maintainable.",
-        "Treating clippy warnings as suggestions - a warning in CI is a merge that waits, and that is the only way it stays at zero."
+        "Believing a green test suite is enough to ship, when it says nothing about formatting, lints or how the binary is built.",
+        "Believing a lint warning fails the build on its own, when a warning has to be denied to become a gate."
       ],
       "files": [
         "Cargo.toml",
-        ".github/workflows/rust.yml",
-        "rust-toolchain.toml"
+        ".github/workflows/rust.yml"
       ],
       "testCommand": "node --test --test-reporter=tap test/ship.test.mjs",
       "timeoutMs": 300000,
       "checks": [
         {
-          "id": "msrv",
-          "label": "The workspace declares the Rust version it supports",
-          "tests": [
-            "the workspace declares an msrv"
-          ],
-          "feedback": "Keep `rust-version` in the workspace package table. A dependency that needs newer Rust then fails here, named, instead of on a teammate machine."
-        },
-        {
-          "id": "release",
-          "label": "The release profile is optimised deliberately",
+          "id": "release-profile",
+          "label": "The release profile is set on purpose",
           "tests": [
             "the release profile is optimised"
           ],
-          "feedback": "Add `[profile.release]` with thin LTO and codegen-units 1. The defaults are fine for development; a shipped binary should choose them on purpose."
+          "feedback": "Add a [profile.release] table with lto and codegen-units in it. A profile that is not written down is whatever the default happens to be."
         },
         {
-          "id": "edge-ci",
-          "label": "CI runs clippy with warnings denied",
+          "id": "edge-clippy",
+          "label": "The workflow runs clippy with warnings denied",
           "tests": [
             "the ci workflow runs clippy"
           ],
-          "feedback": "The workflow is missing or does not name clippy. Add a step that runs `cargo clippy --all-targets -- -D warnings`; a lint that only runs locally is a habit, not a gate.",
+          "feedback": "The workflow needs a step that runs clippy and denies its warnings. Without the deny, the lint is advice that nobody has to act on.",
           "edge": true
-        }
-      ],
-      "resources": [
-        {
-          "label": "Clippy: lint groups and denying warnings",
-          "url": "https://doc.rust-lang.org/clippy/usage.html"
         }
       ]
     },
     "rust-ship-review": {
       "id": "rust-ship-review",
-      "title": "Review: formatting and LTO, from memory",
+      "title": "Review: the format check and the profile",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -5575,8 +6072,8 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Trusting a green test suite as a shipping signal - tests say the behaviour you wrote still works, not that the code is maintainable.",
-        "Treating clippy warnings as suggestions - a warning in CI is a merge that waits, and that is the only way it stays at zero."
+        "Thinking the format check is the lint step, when one reads the shape of the code and the other reads the code itself.",
+        "Thinking LTO can be dropped without a decision, when removing it changes the binary you ship."
       ],
       "files": [
         "Cargo.toml",
@@ -5587,19 +6084,19 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "checks": [
         {
           "id": "fmt",
-          "label": "CI checks formatting as its own step",
+          "label": "The workflow checks the formatting",
           "tests": [
             "the ci workflow runs fmt"
           ],
-          "feedback": "A `cargo fmt --check` step belongs in the workflow. Formatting is cheap to fix before review and expensive to discuss during one."
+          "feedback": "The workflow needs a step that runs cargo fmt in check mode, so a pull request is judged on the shape of the code as well as on its behaviour."
         },
         {
           "id": "edge-lto",
-          "label": "The release profile still keeps LTO",
+          "label": "The manifest keeps LTO in the release profile",
           "tests": [
             "the manifest keeps lto"
           ],
-          "feedback": "Keep `lto` in `[profile.release]`. Removing it is a silent performance decision nobody asked for, and the check is the record that it was chosen.",
+          "feedback": "The [profile.release] table keeps its lto setting. Removing it changes the binary that ships without anyone deciding to change it.",
           "edge": true
         }
       ]
@@ -5616,24 +6113,35 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       "objectives": [
         "Explain what a reviewer can prove that the compiler cannot: total functions, honest labels, one rule in one place.",
         "Identify the three recurring defects here: a library unwrap, a clone that hides a borrow, and a rule copied beside itself.",
-        "Read an Option-returning signature and say what a total body must answer for None."
+        "Read a signature that returns a plain value and say what its body must answer for every input."
       ],
       "hints": [
-        "Read the file once for what it promises, then again for every place it can panic.",
-        "An unwrap in a library turns the caller input into a crash. A named label turns it into a value."
+        "Read the file once for what it promises, then again for every place it can panic. If cargo is command not found, run the environment check first.",
+        "An unwrap in a library turns the caller input into a crash, while a named label turns it into a value."
       ],
       "misconceptions": [
-        "Believing the compiler proves the code is safe - it proves memory safety, not that a missing owner is handled.",
-        "Reviewing for style first - a panic on empty input is a defect; a long line is a preference."
+        "Believing the compiler proves the code is safe, when it proves memory safety and not that a missing owner is handled.",
+        "Reviewing for style first, when a panic on empty input is a defect and a long line is a preference."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node --test --test-reporter=tap test/review.test.mjs",
+          "expect": [
+            "# tests \\d+",
+            "# fail \\d+"
+          ],
+          "shows": "# tests 3\n# fail 3"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A reviewer reads for the cases the tests do not name. The compiler has already proved the types fit. What it cannot prove is that a missing value is handled, that a label is not a lie, or that the money formatter is the only place a sign is decided."
+          "body": "A reviewer reads for the cases the tests do not name. The compiler has proved the types fit; it cannot prove that a missing value is handled, that a label is honest, or that one formatter decides the sign."
         },
         {
           "kind": "prose",
-          "body": "Three defects recur in a first Rust codebase. An `unwrap` in a library, where the caller controls the input. A `clone` that hides a borrow the signature could have expressed. A second formatting rule copied beside the first, so a change to one leaves the other wrong."
+          "body": "Three defects recur in a first Rust codebase. An unwrap in a library, where the caller controls the input. A clone that hides a borrow the signature could have expressed. A second formatting rule copied beside the first."
         },
         {
           "kind": "example",
@@ -5641,38 +6149,48 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
           "code": "fn label(owner: Option<&str>) -> &str {\n    owner.unwrap()          // panics on None\n}\n\nfn label(owner: Option<&str>) -> &str {\n    match owner {\n        Some(name) if !name.is_empty() => name,\n        _ => \"unknown\",\n    }\n}"
         },
         {
-          "kind": "example",
-          "body": "A `HashMap` lookup returns an `Option` for a reason.",
-          "code": "- let owner = owners.get(id).unwrap();\n+ let owner = match owners.get(id) {\n+     Some(name) => name.as_str(),\n+     None => \"unknown\",\n+ };"
+          "kind": "prose",
+          "body": "The second version is total: every input maps to an answer. That is the property to check in review, and it is visible in a signature that promises a &str rather than an Option."
         },
         {
-          "kind": "prose",
-          "body": "The second version has a total function: every input maps to an answer. That is the property to check in review, and it is visible in a signature that promises a `&str`, not an `Option`. A panic is a promise the type system did not ask you to make."
+          "kind": "quickcheck",
+          "body": "A library takes Option<&str> and returns &str. Which body is defensible?",
+          "items": [
+            "value.unwrap()",
+            "value.expect(\"owner\")",
+            "value.unwrap_or_default(), giving an empty label",
+            "A match that returns a named fallback."
+          ],
+          "answer": 3,
+          "explain": "The signature promises a string for every input, so the body must produce one. unwrap and expect panic, and an empty label reads as a real owner. A named fallback is the only total answer."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "A panic on caller input is a defect, not an edge case.",
-            "A clone needs a reason the borrow cannot do the job.",
-            "One rule, one place: call the formatter instead of copying it."
+            "A clone needs a reason the borrow cannot give.",
+            "One rule, one place: call the formatter.",
+            "A total function answers for every input."
           ]
         },
         {
-          "kind": "quickcheck",
-          "body": "A library function takes `Option<&str>` and returns `&str`. Which body is defensible?",
-          "items": [
-            "`value.unwrap()`",
-            "`value.expect(\"owner\")`",
-            "`value.unwrap_or_default()`, silently zero",
-            "A match returning a named fallback."
-          ],
-          "answer": 3,
-          "explain": "The signature promises a string for every input, so the body must produce one. unwrap and expect panic; unwrap_or_default gives an empty label that reads as a real owner. A named fallback is the only total answer."
+          "kind": "example",
+          "body": "crates/ledger-core/src/review.rs is where this phase works.",
+          "code": "/// A name for a person, or a stated fallback when there is none.\npub fn owner_label(_owner: Option<&str>) -> &str {\n    todo!(\"implement owner_label\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/review.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Open `crates/ledger-core/src/review.rs`. Replace the stubs with total functions: an unknown label for a missing owner, a transfer line built with the money formatter, and a read-through for an empty name. The checks name each behaviour."
+          "body": "Open crates/ledger-core/src/review.rs. Replace the stubs with total functions: a named label for a missing owner, a transfer line built with the money formatter, and a balance that is None when no row names the owner."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 9.3 (To panic or Not to panic), which the Rust project publishes under the MIT and Apache-2.0 licences. What is written here is ours, and so is the ledger."
         }
       ],
       "visualization": {
@@ -5683,60 +6201,64 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
             "lines": [
               "unwrap() on caller input",
               "clone() to silence a borrow",
-              "a panic where a label belonged"
+              "a second formatting rule"
             ]
           },
           "after": {
             "title": "the returned fix",
             "lines": [
-              "Result and ?",
-              "a borrow with a lifetime",
-              "None handled as a value"
+              "a named fallback",
+              "a borrow the signature allows",
+              "one call to the formatter"
             ]
           }
         }
       },
       "resources": [
         {
-          "label": "Rust Book: error handling and panic discipline",
-          "url": "https://doc.rust-lang.org/book/ch09-00-error-handling.html"
+          "label": "The Rust Programming Language: chapter 9.3 To panic or Not to panic (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html"
+        },
+        {
+          "label": "The Rust Programming Language: chapter 11.1 How to Write Tests (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch11-01-how-to-write-tests.html"
         }
       ]
     },
     "rust-review-ask": {
       "id": "rust-review-ask",
-      "title": "Reason: the unwrap in a library",
+      "title": "Reason: the rule written twice",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-review"
       ],
       "hints": [
-        "Ask who controls the value that the unwrap assumes is present."
+        "Ask which of the two copies decides the sign, and what happens to the other one when the formatter changes."
       ],
       "misconceptions": [
-        "Believing the compiler proves the code is safe - it proves memory safety, not that a missing owner is handled.",
-        "Reviewing for style first - a panic on empty input is a defect; a long line is a preference."
+        "Thinking a private copy is a fix, when the two copies still disagree after the formatter changes.",
+        "Thinking a test over both copies is a fix, when the duplication is still there to be maintained."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A reviewer finds this in a library: `let owner = owner.unwrap();`. The function is public and its parameter is an `Option`. What is the defect?"
+          "body": "A reviewer finds the money formatting written twice in one file: one copy calls the crate formatter, the other builds the string itself. What is the fix?"
         }
       ],
       "options": [
-        "Rename the field across the whole workspace so every use has to be found.",
-        "Add a comment above the unwrap explaining exactly why it cannot ever fail here.",
-        "Return an unknown label for the missing value instead of unwrapping.",
-        "Wrap the call in catch_unwind and keep the existing unwrap where it is."
+        "Move both copies into a test so the duplication is covered by the suite.",
+        "Delete the second copy and let the callers use the first one.",
+        "Call the one formatter that already exists, and drop the copy.",
+        "Make the second copy private so only this module uses it."
       ],
       "answer": 2,
-      "explanation": "The caller decides whether the option is empty, so a public function cannot assume it is not: unwrap turns ordinary input into a panic and the signature still promises a string. A comment documents the assumption without enforcing it, catch_unwind is a panic handler rather than a design, and renaming a field is a refactor that answers a different problem. Returning a named fallback makes the function total, and the type already says that is what it promises."
+      "explanation": "One rule belongs in one place. The crate already has a formatter, so the second copy is a second rule: change how the formatter rounds and the copy keeps the old behaviour, which is how a ledger starts disagreeing with itself. A test over both copies records the duplication instead of removing it, a private copy is still a copy, and deleting one without naming the other leaves the caller to guess which one is right."
     },
     "rust-review-do": {
       "id": "rust-review-do",
-      "title": "Solve: make the labels total",
+      "title": "Solve: the file a reviewer would sign",
       "kind": "challenge",
       "mode": "solve",
       "guidance": 2,
@@ -5744,57 +6266,52 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-review"
       ],
       "hints": [
-        "Open `crates/ledger-core/src/review.rs`; the checks run `cargo` through a Node wrapper against `ledger-core`.",
-        "Match on the option with a guard: `Some(name) if !name.is_empty()` is the owner, everything else is the fallback.",
-        "For the transfer line, match `Transaction::Transfer { to, cents }` and call `ledger_core::money::format_cents(*cents)`.",
-        "Return `&str`, not `String`: the owner is already a borrow and copying it would hide that.",
-        "Run the checks and read the failing test name before editing further. A missing `cargo` is an environment problem, not a code one."
+        "Open crates/ledger-core/src/review.rs. The seven functions are the ones a reviewer reads. Run node --test --test-reporter=tap test/review.test.mjs and read the name of the check that failed.",
+        "owner_label takes Option<&str> and returns &str, so it answers \"unknown\" for None and for an empty name.",
+        "transfer_line builds its text through the crate formatter, so the amount and the sign come from one rule.",
+        "Run the suite and read the value the failing check expected. A label of \"\" instead of \"unknown\" is the difference the check names.",
+        "Shape: a match per function, a fallback per missing value, and the formatter called rather than copied. If cargo is missing, run the Environment Check."
       ],
       "misconceptions": [
-        "Believing the compiler proves the code is safe - it proves memory safety, not that a missing owner is handled.",
-        "Reviewing for style first - a panic on empty input is a defect; a long line is a preference."
+        "Believing unwrap is acceptable here, when the caller decides whether the option is empty.",
+        "Believing a private copy of the formatter is harmless, when the two copies drift apart on the first change."
       ],
       "files": [
         "crates/ledger-core/src/review.rs"
       ],
       "testCommand": "node --test --test-reporter=tap test/review.test.mjs",
+      "timeoutMs": 300000,
       "checks": [
         {
-          "id": "missing",
-          "label": "A missing owner is labelled, not unwrapped",
+          "id": "missing-owner",
+          "label": "A missing owner is labelled unknown",
           "tests": [
             "a missing owner is labelled unknown"
           ],
-          "feedback": "Return the literal \"unknown\" for None. The function returns &str, so the compiler is already asking for an answer on every path."
+          "feedback": "None has to become the named label \"unknown\", and the function still returns a &str. A panic here is a defect, not a fallback."
         },
         {
           "id": "transfer",
-          "label": "A transfer line names its recipient and amount",
+          "label": "A transfer line names its recipient",
           "tests": [
             "a transfer names its recipient"
           ],
-          "feedback": "Format the cents through `money::format_cents`, then build \"to <name>: <amount>\". Do not divide by 100 by hand; that is the rule written twice."
+          "feedback": "The line has to carry the recipient and the amount. Build the amount through the crate formatter so the sign and the decimals come from one rule."
         },
         {
-          "id": "edge-empty",
-          "label": "An empty owner is treated as missing",
+          "id": "edge-empty-owner",
+          "label": "An empty owner is labelled unknown too",
           "tests": [
             "an empty owner is labelled unknown too"
           ],
-          "feedback": "A guard on `!name.is_empty()` is what separates a present name from a blank one. `Some(\"\")` is not a person.",
+          "feedback": "Some(\"\") is not a name. The fallback covers an empty string as well as a missing one, or a statement prints an owner with nothing in it.",
           "edge": true
-        }
-      ],
-      "resources": [
-        {
-          "label": "std::option::Option documentation",
-          "url": "https://doc.rust-lang.org/std/option/enum.Option.html"
         }
       ]
     },
     "rust-review-review": {
       "id": "rust-review-review",
-      "title": "Review: borrow the formatter, keep the sign",
+      "title": "Review: the label that borrows the formatter",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 2,
@@ -5803,29 +6320,30 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Believing the compiler proves the code is safe - it proves memory safety, not that a missing owner is handled.",
-        "Reviewing for style first - a panic on empty input is a defect; a long line is a preference."
+        "Thinking the label may format the cents itself, when the formatter is the one place that decides.",
+        "Thinking a negative amount has no sign, when the sign belongs to the whole amount."
       ],
       "files": [
         "crates/ledger-core/src/review.rs"
       ],
       "testCommand": "node --test --test-reporter=tap test/review_review.test.mjs",
+      "timeoutMs": 300000,
       "checks": [
         {
           "id": "formatter",
-          "label": "The label calls the one money formatter",
+          "label": "The label comes from the money formatter",
           "tests": [
             "cents label uses the money formatter"
           ],
-          "feedback": "Call `money::format_cents` rather than formatting digits here. A second implementation is a second truth, and the next rule change updates only one."
+          "feedback": "cents_label calls the crate formatter and returns its string. A label built by hand is a second rule, and it will drift."
         },
         {
           "id": "edge-sign",
-          "label": "A negative amount keeps its leading sign",
+          "label": "A negative amount keeps its sign",
           "tests": [
             "a negative amount keeps its sign"
           ],
-          "feedback": "The formatter already places the minus before the whole amount. If the label drops it, the label is not using the formatter.",
+          "feedback": "Five cents below zero is -0.05, with the sign on the whole amount. The formatter decides that, so the label must not edit the string.",
           "edge": true
         }
       ]
@@ -5840,52 +6358,45 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-takehome"
       ],
       "objectives": [
-        "Read a written brief twice and extract the signatures and edge-case words that decide behaviour.",
+        "Read a written brief twice and extract the signatures and the edge-case words that decide behaviour.",
         "Plan a take-home by writing down each promise and its empty, missing and refusing cases before coding.",
-        "Diagnose why a hidden acceptance suite rewards the specification rather than your own tests."
+        "Diagnose why an acceptance suite rewards the specification rather than the tests you wrote."
       ],
       "hints": [
-        "List the behaviours the brief names before writing a line. The list is your plan.",
-        "The acceptance suite is held by the course. You cannot read it, so the brief has to be read closely."
+        "List the behaviours the brief names before you write a line. The list is your plan. If cargo is command not found, run the environment check first.",
+        "The acceptance suite belongs to the course, so the brief has to be read closely."
       ],
       "misconceptions": [
-        "Waiting for more detail before starting - a brief is what a colleague gives you, and the gaps are part of the work.",
-        "Adding your own tests to satisfy a hidden suite - the suite reads behaviour, not the tests you write."
+        "Waiting for more detail before starting, when a brief is what a colleague gives you and the gaps are part of the work.",
+        "Adding your own tests to satisfy the suite, when the suite reads behaviour and not the tests you wrote."
+      ],
+      "observed": [
+        {
+          "kind": "terminal",
+          "command": "node --test --test-reporter=tap acceptance/rust-ledger.acceptance.test.mjs",
+          "expect": [
+            "# tests \\d+",
+            "# fail \\d+"
+          ],
+          "shows": "# tests 3\n# fail 3"
+        }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every earlier challenge named its files and its checks. This one gives you a brief and a project, and judges the result with a suite that is not in your repository. It is the closest thing here to a real task."
+          "body": "Every earlier challenge named its files and its checks. This one gives you a brief and judges the result with a suite the course holds, which you do not. It is the closest thing here to a real task."
         },
         {
           "kind": "prose",
-          "body": "A reviewer starts with the README: one command that runs the project, and the tests that command runs. If either is missing, nobody can tell whether the implementation works, so the code goes unread."
+          "body": "Read the brief twice: once for the functions it names, and once for the words that decide edge cases. Every line means an empty list too. Refuses means a Result, not a zero. Those words are the criteria."
         },
         {
           "kind": "prose",
-          "body": "Read the brief twice: once for the functions it names, once for the words that decide edge cases. \"Every line\" means an empty list too. \"Refuses\" means a `Result`, not a zero. Those words are the criteria."
-        },
-        {
-          "kind": "example",
-          "body": "A signature is part of the brief. Match it exactly:",
-          "code": "pub fn statement_total(lines: &[i64]) -> i64\npub fn refuses_overdraft(balance: i64, cents: i64) -> Result<i64, String>\npub fn balance_for(rows: &[(String, i64)], owner: &str) -> Option<i64>"
-        },
-        {
-          "kind": "prose",
-          "body": "You may run the project and write your own tests. What you cannot do is read the acceptance suite, so a suite that passes because it tests the wrong thing buys nothing. Write down what each function promises, then check that promise against the brief."
-        },
-        {
-          "kind": "keypoints",
-          "body": "Key Points",
-          "items": [
-            "The brief names the signatures; match them exactly.",
-            "Edge words decide behaviour: every, empty, missing, refuse.",
-            "A hidden suite rewards the specification, not the tests."
-          ]
+          "body": "You may run the project and write your own tests. What you cannot do is read the acceptance suite, so a suite that passes because it tests the wrong thing buys nothing."
         },
         {
           "kind": "quickcheck",
-          "body": "The brief says \"every line\". Which input must your function survive?",
+          "body": "The brief says every line. Which input must the function survive?",
           "items": [
             "A list with one line.",
             "A list with two lines.",
@@ -5893,54 +6404,77 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
             "An empty list."
           ],
           "answer": 3,
-          "explain": "Every includes zero. A function that adds lines with a loop and an unwrap on the first element handles the typical case and panics on the one the brief called out."
+          "explain": "Every includes zero. A function that adds the lines with a loop survives the empty list, while one that reads the first element and unwraps it panics on the case the brief called out."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "The brief names the signatures; match them exactly.",
+            "Edge words decide behaviour: every, empty, missing, refuse.",
+            "The acceptance suite belongs to the course."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "crates/ledger-core/src/review.rs is where this phase works.",
+          "code": "/// A name for a person, or a stated fallback when there is none.\npub fn owner_label(_owner: Option<&str>) -> &str {\n    todo!(\"implement owner_label\")\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap acceptance/rust-ledger.acceptance.test.mjs"
         },
         {
           "kind": "task",
-          "body": "Read the brief in the next activity and write the three signatures in a comment before implementing them. Decide what each returns for an empty list and for an owner with no rows. Then open `crates/ledger-core/src/review.rs`."
+          "body": "Read the brief in the Solve step and write the three signatures in a comment before you implement them. Decide what each returns for an empty list and for an owner with no rows."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase follows The Rust Programming Language, chapter 11.1 (How to Write Tests) and chapter 12.4 (Testing the Library Functionality), which the Rust project publishes under the MIT and Apache-2.0 licences. The wording here is ours, and so is the ledger."
         }
       ],
       "resources": [
         {
-          "label": "Rust Book: testing, including the cases a brief leaves implicit",
-          "url": "https://doc.rust-lang.org/book/ch11-00-testing.html"
+          "label": "The Rust Programming Language: chapter 11.1 How to Write Tests (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch11-01-how-to-write-tests.html"
         },
         {
-          "label": "Rust by Example: integration tests in tests/",
-          "url": "https://doc.rust-lang.org/rust-by-example/testing/integration_testing.html"
+          "label": "The Rust Programming Language: chapter 12.4 Testing the Library Functionality (MIT OR Apache-2.0)",
+          "url": "https://doc.rust-lang.org/book/ch12-04-testing-the-librarys-functionality.html"
         }
       ]
     },
     "rust-takehome-ask": {
       "id": "rust-takehome-ask",
-      "title": "Reason: what a hidden suite changes",
+      "title": "Reason: what the acceptance suite judges",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 1,
       "competencyIds": [
         "rust-takehome"
       ],
       "hints": [
-        "Ask what evidence the suite can see, and what it cannot."
+        "Ask what evidence the suite can see about your work, and what it cannot."
       ],
       "misconceptions": [
-        "Waiting for more detail before starting - a brief is what a colleague gives you, and the gaps are part of the work.",
-        "Adding your own tests to satisfy a hidden suite - the suite reads behaviour, not the tests you write."
+        "Thinking a hidden suite reads your source text, when it runs your functions and reads what they answer.",
+        "Thinking writing more tests of your own reveals the criteria, when it only tells you about the cases you already guessed."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A take-home is judged by a suite you cannot read. What does that change about how you work?"
+          "body": "The take-home is judged by a suite you cannot read. What does that suite actually judge?"
         }
       ],
       "options": [
-        "Nothing: the same code passes whether the suite is visible or hidden.",
-        "You should write more of your own tests, because the hidden ones cannot be trusted.",
-        "You should copy the reference implementation from the previous phase.",
-        "You must derive edge cases from the brief instead of reading the checks."
+        "The behaviour your functions produce for the cases the brief names.",
+        "The source text of your implementation, read line by line.",
+        "The speed of your implementation compared with a reference build.",
+        "The tests you wrote yourself, so you can improve them before handover."
       ],
-      "answer": 3,
-      "explanation": "The suite executes behaviour, so its visibility changes what you can copy, not what passes. What disappears is the list of named checks that told you which edge cases matter; the brief still contains them in words like every, missing and refuse. Writing more of your own tests is good practice but does not reveal the hidden criteria, and the previous phase is a different function with a different promise."
+      "answer": 0,
+      "explanation": "The suite calls your functions and checks what they answer, so the behaviour is what counts and the shape of the source is not. What the hidden suite removes is the list of named checks that told you which edge cases mattered. The brief still holds them in words like every, missing and refuse, so those words are what you work from. Your own tests are worth writing, but they confirm what you already decided rather than telling you what was missing."
     },
     "rust-takehome-do": {
       "id": "rust-takehome-do",
@@ -5952,55 +6486,42 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
         "rust-takehome"
       ],
       "hints": [
-        "The brief, restated: implement four total functions in `crates/ledger-core/src/review.rs` - sum signed rows, sum a slice without overflowing, refuse an overdraft with an error naming both amounts, and answer None for an owner with no rows."
+        "Build three functions in crates/ledger-core/src/review.rs. statement_total(lines: &[i64]) -> i64 adds every line and answers 0 for an empty slice. refuses_overdraft(balance: i64, cents: i64) -> Result<i64, String> returns what is left after the spend, or an error naming both amounts when the spend would go below zero. balance_for(rows: &[(String, i64)], owner: &str) -> Option<i64> returns the net balance of the rows naming one owner, and None when no row names them."
       ],
       "misconceptions": [
-        "Waiting for more detail before starting - a brief is what a colleague gives you, and the gaps are part of the work.",
-        "Adding your own tests to satisfy a hidden suite - the suite reads behaviour, not the tests you write."
+        "Thinking a refused spend may return zero, when the brief says refuses and that is a Result.",
+        "Thinking an owner with no rows has a balance of zero, when no row naming them is a different fact."
       ],
       "files": [
         "crates/ledger-core/src/review.rs"
       ],
       "acceptanceCommand": "node --test --test-reporter=tap acceptance/rust-ledger.acceptance.test.mjs",
-      "timeoutMs": 600000,
-      "brief": "Implement the commitment calculations in `crates/ledger-core/src/review.rs`. `net_balance(rows: &[(String, i64)]) -> i64` adds every signed amount. `statement_total(lines: &[i64]) -> i64` adds every line and must not overflow, even when the sum does. `refuses_overdraft(balance: i64, cents: i64) -> Result<i64, String>` returns the new balance, or an error naming both amounts when the charge is larger than the balance. `balance_for(rows: &[(String, i64)], owner: &str) -> Option<i64>` returns the owner net balance, or None when no row names that owner. Keep the existing public labels working. Do not change the tests; the acceptance suite is held by the course.",
+      "brief": "Build three functions in crates/ledger-core/src/review.rs. statement_total(lines: &[i64]) -> i64 adds every line and answers 0 for an empty slice. refuses_overdraft(balance: i64, cents: i64) -> Result<i64, String> returns what is left after the spend, or an error naming both amounts when the spend would go below zero. balance_for(rows: &[(String, i64)], owner: &str) -> Option<i64> returns the net balance of the rows naming one owner, and None when no row names them.",
+      "timeoutMs": 300000,
       "checks": [
         {
           "id": "total",
-          "label": "A statement total adds every line",
+          "label": "Every line is added, and an empty list is zero",
           "tests": [
             "the statement total adds every line"
           ],
-          "feedback": "A slice can be empty, and the brief says every line. Fold from zero with a saturating add so the empty case and an overflowing case are both defined."
+          "feedback": "The total has to add every line, signed, and an empty slice answers 0. A function that reads the first element instead of adding all of them fails on the empty case."
         },
         {
-          "id": "overdraft",
-          "label": "An overdraft is refused with the amounts named",
+          "id": "edge-refusals",
+          "label": "An overdraft is refused and an unknown owner has no balance",
           "tests": [
-            "an overdraft is refused"
-          ],
-          "feedback": "Return Err when the charge is larger than the balance, and Ok with the difference otherwise - including an exact spend. The message must name both amounts so the caller can act."
-        },
-        {
-          "id": "edge-unknown",
-          "label": "An owner with no rows has no balance",
-          "tests": [
+            "an overdraft is refused",
             "an unknown owner has no balance"
           ],
-          "feedback": "None, not zero. Zero is a real balance; a missing owner is a different answer, and the signature already has a way to say so.",
+          "feedback": "A spend that would go below zero returns an error that names both amounts, and an owner with no rows is None rather than a zero balance.",
           "edge": true
-        }
-      ],
-      "resources": [
-        {
-          "label": "Rust Book: the brief-shaped problem, revisited",
-          "url": "https://doc.rust-lang.org/book/ch12-00-an-io-project.html"
         }
       ]
     },
     "rust-takehome-review": {
       "id": "rust-takehome-review",
-      "title": "Review: the same suite, without the hints",
+      "title": "Review: the same two behaviours, unaided",
       "kind": "retrieval",
       "mode": "review",
       "guidance": 3,
@@ -6009,31 +6530,32 @@ export const IDE_COURSE_RUST_LEDGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Waiting for more detail before starting - a brief is what a colleague gives you, and the gaps are part of the work.",
-        "Adding your own tests to satisfy a hidden suite - the suite reads behaviour, not the tests you write."
+        "Thinking a refused spend may return zero, when the brief says refuses and that is a Result.",
+        "Thinking an owner with no rows has a balance of zero, when no row naming them is a different fact."
       ],
       "files": [
         "crates/ledger-core/src/review.rs"
       ],
       "acceptanceCommand": "node --test --test-reporter=tap acceptance/rust-ledger.acceptance.test.mjs",
-      "timeoutMs": 600000,
-      "brief": "No new hint. The same brief and the same acceptance suite, with the edges you have to find yourself: an exact spend is not an overdraft, and an owner with no rows is None rather than zero.",
+      "brief": "Build three functions in crates/ledger-core/src/review.rs. statement_total(lines: &[i64]) -> i64 adds every line and answers 0 for an empty slice. refuses_overdraft(balance: i64, cents: i64) -> Result<i64, String> returns what is left after the spend, or an error naming both amounts when the spend would go below zero. balance_for(rows: &[(String, i64)], owner: &str) -> Option<i64> returns the net balance of the rows naming one owner, and None when no row names them.",
+      "timeoutMs": 300000,
       "checks": [
         {
-          "id": "overdraft-again",
-          "label": "The overdraft rule survives without the ladder",
+          "id": "total",
+          "label": "Every line is added, and an empty list is zero",
           "tests": [
-            "an overdraft is refused"
+            "the statement total adds every line"
           ],
-          "feedback": "An exact spend is allowed: the charge equals the balance. A larger charge is the only refusal, and it must name both amounts."
+          "feedback": "The total adds every line with its sign, and an empty slice answers 0. Reading the first element and unwrapping it is not the same promise."
         },
         {
-          "id": "edge-unknown-again",
-          "label": "A missing owner stays None under the same suite",
+          "id": "edge-refusals",
+          "label": "An overdraft is refused and an unknown owner has no balance",
           "tests": [
+            "an overdraft is refused",
             "an unknown owner has no balance"
           ],
-          "feedback": "The rows are the only truth about who has an account. No rows means None, not a zero that reads as a real balance.",
+          "feedback": "An exact spend leaves zero and is allowed, a larger spend is an error naming both amounts, and an owner with no rows is None.",
           "edge": true
         }
       ]

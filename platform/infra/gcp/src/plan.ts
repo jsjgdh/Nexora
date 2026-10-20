@@ -29,6 +29,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { iamBlockers } from './iam.js';
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const PLATFORM_ROOT = path.resolve(HERE, '..', '..', '..');
 
@@ -79,6 +81,39 @@ export interface IPlan {
 	readonly project: string;
 	readonly region: string;
 	readonly artifactRegistry: string;
+	/**
+	 * The account the services run as.
+	 *
+	 * It is not the account that deploys them. A service that can deploy is a
+	 * service that can replace another service, and the only thing standing
+	 * between a request and the whole platform is the boundary between these
+	 * two names.
+	 */
+	readonly runtimeServiceAccount: string;
+	/**
+	 * Where the image lives and what its tag has to be.
+	 *
+	 * `requireImmutableTag` is here as data because it is a decision, and a
+	 * decision that is written in a file is one that can be argued about in a
+	 * review. A plan that permitted a moving tag would be a plan that cannot
+	 * be rolled back, and the checker refuses one.
+	 */
+	readonly image: {
+		readonly repository: string;
+		readonly movingTag: string;
+		readonly requireImmutableTag: boolean;
+	};
+	/**
+	 * The accounts, and what each may do.
+	 *
+	 * Every role carries the reason it is there. A role without a reason is a
+	 * role nobody ever removes.
+	 */
+	readonly iam: {
+		readonly deployAccount: string;
+		readonly deployRoles: readonly { readonly role: string; readonly why: string }[];
+		readonly runtimeRoles: readonly { readonly role: string; readonly why: string }[];
+	};
 	readonly database: {
 		readonly instance: string;
 		readonly engineVersion: string;
@@ -100,6 +135,16 @@ export interface IPlan {
 		readonly logRetentionDays: number;
 		readonly budget: {
 			readonly displayName: string;
+			/**
+			 * The environment variable that carries the billing account.
+			 *
+			 * A budget belongs to a BILLING ACCOUNT, not to a project, and the
+			 * account is an account fact rather than a code fact: it is the
+			 * operator's, and it is named here so that nobody can forget that
+			 * the deploy needs one. The account identifier is not a credential,
+			 * but it is also not something this repository should decide.
+			 */
+			readonly billingAccountEnv: string;
 			readonly amount: number;
 			readonly currency: string;
 			readonly thresholds: readonly number[];
@@ -521,8 +566,61 @@ export function planBlockers(plan: IPlan): string[] {
 	if (plan.observability.logRetentionDays < 7) {
 		blockers.push(`logs are kept for ${plan.observability.logRetentionDays} day(s), which is too short to investigate an incident`);
 	}
-	if (!plan.observability.uptimeCheck.path.startsWith("/health/")) {
-		blockers.push("the uptime check does not ask a health endpoint");
+	if (!plan.observability.uptimeCheck.path.startsWith('/health/')) {
+		blockers.push('the uptime check does not ask a health endpoint');
+	}
+
+	// (18) The image is addressable, and the tag has to name a build.
+	//
+	// This is the check that would have caught the deploy that pointed Cloud
+	// Run at a registry the pipeline never pushed to, and the deploy that used
+	// a moving tag and therefore had nothing to roll back to. Both were real,
+	// and both were invisible until a deploy ran against a real project.
+	if (!plan.image?.repository) {
+		blockers.push('the plan names no image repository, so the deploy has nowhere to pull from');
+	}
+	if (!plan.image?.movingTag) {
+		blockers.push('the plan names no moving tag');
+	}
+	if (plan.image && plan.image.requireImmutableTag === false) {
+		blockers.push(
+			'the plan permits a moving tag on the deployed image, and a rollback has to name one build'
+		);
+	}
+	if (plan.image?.repository && !/^[a-z0-9][a-z0-9._-]*$/.test(plan.image.repository)) {
+		blockers.push(`the image repository "${plan.image.repository}" is not a usable repository name`);
+	}
+	if (!plan.runtimeServiceAccount) {
+		blockers.push('the plan names no account for the services to run as');
+	}
+
+	// (19) The two accounts are two accounts, and the roles are the ones the
+	// plan says they are. The checks live with the module that builds the
+	// commands, so the thing that is checked and the thing that is applied
+	// cannot drift apart.
+	blockers.push(...iamBlockers(plan));
+
+	// (20) The budget names the environment variable that carries the billing
+	// account it belongs to. A budget belongs to a billing account, not to a
+	// project, so the account is the operator's and the plan only says where
+	// it is read from. A budget that cannot be created alerts nobody.
+	if (!plan.observability.budget.billingAccountEnv) {
+		blockers.push('the budget names no environment variable for its billing account');
+	} else if (!/^[A-Z][A-Z0-9_]*$/.test(plan.observability.budget.billingAccountEnv)) {
+		blockers.push(
+			`the budget's billing account variable "${plan.observability.budget.billingAccountEnv}" is not an environment variable name`
+		);
+	}
+
+	// (21) The secrets the plan names are the ones the services are mounted
+	// with, and every one of them is a secret this project creates. A secret
+	// that is mounted but never created is a service that cannot start.
+	for (const planned of plan.services) {
+		for (const mount of planned.secrets) {
+			if (!plan.secrets.some(s => s.name === mount.secret)) {
+				blockers.push(`${planned.name} mounts ${mount.secret}, which the plan does not create`);
+			}
+		}
 	}
 
 	return blockers;

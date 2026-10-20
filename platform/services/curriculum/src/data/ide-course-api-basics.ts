@@ -77,7 +77,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "web-http-json"
       ],
       "hints": [
-        "Write the contract down before the call: method, path, status, body. Without the status family in front of you, a 4xx reads as a server fault."
+        "Write the contract down before the call: method, path, status, body. Without the status family in front of you, a 4xx reads as a server fault. If node is command not found, run the environment check first."
       ],
       "objectives": [
         "Read an endpoint as four promises: a method, a path, a status and a body.",
@@ -113,6 +113,16 @@ export const IDE_COURSE_API_BASICS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/request.js is where this phase works.",
+          "code": "/* The request, written down before it is sent.\n *\n * The contract this module serves is the API's, not yours: a caller names the\n * method and the path, and gets back the two pieces `fetch` wants — a URL and\n * an init object. Nothing here sends anything, which is what makes it testable\n * without a network.\n *\n * Not written yet. `buildRequest(method, path, body)` is yours to build: read\n * the suite in test/request.test.mjs for the three shapes it has to produce.\n */\nexport function buildRequest(method, path, body) {\n\tthrow new Error('buildRequest is not written yet');\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/request.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Before any code, write the request that creates a task and the response you expect back, then the same pair for a read that finds nothing. Name the method, path, status and body each time."
         }
@@ -137,7 +147,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
       "id": "api-contract-ask",
       "title": "Reason: what a 201 actually tells you",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "web-http-json"
@@ -198,7 +208,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         }
       ],
       "hints": [
-        "Start from the pair the contract names: a method and a path in, an object out. Everything the tests read is a field of that object.",
+        "Open src/request.js. Start from the pair the contract names: a method and a path in, an object out. Everything the tests read is a field of that object. Run node --test --test-reporter=tap test/request.test.mjs and read the name of the check that failed.",
         "A read carries no body. That is not a style choice: a GET with a body is a request many servers answer with 400, so the field must be absent, not empty.",
         "Both verbs ask for JSON back, and only the create says what it is sending. That is two headers on one object, and one of them depends on whether there is a body.",
         "A body is bytes. JSON.stringify turns the task into those bytes; passing the object itself sends nothing the server can read. If the suite cannot start because `node` is command not found, run the environment check first.",
@@ -220,7 +230,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "api-integration"
       ],
       "hints": [
-        "Read res.ok before you touch the body: a 503 resolves exactly like a 200, and an error page is not the payload you meant to parse."
+        "Read res.ok before you touch the body: a 503 resolves exactly like a 200, and an error page is not the payload you meant to parse. If node is command not found, run the environment check first."
       ],
       "objectives": [
         "Explain why a resolved promise means the server answered, not that the request succeeded.",
@@ -256,6 +266,16 @@ export const IDE_COURSE_API_BASICS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/response.js is where this phase works.",
+          "code": "/* An answer arrived. That is all a resolved promise ever said.\n *\n * `readResponse(res)` turns a response into the three things a caller can act\n * on: whether it worked, the status, and either the data or a reason. It must\n * not throw for a server error, because a 500 is an answer.\n *\n * Not written yet. Read test/response.test.mjs for what each of the three\n * outcomes has to look like.\n */\nexport async function readResponse(res) {\n\tthrow new Error('readResponse is not written yet');\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/response.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Before any code, write the three outcomes your client can show — loaded, failed with a status, loaded empty — and the exact fields each one holds."
         }
@@ -280,7 +300,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
       "id": "api-response-ask",
       "title": "Reason: a 503 with an error page",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "api-integration"
@@ -341,7 +361,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         }
       ],
       "hints": [
-        "Write the three outcomes as fields first: ok, status, and data or error. Then make each path of the function produce exactly one of them.",
+        "Open src/response.js. Write the three outcomes as fields first: ok, status, and data or error. Then make each path of the function produce exactly one of them. Run node --test --test-reporter=tap test/response.test.mjs and read the name of the check that failed.",
         "The order of the checks is the whole exercise. Ask whether it worked before asking what it said, because the body of a failure is not yours to interpret.",
         "An error that says only \"request failed\" is not actionable. Put the number in the message so the next person can tell a refusal from an outage.",
         "Not every success has content. One status arrives with no bytes at all, and calling json() on it rejects. If the suite cannot start because `node` is command not found, run the environment check first.",
@@ -363,7 +383,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "api-integration"
       ],
       "hints": [
-        "Name the fields you actually need before parsing anything: an id, a title with something in it, a done that is exactly true or false. JSON.parse guarantees none of them."
+        "Name the fields you actually need before parsing anything: an id, a title with something in it, a done that is exactly true or false. JSON.parse guarantees none of them. If node is command not found, run the environment check first."
       ],
       "objectives": [
         "Explain what JSON.parse proves about a payload, and what it leaves entirely unchecked.",
@@ -399,6 +419,16 @@ export const IDE_COURSE_API_BASICS: unknown = {
           ]
         },
         {
+          "kind": "example",
+          "body": "src/payload.js is where this phase works.",
+          "code": "/* What a body is allowed to contain.\n *\n * A payload is text from somewhere else — a server, a cache, a colleague's\n * fixture. `readTasks(body)` decides which rows can become tasks the app\n * renders, and names the field when a row cannot.\n *\n * Not written yet. Read test/payload.test.mjs: it asks for one shape and two\n * refusals.\n */\nexport function readTasks(body) {\n\tthrow new Error('readTasks is not written yet');\n}"
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the suite:",
+          "code": "node --test --test-reporter=tap test/payload.test.mjs"
+        },
+        {
           "kind": "task",
           "body": "Before any code, write the three fields a task must have, what counts as missing for each, and the message you would want to read when one is wrong."
         }
@@ -423,7 +453,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
       "id": "api-payload-ask",
       "title": "Reason: what a successful parse proves",
       "kind": "question",
-      "mode": "learn",
+      "mode": "review",
       "guidance": 2,
       "competencyIds": [
         "api-integration"
@@ -484,7 +514,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         }
       ],
       "hints": [
-        "Two jobs, in order: check the whole payload is a list, then check each row. A refusal from either is an exception the caller can show.",
+        "Open src/payload.js. Two jobs, in order: check the whole payload is a list, then check each row. A refusal from either is an exception the caller can show. Run node --test --test-reporter=tap test/payload.test.mjs and read the name of the check that failed.",
         "Read a field by asking two questions: is it the right type, and does it say anything? A whitespace-only title passes the first and fails the second.",
         "Build the task object field by field instead of passing the row through. The app should render what you checked, not what happened to be in the object.",
         "Refusing the list means checking every row before returning anything. Collect the tasks, and only hand them back when the whole payload has been read. If the suite cannot start because `node` is command not found, run the environment check first.",

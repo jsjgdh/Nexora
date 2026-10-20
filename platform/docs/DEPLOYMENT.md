@@ -149,14 +149,33 @@ One workflow, two targets, because the fallback is a *target* and not a
 second product: the same image, rolled the same way, verified the same way,
 rolled back the same way.
 
-- **gcp** (the decision of record): the plan is applied — the Cloud SQL
-  instance with its backups and deletion protection, the Secret Manager
-  entries, the five Cloud Run services (in two passes, because a Cloud Run URL
-  carries a hash that does not exist until the service does), and the load
-  balancer. The plan is `infra/gcp/plan.json` as data; `plan-check` refuses it
-  drifting from this tree.
+- **gcp** (the decision of record): the plan is applied — the Artifact Registry
+  repository, the two service accounts and their roles, the Cloud SQL instance
+  with its backups and deletion protection, the Secret Manager entries and their
+  values, the five Cloud Run services (in two passes, because a Cloud Run URL
+  carries a hash that does not exist until the service does), the load balancer
+  and the budget alert. The plan is `infra/gcp/plan.json` as data;
+  `plan-check` refuses it drifting from this tree, and the deploy refuses it
+  again before it touches a project.
 - **compose** (the fallback): the image is copied to one host and rolled with
   `docker compose pull && up -d`.
+
+**The image is addressed by the plan, not by the workflow.** The address comes
+from `infra/gcp/src/image.ts`, which reads the plan: the registry is the plan's,
+and the tag is the commit. A workflow that carried its own copy of the address
+would be a second copy of the plan, and the two would drift — which is how a
+deploy ends up pushing to one registry and pulling from another. The suite
+checks that the workflow does not write a `-docker.pkg.dev` address of its own.
+
+**The deployed tag names one build.** The moving `:latest` tag is pushed as
+well, for a person looking at the registry, and the deploy refuses it: by the
+time a rollback runs, a moving tag points at the image that broke. A rollback
+has to name a build.
+
+**The rollback is a fact, not a guess.** Before anything is deployed, the
+pipeline reads the image the platform is running **from the Cloud Run API**,
+and the rollback is a redeploy of exactly that address. The compose target does
+the same thing with the `.deployed-image` file on the host.
 
 Then it **verifies itself, from outside**: `npm run healthcheck` and
 `npm run synthetic` against the DEPLOYED platform. Those are the same
@@ -166,7 +185,9 @@ platform on the last known-good image, and a human is paged by the fact that
 the run failed at all.
 
 It does not re-run the suite: it runs *after* `verify` has passed on that
-exact commit, so there is exactly one gate and it cannot drift.
+exact commit, so there is exactly one gate and it cannot drift. It does check
+the PLAN before it builds an image, because a plan that has drifted is a
+deploy that will fail later, and failing there costs a minute.
 
 ### `deploy-frontend.yml` — the site, to Vercel
 
@@ -196,10 +217,11 @@ deploys the site; a red one does neither, and says which suite failed.
 
 | Secret | Used by | Why |
 |---|---|---|
-| `GITHUB_TOKEN` (the workflow's own) | the mesh | to push the image to GHCR |
+| `GITHUB_TOKEN` (the workflow's own) | the mesh, compose target only | to push the image to GHCR |
 | `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` | the site | to deploy |
 | `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` | the mesh, compose target only | the fallback host, and a way in |
 | `SYNTHETIC_EMAIL`, `SYNTHETIC_PASSWORD` | the mesh's post-deploy check | the canary account the journey check signs in with |
+| `NEXORA_SECRET_*` (one per entry in the plan) | the mesh, gcp target only | the platform's secrets. The name is the SAME as the variable the deploy reads, so there is one list rather than two: the plan says a secret is called `nexora-internal-api-key`, the deploy reads `NEXORA_SECRET_INTERNAL_API_KEY`, and the repository secret is called that too. The suite checks that the three lists agree. |
 
 | Variable | Used by | Why |
 |---|---|---|
@@ -207,6 +229,7 @@ deploys the site; a red one does neither, and says which suite failed.
 | `SYNTHETIC_URL` | the mesh's post-deploy check | the deployed gateway |
 | `SITE_URL` | the site's post-deploy check | the origin a learner will use |
 | `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SERVICE_ACCOUNT` | the mesh, gcp target | Workload Identity Federation: a short-lived token, and no key in the repository and no key in a secret |
+| `GCP_BILLING_ACCOUNT` | the mesh, gcp target | the billing account the budget alert is created on. A budget belongs to a billing account and not to a project, so the account is the operator's. Without it the platform still comes up, and the run says in terms nobody can miss that the budget was NOT created |
 
 The Vercel project's own environment holds the site's runtime variables:
 `PUBLIC_API_URL` (the browser's route to the gateway), `GATEWAY_URL` (the app

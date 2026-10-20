@@ -27,13 +27,24 @@
 # looking. So the deploy verifies ITSELF: the health check and the learner
 # journey run against the DEPLOYED platform, and if either fails the previous
 # image is rolled back and the run says so. A red deploy ends with the
-# platform on the last known-good image, and a human is paged by the fact
-# that the run failed at all.
+# platform on the last known-good image, and a human is paged by the fact that
+# the run failed at all.
+#
+# THE IMAGE IS ADDRESSED BY THE PLAN, NOT BY THIS FILE
+#
+# The address of the image comes from `infra/gcp/plan.json`, read by
+# `infra/gcp/src/image.ts`. This file does not write the registry out, and it
+# does not write the tag out either: the tag is the commit, and the address is
+# the plan's registry plus that commit. A workflow that carried its own copy
+# of the address would be a second copy of the plan, and the two would drift —
+# which is how a deploy ends up pushing to one registry and pulling from
+# another.
 #
 # The secrets it needs, and why each is required:
 #   DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY   the fallback host, and a way in
-#   GITHUB_TOKEN                               to push the image
-#   VERCEL_*                                   (the front door's own workflow)
+#   GITHUB_TOKEN                               to push the image (compose only)
+#   NEXORA_SECRET_*                            the platform's secrets, one per
+#                                              entry in the plan
 #   SYNTHETIC_EMAIL, SYNTHETIC_PASSWORD        the canary account the journey
 #                                              check signs in with
 #
@@ -78,11 +89,16 @@ permissions:
   packages: write
   id-token: write # Workload Identity Federation mints the GCP token from this
 
+env:
+  # The target is read by the steps as well as by the conditions, so that a
+  # step and its condition cannot disagree about it.
+  TARGET: ${{ inputs.target || 'gcp' }}
+
 jobs:
   image:
     name: build the image
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     outputs:
       image: ${{ steps.name.outputs.image }}
       previous: ${{ steps.previous.outputs.image }}
@@ -92,35 +108,108 @@ jobs:
           ref: ${{ inputs.ref || github.event.workflow_run.head_sha || github.sha }}
           path: platform
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+
+      - name: install the dependencies
+        working-directory: platform
+        run: npm ci
+
+      # The plan is compiled before anything else, because the pipeline asks
+      # the plan where the image goes. Without this the deploy step would run
+      # a `dist/` that is not in the repository, and the step would fail on a
+      # file that does not exist rather than on a plan that does not fit.
+      - name: build the plan
+        working-directory: platform
+        run: npm run build --workspace=@nexora/gcp-plan
+
+      # The plan is checked against the code BEFORE an image is built. A plan
+      # that has drifted is a build that will fail later, and failing here
+      # costs a minute instead of a deploy.
+      - name: check the plan against the code
+        working-directory: platform
+        run: npm run gcp:check
+
+      # On GCP the deploy authenticates with Workload Identity Federation:
+      # a short-lived token, no key in the repository and no key in a secret.
+      # It is needed here, not only in the deploy job, because the image is
+      # PUSHED to Artifact Registry from this job and the address is READ
+      # from the running platform here.
+      - name: authenticate to Google Cloud
+        if: env.TARGET != 'compose'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - name: set up gcloud
+        if: env.TARGET != 'compose'
+        uses: google-github-actions/setup-gcloud@v2
+
+      # The name of the image, asked of the plan. The tag is the commit, so
+      # the address names the code and not the moment: a rollback has to be
+      # able to name a build, and a moving tag cannot.
+      - name: name the image
+        id: name
+        working-directory: platform
+        run: |
+          if [ "$TARGET" = "compose" ]; then
+            IMAGE="ghcr.io/${{ github.repository_owner }}/nexora-platform:${{ github.sha }}"
+          else
+            IMAGE="$(node infra/gcp/dist/image.js --tag=${{ github.sha }})"
+          fi
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
       # The image is built from the same Dockerfile the compose stack builds
       # from, with the same `SERVICE` argument, so the artefact is the one the
       # local stack already runs. The `SERVICE` argument only chooses the
       # entrypoint, and every service's entrypoint reads its own environment.
       - name: build the image
-        id: name
         working-directory: platform
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/nexora-platform:${{ github.sha }}
-          docker build --build-arg SERVICE=gateway -t "$IMAGE" .
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          docker build --build-arg SERVICE=gateway -t "${{ steps.name.outputs.image }}" .
 
       # What is running right now, so a rollback is a fact and not a guess.
+      # On GCP it is READ from the Cloud Run API: a remembered image is a
+      # guess, and a rollback made from a guess is a second outage.
       - name: find the image that is running
         id: previous
         working-directory: platform
         continue-on-error: true
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/nexora-platform:previous
-          if [ "${{ inputs.target }}" = "compose" ]; then
-            ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5 \
+          if [ "$TARGET" = "compose" ]; then
+            mkdir -p ~/.ssh
+            echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+            chmod 600 ~/.ssh/deploy_key
+            PREVIOUS="$(ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=5 \
               "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-              "cat /srv/nexora/platform/.deployed-image 2>/dev/null" && echo "image=$IMAGE" >> "$GITHUB_OUTPUT" || true
+              "cat /srv/nexora/platform/.deployed-image 2>/dev/null" || true)"
+          else
+            PREVIOUS="$(node infra/gcp/dist/image.js --current || true)"
           fi
+          echo "image=$PREVIOUS" >> "$GITHUB_OUTPUT"
 
       - name: push the image
+        working-directory: platform
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          if [ "$TARGET" = "compose" ]; then
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          else
+            # Artifact Registry is authenticated by gcloud, not by a password,
+            # and the host it answers on comes from the plan.
+            gcloud auth configure-docker "$(node infra/gcp/dist/image.js --host)" --quiet
+          fi
           docker push "${{ steps.name.outputs.image }}"
+          if [ "$TARGET" != "compose" ]; then
+            # The moving tag as well, for a person looking at the registry. It
+            # is never what gets deployed: the deploy refuses it, because a
+            # rollback has to name a build.
+            MOVING="$(node infra/gcp/dist/image.js --moving)"
+            docker tag "${{ steps.name.outputs.image }}" "$MOVING"
+            docker push "$MOVING"
+          fi
 
   deploy:
     name: ${{ inputs.target || 'gcp' }} — roll, verify, roll back if it must
@@ -147,33 +236,59 @@ jobs:
         working-directory: platform
         run: npm ci
 
+      # The plan is compiled here as well as in the image job. The two jobs
+      # do not share a filesystem, and a deploy that ran a `dist/` from
+      # somewhere else would be running code that was never checked.
+      - name: build the plan
+        working-directory: platform
+        run: npm run build --workspace=@nexora/gcp-plan
+
+      - name: check the plan against the code
+        working-directory: platform
+        run: npm run gcp:check
+
       # On GCP the deploy authenticates with Workload Identity Federation: a
       # short-lived token, no key in the repository and no key in a secret. The
       # provider and the service account are repository variables.
       - name: authenticate to Google Cloud
-        if: inputs.target != 'compose'
+        if: env.TARGET != 'compose'
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
       - name: set up gcloud
-        if: inputs.target != 'compose'
+        if: env.TARGET != 'compose'
         uses: google-github-actions/setup-gcloud@v2
 
       # The deploy itself is the plan: `plan.json` as data, `deploy.ts` as the
       # thing that applies it, and `plan-check` as the gate that refuses it
       # drifting from this tree. The Cloud Run deploy is two passes because a
       # Cloud Run URL carries a hash that does not exist until the service does.
+      #
+      # The secret values are named exactly as the plan's secrets are read, so
+      # there is one list rather than two: the plan says a secret is called
+      # `nexora-internal-api-key`, the deploy reads `NEXORA_SECRET_INTERNAL_API_KEY`,
+      # and the repository secret is called that too. The suite checks that
+      # the three lists agree.
       - name: apply the plan
-        if: inputs.target != 'compose'
+        if: env.TARGET != 'compose'
         working-directory: platform
         env:
           PLATFORM_IMAGE: ${{ needs.image.outputs.image }}
+          GCP_BILLING_ACCOUNT: ${{ vars.GCP_BILLING_ACCOUNT }}
+          NEXORA_SECRET_INTERNAL_API_KEY: ${{ secrets.NEXORA_SECRET_INTERNAL_API_KEY }}
+          NEXORA_SECRET_AUTH_JWT_SECRET: ${{ secrets.NEXORA_SECRET_AUTH_JWT_SECRET }}
+          NEXORA_SECRET_RECEIPT_ED25519_KEY: ${{ secrets.NEXORA_SECRET_RECEIPT_ED25519_KEY }}
+          NEXORA_SECRET_RECEIPT_ED25519_PUBLIC_KEY: ${{ secrets.NEXORA_SECRET_RECEIPT_ED25519_PUBLIC_KEY }}
+          NEXORA_SECRET_RESEND_API_KEY: ${{ secrets.NEXORA_SECRET_RESEND_API_KEY }}
+          NEXORA_SECRET_DODO_API_KEY: ${{ secrets.NEXORA_SECRET_DODO_API_KEY }}
+          NEXORA_SECRET_DODO_WEBHOOK_SECRET: ${{ secrets.NEXORA_SECRET_DODO_WEBHOOK_SECRET }}
+          NEXORA_SECRET_DB_PASSWORD: ${{ secrets.NEXORA_SECRET_DB_PASSWORD }}
         run: node infra/gcp/dist/deploy.js --apply
 
       # The fallback shape: the same image, rolled onto one host.
       - name: put the compose file on the host
-        if: inputs.target == 'compose'
+        if: env.TARGET == 'compose'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
@@ -182,7 +297,7 @@ jobs:
             platform/docker-compose.yml \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/srv/nexora/platform/docker-compose.yml"
       - name: roll the new image
-        if: inputs.target == 'compose'
+        if: env.TARGET == 'compose'
         env:
           IMAGE: ${{ needs.image.outputs.image }}
         run: |
@@ -227,7 +342,7 @@ jobs:
       - name: the deployed platform can teach
         working-directory: platform
         env:
-          SYNTHETIC_URL: ${{ vars.SYNTHETIC_URL }}
+          SYNTHETIC_URL: ${{ vars.SYNTHET_URL }}
           SYNTHETIC_EMAIL: ${{ secrets.SYNTHETIC_EMAIL }}
           SYNTHETIC_PASSWORD: ${{ secrets.SYNTHETIC_PASSWORD }}
         run: node scripts/synthetic.mjs --url="$SYNTHETIC_URL"
@@ -235,7 +350,7 @@ jobs:
       # The rollback. The previous image is known, so this is a redeploy of a
       # known-good artefact rather than a rebuild.
       - name: roll back if the verification failed
-        if: failure() && inputs.target == 'compose'
+        if: failure() && env.TARGET == 'compose'
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" <<'REMOTE'
@@ -251,7 +366,7 @@ jobs:
           echo "rolled back to $(cat .previous-image)"
           REMOTE
       - name: roll back on Google Cloud
-        if: failure() && inputs.target != 'compose'
+        if: failure() && env.TARGET != 'compose'
         working-directory: platform
         env:
           PREVIOUS: ${{ needs.image.outputs.previous }}
@@ -260,4 +375,4 @@ jobs:
             echo "there is no previous image recorded, so there is nothing to roll back to" >&2
             exit 0
           fi
-          PLATFORM_IMAGE="$PREVIOUS" node infra/gcp/dist/deploy.js --apply
+          node infra/gcp/dist/deploy.js --rollback --image="$PREVIOUS"

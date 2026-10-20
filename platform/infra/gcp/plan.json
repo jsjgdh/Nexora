@@ -42,6 +42,71 @@
   "project": "nexora-prod",
   "region": "us-central1",
   "artifactRegistry": "nexora",
+  "runtimeServiceAccount": "nexora-runtime",
+  "image": {
+    "repository": "mesh",
+    "movingTag": "latest",
+    "requireImmutableTag": true
+  },
+  "iam": {
+    "deployAccount": "nexora-deploy",
+    "deployRoles": [
+      {
+        "role": "roles/run.admin",
+        "why": "the deploy creates and updates the five Cloud Run services"
+      },
+      {
+        "role": "roles/iam.serviceAccountUser",
+        "why": "the deploy runs a service AS the running account, which is the only way to give it that identity"
+      },
+      {
+        "role": "roles/iam.serviceAccountAdmin",
+        "why": "the deploy creates the running account and grants it the roles below"
+      },
+      {
+        "role": "roles/sqladmin",
+        "why": "the deploy creates the Cloud SQL instance, its two databases and the automated backups"
+      },
+      {
+        "role": "roles/serviceusage.serviceUsageAdmin",
+        "why": "the Cloud Run and Cloud SQL APIs have to be enabled on the project before anything is created"
+      },
+      {
+        "role": "roles/compute.networkAdmin",
+        "why": "the deploy creates the load balancer, the serverless NEG, the certificate and the reserved address"
+      },
+      {
+        "role": "roles/secretmanager.admin",
+        "why": "the deploy creates the Secret Manager entries and adds a version to each one"
+      },
+      {
+        "role": "roles/artifactregistry.admin",
+        "why": "the deploy creates the Artifact Registry repository the image is pushed to"
+      },
+      {
+        "role": "roles/monitoring.admin",
+        "why": "the deploy creates the uptime check that watches the public surface"
+      }
+    ],
+    "runtimeRoles": [
+      {
+        "role": "roles/secretmanager.secretAccessor",
+        "why": "the services read the secrets they are mounted with, and nothing else in the project does"
+      },
+      {
+        "role": "roles/cloudsql.client",
+        "why": "the services reach Postgres through the Cloud SQL Auth Proxy sidecar"
+      },
+      {
+        "role": "roles/logging.logWriter",
+        "why": "the services write their own logs and nothing else writes for them"
+      },
+      {
+        "role": "roles/monitoring.metricWriter",
+        "why": "the services publish their own metrics to Cloud Monitoring"
+      }
+    ]
+  },
   "database": {
     "instance": "nexora-postgres",
     "engineVersion": "POSTGRES_17",
@@ -66,6 +131,7 @@
     "logRetentionDays": 30,
     "budget": {
       "displayName": "nexora-monthly",
+      "billingAccountEnv": "GCP_BILLING_ACCOUNT",
       "amount": 50,
       "currency": "USD",
       "thresholds": [
