@@ -131,6 +131,22 @@ not connected" where the sign-in form should have been.
   gradebook, no certificate, no credit, no outcome data) and that the offer
   is higher education and adult, not a school for under-16s. The contact is
   `teaching@nexora.dev`, named in the privacy notice and the terms.
+- [x] The operator's console (`/admin`), and its security review
+  (2026-10-20): an operator is a learner account with a row, and the flag
+  has a scope (an operator may look and end a session, only a super may
+  hand the flag on), an end (a flag granted from the console always
+  expires), and a proof of the address (a grant needs a verified address,
+  because an account row is not proof that anybody owns that address). The
+  first operator is granted by the operator's tooling on the machine. A
+  forged identity header is refused at the edge, and the suite proves it.
+- [ ] Reads of a learner's data in the console are not logged, so "who looked
+  at this account" cannot be answered. An operator's read is processing, and
+  the product's own data-rights page promises a record of processing.
+- [ ] The site's content security policy is still report-only, so a script
+  injected on any page could reach the browser's bearer and drive the
+  console's actions. Promoting it to enforcing with a nonce is a
+  verification pass over every page on the site, not a change to one
+  surface, and the hooks file says so.
 - [x] Subscription management: "Manage subscription" opens a Dodo customer
   portal session (new backend endpoint minting the session for the stored
   `dodo_customer_id`; frontend redirects). Cancel, card update, and invoice
