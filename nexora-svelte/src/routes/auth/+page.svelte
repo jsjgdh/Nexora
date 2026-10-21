@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { FREE_PHASES_PHRASE } from "$lib/content/site";
   import { goto } from "$app/navigation";
   import { apiConfigured, session } from "$lib/session.svelte";
   import {
@@ -39,7 +40,7 @@
      connected there is no form on this page at all. A local account stored
      in the browser would be a fiction: no refresh token, no proofs, no plan,
      no rights, and a "signed in" state the platform knows nothing about.
-     So the page says the truth and points at the nine free phases, which
+     So the page says the truth and points at the free phases, which
      need no account at all. */
 
   let mode = $state<"login" | "register">("login");
@@ -144,7 +145,7 @@
 
 <PageHead
   title={pageTitle("Account")}
-  description="Sign in to unlock IDE courses per your tier, or keep the nine free phases locally. It works without an account."
+  description="Sign in to unlock IDE courses per your tier, or keep the {FREE_PHASES_PHRASE} locally. It works without an account."
   path="/auth"
 />
 
@@ -160,7 +161,7 @@
         class="text-[clamp(1.9rem,4.4vw,3.2rem)] text-ink"
       />
       <p class="mt-6 max-w-[44ch] text-[14.5px] leading-relaxed text-muted">
-        An account unlocks IDE courses per your tier. The nine free phases bundled in the IDE work
+        An account unlocks IDE courses per your tier. The {FREE_PHASES_PHRASE} bundled in the IDE work
         without one, and it stays that way.
       </p>
 
@@ -196,7 +197,7 @@
         </Plate>
       {:else if !apiConfigured}
         <!-- Local mode. There is no form here on purpose: a form that cannot
-             work is worse than no form, and the nine free phases do not need
+             work is worse than no form, and the {FREE_PHASES_PHRASE} do not need
              one. -->
         <Plate>
           <p class="stamp text-review">cloud accounts not connected</p>
@@ -368,7 +369,7 @@
               {:else if failure === "outage"}
                 <div class="mt-4">
                   <a href="/download" class="text-[13px] text-accent underline underline-offset-4">
-                    The nine free phases work without an account
+                    The {FREE_PHASES_PHRASE} work without an account
                   </a>
                 </div>
               {/if}

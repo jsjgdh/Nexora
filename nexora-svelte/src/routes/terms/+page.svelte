@@ -5,7 +5,7 @@
   import DocStatus from "$lib/components/DocStatus.svelte";
   import { pageTitle } from "$lib/seo";
   import { LEGAL_ENTITY, PRIVACY_CONTACT, GOVERNING_LAW } from "$lib/legal";
-  import { HIRING_CONTACT, TEACHING_CONTACT } from "$lib/content/site";
+  import { HIRING_CONTACT, TEACHING_CONTACT, FREE_PHASES_PHRASE } from "$lib/content/site";
 
   /* The terms of service, written to be true rather than to be reassuring.
    *
@@ -69,7 +69,7 @@
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">What is free, and what a paid tier unlocks</h2>
           <p class="mt-3">
-            The IDE download, the nine free phases bundled inside it, and every check and verdict are free
+            The IDE download, the {FREE_PHASES_PHRASE} bundled inside it, and every check and verdict are free
             and stay free: assessment is never placed behind the paywall. A paid tier unlocks further
             courses, which are fetched into the IDE for the account that is entitled to them. The
             price, the billing period and what each tier includes are shown on the pricing page and at

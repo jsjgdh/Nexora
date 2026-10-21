@@ -8,7 +8,7 @@
   import PhaseMatrix from "$lib/components/PhaseMatrix.svelte";
   import CourseLedger from "$lib/components/CourseLedger.svelte";
   import FactStrip from "$lib/components/FactStrip.svelte";
-  import { COURSES, ALL_PHASES } from "$lib/content/site";
+  import { COURSES, ALL_PHASES, FREE_PHASE_COUNT_WORD_CAPITAL } from "$lib/content/site";
   import {
     COURSE_ACTIVITY_COUNTS,
     COURSE_DESCRIPTIONS,
@@ -138,7 +138,7 @@
 <section class="border-t-2 border-rule-strong">
   <div class="mx-auto max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28">
     <Headline
-      lines={["Nine of these ship", "inside the installer."]}
+      lines={[`${FREE_PHASE_COUNT_WORD_CAPITAL} of these ship`, "inside the installer."]}
       class="max-w-[18ch] text-[clamp(1.9rem,4.6vw,3.4rem)] text-ink"
     />
     <p class="reading mt-7 max-w-[52ch] text-[17px] leading-relaxed text-muted">

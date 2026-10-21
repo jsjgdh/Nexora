@@ -842,6 +842,12 @@ export const PRO_PHASE_COUNT = ALL_PHASES.length - FREE_PHASE_COUNT;
 const FREE_PHASES_IN_WORDS = numberWords(FREE_PHASE_COUNT) ?? String(FREE_PHASE_COUNT);
 const FREE_PHASES_IN_WORDS_CAPITAL = FREE_PHASES_IN_WORDS.charAt(0).toUpperCase() + FREE_PHASES_IN_WORDS.slice(1);
 
+/** The free count, in a phrase, so no sentence types the number. */
+export const FREE_PHASES_PHRASE = `${FREE_PHASES_IN_WORDS} free phases`;
+
+/** The count alone, capitalised, for a sentence that starts with it. */
+export const FREE_PHASE_COUNT_WORD_CAPITAL = FREE_PHASES_IN_WORDS_CAPITAL;
+
 /**
  * What is true of the offer today, in the two states the world can be in.
  *
@@ -1113,7 +1119,7 @@ export const FAQ = [
   },
   {
     q: "What does free include?",
-    a: "The IDE download, the nine free phases, every check and every verdict. Assessment is never behind the paywall.",
+    a: `The IDE download, the ${FREE_PHASES_IN_WORDS} free phases, every check and every verdict. Assessment is never behind the paywall.`,
   },
   {
     q: "How am I judged?",
@@ -1989,7 +1995,7 @@ export const TEACHING_ENQUIRY = {
  *     plain words, because a page that prints the word "pending" and leaves
  *     it there reads like an administrative detail, and it is not one: it is
  *     a licence that has not been confirmed, and the students who join get
- *     the nine free phases and nothing more.
+ *     the free phases and nothing more.
  *   - No em dash and no en dash in a visible string.
  * ======================================================================== */
 
@@ -2018,7 +2024,7 @@ export const COHORT_STATUS = {
   pending: {
     label: "pending",
     title: "The studio has to confirm the licence.",
-    body: "The cohort exists and you can see it, but the licence has not been confirmed. While it waits, the students who join get the nine free phases and nothing more. They do not have the paid course.",
+    body: `The cohort exists and you can see it, but the licence has not been confirmed. While it waits, the students who join get the ${FREE_PHASES_IN_WORDS} free phases and nothing more. They do not have the paid course.`,
   },
   active: {
     label: "active",
@@ -2128,7 +2134,7 @@ export const COHORT_TEACH = {
     submit: "Create the cohort",
     submitting: "Creating the cohort",
     created:
-      "The cohort is created, and it is pending. The studio has to confirm the licence before it carries anything, and until it does, the students who join get the nine free phases and nothing more.",
+      `The cohort is created, and it is pending. The studio has to confirm the licence before it carries anything, and until it does, the students who join get the ${FREE_PHASES_IN_WORDS} free phases and nothing more.`,
     failed:
       "The cohort was not created, and what you typed is still here. The platform did not answer.",
   },
@@ -2171,8 +2177,8 @@ export const COHORT_JOIN = {
   title: "Join a cohort.",
   lede: "Your instructor puts a code on the slide. You type it once, and you are in.",
   gives: "Joining gives you the paid course of that cohort, and nothing else. It does not open the other courses, and it does not open the paid phases of a course that is not this one.",
-  free: "The nine free phases are free either way, with no code and no account, and every check is free.",
-  pending: "If the licence is still waiting for the studio, joining gets you the nine free phases and nothing more, and this page says so.",
+  free: `The ${FREE_PHASES_IN_WORDS} free phases are free either way, with no code and no account, and every check is free.`,
+  pending: `If the licence is still waiting for the studio, joining gets you the ${FREE_PHASES_IN_WORDS} free phases and nothing more, and this page says so.`,
   field: "the join code from the slide",
   placeholder: "KQ7M-XR42",
   action: "Join with this code",
@@ -2183,7 +2189,7 @@ export const COHORT_JOIN = {
   atInstitution: "the institution",
   theTerm: "the term",
   notConfigured:
-    "Accounts are not connected in this build, so no code can be joined. The nine free phases in the IDE need no account.",
+    `Accounts are not connected in this build, so no code can be joined. The ${FREE_PHASES_IN_WORDS} free phases in the IDE need no account.`,
   signedOut:
     "Joining puts the cohort on your account, so sign in first and the code will still be here.",
   errors: {
@@ -2215,7 +2221,7 @@ export const COHORT_ACCOUNT = {
   active:
     "This gives you the paid course of that cohort, and nothing else. It does not open the other courses.",
   pending:
-    "The licence of this cohort is still waiting for the studio to confirm it, so it gives you the nine free phases and nothing more for now.",
+    `The licence of this cohort is still waiting for the studio to confirm it, so it gives you the ${FREE_PHASES_IN_WORDS} free phases and nothing more for now.`,
   ended:
     "The licence of this cohort has ended, so it gives you nothing further. The receipts you already have stay.",
   unknown: "The platform did not answer, so what this account holds is not known here.",

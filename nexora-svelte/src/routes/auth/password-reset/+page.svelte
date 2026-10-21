@@ -1,7 +1,7 @@
 <script lang="ts">
   import { apiConfigured, session } from "$lib/session.svelte";
   import { authMessage } from "$lib/auth-errors";
-  import { PASSWORD_RESET } from "$lib/content/site";
+  import { PASSWORD_RESET, FREE_PHASES_PHRASE } from "$lib/content/site";
   import Button from "$lib/components/Button.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
   import Headline from "$lib/components/Headline.svelte";
@@ -81,7 +81,7 @@
           <p class="stamp text-review">cloud accounts not connected</p>
           <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
             This build runs in local mode, so there is no account to reset and no link was sent. The
-            nine free phases in the IDE work without one, offline, and every check is free.
+            {FREE_PHASES_PHRASE} in the IDE work without one, offline, and every check is free.
           </p>
           <div class="mt-5">
             <ActionLink href="/download" variant="ghost" size="sm" island>Download the IDE</ActionLink>

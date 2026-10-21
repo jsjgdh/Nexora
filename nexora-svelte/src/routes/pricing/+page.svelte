@@ -7,7 +7,7 @@
   import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
-  import { BILLING_COMMITMENTS, NOT_SOLD, PRICING, PRICING_PLANS, QUOTED_PLANS, money } from "$lib/content/site";
+  import { BILLING_COMMITMENTS, NOT_SOLD, PRICING, PRICING_PLANS, QUOTED_PLANS, money, FREE_PHASES_PHRASE } from "$lib/content/site";
   import { SUBSCRIPTION_TERMS } from "$lib/legal";
 
   /* The price, printed. One number in one place, and the same number in the
@@ -96,7 +96,7 @@
     class="text-[clamp(2.2rem,6.5vw,5rem)] text-ink"
   />
   <p class="mt-7 max-w-[54ch] font-serif text-[clamp(1.05rem,2vw,1.5rem)] leading-snug text-muted">
-    Learning happens in the IDE. The nine free phases ship inside the download and stay free, and
+    Learning happens in the IDE. The {FREE_PHASES_PHRASE} ship inside the download and stay free, and
     assessment is never gated.
   </p>
 </div>

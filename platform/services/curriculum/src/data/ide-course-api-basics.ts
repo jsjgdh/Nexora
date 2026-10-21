@@ -135,6 +135,20 @@ export const IDE_COURSE_API_BASICS: unknown = {
           "body": "Before any code, write the request that creates a task and the response you expect back, then the same pair for a read that finds nothing. Name the method, path, status and body each time."
         }
       ],
+      "visualization": {
+        "type": "request-cycle",
+        "spec": {
+          "steps": [
+            "the method says what you want",
+            "the path names the resource",
+            "the server answers with a status",
+            "the body carries the thing"
+          ],
+          "status": "201 Created",
+          "body": "{\"id\":\"t1\"}"
+        },
+        "caption": "The status and the body are two separate things, and the first digit of the status is its family: 2xx worked, 4xx your request was wrong, 5xx the server broke."
+      },
       "resources": [
         {
           "label": "MDN: HTTP request methods",
@@ -288,6 +302,20 @@ export const IDE_COURSE_API_BASICS: unknown = {
           "body": "Before any code, write the three outcomes your client can show, loaded, failed with a status, loaded empty, and the exact fields each one holds."
         }
       ],
+      "visualization": {
+        "type": "request-cycle",
+        "spec": {
+          "steps": [
+            "the promise resolves",
+            "an answer has arrived",
+            "res.ok says if it worked",
+            "the body is read last"
+          ],
+          "status": "503",
+          "body": "an error page, not the payload"
+        },
+        "caption": "A 503 arrives exactly like a 200, so the promise is not the verdict. Read res.ok before the body, because an error page is not the payload."
+      },
       "resources": [
         {
           "label": "MDN: Response.ok",
@@ -441,6 +469,20 @@ export const IDE_COURSE_API_BASICS: unknown = {
           "body": "Before any code, write the three fields a task must have, what counts as missing for each, and the message you would want to read when one is wrong."
         }
       ],
+      "visualization": {
+        "type": "request-cycle",
+        "spec": {
+          "steps": [
+            "the body is text",
+            "JSON.parse proves it is JSON",
+            "every field is read",
+            "a bad row is refused by name"
+          ],
+          "status": "200 OK",
+          "body": "a row with no title"
+        },
+        "caption": "The status can be 200 and the payload still be unusable. Parsing proves the body is JSON, not that it is the shape your app renders."
+      },
       "resources": [
         {
           "label": "MDN: JSON.parse()",

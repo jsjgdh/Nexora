@@ -14,7 +14,7 @@
    * The code is on a slide and it is typed once, so the page says one thing
    * before the code is entered: what joining gives, and what it does not.
    * That matters most when the licence is still waiting for the studio,
-   * because a student who joins a pending cohort gets the nine free phases
+   * because a student who joins a pending cohort gets the free phases
    * and nothing more, and a page that said only "you are in" would have
    * promised the paid course by implication.
    *

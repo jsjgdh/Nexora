@@ -45,6 +45,8 @@ export function errorStatus(error: unknown): number {
   return typeof status === "number" ? status : 0;
 }
 
+import { FREE_PHASES_PHRASE } from "./content/site";
+
 /**
  * The sentences, one per event.
  *
@@ -68,10 +70,10 @@ export const AUTH_MESSAGES = {
     "That session was ended for safety, because its credential was used twice. Sign in again. Your work in the IDE is untouched.",
   /** The service did not answer at all. */
   unavailable:
-    "The sign-in service did not answer. Nothing here depends on it: the nine free phases in the IDE work offline, and your work is saved on your own machine.",
+    `The sign-in service did not answer. Nothing here depends on it: the ${FREE_PHASES_PHRASE} in the IDE work offline, and your work is saved on your own machine.`,
   /** The build has no platform behind it. */
   notConfigured:
-    "Accounts are not connected in this build, so nothing was sent and no account was made. The nine free phases in the IDE need no account.",
+    `Accounts are not connected in this build, so nothing was sent and no account was made. The ${FREE_PHASES_PHRASE} in the IDE need no account.`,
   /** The link or code was not accepted. */
   badToken:
     "That link was not accepted. It may have expired, or it may already have been used. Ask for a new one and it will arrive.",

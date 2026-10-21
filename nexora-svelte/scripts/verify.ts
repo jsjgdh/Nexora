@@ -2800,8 +2800,8 @@ console.log("\n== the cohort surface: a front door for a lecturer, and the truth
       )
   );
   ok(
-    "a pending licence says the students get the nine free phases and do not have the paid course",
-    COPY.COHORT_STATUS.pending.body.includes("nine free phases") &&
+    "a pending licence says the students get the free phases and do not have the paid course",
+    COPY.COHORT_STATUS.pending.body.includes(`${COPY.numberWords(COPY.FREE_PHASE_COUNT)} free phases`) &&
       COPY.COHORT_STATUS.pending.body.includes("do not have the paid course") &&
       // And it never says the thing that belongs to an active licence.
       !COPY.COHORT_STATUS.pending.body.includes("can open the paid phases")
@@ -2823,7 +2823,7 @@ console.log("\n== the cohort surface: a front door for a lecturer, and the truth
   );
   ok(
     "and it says what a pending licence gives, which is the free phases and nothing more",
-    COPY.COHORT_JOIN.pending.includes("nine free phases and nothing more") &&
+    COPY.COHORT_JOIN.pending.includes(`${COPY.numberWords(COPY.FREE_PHASE_COUNT)} free phases and nothing more`) &&
       joinSrc.includes("COHORT_JOIN.pending")
   );
   ok(
@@ -2867,7 +2867,9 @@ console.log("\n== the cohort surface: a front door for a lecturer, and the truth
       accountSrc.includes("COHORT_ACCOUNT.institution") &&
       accountSrc.includes("COHORT_ACCOUNT.term") &&
       COPY.COHORT_ACCOUNT.active.includes("the paid course of that cohort") &&
-      COPY.COHORT_ACCOUNT.pending.includes("nine free phases and nothing more")
+      COPY.COHORT_ACCOUNT.pending.includes(
+        `${COPY.numberWords(COPY.FREE_PHASE_COUNT)} free phases and nothing more`
+      )
   );
 
   // 6. The truth of the day: the page's list and the platform's routes.
@@ -3266,6 +3268,22 @@ console.log("\n== the front door says what is true today, and says it once ==");
       "and no count of phases or courses is typed into the copy at all",
       typed.length === 0,
       typed.join(", ")
+    );
+    // A count written in words is the same mistake with the digits taken off.
+    // The digit rule above cannot see "nine free phases", and a course that
+    // lands makes that sentence wrong while every other check still passes,
+    // because the number is right on the day it is written. So the count in
+    // words is not typed either: it is computed from the shipped list.
+    const spelledOut = readFileSync(
+      new URL("../src/lib/content/site.ts", import.meta.url),
+      "utf8"
+    ).match(
+      /\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+free\s+phases?\b/gi
+    ) ?? [];
+    ok(
+      "and no count of free phases is written in words in the copy either",
+      spelledOut.length === 0,
+      spelledOut.join(", ")
     );
     // A bare figure in a reading is the same mistake wearing a different
     // hat, so the two curriculum readings have to be computed. The zero and

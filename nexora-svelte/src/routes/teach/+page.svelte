@@ -6,8 +6,7 @@
     COHORT_COURSE_OPTIONS,
     COHORT_EXPORT,
     COHORT_STATUS,
-    COHORT_TEACH,
-  } from "$lib/content/site";
+    COHORT_TEACH, FREE_PHASES_PHRASE } from "$lib/content/site";
   import { courseTitle, type Cohort, type CohortDetail } from "$lib/cohorts";
   import Button from "$lib/components/Button.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
@@ -24,7 +23,7 @@
    *
    * The state that matters most is the licence. A cohort that is pending is
    * waiting for the studio to confirm it, and while it waits the students who
-   * join get the nine free phases and nothing more. So the page says that in
+   * join get the free phases and nothing more. So the page says that in
    * the status line itself, every time, and it never prints the sentence that
    * belongs to an active licence for a cohort that is not one.
    *
@@ -237,7 +236,7 @@
         <p class="stamp text-review">cloud accounts not connected</p>
         <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
           This build runs in local mode, so there is no platform to hold a cohort and nothing can be
-          created. The nine free phases in the IDE work offline and need no account.
+          created. The {FREE_PHASES_PHRASE} in the IDE work offline and need no account.
         </p>
       </Plate>
     </div>

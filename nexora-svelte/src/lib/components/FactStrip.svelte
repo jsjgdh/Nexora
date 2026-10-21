@@ -6,7 +6,7 @@
    *
    * Four measured facts, set as an instrument's readout row: a figure in
    * monospace and a label under it. Every figure is a count the suite can
-   * check — eighty phases, nine free phases, and no badge of any kind — and
+   * check — every phase, every free phase, and no badge of any kind — and
    * the last one is a zero, which is the number the whole product is arguing
    * for.
    *
