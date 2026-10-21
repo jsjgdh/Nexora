@@ -3,7 +3,7 @@
 export const IDE_MANIFEST_OCAML_FUNDAMENTALS: unknown = {
   "id": "ocaml-fundamentals",
   "title": "OCaml fundamentals",
-  "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report the learner writes themselves.",
+  "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report you write yourself.",
   "version": 1,
   "role": "main",
   "phases": [

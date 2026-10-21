@@ -3,7 +3,7 @@
 export const IDE_MANIFEST_API_BASICS: unknown = {
   "id": "api-basics",
   "title": "APIs from the outside",
-  "description": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design — it gates nothing, and you can leave it at any point.",
+  "description": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design. It gates nothing, and you can leave it at any point.",
   "version": 1,
   "role": "side",
   "covers": [

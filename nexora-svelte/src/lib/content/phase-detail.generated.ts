@@ -20,7 +20,7 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 8
     },
     "fundamentals": {
-      "goal": "The words every later phase uses as if you already knew them — a value, a variable, a function, a list, a loop — each defined in plain language and run in a two-line program, so the next phase is reading, not guessing.",
+      "goal": "The words every later phase uses as if you already knew them, a value, a variable, a function, a list, a loop, each defined in plain language and run in a two-line program, so the next phase is reading, not guessing.",
       "activities": 5
     },
     "web-basics": {
@@ -68,7 +68,7 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 4
     },
     "testing": {
-      "goal": "Write tests that would catch a broken implementation — judged by whether they can fail.",
+      "goal": "Write tests that would catch a broken implementation, judged by whether they can fail.",
       "activities": 4
     },
     "review": {
@@ -134,11 +134,11 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 4
     },
     "go-errors": {
-      "goal": "Errors are values: a sentinel you compare with errors.Is, context you add with %w, and — for the rare panic — a recover that turns a crash back into a value the caller can check.",
+      "goal": "Errors are values: a sentinel you compare with errors.Is, context you add with %w, and, for the rare panic, a recover that turns a crash back into a value the caller can check.",
       "activities": 4
     },
     "go-lifecycle": {
-      "goal": "Defer runs at return, panic means programmer bug, recover belongs at one boundary — and cleanup always runs exactly once.",
+      "goal": "Defer runs at return, panic means programmer bug, recover belongs at one boundary, and cleanup always runs exactly once.",
       "activities": 4
     },
     "go-generics": {
@@ -200,15 +200,15 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 4
     },
     "go-tests": {
-      "goal": "Write code against a suite you cannot rewrite. A hidden, table-driven test is the machine-checkable definition of correct behaviour here: it pins every band of a grader through a slice of cases run under t.Run subtests, and it checks an HTTP handler over a real loopback listener with httptest. Your job is the implementation that survives such a suite — boundaries exact, the out-of-range case refused, the status and the body both right — and the literacy to know that coverage counts what ran, never what you actually asserted.",
+      "goal": "Write code against a suite you cannot rewrite. A hidden, table-driven test is the machine-checkable definition of correct behaviour here: it pins every band of a grader through a slice of cases run under t.Run subtests, and it checks an HTTP handler over a real loopback listener with httptest. Your job is the implementation that survives such a suite, boundaries exact, the out-of-range case refused, the status and the body both right, and the literacy to know that coverage counts what ran, never what you actually asserted.",
       "activities": 4
     },
     "go-perf": {
-      "goal": "Ship the function a senior ships. Two implementations can both be correct and one of them is a landmine that only goes off at real size: building a string with += in a loop copies everything gathered so far each turn, so it is O(n^2), while a single-pass build is O(n). This phase makes that cost something you see rather than guess — the standard library as the senior one-liner, sizing a slice when you already know its length, and measuring with benchmarks, AllocsPerRun, and pprof instead of trusting a hunch.",
+      "goal": "Ship the function a senior ships. Two implementations can both be correct and one of them is a landmine that only goes off at real size: building a string with += in a loop copies everything gathered so far each turn, so it is O(n^2), while a single-pass build is O(n). This phase makes that cost something you see rather than guess, the standard library as the senior one-liner, sizing a slice when you already know its length, and measuring with benchmarks, AllocsPerRun, and pprof instead of trusting a hunch.",
       "activities": 4
     },
     "go-store": {
-      "goal": "A data model is not the shape of the happy path, it is the set of states you have decided are representable. This phase moves the rules to the one seam every writer shares — the store — so a handler, a migration and a seed script are all held to the same contract: a record with nothing naming it is refused by name, the same id cannot be stored twice, and a refusal changes nothing at all.",
+      "goal": "A data model is not the shape of the happy path, it is the set of states you have decided are representable. This phase moves the rules to the one seam every writer shares, the store, so a handler, a migration and a seed script are all held to the same contract: a record with nothing naming it is refused by name, the same id cannot be stored twice, and a refusal changes nothing at all.",
       "activities": 4
     },
     "go-db": {
@@ -220,11 +220,11 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 4
     },
     "go-resilience": {
-      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes — so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
+      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes, so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
       "activities": 4
     },
     "go-ops": {
-      "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest — the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
+      "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest, the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
       "activities": 4
     },
     "go-logging": {
@@ -236,19 +236,19 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 4
     },
     "go-ship": {
-      "goal": "Your machine builds your code because it holds a toolchain you installed and modules you already downloaded; none of that travels. This phase makes the build itself portable — a Dockerfile that compiles in one stage and ships from another, so the artifact is identical everywhere, and a pipeline that re-runs the same commands in a clean room on every push. The lab judges at two altitudes: the file structure is linted on every machine, and when a Docker daemon answers the image is really built and the suite really runs inside it — while a machine without one says so plainly and still gets every file check. Missing infrastructure is never a verdict about your work; a runtime image that ships its toolchain always is.",
+      "goal": "Your machine builds your code because it holds a toolchain you installed and modules you already downloaded; none of that travels. This phase makes the build itself portable, a Dockerfile that compiles in one stage and ships from another, so the artifact is identical everywhere, and a pipeline that re-runs the same commands in a clean room on every push. The lab judges at two altitudes: the file structure is linted on every machine, and when a Docker daemon answers the image is really built and the suite really runs inside it, while a machine without one says so plainly and still gets every file check. Missing infrastructure is never a verdict about your work; a runtime image that ships its toolchain always is.",
       "activities": 3
     },
     "go-incident": {
-      "goal": "Until now the broken apps in this course were models you investigated on paper. This one is your own code: a journal whose flush silently drops the last buffered entry, a suite that is red on arrival, and no list of candidate fixes to pick from. Run the suite, read the failure, form a hypothesis before you touch the code, cite the evidence your fix rests on, then make the real suite green. What is judged is the run — and the order of your reasoning.",
+      "goal": "Until now the broken apps in this course were models you investigated on paper. This one is your own code: a journal whose flush silently drops the last buffered entry, a suite that is red on arrival, and no list of candidate fixes to pick from. Run the suite, read the failure, form a hypothesis before you touch the code, cite the evidence your fix rests on, then make the real suite green. What is judged is the run, and the order of your reasoning.",
       "activities": 1
     },
     "incident-labs": {
-      "goal": "Three broken apps you investigate rather than run: read the symptom, log, and failing tests, record a hypothesis, then choose the fix that resolves the real cause without a regression. The process is what is judged — a hypothesis must come before the fix. Each lab carries the arc itself: the report frames it, the hypothesis and fix are the work, and the verdict on your own event order is the review.",
+      "goal": "Three broken apps you investigate rather than run: read the symptom, log, and failing tests, record a hypothesis, then choose the fix that resolves the real cause without a regression. The process is what is judged: a hypothesis must come before the fix. Each lab carries the arc itself: the report frames it, the hypothesis and fix are the work, and the verdict on your own event order is the review.",
       "activities": 3
     },
     "design-labs": {
-      "goal": "Take a concern you have already built in code and design it: decide where state that must survive a reload actually lives, defend the choice against a store that is unreachable, and read your own graph back as an architecture rather than a picture. Judged by the Studio rubric over the graph you draw — no test suite runs here. Each lab carries the arc itself: the brief frames it, the graph and its rationale are the work, and reading the rubric back is the review.",
+      "goal": "Take a concern you have already built in code and design it: decide where state that must survive a reload actually lives, defend the choice against a store that is unreachable, and read your own graph back as an architecture rather than a picture. Judged by the Studio rubric over the graph you draw. No test suite runs here. Each lab carries the arc itself: the brief frames it, the graph and its rationale are the work, and reading the rubric back is the review.",
       "activities": 3
     }
   },
@@ -320,11 +320,11 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
   },
   "rust-in-production": {
     "rust-checker": {
-      "goal": "Learn what a tool can establish about code, and how to report a finding a reader can judge.",
+      "goal": "Learn what a tool can establish about code, and how to report a finding a reader can judge. The judge reads the report module as well as the findings, so the report check stays red until the next phase writes it.",
       "activities": 4
     },
     "rust-checker-report": {
-      "goal": "Choose what the checker looks for, how badly it rates what it finds, and how the report says it.",
+      "goal": "Choose what the checker looks for, how badly it rates what it finds, and how the report says it. One judge runs both checker phases, so the suite is red until the phase before it and this one are done.",
       "activities": 4
     },
     "rust-tokio-runtime": {
@@ -450,6 +450,106 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "activities": 4
     }
   },
+  "zig-fundamentals": {
+    "zig-program": {
+      "goal": "A Zig project is a build script, a package manifest and a set of sources. What build.zig decides, what the compiler is told to compile, and what a dependency is pinned by.",
+      "activities": 4
+    },
+    "zig-values": {
+      "goal": "Money in a sheet is whole cents, and saying so in a type means every operation on it is checked. The Amount type, the arithmetic on it, and the value that may be missing.",
+      "activities": 4
+    },
+    "zig-control-flow": {
+      "goal": "A cell's text is read one byte at a time, and the branches decide what it is. The loops, the conditions, and the switch that has to mention every case.",
+      "activities": 4
+    },
+    "zig-functions": {
+      "goal": "A function names what it takes and what it gives back, and the signature is the promise the compiler checks. Turning a cell's text into an amount.",
+      "activities": 4
+    },
+    "zig-structs": {
+      "goal": "A struct is a shape, and a method is a function that takes the shape as its first argument. The cell, its amount, and the value that may be a number or words.",
+      "activities": 4
+    },
+    "zig-pointers": {
+      "goal": "A pointer is the address of a value. Passing the address lets a function change the value the caller holds, and reading through it lets a function work in place.",
+      "activities": 4
+    },
+    "zig-errors": {
+      "goal": "An error union holds a value or an error, and the compiler makes every caller deal with the error. The error set of a cell, and the failures it names.",
+      "activities": 4
+    },
+    "zig-allocator": {
+      "goal": "Zig does no memory management for you, so a function that needs room takes an allocator and the caller decides where the bytes come from. The sheet that owns its rows, and the slice it does not own.",
+      "activities": 4
+    },
+    "zig-defer": {
+      "goal": "defer runs when the scope ends however it ends, and errdefer runs only when the scope ends because something went wrong. The copy that has to be given back, and the pair that has to be unwound.",
+      "activities": 4
+    },
+    "zig-comptime": {
+      "goal": "A comptime value is known while the compiler reads the code, and a comptime parameter is a choice the caller makes. The table of operators, and the generic function that works on any type of numbers.",
+      "activities": 4
+    },
+    "zig-stdlib": {
+      "goal": "A writer is anything that takes bytes and a reader is anything that gives them, so one function can write to the screen, to a file or to a buffer. The row writer, and the reader that fills memory.",
+      "activities": 4
+    },
+    "zig-tests": {
+      "goal": "The test runner runs a named block of code and reports the ones that failed. Writing the assertion yourself, and reading what the runner said.",
+      "activities": 4
+    },
+    "zig-audit": {
+      "goal": "This is your turn: you choose the shape of the report, the wording and the code, and the checks judge what your program prints. The two facts it may establish, and the one it may not.",
+      "activities": 4
+    }
+  },
+  "ocaml-fundamentals": {
+    "ocaml-project": {
+      "goal": "What an OCaml project is: a dune project, a library, a program, and the compiler that turns your files into both.",
+      "activities": 4
+    },
+    "ocaml-values": {
+      "goal": "What a value is, what a type is, and what the compiler checks about both before the program runs.",
+      "activities": 4
+    },
+    "ocaml-control-flow": {
+      "goal": "How OCaml chooses: a condition with if, and a shape with match, and what the compiler says when a case is left out.",
+      "activities": 4
+    },
+    "ocaml-functions": {
+      "goal": "A function is a value: it can be given away, built on the spot, and left waiting for an argument.",
+      "activities": 4
+    },
+    "ocaml-lists": {
+      "goal": "How a list is built, how it is taken apart, and how a function walks one by calling itself.",
+      "activities": 4
+    },
+    "ocaml-records": {
+      "goal": "A value with named fields, and the one thing a record cannot do: change itself.",
+      "activities": 4
+    },
+    "ocaml-variants": {
+      "goal": "A value that is one of several shapes, and the match that takes it apart.",
+      "activities": 4
+    },
+    "ocaml-modules": {
+      "goal": "A module is a file with a name, a signature is what it promises, and a functor is a module built from a module.",
+      "activities": 4
+    },
+    "ocaml-errors": {
+      "goal": "Two ways to say that something went wrong: a value the caller has to look at, and an exception the caller catches.",
+      "activities": 4
+    },
+    "ocaml-stdlib": {
+      "goal": "The code that is already written for you: lists, folds, options, and the functions that turn a value into text.",
+      "activities": 4
+    },
+    "ocaml-your-turn": {
+      "goal": "The report you write: the shape is yours, the contract is not.",
+      "activities": 4
+    }
+  },
   "api-basics": {
     "api-contract": {
       "goal": "An endpoint is a promise written down: a method, a path, a status and a body. This phase reads one before writing a single call, so a wrong answer later reads as a wrong request rather than a broken server.",
@@ -473,6 +573,8 @@ export const COURSE_ACTIVITY_COUNTS: Record<string, number> = {
   "rust-fundamentals": 64,
   "rust-in-production": 88,
   "sql-fundamentals": 40,
+  "zig-fundamentals": 52,
+  "ocaml-fundamentals": 44,
   "api-basics": 9
 };
 
@@ -482,6 +584,8 @@ export const COURSE_DESCRIPTIONS: Record<string, string> = {
   "go-in-production": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, pipelines, JSON in and out, an HTTP server with its deadlines, routes, middleware, authentication, tests, performance, storage, a database, caching, resilience, operations, logging, dependencies, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
   "rust-fundamentals": "The Rust language, in the order the book teaches it: the tools, then values and control flow, then ownership and borrowing, then structs, enums, errors and modules, then collections, traits and lifetimes, then testing, then the threads and the futures the language gives you, and a money type of your own design at the end.",
   "rust-in-production": "The ledger as a service. It opens with a program that reads code and reports what it finds, and then it builds the service: the runtime and its tasks, the channels between them, the router and its extractors, the state it shares, the layers around it, the stop at the end of it, the failures that become answers, the database, the configuration, the log, the tests, and a release you can defend.",
-  "sql-fundamentals": "SQL as SQLite really accepts it, on the ledger the Go and Rust courses already build: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
-  "api-basics": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design — it gates nothing, and you can leave it at any point."
+  "sql-fundamentals": "SQL as SQLite really accepts it, on the ledger the Go and Rust courses already build: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. It teaches the SQL of SQLite 3.54.1, the version that was current on 2026-10-21, and says so where SQLite and the SQL standard differ. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
+  "zig-fundamentals": "Zig itself, from the first program to the test runner. What build.zig decides, values and types, control flow, functions, structs and methods, pointers, error unions, the allocator, defer and errdefer, comptime and generics, the standard library, and the test runner. The phases build one small sheet program, and each is judged by the project's own Zig tests read by the Zig test runner. Every phase is Learn, then Solve, then Review.",
+  "ocaml-fundamentals": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report you write yourself.",
+  "api-basics": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design. It gates nothing, and you can leave it at any point."
 };

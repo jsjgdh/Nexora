@@ -3,7 +3,7 @@
 export const IDE_COURSE_API_BASICS: unknown = {
   "id": "api-basics",
   "title": "APIs from the outside",
-  "description": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design — it gates nothing, and you can leave it at any point.",
+  "description": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design. It gates nothing, and you can leave it at any point.",
   "version": 1,
   "role": "side",
   "covers": [
@@ -24,7 +24,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "api-contract-do"
       ],
       "interviewQuestions": [
-        "What does each part of a request — method, path, headers, body — decide about what the server will do?",
+        "What does each part of a request, method, path, headers, body, decide about what the server will do?",
         "Why is a 4xx different from a 5xx when you are deciding who has to fix something?",
         "When would you send a body with a read, and why is the answer usually never?"
       ]
@@ -77,7 +77,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "web-http-json"
       ],
       "hints": [
-        "Write the contract down before the call: method, path, status, body. Without the status family in front of you, a 4xx reads as a server fault. If node is command not found, run the environment check first."
+        "Write the contract down before the call: method, path, status, body. Without the status family in front of you, a 4xx reads as a server fault. If the terminal says node is not found, run the environment check first."
       ],
       "objectives": [
         "Read an endpoint as four promises: a method, a path, a status and a body.",
@@ -115,12 +115,20 @@ export const IDE_COURSE_API_BASICS: unknown = {
         {
           "kind": "example",
           "body": "src/request.js is where this phase works.",
-          "code": "/* The request, written down before it is sent.\n *\n * The contract this module serves is the API's, not yours: a caller names the\n * method and the path, and gets back the two pieces `fetch` wants — a URL and\n * an init object. Nothing here sends anything, which is what makes it testable\n * without a network.\n *\n * Not written yet. `buildRequest(method, path, body)` is yours to build: read\n * the suite in test/request.test.mjs for the three shapes it has to produce.\n */\nexport function buildRequest(method, path, body) {\n\tthrow new Error('buildRequest is not written yet');\n}"
+          "code": "/* The request, written down before it is sent.\n *\n * The contract this module serves is the API's, not yours: a caller names the\n * method and the path, and gets back the two pieces `fetch` wants, a URL and\n * an init object. Nothing here sends anything, which is what makes it testable\n * without a network.\n *\n * Not written yet. `buildRequest(method, path, body)` is yours to build: read\n * the suite in test/request.test.mjs for the three shapes it has to produce.\n */\nexport function buildRequest(method, path, body) {\n\tthrow new Error('buildRequest is not written yet');\n}"
         },
         {
           "kind": "example",
           "body": "The command that runs the suite:",
           "code": "node --test --test-reporter=tap test/request.test.mjs"
+        },
+        {
+          "kind": "prose",
+          "body": "That command is Node, and Node has to be on the machine before the phase can run. It comes from https://nodejs.org: take the download labeled LTS, the long-support release the tests are written against. If the terminal says node is not found, install it from that page and run the environment check before you write a line."
+        },
+        {
+          "kind": "prose",
+          "body": "This course works in the API Basics project, at NEXORA/API-Basics in your home folder. This is a short course with a project of its own, so it never asks you to work inside the Task Manager app, and the module this phase names, src/request.js, is inside it instead."
         },
         {
           "kind": "task",
@@ -138,9 +146,9 @@ export const IDE_COURSE_API_BASICS: unknown = {
         }
       ],
       "misconceptions": [
-        "A 404 means the network is down — it means the server answered and found nothing at that path.",
-        "The body of a read is how you pass a filter — filters go in the path, because a read carries no body.",
-        "201 and 200 are interchangeable — 201 says something was created and usually hands it back."
+        "A 404 means the network is down; it means the server answered and found nothing at that path.",
+        "The body of a read is how you pass a filter, filters go in the path, because a read carries no body.",
+        "201 and 200 are interchangeable, 201 says something was created and usually hands it back."
       ]
     },
     "api-contract-ask": {
@@ -165,13 +173,13 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "The body must be empty, because a create answers with a status only."
       ],
       "answer": 0,
-      "explanation": "201 is the family of 2xx: the server did what was asked, and the thing it created now exists. Creation is one round trip, so no second read confirms it — a client that reads again is doing it to refresh, not to verify. The returned body is the server telling you what it stored, which is how the client learns the id the server assigned. And a create answers with a body far more often than with none, because the caller needs that id. Reading the status family first, then the body, is the whole habit.",
+      "explanation": "201 is the 2xx family: the server did what was asked, and the task now exists. One round trip creates it, so a second read refreshes rather than confirms. The body is how you learn what the server stored and the id it assigned, so a create usually carries a body because the caller needs that id. Read the status family first, then the body.",
       "hints": [
         "Ask which family 201 belongs to, and what that family promises about the request."
       ],
       "misconceptions": [
-        "A create needs a follow-up read before it counts — one accepted POST is the whole confirmation.",
-        "The body of a 201 is decoration — it is usually the stored record, including the id you do not have yet."
+        "A create needs a follow-up read before it counts, one accepted POST is the whole confirmation.",
+        "The body of a 201 is decoration; it is usually the stored record, including the id you do not have yet."
       ]
     },
     "api-contract-do": {
@@ -195,7 +203,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
             "a read sends no body and asks for JSON back",
             "a create sends the task as JSON text"
           ],
-          "feedback": "The two calls are not the same call with a different verb. A read names the path and asks for JSON in a header, with no body at all. A create states its content type and sends the task serialized to text, because an object put straight into a body arrives as nothing the server can parse. Build the init object, then check which fields belong to which verb."
+          "feedback": "The two calls are not the same call with a different verb. A read names the path and asks for JSON in a header, with no body. A create states its content type and sends the task serialized to text, because an object put straight into a body is nothing the server can parse. Build the init object, then check which fields belong to which verb."
         },
         {
           "id": "edge-verb",
@@ -211,13 +219,13 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "Open src/request.js. Start from the pair the contract names: a method and a path in, an object out. Everything the tests read is a field of that object. Run node --test --test-reporter=tap test/request.test.mjs and read the name of the check that failed.",
         "A read carries no body. That is not a style choice: a GET with a body is a request many servers answer with 400, so the field must be absent, not empty.",
         "Both verbs ask for JSON back, and only the create says what it is sending. That is two headers on one object, and one of them depends on whether there is a body.",
-        "A body is bytes. JSON.stringify turns the task into those bytes; passing the object itself sends nothing the server can read. If the suite cannot start because `node` is command not found, run the environment check first.",
+        "A body is bytes. JSON.stringify turns the task into those bytes; passing the object itself sends nothing the server can read. If the suite cannot start because the terminal says `node` is not found, run the environment check first.",
         "Before submitting, walk three calls: a read, a create, and a verb you invented. All three must return or refuse without ever reaching a network, and the refusal has to name the verb."
       ],
       "misconceptions": [
-        "An empty string body is the same as no body — a server reads the presence of the field, not its contents.",
-        "Setting content-type is optional when the payload is obviously JSON — nothing on the wire is obvious.",
-        "A client can assume its caller passes a real verb — the typo is made here, so the check belongs here."
+        "An empty string body is the same as no body, a server reads the presence of the field, not its contents.",
+        "Setting content-type is optional when the payload is obviously JSON, nothing on the wire is obvious.",
+        "A client can assume its caller passes a real verb, the typo is made here, so the check belongs here."
       ]
     },
     "api-response-learn": {
@@ -230,7 +238,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "api-integration"
       ],
       "hints": [
-        "Read res.ok before you touch the body: a 503 resolves exactly like a 200, and an error page is not the payload you meant to parse. If node is command not found, run the environment check first."
+        "Read res.ok before you touch the body: a 503 resolves exactly like a 200, and an error page is not the payload you meant to parse. If the terminal says node is not found, run the environment check first."
       ],
       "objectives": [
         "Explain why a resolved promise means the server answered, not that the request succeeded.",
@@ -277,7 +285,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         },
         {
           "kind": "task",
-          "body": "Before any code, write the three outcomes your client can show — loaded, failed with a status, loaded empty — and the exact fields each one holds."
+          "body": "Before any code, write the three outcomes your client can show, loaded, failed with a status, loaded empty, and the exact fields each one holds."
         }
       ],
       "resources": [
@@ -291,9 +299,9 @@ export const IDE_COURSE_API_BASICS: unknown = {
         }
       ],
       "misconceptions": [
-        "fetch rejects when the server answers with an error status — it rejects only when no answer arrives at all.",
-        "A catch around the request is the same as handling a failure — a 500 resolves, so the catch never runs.",
-        "Parsing the body always works — 204 has none, and an error page is often not JSON."
+        "fetch rejects when the server answers with an error status; it rejects only when no answer arrives at all.",
+        "A catch around the request is the same as handling a failure, a 500 resolves, so the catch never runs.",
+        "Parsing the body always works, 204 has none, and an error page is often not JSON."
       ]
     },
     "api-response-ask": {
@@ -318,13 +326,13 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "Retry immediately and forever, since the server clearly had a moment of trouble."
       ],
       "answer": 2,
-      "explanation": "The request was answered, so the promise resolved and no catch runs; the 503 is data inside that answer. Parsing next is the trap: the body is an HTML page, so JSON.parse throws a syntax error, and the caller is told about a parse problem when the real news was a broken server. The honest order is verdict first, body second: read res.ok, keep the status number, and skip the body entirely on a failure. Retrying forever is the other extreme — a 503 is worth one deliberate retry with a wait, never an unbounded loop.",
+      "explanation": "An answered request resolves the promise: no catch runs, and the 503 is data, not an exception. Parsing next is the trap: JSON.parse throws on an HTML page, and the caller blames the bytes, not the machine. Verdict first, body second: check res.ok, keep the status, skip the body on a failure. Retrying forever is the other extreme; a 503 is worth one retry after a wait.",
       "hints": [
         "Ask what resolved means for a promise, and whether a status can change that."
       ],
       "misconceptions": [
-        "An error response has no useful information — its status code is the most useful fact in the exchange.",
-        "A parse error and a server failure are the same report — one blames the bytes, the other blames the machine."
+        "An error response has no useful information, its status code is the most useful fact in the exchange.",
+        "A parse error and a server failure are the same report, one blames the bytes, the other blames the machine."
       ]
     },
     "api-response-do": {
@@ -348,7 +356,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
             "an ok answer becomes the data the caller wanted",
             "a server error is reported with its status rather than thrown away"
           ],
-          "feedback": "The failure path is not more forgiving than the success path, and it is not louder either. A server error is an answer: return the status and a reason that quotes it, and do not touch the body, because an error page is not the payload. The caller needs three fields it can render without guarding anything — ok, status, and either data or error."
+          "feedback": "The failure path is not more forgiving than the success path, and it is not louder either. A server error is an answer: return the status and a reason that quotes it, and do not touch the body, because an error page is not the payload. The caller needs three fields it can render without guarding anything, ok, status, and either data or error."
         },
         {
           "id": "edge-empty",
@@ -364,13 +372,13 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "Open src/response.js. Write the three outcomes as fields first: ok, status, and data or error. Then make each path of the function produce exactly one of them. Run node --test --test-reporter=tap test/response.test.mjs and read the name of the check that failed.",
         "The order of the checks is the whole exercise. Ask whether it worked before asking what it said, because the body of a failure is not yours to interpret.",
         "An error that says only \"request failed\" is not actionable. Put the number in the message so the next person can tell a refusal from an outage.",
-        "Not every success has content. One status arrives with no bytes at all, and calling json() on it rejects. If the suite cannot start because `node` is command not found, run the environment check first.",
+        "Not every success has content. One status arrives with no bytes at all, and calling json() on it rejects. If the suite cannot start because the terminal says `node` is not found, run the environment check first.",
         "Before submitting, walk four responses: 200 with a body, 204 with none, 503 with an error page, and one whose json() rejects. Every one of them must leave your function without throwing."
       ],
       "misconceptions": [
-        "A try/catch around the whole function is enough — it would turn every named failure into an unnamed exception.",
-        "The status only matters when something goes wrong — the caller shows it either way, and 204 changes what data means.",
-        "Returning the raw response is kinder, since callers can inspect it — a caller that must remember res.ok will forget in the next screen."
+        "A try/catch around the whole function is enough; it would turn every named failure into an unnamed exception.",
+        "The status only matters when something goes wrong, the caller shows it either way, and 204 changes what data means.",
+        "Returning the raw response is kinder, since callers can inspect it, a caller that must remember res.ok will forget in the next screen."
       ]
     },
     "api-payload-learn": {
@@ -383,7 +391,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "api-integration"
       ],
       "hints": [
-        "Name the fields you actually need before parsing anything: an id, a title with something in it, a done that is exactly true or false. JSON.parse guarantees none of them. If node is command not found, run the environment check first."
+        "Name the fields you actually need before parsing anything: an id, a title with something in it, a done that is exactly true or false. JSON.parse guarantees none of them. If the terminal says node is not found, run the environment check first."
       ],
       "objectives": [
         "Explain what JSON.parse proves about a payload, and what it leaves entirely unchecked.",
@@ -421,7 +429,7 @@ export const IDE_COURSE_API_BASICS: unknown = {
         {
           "kind": "example",
           "body": "src/payload.js is where this phase works.",
-          "code": "/* What a body is allowed to contain.\n *\n * A payload is text from somewhere else — a server, a cache, a colleague's\n * fixture. `readTasks(body)` decides which rows can become tasks the app\n * renders, and names the field when a row cannot.\n *\n * Not written yet. Read test/payload.test.mjs: it asks for one shape and two\n * refusals.\n */\nexport function readTasks(body) {\n\tthrow new Error('readTasks is not written yet');\n}"
+          "code": "/* What a body is allowed to contain.\n *\n * A payload is text from somewhere else, a server, a cache, a colleague's\n * fixture. `readTasks(body)` decides which rows can become tasks the app\n * renders, and names the field when a row cannot.\n *\n * Not written yet. Read test/payload.test.mjs: it asks for one shape and two\n * refusals.\n */\nexport function readTasks(body) {\n\tthrow new Error('readTasks is not written yet');\n}"
         },
         {
           "kind": "example",
@@ -444,9 +452,9 @@ export const IDE_COURSE_API_BASICS: unknown = {
         }
       ],
       "misconceptions": [
-        "If JSON.parse succeeded the data is safe to render — parsing checks syntax, and the shape is yours to check.",
-        "Dropping the rows that fail is more forgiving than refusing — it renders a list that silently disagrees with the server.",
-        "An empty title is a valid title — it renders as a blank row nobody can identify or click."
+        "If JSON.parse succeeded the data is safe to render, parsing checks syntax, and the shape is yours to check.",
+        "Dropping the rows that fail is more forgiving than refusing; it renders a list that silently disagrees with the server.",
+        "An empty title is a valid title; it renders as a blank row nobody can identify or click."
       ]
     },
     "api-payload-ask": {
@@ -471,13 +479,13 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "That the text parsed, and nothing about whether the rows fit."
       ],
       "answer": 3,
-      "explanation": "A parser answers one question: are these bytes shaped like JSON? It cannot know that a task needs a title, because the schema lives with your app rather than in the syntax. A server can be healthy and still return an object whose fields were renamed last week, and it can return a valid list with one row missing a title. So parsing is the gate to reading, not the end of it: after it succeeds, every field the screen depends on still has to be checked, and the check is the only place the app can say which field was wrong.",
+      "explanation": "A parser answers one question: are these bytes JSON? It cannot know a task needs a title: your app holds the schema, not the syntax. A healthy server can still send renamed fields, or a list with a row missing a title. Parsing is the gate to reading, not the end: every field the screen needs must be checked, and the check names the wrong field.",
       "hints": [
         "Ask what a parser is able to know: the grammar of the text, or the meaning your app gives it."
       ],
       "misconceptions": [
-        "A parser validates the schema — it validates syntax only, and a schema is a separate promise.",
-        "Well-formed data from a healthy server is trustworthy — a rename on their side is not an outage on yours."
+        "A parser validates the schema; it validates syntax only, and a schema is a separate promise.",
+        "Well-formed data from a healthy server is trustworthy, a rename on their side is not an outage on yours."
       ]
     },
     "api-payload-do": {
@@ -517,13 +525,13 @@ export const IDE_COURSE_API_BASICS: unknown = {
         "Open src/payload.js. Two jobs, in order: check the whole payload is a list, then check each row. A refusal from either is an exception the caller can show. Run node --test --test-reporter=tap test/payload.test.mjs and read the name of the check that failed.",
         "Read a field by asking two questions: is it the right type, and does it say anything? A whitespace-only title passes the first and fails the second.",
         "Build the task object field by field instead of passing the row through. The app should render what you checked, not what happened to be in the object.",
-        "Refusing the list means checking every row before returning anything. Collect the tasks, and only hand them back when the whole payload has been read. If the suite cannot start because `node` is command not found, run the environment check first.",
+        "Refusing the list means checking every row before returning anything. Collect the tasks, and only hand them back when the whole payload has been read. If the suite cannot start because the terminal says `node` is not found, run the environment check first.",
         "Before submitting, run four payloads: a good list, a row with no title, a row with an empty title, and something that is not a list at all. Each refusal must name what was wrong, and no input may return a partial list."
       ],
       "misconceptions": [
-        "Checking the first row is enough, since the server sends one shape — a list can mix rows, and the bad one is rarely first.",
-        "Passing the row object straight through keeps unknown fields for later — the app then renders whatever the server happened to send.",
-        "A thrown error is a bad user experience, so returning an empty list is kinder — it turns a diagnosable failure into a silent, empty screen."
+        "Checking the first row is enough, since the server sends one shape, a list can mix rows, and the bad one is rarely first.",
+        "Passing the row object straight through keeps unknown fields for later, the app then renders whatever the server happened to send.",
+        "A thrown error is a bad user experience, so returning an empty list is kinder; it turns a diagnosable failure into a silent, empty screen."
       ]
     }
   }

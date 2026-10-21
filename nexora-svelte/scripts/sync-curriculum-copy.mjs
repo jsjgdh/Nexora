@@ -87,6 +87,8 @@ const COURSES = [
   ["rust-fundamentals", "RUST_FUNDAMENTALS"],
   ["rust-in-production", "RUST_IN_PRODUCTION"],
   ["sql-fundamentals", "SQL_FUNDAMENTALS"],
+  ["zig-fundamentals", "ZIG_FUNDAMENTALS"],
+  ["ocaml-fundamentals", "OCAML_FUNDAMENTALS"],
   ["api-basics", "API_BASICS"],
 ];
 

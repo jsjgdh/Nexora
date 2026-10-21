@@ -281,10 +281,33 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "code": "node --test --test-reporter=tap test/first-database.test.mjs"
         },
         {
+          "kind": "prose",
+          "body": "If the terminal says node is not found, install Node from https://nodejs.org and run the environment check before you write any SQL."
+        },
+        {
+          "kind": "prose",
+          "body": "The sqlite3 command is a tool of its own, and the one that opens a database file from a terminal: it comes from https://sqlite.org/download.html, and the download there is a single file you run. If the terminal says sqlite3 is not found, install it from that page, and the checks work either way because they read the file through the driver."
+        },
+        {
+          "kind": "prose",
+          "body": "This course works in the SQL Ledger project, at NEXORA/SQL-Ledger in your home folder, and the schema file and the query this phase names, schema.sql and queries/01-first-database.sql, are inside it."
+        },
+        {
           "kind": "task",
           "body": "Open queries/01-first-database.sql and write the three statements it asks for: the table, the row, and the select. The check reads the rows the last statement returns."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "run schema.sql",
+            "run seed.sql",
+            "the query runs"
+          ]
+        },
+        "caption": "The file is built by statements, not by the program. The schema and the seed are read into ledger.db before anything asks it a question."
+      }
     },
     "sql-first-database-do": {
       "id": "sql-first-database-do",
@@ -301,7 +324,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "A table is made with CREATE TABLE notes (id TEXT, body TEXT), and a row goes in with INSERT INTO notes (id, body) VALUES (...).",
         "The select has to name the columns in the order the check reads them: the id first and the body second.",
         "Run node --test --test-reporter=tap test/first-database.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the sqlite3 command line is not needed to find out whether the table is there."
       ],
       "misconceptions": [
         "Writing the select first and the statements that make its rows later, so the query has nothing to read.",
@@ -363,13 +386,13 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "The file has to be there, and the command has to name it.",
         "A server has to be running somewhere on the network.",
-        "The driver has to be built before the file can be read.",
-        "The rows have to be sorted before SQLite will show them."
+        "The rows have to be sorted before SQLite will show them.",
+        "The file has to be there, and the command has to name it.",
+        "The driver has to be built and installed before the file can be read."
       ],
-      "answer": 0,
-      "explanation": "SQLite is a library over a file. The command opens the file the name points at, reads the pages it needs and closes it again. There is no service to start and nothing to download, and the driver does not have to be built: the command line and the driver in your own language are the same engine over the same file. Sorting is something you ask for with a query, not something the engine does on its own."
+      "answer": 2,
+      "explanation": "SQLite is a library over a file: the command opens the file its name points at, reads the pages it needs and closes it. There is no service to start, nothing to download, and the driver needs no building: the command line and the driver are the same engine over the same file. Sorting is what you ask for with a query, not what the engine does."
     },
     "sql-first-database-review": {
       "id": "sql-first-database-review",
@@ -435,7 +458,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Run the examples yourself: examples.sql holds one query per idea, and the ledger they read is the one you built.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The condition is plain SQL, so the answer does not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking WHERE decides which columns come back, when it decides which rows come back.",
@@ -450,7 +473,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A query has two halves that are easy to confuse. SELECT names the columns the answer has. WHERE decides which rows of the table the answer is made of. Write the first, forget the second, and you get the whole table."
+          "body": "A query has two halves, and they look alike. SELECT names the columns the answer has. WHERE decides which rows of the table the answer is made of. Write the first, forget the second, and you get the whole table."
         },
         {
           "kind": "prose",
@@ -489,7 +512,27 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/02-select-where.sql and write the query the file asks for: the accounts at or above the threshold, with the id, the owner and the balance."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "query-plan",
+        "spec": {
+          "steps": [
+            {
+              "label": "the accounts table",
+              "rows": 6
+            },
+            {
+              "label": "WHERE owner = Ada",
+              "rows": 1
+            },
+            {
+              "label": "SELECT id, owner, cents",
+              "rows": 1
+            }
+          ]
+        },
+        "caption": "WHERE decides the rows and SELECT decides the columns. The filter runs first, so the answer is the rows that are left."
+      }
     },
     "sql-select-where-do": {
       "id": "sql-select-where-do",
@@ -506,7 +549,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "The threshold is at least 5000 cents, so the comparison keeps a balance of exactly 5000 as well.",
         "Three columns come back, in this order: the account id, the owner and the balance.",
         "Run node --test --test-reporter=tap test/select-where.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the rows your condition keeps are read the same way on every machine."
       ],
       "misconceptions": [
         "Using a comparison that leaves out the account with exactly five thousand cents.",
@@ -574,7 +617,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "SELECT id, owner, cents FROM accounts LIMIT 5000;"
       ],
       "answer": 1,
-      "explanation": "The condition on the balance is what keeps the rows the report is about, so it belongs in the WHERE clause. The first query answers with every account in the ledger, which is a table and not a report. ORDER BY sorts the rows that come back and does not remove any of them, and LIMIT counts the rows it keeps and does not look at their values, so neither of them is a condition on the balance."
+      "explanation": "The condition on the balance keeps the rows the report is about, so it belongs in the WHERE clause. The first query answers with every account in the ledger, which is a table, not a report. ORDER BY sorts the rows it returns and removes none of them, and LIMIT counts the rows it keeps without reading their values, so neither is a condition on the balance."
     },
     "sql-select-where-review": {
       "id": "sql-select-where-review",
@@ -640,7 +683,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Run the example in examples.sql and look at the dates. Two of them are the same, which is the case the lesson is about.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The order is plain SQL, so the rows do not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking the rows come back in the order they were written once an ORDER BY names one column.",
@@ -690,7 +733,27 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/03-order-limit.sql and write the query the file asks for: the three accounts with the largest balance, largest first."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "query-plan",
+        "spec": {
+          "steps": [
+            {
+              "label": "the accounts table",
+              "rows": 6
+            },
+            {
+              "label": "ORDER BY cents DESC",
+              "rows": 6
+            },
+            {
+              "label": "LIMIT 3",
+              "rows": 3
+            }
+          ]
+        },
+        "caption": "ORDER BY promises an order and changes no rows. LIMIT then keeps the first three of that order and drops the rest."
+      }
     },
     "sql-order-limit-do": {
       "id": "sql-order-limit-do",
@@ -707,7 +770,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "Sort on the balance, largest first, and then keep only the first three rows of that order.",
         "Two columns come back: the owner and the balance. The owner is the first of them.",
         "Run node --test --test-reporter=tap test/order-limit.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the order the three rows come back in is read the same way on every machine."
       ],
       "misconceptions": [
         "Sorting the wrong way round, so the smallest balance comes first.",
@@ -769,12 +832,12 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "ORDER BY cents DESC and LIMIT 3",
         "WHERE cents > 0 and GROUP BY owner",
         "LIMIT 3 and WHERE cents > 0",
-        "GROUP BY owner and ORDER BY cents"
+        "GROUP BY owner and ORDER BY cents",
+        "ORDER BY cents DESC and LIMIT 3"
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "One clause has to put the rows in order and the other has to say how many of them the report holds. ORDER BY cents DESC puts the largest balance first and LIMIT 3 keeps the first three rows of that order. A WHERE clause keeps the rows that match a condition and says nothing about order, and GROUP BY gathers rows into groups rather than sorting them."
     },
     "sql-order-limit-review": {
@@ -841,7 +904,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Every account in this ledger has a balance, and the sum of its transactions is the same number. Phase 4 asks you to prove it.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The totals are plain SQL, so the numbers do not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking count(*) counts the values in a column, when it counts the rows of the group.",
@@ -895,7 +958,27 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/04-group-by.sql and write the query the file asks for: the accounts with at least three transactions, with the count, in account id order."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "query-plan",
+        "spec": {
+          "steps": [
+            {
+              "label": "the transactions table",
+              "rows": 12
+            },
+            {
+              "label": "GROUP BY account_id",
+              "rows": 4
+            },
+            {
+              "label": "count(*) for each group",
+              "rows": 4
+            }
+          ]
+        },
+        "caption": "Twelve rows go in and four rows come out. The group is the unit, and the aggregate gives one number for each group."
+      }
     },
     "sql-group-by-do": {
       "id": "sql-group-by-do",
@@ -912,7 +995,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "The groups are the accounts, so GROUP BY names the account id and the count is count(*).",
         "The condition is about the count the aggregate computed, so it belongs in HAVING and not in WHERE.",
         "Run node --test --test-reporter=tap test/group-by.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the counts and the totals are read the same way on every machine."
       ],
       "misconceptions": [
         "Putting the condition on the count in WHERE, where it is compared before the groups are made.",
@@ -974,13 +1057,13 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
+        "The balance the accounts table holds, because the two tables agree.",
         "Nothing at all, because the sum of no rows is not a number.",
-        "Zero, because adding nothing to nothing is nothing.",
         "An error, because a group without rows cannot be added up.",
-        "The balance the accounts table holds, because the two tables agree."
+        "Zero, because adding nothing to nothing is nothing."
       ],
-      "answer": 0,
-      "explanation": "The SQL standard says the sum of no rows is not a number, and SQLite follows it: sum() gives nothing for a group with no rows, while count() gives zero because there are no rows to count. SQLite has a second function, total(), that gives 0.0 instead of nothing, and it exists precisely because the standard leaves this gap. Reading a balance from the accounts table is a different query, not the sum of the transactions."
+      "answer": 1,
+      "explanation": "The standard says the sum of no rows is not a number, and SQLite follows: sum() gives nothing for a group with no rows, while count() gives zero, because there is nothing to count. SQLite has a second function, total(), giving 0.0 instead of nothing, because the standard leaves that gap. Reading a balance from the accounts table is a different query, not the sum of the transactions."
     },
     "sql-group-by-review": {
       "id": "sql-group-by-review",
@@ -1046,7 +1129,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Look at the two tables in schema.sql before you write the join. One holds the accounts, the other holds the transactions that belong to them.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The join is plain SQL, so the matched rows do not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking the join adds the columns of the second table to the rows of the first one.",
@@ -1099,7 +1182,27 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/05-joins.sql and write the query the file asks for: the transactions on the accounts that owe money, with the owner and the amount, in transaction id order."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "transactions alone",
+            "lines": [
+              "t-001 | 199",
+              "t-002 | -50"
+            ]
+          },
+          "after": {
+            "title": "joined with accounts",
+            "lines": [
+              "t-001 | Ada | 199",
+              "t-002 | Gita | -50"
+            ]
+          }
+        },
+        "caption": "The join adds the owner from the other table and adds no rows. A transaction belongs to one account, so each one gains a name and keeps its own row."
+      }
     },
     "sql-joins-do": {
       "id": "sql-joins-do",
@@ -1116,7 +1219,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "The amount is in one table and the balance that decides the question is in the other, so the query has to read both.",
         "Three columns come back: the transaction id, the owner and the amount.",
         "Run node --test --test-reporter=tap test/joins.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the joined rows are read the same way on every machine."
       ],
       "misconceptions": [
         "Filtering on the amount of the transaction when the question is about the balance of the account.",
@@ -1178,12 +1281,12 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "From the accounts table, joined on the account id.",
         "From the id itself, which holds the name of the owner.",
-        "From the memo of the transaction, which names the owner.",
-        "From the balance column, which is the name in another form."
+        "From the balance column, which is the name in another form.",
+        "From the accounts table, joined on the account id.",
+        "From the memo of the transaction, which names the owner."
       ],
-      "answer": 0,
+      "answer": 2,
       "explanation": "The account id is the link between the two tables, and the name is in the accounts table. A join matches the rows on that link and the answer carries the name along with them. Copying the name into every transaction row would mean two copies of one fact, and the copy would go out of date the moment the account was renamed."
     },
     "sql-joins-review": {
@@ -1250,7 +1353,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Every number the ledger can compute is better computed by the ledger than copied into a query by hand.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The subquery is plain SQL, so the number it works out does not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking a view holds a copy of the rows, so it has to be refreshed when the data changes.",
@@ -1309,7 +1412,27 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/06-subqueries.sql and write the query the file asks for: the accounts whose balance is above the average balance of all the accounts."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "query-plan",
+        "spec": {
+          "steps": [
+            {
+              "label": "the inner query",
+              "rows": 2
+            },
+            {
+              "label": "the accounts table",
+              "rows": 6
+            },
+            {
+              "label": "WHERE id IN (that list)",
+              "rows": 2
+            }
+          ]
+        },
+        "caption": "The inner query runs first and hands the outer one a list of ids. The outer query then keeps the accounts whose id is on that list."
+      }
     },
     "sql-subqueries-do": {
       "id": "sql-subqueries-do",
@@ -1326,7 +1449,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "The average is a single number, so the subquery that computes it stands in parentheses after the comparison.",
         "The subquery reads the accounts table itself, so it has to be a second query and not a second table.",
         "Run node --test --test-reporter=tap test/subqueries.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the rows the subquery produces are read the same way on every machine."
       ],
       "misconceptions": [
         "Writing the average into the query as a number, so the answer goes wrong the moment an account changes.",
@@ -1388,12 +1511,12 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "The new total, because the view reads the tables each time it is used.",
         "The old total, because the view holds the rows it was made from.",
         "Both totals, because the view keeps a row for every version.",
-        "Nothing, because the view has to be created again."
+        "Nothing, because the view has to be created again before it can show anything.",
+        "The new total, because the view reads the tables each time it is used."
       ],
-      "answer": 0,
+      "answer": 3,
       "explanation": "A view holds the query, not the rows. Every time the view is read, SQLite runs the query it names and reads the tables again, so a row that was written shows up at once. A view that held a copy of the rows would be out of date the moment the tables changed, and something else would have to remember to rebuild it."
     },
     "sql-subqueries-review": {
@@ -1460,7 +1583,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Ask for the plan yourself: EXPLAIN QUERY PLAN goes in front of the query, and the answer is a list of steps.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The plan is printed by the engine, so the steps do not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking an index is part of the data, when it is another copy of part of it.",
@@ -1518,7 +1641,23 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/07-indexes.sql and write the statement that adds the index and the query that reads the transactions of one account."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "query-plan",
+        "spec": {
+          "steps": [
+            {
+              "label": "SCAN accounts",
+              "rows": 6
+            },
+            {
+              "label": "SEARCH with the index",
+              "rows": 1
+            }
+          ]
+        },
+        "caption": "The index never changes the answer. It changes the work: six rows read becomes one row read."
+      }
     },
     "sql-indexes-do": {
       "id": "sql-indexes-do",
@@ -1535,7 +1674,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "The index has to be named idx_transactions_account and sit on the account_id column of the transactions table.",
         "Then the transactions of the account a-006: the transaction id and the amount, in transaction id order.",
         "Run node --test --test-reporter=tap test/indexes.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the index is found in the schema the same way on every machine."
       ],
       "misconceptions": [
         "Naming the index something else, when the check reads the name out of the schema.",
@@ -1600,10 +1739,10 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "The engine found the row it needed in the first page it read.",
         "The engine read every row of the table to find the rows it needed.",
         "The engine used an index and the rows came back in order.",
-        "The engine could not read the table and gave up on the query."
+        "The engine could not read the table at all and gave up on the query."
       ],
       "answer": 1,
-      "explanation": "A scan reads every row of the table and checks it, which is what SQLite does when there is no index to search. On a table with a few rows that is cheap, and on a table with millions it is the difference between a query that answers and one that does not. SEARCH is the line that means only some of the rows were visited, and it names the index that found them."
+      "explanation": "A scan reads every row of the table and checks it, which is what SQLite does with no index to search. On a table with a few rows that is cheap; on a table with millions it is the difference between a query that answers and one that does not. SEARCH means only some of the rows were visited, and it names the index that found them."
     },
     "sql-indexes-review": {
       "id": "sql-indexes-review",
@@ -1669,7 +1808,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Every statement runs in a transaction of its own unless you say otherwise, so the ledger is never half written by accident.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The commit and the rollback are plain SQL, so the outcome does not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking a transaction is a way to make a slow query faster.",
@@ -1727,7 +1866,27 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/08-transactions.sql and write the transaction that inserts the row and commits it, then the select that shows it."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "a reader, while the write is open",
+            "lines": [
+              "the new row is not there",
+              "the count is 41"
+            ]
+          },
+          "after": {
+            "title": "the same reader, after COMMIT",
+            "lines": [
+              "the new row is there",
+              "the count is 42"
+            ]
+          }
+        },
+        "caption": "A reader sees the rows of a committed transaction and not the rows of one that is still open. The same query, before and after the commit."
+      }
     },
     "sql-transactions-do": {
       "id": "sql-transactions-do",
@@ -1744,7 +1903,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "The row is t-900 on the account a-001, for 100 cents, with the memo test and the date 2026-03-15.",
         "The transaction has to end with a COMMIT, and the select that shows the row comes after it.",
         "Run node --test --test-reporter=tap test/transactions.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the committed row is read the same way on every machine."
       ],
       "misconceptions": [
         "Leaving the transaction open, so the row is never committed and the ledger does not hold it.",
@@ -1806,13 +1965,13 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "Only the rows that have been committed, and not the open one.",
         "The open row as well, because the file holds it.",
-        "Nothing at all, because the writer holds the table.",
-        "Both rows, because a read never blocks a write."
+        "Both rows, because a read never blocks a write in SQLite, whatever the journal mode.",
+        "Only the rows that have been committed, and not the open one.",
+        "Nothing at all, because the writer holds the table."
       ],
-      "answer": 0,
-      "explanation": "A connection sees only the transactions that have been committed, and that holds in SQLite whatever the journal mode: a reader never sees a half-finished change. What it sees of the file depends on the mode. In rollback journal mode the transactions are serializable, and in WAL mode the reader holds the snapshot it had when the read began, so a write that commits later stays invisible until the read ends."
+      "answer": 2,
+      "explanation": "A connection sees only the committed transactions, and that holds in SQLite whatever the journal mode: a reader never sees a half-finished change. What it sees depends on the mode. In rollback journal mode the transactions are serializable, and in WAL mode the reader holds the snapshot it had when the read began, so a write that commits later stays invisible until the read ends."
     },
     "sql-transactions-review": {
       "id": "sql-transactions-review",
@@ -1878,7 +2037,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "The shape of the ledger is in schema.sql, and the rows are in seed.sql. A change to the shape is a change to the first one.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The new column is plain SQL, so the shape does not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking ALTER TABLE can change any column of a table in one statement.",
@@ -1936,7 +2095,19 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/09-schema.sql and write the change the file asks for: a currency column on the accounts table, and one account in another currency."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "build the new table",
+            "copy the rows",
+            "drop the old table",
+            "rename the new one"
+          ]
+        },
+        "caption": "The four steps run inside one transaction, so a failure anywhere leaves the old table exactly as it was."
+      }
     },
     "sql-schema-do": {
       "id": "sql-schema-do",
@@ -1953,7 +2124,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "The column is called currency, it is text, it cannot be empty, and its default is EUR. A column that cannot be empty needs a default.",
         "Then set the currency of the account a-001 to USD, and select the id and the currency of every account in account id order.",
         "Run node --test --test-reporter=tap test/schema.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the new column is found in the schema the same way on every machine."
       ],
       "misconceptions": [
         "Adding the column without a default, so every account ends up with no currency at all.",
@@ -2021,7 +2192,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "So SQLite will not let the table be changed without one."
       ],
       "answer": 0,
-      "explanation": "A transaction is all of it or none of it, so a copy that fails or a rename that never happens leaves the ledger as it was. The procedure is safe because of the order and the transaction together: the new table is built beside the old one, the rows are copied into it, and only then is the old one dropped and the new one renamed into its place. With the steps outside a transaction, a failure halfway would leave the ledger with no table at all."
+      "explanation": "A transaction is all of it or none of it: a failed copy or an unfinished rename leaves the ledger as it was. The order and the transaction make it safe: a new table is built beside the old, the rows are copied, and only then the old is dropped and the new renamed into place. Outside a transaction, a failure halfway leaves no table at all."
     },
     "sql-schema-review": {
       "id": "sql-schema-review",
@@ -2087,7 +2258,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Every idea the last nine phases taught is one part of this report: a join, a group, an aggregate and an order.",
-        "If sqlite3 is not installed on the machine, the driver built into Node runs the same query, so nothing here is blocked by a missing tool."
+        "The report is plain SQL, so the rows do not depend on the tool: Node 22.5 and newer carries SQLite as node:sqlite, and the sqlite3 command line is the other way in."
       ],
       "misconceptions": [
         "Thinking a report is one query per table, when it is one query over the tables it needs.",
@@ -2141,7 +2312,21 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open queries/10-your-turn.sql and write the report the file asks for: every account that has transactions, with the owner, the number of transactions and the total."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "the columns",
+            "the tables",
+            "the join",
+            "the groups",
+            "the number",
+            "the order"
+          ]
+        },
+        "caption": "The parts come in a fixed order: the columns, the tables and the join, the groups, the number for each group, and the order."
+      }
     },
     "sql-your-turn-do": {
       "id": "sql-your-turn-do",
@@ -2156,8 +2341,9 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       "hints": [
         "The case file names the case your-turn-report. It holds the rows your query has to produce, and nothing about how to produce them.",
         "Three columns come back for each account: the owner, the number of its transactions and the total it has moved. The order is the total, largest first.",
+        "The report is about the accounts that have transactions, so the join has to be an inner one: an account with no transactions has no row in the answer at all.",
         "Run node --test --test-reporter=tap test/your-turn.test.mjs and read the name of the check that failed before you change anything else.",
-        "If sqlite3 is not installed on the machine, the checks still run: they use the SQLite driver that is built into Node."
+        "The checks for this phase read the ledger with the SQLite driver built into Node 22.5 and newer, so the case file is compared against the same rows on every machine."
       ],
       "misconceptions": [
         "Counting the rows of the transactions table instead of the rows of each account.",
@@ -2209,13 +2395,13 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
         "Ask what has to be true about a file if a program in any language is going to read it."
       ],
       "misconceptions": [
-        "Thinking the case file holds the query the learner has to write.",
+        "Thinking the case file holds the query you have to write.",
         "Thinking a case file can only be read by the program that wrote it."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "The next course asks the learner to write a query engine, in whatever language they are learning. The check for that work is a case file. What has to be true about a file if a program in any language is going to read it?"
+          "body": "The next course asks you to write a query engine, in whatever language you are learning. The check for that work is a case file. What has to be true about a file if a program in any language is going to read it?"
         }
       ],
       "options": [

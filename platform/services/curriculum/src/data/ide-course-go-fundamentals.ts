@@ -60,7 +60,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-control-flow-review"
       ],
       "interviewQuestions": [
-        "Go has no while loop — how do you express repetition and branching instead?",
+        "Go has no while loop, how do you express repetition and branching instead?",
         "What happens when a switch value matches no case, and why does that matter for status codes?",
         "Why does a Go switch not need break, and where must a loop condition change?"
       ]
@@ -220,7 +220,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
     {
       "id": "go-errors",
       "title": "Go errors",
-      "goal": "Errors are values: a sentinel you compare with errors.Is, context you add with %w, and — for the rare panic — a recover that turns a crash back into a value the caller can check.",
+      "goal": "Errors are values: a sentinel you compare with errors.Is, context you add with %w, and, for the rare panic, a recover that turns a crash back into a value the caller can check.",
       "level": 2,
       "authored": true,
       "project": "go-ledger",
@@ -240,7 +240,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
     {
       "id": "go-lifecycle",
       "title": "Go cleanup and panic",
-      "goal": "Defer runs at return, panic means programmer bug, recover belongs at one boundary — and cleanup always runs exactly once.",
+      "goal": "Defer runs at return, panic means programmer bug, recover belongs at one boundary, and cleanup always runs exactly once.",
       "level": 2,
       "authored": true,
       "project": "go-ledger",
@@ -340,6 +340,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "body": "Every Go file begins with a package clause, and the clause names the package the file belongs to. A package is a directory of Go files that agree on that name, and the compiler builds one package at a time: it reads the directory, checks the clauses match, and treats the files as one unit."
         },
         {
+          "kind": "prose",
+          "body": "Two tools do the work here. Go is the compiler and the test runner, and it comes from https://go.dev/dl; if the terminal says go is not found, install it from that page and run the environment check before you touch any code. Node is the second: the Run button calls a wrapper that runs Go and reports what it said."
+        },
+        {
+          "kind": "prose",
+          "body": "The project you are working in is Go Ledger, at NEXORA/Go-Ledger in your home folder. The first time you open this course the IDE asks where it should go; choose the default and the project is created and opened. The files this phase names are inside it."
+        },
+        {
           "kind": "example",
           "body": "The file you are about to open, with its package clause, its import and its main:",
           "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"TODO\")\n}"
@@ -350,11 +358,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "`go run ./cmd/balance` compiles the program and runs it, and leaves nothing behind on your disk. `go build ./cmd/balance` compiles it and writes an executable instead of running it. One command shows your work; the other produces the artifact you ship."
+          "body": "`go run ./cmd/balance` compiles the program and runs it, and leaves nothing behind on your disk. `go build ./cmd/balance` compiles it and writes an executable instead. One command shows your work; the other produces the artifact you ship."
         },
         {
           "kind": "prose",
-          "body": "`go.mod` is the file that makes the directory a module. It names the module, declares the Go version the code is written for, and lists the versions the code builds against. The module path on its first line is the prefix every import inside the module uses."
+          "body": "`go.mod` is the file that makes the directory a module. It names the module, declares the Go version the code is written for, and lists the versions it builds against. The module path on its first line is the prefix every import inside uses."
         },
         {
           "kind": "example",
@@ -382,7 +390,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Say what the program has to print before you open the file, and write it in a comment. A wrong guess costs a comment, not a run. If go is command not found, run the environment check first.",
+        "Say what the program has to print before you open the file, and write it in a comment. A wrong guess costs a comment, not a run. If the terminal says go is not found, run the environment check first.",
         "The file already carries the package clause, the import and the func main. What it does not have is the line you were asked for, and one Println inside func main writes it."
       ],
       "misconceptions": [
@@ -425,7 +433,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "It compiles and runs, and the program exits at once with no output."
       ],
       "answer": 2,
-      "explanation": "Go compiles a package main before it runs anything, and the compiler is the one that insists: a main package without a func main has nowhere to start, so the build fails and no program ever runs. The other three answers each describe a tool that does not exist. There is no warning for a program with nothing to run, because a program with nothing to run is not a program yet. A directory is a library or a program by the package clause in its files, and the module file has no say in it. And a program that exits at once with no output is a program that ran, which is not what happened here.",
+      "explanation": "Go compiles a package main before it runs anything, and the compiler is the one that insists: a main package without a func main has nowhere to start, so the build fails. The other three answers each describe a tool that does not exist. There is no warning for a program with nothing to run, because a program with nothing to run is not a program yet.",
       "hints": [
         "The go tool never runs a program it could not compile, so ask what the compiler does with a main package that has no func main inside it."
       ],
@@ -445,7 +453,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-program"
       ],
       "files": [
-        "cmd/balance/main.go"
+        "cmd/balance/main.go",
+        "test/program.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/program.test.mjs",
       "checks": [
@@ -476,7 +485,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open cmd/balance/main.go. It already carries the package clause, the import and the func main; what it does not have is the line you were asked for. Run go run ./cmd/balance and read what it printed before you change anything. If go is command not found, run the environment check first.",
+        "Open cmd/balance/main.go. It already carries the package clause, the import and the func main; what it does not have is the line you were asked for. Run go run ./cmd/balance and read what it printed before you change anything. If the terminal says go is not found, run the environment check first.",
         "The line is a sentence: the words, the number of cents, and the word cents. The amount is 199, because this course keeps money in whole cents rather than in a float.",
         "fmt.Println writes the line and ends it with a newline. One call, one line: the balance, and nothing after it.",
         "Run go run ./cmd/balance again and read the line. If it still says TODO, your Println is not inside func main, or it prints something other than the balance.",
@@ -498,7 +507,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-program"
       ],
       "files": [
-        "cmd/audit/main.go"
+        "cmd/audit/main.go",
+        "test/audit.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/audit.test.mjs",
       "checks": [
@@ -516,7 +526,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "the audit program prints one line and nothing else"
           ],
-          "feedback": "One line, and it is the audit line. A second print is a second thing the program says, and the placeholder left in the file is not an audit at all. If the suite cannot run because `go` is command not found, run the environment check first.",
+          "feedback": "One line, and it is the audit line. A second print is a second thing the program says, and the placeholder left in the file is not an audit at all. If the suite cannot run because the terminal says `go` is not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -537,12 +547,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-values"
       ],
       "hints": [
-        "Say what FormatCents(0) and FormatCents(-5) must print before you open the file, and write both answers in a comment — a wrong guess costs a comment, not a run. If go is command not found, run the environment check first.",
+        "Say what FormatCents(0) and FormatCents(-5) must print before you open the file, and write both answers in a comment, a wrong guess costs a comment, not a run. If the terminal says go is not found, run the environment check first.",
         "Whole cents means two digits after the dot: divide for the dollars, take the remainder for the cents, and pad that remainder to two places."
       ],
       "misconceptions": [
-        "Reading 0 as \"the caller forgot\" — 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
-        "Formatting money with a float — the integer of cents is the value; the string is only how it is shown."
+        "Reading 0 as \"the caller forgot\", 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
+        "Formatting money with a float, the integer of cents is the value; the string is only how it is shown."
       ],
       "objectives": [
         "Explain why a declared int starts at 0 and a declared string starts empty, and why 0 is a value rather than a blank.",
@@ -552,11 +562,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "You have finished the JavaScript track. This one is written in Go, in a second project on your disk: Go Ledger, which holds money as whole numbers. The method does not change — you still Learn, then Solve, then Review alone — so the level reads 2 again because the language is new, not because you fell behind."
+          "body": "You have finished the JavaScript track. This one is written in Go, in a second project on your disk: Go Ledger, which holds money as whole numbers. The method does not change, you still Learn, then Solve, then Review alone, so the level reads 2 again because the language is new, not because you fell behind."
         },
         {
           "kind": "prose",
-          "body": "Two tools run here. The compiler and tester is `go`, and `go test ./...` is the command that runs the tests; the suite you press Run on is a small Node wrapper that calls it and reports TAP, the same format the JavaScript phases used. If `go` is command not found, run the environment check before you touch any Go code."
+          "body": "Two tools run here. The compiler and tester is `go`, and `go test ./...` is the command that runs the tests; the suite you press Run on is a small Node wrapper that calls it and reports TAP, the same format the JavaScript phases used. If the terminal says `go` is not found, run the environment check before you touch any Go code."
         },
         {
           "kind": "prose",
@@ -637,8 +647,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Ask what Go writes into an int nobody assigned, and whether that value can be a real amount rather than a blank."
       ],
       "misconceptions": [
-        "Reading 0 as \"the caller forgot\" — 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
-        "Formatting money with a float — the integer of cents is the value; the string is only how it is shown."
+        "Reading 0 as \"the caller forgot\", 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
+        "Formatting money with a float, the integer of cents is the value; the string is only how it is shown."
       ],
       "lesson": [
         {
@@ -647,13 +657,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "nil — integers are references until something is written to them.",
+        "nil, integers are references until something is written to them.",
         "Whatever the previous request left in that memory, so it varies by request.",
-        "Nothing — the request is rejected because paid was never set by the caller at all.",
-        "0 — Go filled the int with its zero value, and 0 is a real payment of nothing."
+        "Nothing, the request is rejected because paid was never set by the caller at all.",
+        "0. Go filled the int with its zero value, and 0 is a real payment of nothing."
       ],
       "answer": 3,
-      "explanation": "A declared int is 0 before any assignment. That 0 will be saved, summed, and formatted if you treat \"I never set it\" as \"it has no value\". The zero value is a value. nil is for the kinds of values that can name nothing, and you meet each of those kinds in a later phase — an int is never nil, because 0 is a value. And a local variable is not leftover memory from another call — each call starts from the zero value again. The bug is storing 0 when the field was absent, which you can only see once you believe 0 was stored on purpose by the language."
+      "explanation": "A declared int is 0 before any assignment, and that 0 is saved, summed, and formatted if you treat \"I never set it\" as \"it has no value\". The zero value is a value: nil is for the kinds of values that can name nothing, and an int is never nil. A local variable is not leftover memory: the bug is storing 0 when the field was absent."
     },
     "go-values-do": {
       "id": "go-values-do",
@@ -670,14 +680,16 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Split the absolute value into dollars and the leftover cents, then decide the sign separately.",
         "Print the leftover with two digits. A remainder of 5 is 05, not 5.",
         "Run go test and read the name of the test that failed before changing anything else.",
-        "Shape: sign, then dollars, then a dot, then two digits of cents. Zero is 0.00. Minus five cents is -0.05. If the suite cannot start because `node` is command not found, run the environment check first."
+        "Shape: sign, then dollars, then a dot, then two digits of cents. Zero is 0.00. Minus five cents is -0.05. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Reading 0 as \"the caller forgot\" — 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
-        "Formatting money with a float — the integer of cents is the value; the string is only how it is shown."
+        "Reading 0 as \"the caller forgot\", 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
+        "Formatting money with a float, the integer of cents is the value; the string is only how it is shown."
       ],
       "files": [
-        "values.go"
+        "values.go",
+        "values_test.go",
+        "test/values.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/values.test.mjs",
       "checks": [
@@ -720,11 +732,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Reading 0 as \"the caller forgot\" — 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
-        "Formatting money with a float — the integer of cents is the value; the string is only how it is shown."
+        "Reading 0 as \"the caller forgot\", 0 is what Go writes when nobody assigns, and it is also a legitimate amount.",
+        "Formatting money with a float, the integer of cents is the value; the string is only how it is shown."
       ],
       "files": [
-        "label.go"
+        "label.go",
+        "label_test.go",
+        "test/label.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/label.test.mjs",
       "checks": [
@@ -742,7 +756,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "a count of zero returns an empty string"
           ],
-          "feedback": "Zero copies is the empty string. A negative count is also no copies — do not treat it as an emergency and do not wrap around. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "Zero copies is the empty string. A negative count is also no copies, do not treat it as an emergency and do not wrap around. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ]
@@ -783,11 +797,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "items": [
             "Runs case 200 and then falls through into default, as C would.",
             "Nothing falls through: 201 matches no case, so default runs.",
-            "Runs case 200 — both codes belong to the 2xx family.",
+            "Runs case 200, both codes belong to the 2xx family.",
             "Panics, because every status code needs its own case."
           ],
           "answer": 1,
-          "explain": "A Go switch runs at most one case and never falls through, so only an exact match counts. 201 matches nothing, and default is the branch that answers the code you never named — a deliberate answer instead of a lie."
+          "explain": "A Go switch runs at most one case and never falls through, so only an exact match counts. 201 matches nothing, and default is the branch that answers the code you never named, a deliberate answer instead of a lie."
         },
         {
           "kind": "keypoints",
@@ -814,11 +828,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Write the word for a code the lesson named and the word for one it did not — the second is the case you are really testing. If go is command not found, run the environment check first.",
+        "Write the word for a code the lesson named and the word for one it did not, the second is the case you are really testing. If the terminal says go is not found, run the environment check first.",
         "Every switch still has to answer when no case matches; that answer lives in default, and so does every typo."
       ],
       "misconceptions": [
-        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
+        "Expecting cases to fall through the way they do in C; they do not, and a missing break is not a bug here.",
         "Treating a nearby code as the same case - 201 is not 200, and default exists so that proximity is not a match."
       ],
       "visualization": {
@@ -862,13 +876,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "It falls through into the 404 case, because that case is next in the source."
       ],
       "answer": 0,
-      "explanation": "A Go switch compares the value to each case and stops at the first match. There is no fallthrough unless you write the fallthrough keyword, which this course does not need. 201 matches none of the named cases, so default runs. Grouping 201 with 200 because they \"feel like success\" is a decision the switch did not make — you would have to write it as its own case. Integers are not enums here: an unlisted value is legal and has to be answered, which is what default is for.",
+      "explanation": "A Go switch compares the value to each case and stops at the first match. It does not fall through unless you write the fallthrough keyword. 201 matches no named case, so default runs: integers are not enums here, and an unlisted integer is legal. Grouping 201 with 200 because they \"feel like success\" is a decision you would have to write as its own case.",
       "hints": [
         "Check whether any case equals 201. If none does, name the branch the switch still runs."
       ],
       "misconceptions": [
-        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
-        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
+        "Expecting cases to fall through the way they do in C; they do not, and a missing break is not a bug here.",
+        "Treating a nearby code as the same case, 201 is not 200, and default exists so that proximity is not a match."
       ]
     },
     "go-control-flow-do": {
@@ -882,7 +896,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-control-flow"
       ],
       "files": [
-        "status.go"
+        "status.go",
+        "status_test.go",
+        "test/status.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/status.test.mjs",
       "checks": [
@@ -908,7 +924,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "201 returns unknown rather than ok"
           ],
-          "feedback": "201 Created is a different code from 200. Leaving it off the success case is the point — only the codes you named are those words.",
+          "feedback": "201 Created is a different code from 200. Leaving it off the success case is the point, only the codes you named are those words.",
           "edge": true
         }
       ],
@@ -920,8 +936,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Cases: 200 ok, 404 missing, 500 down, default unknown. 201 hits default."
       ],
       "misconceptions": [
-        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
-        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
+        "Expecting cases to fall through the way they do in C; they do not, and a missing break is not a bug here.",
+        "Treating a nearby code as the same case, 201 is not 200, and default exists so that proximity is not a match."
       ]
     },
     "go-control-flow-review": {
@@ -935,7 +951,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-control-flow"
       ],
       "files": [
-        "sum.go"
+        "sum.go",
+        "sum_test.go",
+        "test/sum.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/sum.test.mjs",
       "checks": [
@@ -959,8 +977,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Expecting cases to fall through the way they do in C — they do not, and a missing break is not a bug here.",
-        "Treating a nearby code as the same case — 201 is not 200, and default exists so that proximity is not a match."
+        "Expecting cases to fall through the way they do in C; they do not, and a missing break is not a bug here.",
+        "Treating a nearby code as the same case, 201 is not 200, and default exists so that proximity is not a match."
       ]
     },
     "go-functions-learn": {
@@ -997,13 +1015,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "kind": "quickcheck",
           "body": "ParseQty returns (0, err) for a bad string. The caller writes qty, _ := ParseQty(raw). What is stored?",
           "items": [
-            "0 — the caller discarded the only signal that said so.",
+            "0, the caller discarded the only signal that said so.",
             "The error, because Go substitutes it when the value is discarded.",
             "The call does not compile when an error is thrown away.",
             "Nothing is stored, because the assignment never runs."
           ],
           "answer": 0,
-          "explain": "The blank identifier is a deliberate discard: the call compiles, the error is dropped, and qty is 0 — a legal quantity meaning \"none\". The function reported the failure and the caller refused to read it, which is how a bad request becomes a stored zero."
+          "explain": "The blank identifier is a deliberate discard: the call compiles, the error is dropped, and qty is 0, a legal quantity meaning \"none\". The function reported the failure and the caller refused to read it, which is how a bad request becomes a stored zero."
         },
         {
           "kind": "keypoints",
@@ -1026,16 +1044,16 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "task",
-          "body": "Call ParseQty(\"\") and ParseQty(\"3\") in your head and write down both return pairs. Then implement the function so those pairs are what the tests observe. Do not print the error — return it."
+          "body": "Call ParseQty(\"\") and ParseQty(\"3\") in your head and write down both return pairs. Then implement the function so those pairs are what the tests observe. Do not print the error, return it."
         }
       ],
       "hints": [
-        "Call ParseQty(\"\") in your head first: with nothing to parse, the pair it returns should say so instead of quietly claiming zero. If go is command not found, run the environment check first.",
+        "Call ParseQty(\"\") in your head first: with nothing to parse, the pair it returns should say so instead of quietly claiming zero. If the terminal says go is not found, run the environment check first.",
         "Success is (n, nil); failure is (0, err). The number beside a non-nil error is a placeholder the caller must not use."
       ],
       "misconceptions": [
-        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
-        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
+        "Discarding the error with a blank identifier and using the number, the number beside an error is the zero value, not the answer.",
+        "Accepting a string that starts with digits, the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ],
       "resources": [
         {
@@ -1062,18 +1080,18 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "The error, because Go substitutes it when the value is discarded by the caller.",
-        "0 — the blank identifier threw away the only signal that 0 was not a real quantity.",
+        "0, the blank identifier threw away the only signal that 0 was not a real quantity.",
         "The call does not compile if the error is discarded, so the mistake is caught early.",
-        "Nothing — the blank identifier stops the assignment, so no error is returned at all."
+        "Nothing, the blank identifier stops the assignment, so no error is returned at all."
       ],
       "answer": 1,
-      "explanation": "The blank identifier is a deliberate discard. The call compiles, the error value is dropped, and qty is 0, which is a legal quantity meaning \"none\". The function did its job: it reported failure in the second result. The caller undid that by refusing to read it. Discarding an error is not a compile error in Go, which is why the discipline has to live in the call, not in the type checker. Check the error, and only then trust the number.",
+      "explanation": "The blank identifier is a deliberate discard: the call compiles, the error is dropped, and qty is 0, a legal quantity meaning \"none\". The function reported failure in the second result; the caller refused to read it. Discarding an error is not a compile error in Go, so the discipline lives in the call, not in the type checker. Check the error, then trust the number.",
       "hints": [
-        "Count how many values ParseQty returns and how many the caller names — the unnamed one carries the verdict."
+        "Count how many values ParseQty returns and how many the caller names, the unnamed one carries the verdict."
       ],
       "misconceptions": [
-        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
-        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
+        "Discarding the error with a blank identifier and using the number, the number beside an error is the zero value, not the answer.",
+        "Accepting a string that starts with digits, the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ]
     },
     "go-functions-do": {
@@ -1087,7 +1105,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-functions"
       ],
       "files": [
-        "parse.go"
+        "parse.go",
+        "parse_test.go",
+        "test/parse.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/parse.test.mjs",
       "checks": [
@@ -1118,15 +1138,15 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open parse.go. It owns ParseQty, whose signature already hands back an int and an error, and the tests read both results — so keep both. Run go test ./... and read the name of the test that failed.",
+        "Open parse.go. It owns ParseQty, whose signature already hands back an int and an error, and the tests read both results, so keep both. Run go test ./... and read the name of the test that failed.",
         "An empty string fails before you try to parse it.",
         "strconv.Atoi rejects trailing junk. Use it, and return its error rather than replacing it with nil.",
         "When Atoi fails, return 0 and that error. When it works, return the number and nil.",
         "Success is (n, nil). Failure is (0, err) for \"\" and for \"3a\". Do not return 3 for \"3a\"."
       ],
       "misconceptions": [
-        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
-        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
+        "Discarding the error with a blank identifier and using the number, the number beside an error is the zero value, not the answer.",
+        "Accepting a string that starts with digits, the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ]
     },
     "go-functions-review": {
@@ -1140,7 +1160,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-functions"
       ],
       "files": [
-        "positive.go"
+        "positive.go",
+        "positive_test.go",
+        "test/positive.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/positive.test.mjs",
       "checks": [
@@ -1158,14 +1180,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "0 returns an error"
           ],
-          "feedback": "Zero is the boundary. It is not positive, so it is an error, same as a negative. Do not treat \"not negative\" as success. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Zero is the boundary. It is not positive, so it is an error, same as a negative. Do not treat \"not negative\" as success. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Discarding the error with a blank identifier and using the number — the number beside an error is the zero value, not the answer.",
-        "Accepting a string that starts with digits — the whole string has to be the quantity, or the caller stored a different number than the one they sent."
+        "Discarding the error with a blank identifier and using the number, the number beside an error is the zero value, not the answer.",
+        "Accepting a string that starts with digits, the whole string has to be the quantity, or the caller stored a different number than the one they sent."
       ]
     },
     "go-structs-learn": {
@@ -1179,12 +1201,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-structs"
       ],
       "hints": [
-        "Write the Order struct before the loop: a Cents on its own cannot say which order it belongs to. If go is command not found, run the environment check first.",
-        "Total(nil) is not an error case — range over nil runs zero times, so the accumulator you started with is the answer."
+        "Write the Order struct before the loop: a Cents on its own cannot say which order it belongs to. If the terminal says go is not found, run the environment check first.",
+        "Total(nil) is not an error case, range over nil runs zero times, so the accumulator you started with is the answer."
       ],
       "misconceptions": [
-        "Panicking on a nil slice — nil means no elements, and a total of no elements is 0.",
-        "Passing the ID and the cents as two arguments that can get swapped — the struct is what keeps them one fact."
+        "Panicking on a nil slice, nil means no elements, and a total of no elements is 0.",
+        "Passing the ID and the cents as two arguments that can get swapped, the struct is what keeps them one fact."
       ],
       "objectives": [
         "Explain why an order is one struct with named fields rather than an ID and a number passed side by side.",
@@ -1209,13 +1231,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "kind": "quickcheck",
           "body": "Total is handed a []Order variable that was never assigned. What should it return?",
           "items": [
-            "0 — range over nil visits nothing, so nothing is added.",
+            "0, range over nil visits nothing, so nothing is added.",
             "It should panic, because a nil slice means the caller made a mistake.",
             "The length of the slice, which is 0 either way.",
             "-1, so the caller can tell nil apart from an empty slice."
           ],
           "answer": 0,
-          "explain": "A nil slice has length 0 and no elements: range walks nothing, the accumulator keeps its zero value, and the total is 0 — the same total an empty slice produces. Somebody with no orders is one situation, not two, and a sentinel like -1 would collide with a real total."
+          "explain": "A nil slice has length 0 and no elements: range walks nothing, the accumulator keeps its zero value, and the total is 0, the same total an empty slice produces. Somebody with no orders is one situation, not two, and a sentinel like -1 would collide with a real total."
         },
         {
           "kind": "keypoints",
@@ -1262,8 +1284,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Ask how many times range runs over a nil slice before deciding whether the sum can move."
       ],
       "misconceptions": [
-        "Panicking on a nil slice — nil means no elements, and a total of no elements is 0.",
-        "Passing the ID and the cents as two arguments that can get swapped — the struct is what keeps them one fact."
+        "Panicking on a nil slice, nil means no elements, and a total of no elements is 0.",
+        "Passing the ID and the cents as two arguments that can get swapped, the struct is what keeps them one fact."
       ],
       "lesson": [
         {
@@ -1278,11 +1300,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "options": [
         "The zero Order's cents, which is a field access on nil.",
         "It should panic, because nil means the caller made a mistake.",
-        "0 — ranging a nil slice visits nothing, so nothing is added.",
+        "0, ranging a nil slice visits nothing, so nothing is added.",
         "-1, so the caller can tell nil apart from an empty slice."
       ],
       "answer": 2,
-      "explanation": "A nil slice has length 0 and no elements. range walks nothing, the accumulator stays at its zero value, and the total is 0. That is the same total an empty non-nil slice produces, which is what you want: \"no orders\" is one situation, not two. Panic is for a broken program, not for a cart nobody has added to. A sentinel like -1 collides with a real refund total. And you never field-access the slice itself as if it were an Order — you range it, and nil is a valid thing to range."
+      "explanation": "A nil slice has length 0 and no elements. range walks nothing, the accumulator stays at its zero value, and the total is 0, the same total an empty non-nil slice produces. Panic is for a broken program, not for a cart nobody added to, and a -1 sentinel collides with a real refund total. You range a nil slice, you never field-access it as an Order."
     },
     "go-structs-do": {
       "id": "go-structs-do",
@@ -1295,18 +1317,20 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-structs"
       ],
       "hints": [
-        "The file order.go already owns the Order type the tests construct, with its ID and Cents fields — read it, then make Total add up a slice of them. Run go test ./... and read the name of the test that failed.",
+        "The file order.go already owns the Order type the tests construct, with its ID and Cents fields, read it, then make Total add up a slice of them. Run go test ./... and read the name of the test that failed.",
         "Total takes []Order and returns an int. Start the sum at 0.",
         "Range the slice. Add o.Cents. Ignore the index if you do not need it.",
         "Do not special-case nil. The loop already does the right thing when there is nothing to visit.",
         "Two orders sum their cents. Empty and nil both return 0 without panicking."
       ],
       "misconceptions": [
-        "Panicking on a nil slice — nil means no elements, and a total of no elements is 0.",
-        "Passing the ID and the cents as two arguments that can get swapped — the struct is what keeps them one fact."
+        "Panicking on a nil slice, nil means no elements, and a total of no elements is 0.",
+        "Passing the ID and the cents as two arguments that can get swapped, the struct is what keeps them one fact."
       ],
       "files": [
-        "order.go"
+        "order.go",
+        "order_test.go",
+        "test/order.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/order.test.mjs",
       "checks": [
@@ -1349,11 +1373,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Panicking on a nil slice — nil means no elements, and a total of no elements is 0.",
-        "Passing the ID and the cents as two arguments that can get swapped — the struct is what keeps them one fact."
+        "Panicking on a nil slice, nil means no elements, and a total of no elements is 0.",
+        "Passing the ID and the cents as two arguments that can get swapped, the struct is what keeps them one fact."
       ],
       "files": [
-        "line.go"
+        "line.go",
+        "line_test.go",
+        "test/line.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/line.test.mjs",
       "checks": [
@@ -1371,7 +1397,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "a line with qty 0 contributes 0"
           ],
-          "feedback": "Qty of 0 is not a bill. Skip it. A negative qty is not a bill either — do not subtract. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "Qty of 0 is not a bill. Skip it. A negative qty is not a bill either, do not subtract. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ]
@@ -1403,7 +1429,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Balance does not need a pointer: it only reads. Deposit does, and it refuses a non-positive amount. Adding a negative \"deposit\" would be a withdrawal wearing the wrong name. Zero changes nothing, which is the edge — a call that looked like it happened and left the balance where it was."
+          "body": "Balance does not need a pointer: it only reads. Deposit does, and it refuses a non-positive amount. Adding a negative \"deposit\" would be a withdrawal wearing the wrong name. Zero changes nothing, which is the edge, a call that looked like it happened and left the balance where it was."
         },
         {
           "kind": "quickcheck",
@@ -1412,7 +1438,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
             "A value receiver, because a small struct is cheaper to copy.",
             "A pointer receiver, because the change must reach the caller.",
             "A value receiver, because Deposit hands nothing back to the caller.",
-            "Either one — Go promotes the receiver to a pointer when a field is assigned."
+            "Either one. Go promotes the receiver to a pointer when a field is assigned."
           ],
           "answer": 1,
           "explain": "A value receiver is a copy. Deposit would add to that copy and the caller would still hold the old cents, which is why the star is not decoration. Balance may read through a copy because it never writes."
@@ -1442,12 +1468,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Deposit must change the Account the caller holds; check whether the receiver is that value or a copy of it. If go is command not found, run the environment check first.",
-        "Balance can read through a copy, but Deposit cannot write through one — the star in the receiver is the difference."
+        "Deposit must change the Account the caller holds; check whether the receiver is that value or a copy of it. If the terminal says go is not found, run the environment check first.",
+        "Balance can read through a copy, but Deposit cannot write through one, the star in the receiver is the difference."
       ],
       "misconceptions": [
-        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
-        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
+        "Using a value receiver for a method that must update the caller, the update lands on a copy and the caller keeps the old cents.",
+        "Treating a negative deposit as a withdrawal, the method's name is the contract, and this one only adds."
       ],
       "visualization": {
         "type": "state-compare",
@@ -1496,17 +1522,17 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "options": [
         "It does not compile, because Cents is unexported to methods.",
         "10, but only if the caller used a pointer variable.",
-        "10 — the method is attached to Account, so it edits the caller itself.",
-        "0 — the receiver is a copy, and the addition happened to the copy."
+        "10, the method is attached to Account, so it edits the caller itself.",
+        "0, the receiver is a copy, and the addition happened to the copy."
       ],
       "answer": 3,
-      "explanation": "A value receiver is a copy passed to the method. Assigning to a.Cents assigns to that copy, which is discarded when the method returns. The caller's Account is unchanged, whether the caller holds a value or a pointer — Go will copy either way when the receiver is not a pointer. The star on the receiver is the difference between a method that reads and a method that updates. Export has nothing to do with it: the method is in the same package as the field.",
+      "explanation": "A value receiver is a copy passed to the method. Assigning to a.Cents assigns to that copy, which is discarded when the method returns, so the caller's Account is unchanged. Go copies either way when the receiver is not a pointer. The star on the receiver is the difference between a method that reads and a method that updates, and export has nothing to do with it.",
       "hints": [
         "Trace where the addition happened: is that variable the account in main, or a copy the method is holding?"
       ],
       "misconceptions": [
-        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
-        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
+        "Using a value receiver for a method that must update the caller, the update lands on a copy and the caller keeps the old cents.",
+        "Treating a negative deposit as a withdrawal, the method's name is the contract, and this one only adds."
       ]
     },
     "go-methods-do": {
@@ -1520,7 +1546,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-methods"
       ],
       "files": [
-        "account.go"
+        "account.go",
+        "account_test.go",
+        "test/account.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/account.test.mjs",
       "checks": [
@@ -1546,7 +1574,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "depositing 0 leaves the balance unchanged"
           ],
-          "feedback": "Deposit(0) and Deposit(-3) do not change cents. A negative deposit is a withdrawal under the wrong name — refuse it.",
+          "feedback": "Deposit(0) and Deposit(-3) do not change cents. A negative deposit is a withdrawal under the wrong name, refuse it.",
           "edge": true
         }
       ],
@@ -1558,8 +1586,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Self-review before you run: the update reaches the caller, a second deposit adds to the first, and a deposit of zero or less leaves the balance untouched."
       ],
       "misconceptions": [
-        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
-        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
+        "Using a value receiver for a method that must update the caller, the update lands on a copy and the caller keeps the old cents.",
+        "Treating a negative deposit as a withdrawal, the method's name is the contract, and this one only adds."
       ]
     },
     "go-methods-review": {
@@ -1573,7 +1601,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-methods"
       ],
       "files": [
-        "fee.go"
+        "fee.go",
+        "fee_test.go",
+        "account.go",
+        "test/fee.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/fee.test.mjs",
       "checks": [
@@ -1591,14 +1622,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "a fee larger than the balance leaves 0"
           ],
-          "feedback": "When the fee is larger than Cents, the balance becomes 0. It does not go negative, and it does not stay at the old value. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "When the fee is larger than Cents, the balance becomes 0. It does not go negative, and it does not stay at the old value. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Using a value receiver for a method that must update the caller — the update lands on a copy and the caller keeps the old cents.",
-        "Treating a negative deposit as a withdrawal — the method's name is the contract, and this one only adds."
+        "Using a value receiver for a method that must update the caller, the update lands on a copy and the caller keeps the old cents.",
+        "Treating a negative deposit as a withdrawal, the method's name is the contract, and this one only adds."
       ]
     },
     "go-interfaces-learn": {
@@ -1619,7 +1650,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "SumPriced does not know what it is adding. It knows each item has a Price method that returns cents. That set of methods is an interface. A struct satisfies it by having the method — there is no implements keyword, and the concrete type can live in another package, including the test."
+          "body": "SumPriced does not know what it is adding. It knows each item has a Price method that returns cents. That set of methods is an interface. A struct satisfies it by having the method; there is no implements keyword, and the concrete type can live in another package, including the test."
         },
         {
           "kind": "example",
@@ -1628,7 +1659,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A nil interface value is not a thing with a price, and calling Price on it panics. An empty slice does not panic: there is nothing to call. The function's job is to add what it was given and to tolerate being given nothing. It is not to know about orders, lines, or accounts — those types grow Price methods on their own side of the seam."
+          "body": "A nil interface value is not a thing with a price, and calling Price on it panics. An empty slice does not panic: there is nothing to call. The function's job is to add what it was given and to tolerate being given nothing. It is not to know about orders, lines, or accounts, those types grow Price methods on their own side of the seam."
         },
         {
           "kind": "quickcheck",
@@ -1640,7 +1671,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
             "It returns an error, because a nil interface is a failure value."
           ],
           "answer": 0,
-          "explain": "A nil interface holds no concrete type, so a method call on it panics — there is nothing to dispatch to. An empty slice is the safe case: a real slice with no elements, so the loop simply adds nothing."
+          "explain": "A nil interface holds no concrete type, so a method call on it panics; there is nothing to dispatch to. An empty slice is the safe case: a real slice with no elements, so the loop simply adds nothing."
         },
         {
           "kind": "keypoints",
@@ -1663,16 +1694,16 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "task",
-          "body": "Write the Priced interface and SumPriced in priced.go. Do not add an Order type in this file. The tests bring their own types that have Price methods — your function should add those without naming them."
+          "body": "Write the Priced interface and SumPriced in priced.go. Do not add an Order type in this file. The tests bring their own types that have Price methods, your function should add those without naming them."
         }
       ],
       "hints": [
-        "Do not name Order in priced.go: if SumPriced needs a concrete type, the interface is not doing its job. If go is command not found, run the environment check first.",
-        "The test's own types are the proof — if they compile against Priced, the method set is the only contract."
+        "Do not name Order in priced.go: if SumPriced needs a concrete type, the interface is not doing its job. If the terminal says go is not found, run the environment check first.",
+        "The test's own types are the proof, if they compile against Priced, the method set is the only contract."
       ],
       "misconceptions": [
-        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
-        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
+        "Writing implements on the struct. Go has no such clause, and adding one does not compile.",
+        "Switching on the concrete type inside SumPriced, the function then only works for types it was shown, which is the problem the interface was meant to remove."
       ],
       "resources": [
         {
@@ -1698,19 +1729,19 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "Yes — the method set is the whole contract, and the struct already has it.",
+        "Yes, the method set is the whole contract, and the struct already has it.",
         "Yes, but only after a conversion function copies it into an Order.",
-        "No — the struct has to say \"implements Priced\" or it is a different type, so the interface never sees it.",
-        "No — the struct has to live in package ledger, next to the interface."
+        "No, the struct has to say \"implements Priced\" or it is a different type, so the interface never sees it.",
+        "No, the struct has to live in package ledger, next to the interface."
       ],
       "answer": 0,
-      "explanation": "Go checks interfaces by method set, at the call. If the concrete type has every method the interface lists, the value can be passed as that interface. There is no implements clause to forget, and the type does not have to be in the same package — the tests rely on that, because they define their own priced things. A conversion into some house struct would throw away the seam: the function would again know the concrete type, which is what the interface was introduced to avoid.",
+      "explanation": "Go checks interfaces by method set, at the call. If the concrete type has every method the interface lists, the value can be passed as that interface. There is no implements clause to forget, and the type does not have to be in the same package. Converting into some house struct would throw away the seam: the function would again know the concrete type.",
       "hints": [
         "Look for the method the interface names on the concrete type, not for a line that declares it implements."
       ],
       "misconceptions": [
-        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
-        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
+        "Writing implements on the struct. Go has no such clause, and adding one does not compile.",
+        "Switching on the concrete type inside SumPriced, the function then only works for types it was shown, which is the problem the interface was meant to remove."
       ]
     },
     "go-interfaces-do": {
@@ -1724,7 +1755,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-interfaces"
       ],
       "files": [
-        "priced.go"
+        "priced.go",
+        "priced_test.go",
+        "test/priced.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/priced.test.mjs",
       "checks": [
@@ -1762,8 +1795,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Self-review: one item, several items and no items all have to fall out of the same rule that asks each value for its price."
       ],
       "misconceptions": [
-        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
-        "Switching on the concrete type inside SumPriced — the function then only works for types it was shown, which is the problem the interface was meant to remove."
+        "Writing implements on the struct. Go has no such clause, and adding one does not compile.",
+        "Switching on the concrete type inside SumPriced, the function then only works for types it was shown, which is the problem the interface was meant to remove."
       ]
     },
     "go-interfaces-review": {
@@ -1777,7 +1810,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-interfaces"
       ],
       "files": [
-        "names.go"
+        "names.go",
+        "names_test.go",
+        "test/names.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/names.test.mjs",
       "checks": [
@@ -1795,14 +1830,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "a single name is returned alone"
           ],
-          "feedback": "With one item there is nothing to separate. Return the name. Do not prefix or suffix the separator. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "With one item there is nothing to separate. Return the name. Do not prefix or suffix the separator. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Writing implements on the struct — Go has no such clause, and adding one does not compile.",
-        "Switching on the concrete type inside SumPriced — the function then only works for types it was meant to remove."
+        "Writing implements on the struct. Go has no such clause, and adding one does not compile.",
+        "Switching on the concrete type inside SumPriced, the function then only works for types it was meant to remove."
       ]
     },
     "go-packages-learn": {
@@ -1859,12 +1894,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Checkout lives in another package: only a capital letter lets a name cross that boundary, whatever the file is called. If go is command not found, run the environment check first.",
-        "If the compiler says undefined, read the name you wrote — the import path is the directory, the export is the first letter."
+        "Checkout lives in another package: only a capital letter lets a name cross that boundary, whatever the file is called. If the terminal says go is not found, run the environment check first.",
+        "If the compiler says undefined, read the name you wrote, the import path is the directory, the export is the first letter."
       ],
       "misconceptions": [
-        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
-        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
+        "Reimplementing the formatter inside Checkout, the package boundary is only real if the caller crosses it.",
+        "Assuming the same module means every name is visible, lowercase names stop at the package, and the compiler is the thing that stops them."
       ],
       "resources": [
         {
@@ -1891,18 +1926,18 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "It works if Checkout is in a file that starts with package money.",
-        "It does not compile — a lowercase name is not exported to another package.",
+        "It does not compile, a lowercase name is not exported to another package.",
         "It compiles and panics at run time, because the function exists but is private.",
-        "It works — the packages are in the same module, so every name is shared."
+        "It works, the packages are in the same module, so every name is shared."
       ],
       "answer": 1,
-      "explanation": "Export is a compile-time rule based on the first letter. A capital letter is visible to importers. A lowercase letter is visible only inside the package that defined it. Being in the same module changes nothing: the module is the unit you download, the package is the unit of visibility. The failure is a compiler error, not a panic, which is the useful part — the boundary is checked before the program runs. If Checkout itself is declared package money, it is not importing anything; it is the same package, and the directory layout has stopped meaning what the lesson said it means.",
+      "explanation": "Export is a compile-time rule based on the first letter: a capital letter is visible to importers, a lowercase one only inside its own package, and the module has no say in it. The failure is a compiler error, not a panic, because the boundary is checked before the program runs. If Checkout is declared package money, it is the same package, not an import.",
       "hints": [
         "The first letter of the function name decides visibility; the directory and the module have no say in it."
       ],
       "misconceptions": [
-        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
-        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
+        "Reimplementing the formatter inside Checkout, the package boundary is only real if the caller crosses it.",
+        "Assuming the same module means every name is visible, lowercase names stop at the package, and the compiler is the thing that stops them."
       ]
     },
     "go-packages-do": {
@@ -1916,7 +1951,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-packages"
       ],
       "files": [
-        "money/money.go"
+        "money/money.go",
+        "money_test.go",
+        "checkout.go",
+        "test/money.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/money.test.mjs",
       "checks": [
@@ -1954,8 +1992,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Cents owns the string. Checkout is a one-line call."
       ],
       "misconceptions": [
-        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
-        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
+        "Reimplementing the formatter inside Checkout, the package boundary is only real if the caller crosses it.",
+        "Assuming the same module means every name is visible, lowercase names stop at the package, and the compiler is the thing that stops them."
       ]
     },
     "go-packages-review": {
@@ -1969,7 +2007,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-packages"
       ],
       "files": [
-        "tax/tax.go"
+        "tax/tax.go",
+        "tax_test.go",
+        "withtax.go",
+        "test/tax.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/tax.test.mjs",
       "checks": [
@@ -1987,14 +2028,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "a rate of 0 returns the cents unchanged"
           ],
-          "feedback": "Add(200, 0) is 200. WithTax in package ledger must call tax.Add, so a rate of 0 stays 200 there too. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Add(200, 0) is 200. WithTax in package ledger must call tax.Add, so a rate of 0 stays 200 there too. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Reimplementing the formatter inside Checkout — the package boundary is only real if the caller crosses it.",
-        "Assuming the same module means every name is visible — lowercase names stop at the package, and the compiler is the thing that stops them."
+        "Reimplementing the formatter inside Checkout, the package boundary is only real if the caller crosses it.",
+        "Assuming the same module means every name is visible, lowercase names stop at the package, and the compiler is the thing that stops them."
       ]
     },
     "go-collections-learn": {
@@ -2042,7 +2083,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         {
           "kind": "example",
           "body": "A slice with a free slot is where it bites:",
-          "code": "names := make([]string, 0, 4)\nfor _, s := range []string{\"milk\", \"bread\", \"egg\"} {\n    names = append(names, s) // len 3, cap 4: one free slot\n}\n\norder := append(names, \"fig\") // the free slot takes it, no new array\nmore := append(names, \"date\") // the same slot, the same array\n\nfmt.Println(order[3]) // \"date\" — order was never touched again"
+          "code": "names := make([]string, 0, 4)\nfor _, s := range []string{\"milk\", \"bread\", \"egg\"} {\n    names = append(names, s) // len 3, cap 4: one free slot\n}\n\norder := append(names, \"fig\") // the free slot takes it, no new array\nmore := append(names, \"date\") // the same slot, the same array\n\nfmt.Println(order[3]) // \"date\", order was never touched again"
         },
         {
           "kind": "prose",
@@ -2084,13 +2125,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Look a missing SKU up with the two-result form — the second result is what separates absent from stored 0. If go is command not found, run the environment check first.",
+        "Look a missing SKU up with the two-result form, the second result is what separates absent from stored 0. If the terminal says go is not found, run the environment check first.",
         "After an append, do not trust an index you worked out before it: growth can move the elements to a new array."
       ],
       "misconceptions": [
-        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
-        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent.",
-        "Ranging a map in insertion order — Go picks the order fresh each run, so a report built on that range flips lists between two runs of the same binary."
+        "Adding quantities when the same SKU appears twice; this index is a replacement, and the later line is the current qty.",
+        "Reading a missing key as an error or a panic; it reads as 0, and only the ok result says the key was absent.",
+        "Ranging a map in insertion order. Go picks the order fresh each run, so a report built on that range flips lists between two runs of the same binary."
       ],
       "visualization": {
         "type": "slice-memory",
@@ -2128,19 +2169,19 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "A panic, because \"b\" was never stored in the map — reading an absent key is a misuse of it.",
+        "A panic, because \"b\" was never stored in the map, reading an absent key is a misuse of it.",
         "nil, because the key is absent, and Go returns nil for any value that is not there.",
-        "0 — the zero value for int — the same number a SKU stored with qty 0 would give.",
+        "0, the zero value for int, the same number a SKU stored with qty 0 would give.",
         "false, because the lookup failed, and a failed lookup reports itself that way."
       ],
       "answer": 2,
-      "explanation": "A map read with one result always returns something. For an int value that something is 0 when the key is absent. There is no panic and no nil — nil is not an int. false only appears if you write qty, ok := bySKU[\"b\"], and then ok is false while qty is still 0. That is why a qty of 0 and a missing SKU look identical unless the caller asks for ok. This course's index avoids the ambiguity by not storing a SKU that never appeared, and by treating \"is it in the map\" as the question the tests ask.",
+      "explanation": "A map read with one result always returns something: for an int, 0 when the key is absent, no panic, and nil is not an int. false only comes from the two-result form, qty, ok := bySKU[\"b\"], where ok is false and qty is 0. So a qty of 0 and a missing SKU look identical, and the course's index asks whether the key is in the map.",
       "hints": [
-        "A map lookup answers even for a key nobody stored — ask which value it returns for int, and whether a stored 0 looks the same."
+        "A map lookup answers even for a key nobody stored, ask which value it returns for int, and whether a stored 0 looks the same."
       ],
       "misconceptions": [
-        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
-        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
+        "Adding quantities when the same SKU appears twice; this index is a replacement, and the later line is the current qty.",
+        "Reading a missing key as an error or a panic; it reads as 0, and only the ok result says the key was absent."
       ]
     },
     "go-collections-do": {
@@ -2154,7 +2195,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-collections"
       ],
       "files": [
-        "index.go"
+        "index.go",
+        "index_test.go",
+        "line.go",
+        "test/index.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/index.test.mjs",
       "checks": [
@@ -2192,8 +2236,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Last line wins. Absent stays absent. An empty slice returns an empty map, not nil, so the caller can read it."
       ],
       "misconceptions": [
-        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
-        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
+        "Adding quantities when the same SKU appears twice; this index is a replacement, and the later line is the current qty.",
+        "Reading a missing key as an error or a panic; it reads as 0, and only the ok result says the key was absent."
       ]
     },
     "go-collections-review": {
@@ -2207,7 +2251,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-collections"
       ],
       "files": [
-        "unique.go"
+        "unique.go",
+        "unique_test.go",
+        "line.go",
+        "test/unique.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/unique.test.mjs",
       "checks": [
@@ -2225,14 +2272,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "an empty slice returns an empty slice"
           ],
-          "feedback": "Nothing in, nothing out. Return an empty slice, not nil, so a caller ranging it is safe and a length check reads 0. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Nothing in, nothing out. Return an empty slice, not nil, so a caller ranging it is safe and a length check reads 0. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Adding quantities when the same SKU appears twice — this index is a replacement, and the later line is the current qty.",
-        "Reading a missing key as an error or a panic — it reads as 0, and only the ok result says the key was absent."
+        "Adding quantities when the same SKU appears twice; this index is a replacement, and the later line is the current qty.",
+        "Reading a missing key as an error or a panic; it reads as 0, and only the ok result says the key was absent."
       ]
     },
     "go-pointers-learn": {
@@ -2260,7 +2307,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every variable lives somewhere. The address operator & asks where: &n is the address of n. A pointer holds an address, and the star dereferences it: if p holds the address of n, *p is n itself, and assigning to *p changes n. Go has no pointer arithmetic — a pointer names one value, never a neighborhood."
+          "body": "Every variable lives somewhere. The address operator & asks where: &n is the address of n. A pointer holds an address, and the star dereferences it: if p holds the address of n, *p is n itself, and assigning to *p changes n. Go has no pointer arithmetic, a pointer names one value, never a neighborhood."
         },
         {
           "kind": "example",
@@ -2269,7 +2316,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Three nils, three behaviors. A nil map reads fine (a missing key is the zero value) but writing to it panics, because there is no backing store yet — make() is what creates one. A nil slice reads and appends fine, because append allocates. A nil pointer does nothing safely: any use panics, so a function that accepts a pointer decides up front what nil means, usually a documented no-op."
+          "body": "Three nils, three behaviors. A nil map reads fine (a missing key is the zero value) but writing to it panics, because there is no backing store yet, make() is what creates one."
+        },
+        {
+          "kind": "prose",
+          "body": "A nil slice reads and appends fine, because append allocates. A nil pointer does nothing safely: any use panics, so a function that accepts a pointer decides up front what nil means, usually a documented no-op."
         },
         {
           "kind": "quickcheck",
@@ -2281,11 +2332,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
             "It is a compile error, so the build fails before the program runs."
           ],
           "answer": 0,
-          "explain": "A map value is a small header pointing at a store; a nil map has no store, so a write panics while a read is fine and hands back the zero value. make() is what creates the store — reading nil is safe, writing to it never is."
+          "explain": "A map value is a small header pointing at a store; a nil map has no store, so a write panics while a read is fine and hands back the zero value. make() is what creates the store, reading nil is safe, writing to it never is."
         },
         {
           "kind": "prose",
-          "body": "One rule covers the methods phase retroactively: a method that only reads takes a value, and a method that must change the caller takes a pointer. Copying is the default in Go — function arguments, return values, and range variables are all copies — so sharing has to be asked for with & at the call and * in the signature."
+          "body": "One rule covers the methods phase retroactively: a method that only reads takes a value, and a method that must change the caller takes a pointer. Copying is the default in Go, function arguments, return values, and range variables are all copies, so sharing has to be asked for with & at the call and * in the signature."
         },
         {
           "kind": "keypoints",
@@ -2294,7 +2345,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
             "& takes the address; * follows it. No arithmetic, no neighborhood.",
             "Everything copies unless shared: arguments, returns, range values.",
             "A nil map reads but never writes; a nil pointer never does anything safely.",
-            "Read with a value, write with a pointer — one rule, methods included."
+            "Read with a value, write with a pointer, one rule, methods included."
           ]
         },
         {
@@ -2313,13 +2364,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Read *p as \"the value p is pointing at\", wherever it appears. If go is command not found, run the environment check first.",
+        "Read *p as \"the value p is pointing at\", wherever it appears. If the terminal says go is not found, run the environment check first.",
         "A map is already shared through its header: passing one never copies the entries."
       ],
       "misconceptions": [
-        "Passing a pointer to read faster — the compiler already copies small values cheaply; a pointer means shared mutation, not speed.",
-        "A nil map is broken — it reads perfectly; only writing needs make().",
-        "Go has pointer arithmetic like C — it does not, and the compiler refuses p+1."
+        "Passing a pointer to read faster, the compiler already copies small values cheaply; a pointer means shared mutation, not speed.",
+        "A nil map is broken; it reads perfectly; only writing needs make().",
+        "Go has pointer arithmetic like C; it does not, and the compiler refuses p+1."
       ]
     },
     "go-pointers-ask": {
@@ -2344,19 +2395,19 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "m is empty and v is 0 — nothing a call does to its parameters sticks for the caller.",
-        "m holds a:1 but v is still 0 — the map is shared, the int is a copy of it.",
-        "m is empty but v is 2 — the pointer reaches the caller while the map never does.",
-        "m holds a:1 and v is 2 — the map is shared and the pointer writes the caller's int."
+        "m is empty and v is 0, nothing a call does to its parameters sticks for the caller.",
+        "m holds a:1 but v is still 0, the map is shared, the int is a copy of it.",
+        "m is empty but v is 2, the pointer reaches the caller while the map never does.",
+        "m holds a:1 and v is 2, the map is shared and the pointer writes the caller's int."
       ],
       "answer": 3,
-      "explanation": "Both stick, for different reasons. A map value is a small header pointing at a shared store, so the copy the function receives still names the caller's entries — writing m[\"a\"] writes the caller's map. The pointer is explicit sharing: &v hands over the address, and *p = 2 writes the caller's variable through it. The two options that split them each deny one half of Go's model: maps share by construction, pointers share by request. And nothing about this panics — the map was made before the call, and the pointer names a live variable.",
+      "explanation": "Both stick, for different reasons. A map value is a small header pointing at a shared store, so writing m[\"a\"] writes the caller's map. The pointer is explicit sharing: &v hands over the address, and *p = 2 writes the caller's variable through it. Maps share by construction, pointers share by request, and nothing about this panics.",
       "hints": [
         "Ask what each parameter carries: the map carries a store reference, the pointer carries an address."
       ],
       "misconceptions": [
-        "Arguments never affect the caller — value arguments do not, but a map header and a pointer both name caller-owned memory.",
-        "The map must be passed by pointer to change — it must not; the map value already shares its store."
+        "Arguments never affect the caller, value arguments do not, but a map header and a pointer both name caller-owned memory.",
+        "The map must be passed by pointer to change; it must not; the map value already shares its store."
       ]
     },
     "go-pointers-do": {
@@ -2370,7 +2421,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-pointers"
       ],
       "files": [
-        "pointers.go"
+        "pointers.go",
+        "pointers_test.go",
+        "test/pointers.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/pointers.test.mjs",
       "checks": [
@@ -2396,7 +2449,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "reset on nil reports -1, never panics"
           ],
-          "feedback": "Decide what nil means before you dereference: a nil counter is a no-op reporting -1. Guard first, touch second. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Decide what nil means before you dereference: a nil counter is a no-op reporting -1. Guard first, touch second. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -2405,12 +2458,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Nudge receives Counter: raise the copy's N by one and return the copy. No star anywhere in that function.",
         "A nil *Counter has no N to read. Check for nil before anything else and return the documented -1.",
         "Run go test and read the failing test name first: each name is the exact behavior still missing.",
-        "Solution review: Reset guards nil (-1), saves the old N, zeroes, and returns the saved value; Nudge returns a copy with N+1 while the caller stays put. Run the checks — three tests, three green. If the suite cannot start because node is command not found, run the environment check first."
+        "Solution review: Reset guards nil (-1), saves the old N, zeroes, and returns the saved value; Nudge returns a copy with N+1 while the caller stays put. Run the checks, three tests, three green. If the suite cannot start because the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Returning the new value from Reset — the contract reports the previous one, so the caller can log what was cleared.",
-        "Checking nil after dereferencing — the guard must come first; a read before the check is the panic you were avoiding.",
-        "Taking a pointer in Nudge to \"be safe\" — the value receiver is the requirement, and a pointer would move the caller."
+        "Returning the new value from Reset, the contract reports the previous one, so the caller can log what was cleared.",
+        "Checking nil after dereferencing, the guard must come first; a read before the check is the panic you were avoiding.",
+        "Taking a pointer in Nudge to \"be safe\", the value receiver is the requirement, and a pointer would move the caller."
       ]
     },
     "go-pointers-review": {
@@ -2424,7 +2477,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-pointers"
       ],
       "files": [
-        "clone.go"
+        "clone.go",
+        "clone_test.go",
+        "pointers.go",
+        "test/clone.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/clone.test.mjs",
       "checks": [
@@ -2442,14 +2498,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "mutating the clone leaves the original"
           ],
-          "feedback": "Write to the clone and read the original back: it must not have moved. If it did, the two pointers name the same memory. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Write to the clone and read the original back: it must not have moved. If it did, the two pointers name the same memory. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Copying the pointer instead of the value — the clone must name new memory, or it is an alias wearing a copy's name.",
-        "A nil input needs a value — it needs nil back, decided before any dereference."
+        "Copying the pointer instead of the value, the clone must name new memory, or it is an alias wearing a copy's name.",
+        "A nil input needs a value; it needs nil back, decided before any dereference."
       ]
     },
     "go-embedding-learn": {
@@ -2470,7 +2526,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Go has no classes to inherit from, so it composes. You put one type inside another without naming the field, and that is embedding. The inner type's exported fields and methods are lifted up — promoted — so the outer value answers them as if they were its own."
+          "body": "Go has no classes to inherit from, so it composes. You put one type inside another without naming the field, and that is embedding. The inner type's exported fields and methods are lifted up, promoted, so the outer value answers them as if they were its own."
         },
         {
           "kind": "prose",
@@ -2483,7 +2539,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "s.N works because an embedded field takes the embedded type's name as its own, and its fields show through. If Satellite defined its own Twice, that one would win — the outer method shadows the promoted one, and you can still reach the inner as s.Kernel.Twice(). That is composition, not a parent class."
+          "body": "s.N works because an embedded field takes the embedded type's name as its own, and its fields show through. If Satellite defined its own Twice, that one would win, the outer method shadows the promoted one, and you can still reach the inner as s.Kernel.Twice(). That is composition, not a parent class."
         },
         {
           "kind": "keypoints",
@@ -2506,16 +2562,16 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "task",
-          "body": "In embed.go, Satellite embeds Kernel. Write Sum so it calls the promoted Twice and adds Bonus — do not recompute the doubling yourself."
+          "body": "In embed.go, Satellite embeds Kernel. Write Sum so it calls the promoted Twice and adds Bonus, do not recompute the doubling yourself."
         }
       ],
       "hints": [
-        "Write both numbers down before you finish the method: Sum of Kernel{5} with a Bonus of 3 is 13, not 8. If go is command not found, run the environment check first.",
+        "Write both numbers down before you finish the method: Sum of Kernel{5} with a Bonus of 3 is 13, not 8. If the terminal says go is not found, run the environment check first.",
         "A promoted method is already on the value. Call s.Twice(); do not write s.N * 2 again."
       ],
       "misconceptions": [
-        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
-        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
+        "Reimplementing the promoted method instead of calling it, the whole point of embedding is that Twice is already there.",
+        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves, a named field is not an embedded one."
       ],
       "visualization": {
         "type": "component-tree",
@@ -2567,19 +2623,19 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "A compile error — a type cannot declare a method with the same name as a promoted one.",
-        "16 — Go adds the outer and inner results together.",
-        "8 — the embedded Kernel method is the one attached to the inner value.",
-        "12 — the outer type's own Twice shadows the promoted one."
+        "A compile error, a type cannot declare a method with the same name as a promoted one.",
+        "16. Go adds the outer and inner results together.",
+        "8, the embedded Kernel method is the one attached to the inner value.",
+        "12, the outer type's own Twice shadows the promoted one."
       ],
       "answer": 3,
-      "explanation": "When the outer type declares a method with the same name as a promoted one, the outer method wins: embedding places the inner method set one level further out than the type's own names, so the outer shadows rather than clashes. It is not a redefinition error. The promoted Twice still exists and is reachable as s.Kernel.Twice(), but a plain s.Twice() resolves to the outer one — 4 * 3 = 12.",
+      "explanation": "When the outer type declares a method with the same name as a promoted one, the outer method wins: embedding places the inner method set one level further out than its own names, so the outer shadows rather than clashes. It is not a redefinition error. The promoted Twice still exists as s.Kernel.Twice(), but a plain s.Twice() resolves to the outer one, 4 * 3 = 12.",
       "hints": [
         "A method the type declares itself sits closer than one it only inherited."
       ],
       "misconceptions": [
-        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
-        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
+        "Reimplementing the promoted method instead of calling it, the whole point of embedding is that Twice is already there.",
+        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves, a named field is not an embedded one."
       ]
     },
     "go-embedding-do": {
@@ -2593,7 +2649,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-embedding"
       ],
       "files": [
-        "embed.go"
+        "embed.go",
+        "embed_test.go",
+        "test/embed.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/embed.test.mjs",
       "checks": [
@@ -2628,11 +2686,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Call s.Twice() to get the doubled count; do not recompute it from s.N.",
         "Sum is the promoted Twice plus the Bonus field the Satellite carries itself.",
         "A bonus of 0 still returns the doubled count; a negative bonus is subtracted.",
-        "If the suite cannot start because node is command not found, run the environment check first."
+        "If the suite cannot start because the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
-        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
+        "Reimplementing the promoted method instead of calling it, the whole point of embedding is that Twice is already there.",
+        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves, a named field is not an embedded one."
       ]
     },
     "go-embedding-review": {
@@ -2646,7 +2704,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-embedding"
       ],
       "files": [
-        "promote.go"
+        "promote.go",
+        "promote_test.go",
+        "test/promote.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/promote.test.mjs",
       "checks": [
@@ -2664,14 +2724,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "an empty label still renders the version"
           ],
-          "feedback": "Version 0 with an empty label renders \"v0:\" — not the empty string. The promoted field is still read even when the label is blank. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Version 0 with an empty label renders \"v0:\", not the empty string. The promoted field is still read even when the label is blank. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Reimplementing the promoted method instead of calling it — the whole point of embedding is that Twice is already there.",
-        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves — a named field is not an embedded one."
+        "Reimplementing the promoted method instead of calling it, the whole point of embedding is that Twice is already there.",
+        "Giving the embedded type a field name (k Kernel) and then wondering why s.Twice() no longer resolves, a named field is not an embedded one."
       ]
     },
     "go-errors-learn": {
@@ -2693,7 +2753,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A Go failure is a value you return, not an exception you throw. A function that can fail returns a result and an error together, and the caller decides what to do. Three tools carry most of the weight: a sentinel error you compare with errors.Is, context you add with fmt.Errorf and the %w verb, and — for the rare panic — recover."
+          "body": "A Go failure is a value you return, not an exception you throw. A function that can fail returns a result and an error together, and the caller decides what to do. Three tools carry most of the weight: a sentinel error you compare with errors.Is, context you add with fmt.Errorf and the %w verb, and, for the rare panic, recover."
         },
         {
           "kind": "example",
@@ -2708,10 +2768,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "kind": "quickcheck",
           "body": "err := fmt.Errorf(\"ledger: %w\", ErrMissing). What does errors.Is(err, ErrMissing) return?",
           "items": [
-            "true — %w kept the sentinel reachable inside the wrap.",
-            "false — a wrapped error is a new value, so nothing matches.",
+            "true: %w kept the sentinel reachable inside the wrap.",
+            "false: a wrapped error is a new value, so nothing matches.",
             "true, but only because both errors carry the same message.",
-            "false — %w formats the text, while %v is the wrapping verb."
+            "false: %w formats the text, while %v is the wrapping verb."
           ],
           "answer": 0,
           "explain": "errors.Is walks the chain of wraps, so it finds ErrMissing inside the error that %w produced. == would answer false because the wrap is a different value; the link %w records is what keeps the caller's check working."
@@ -2751,13 +2811,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "A map lookup hands you the value and an ok flag. When ok is false there is nothing to return — hand back the sentinel. If go is command not found, run the environment check first.",
+        "A map lookup hands you the value and an ok flag. When ok is false there is nothing to return, hand back the sentinel. If the terminal says go is not found, run the environment check first.",
         "To keep a caller's errors.Is true, wrap with fmt.Errorf and the %w verb, not %v."
       ],
       "misconceptions": [
-        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
-        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless.",
-        "Writing if err != nil inside a block and trusting the function still reports that failure — the name can point at a second variable the caller never sees."
+        "Comparing a wrapped error with ==, the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
+        "Returning a non-nil error beside a result the caller might read, when the error is set, the value is meaningless.",
+        "Writing if err != nil inside a block and trusting the function still reports that failure, the name can point at a second variable the caller never sees."
       ],
       "resources": [
         {
@@ -2783,19 +2843,19 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "true — %w put ErrMissing inside err, and errors.Is unwraps to find it.",
-        "false — errors.Is only works when ErrMissing is returned exactly, never wrapped.",
+        "true: %w put ErrMissing inside err, and errors.Is unwraps to find it.",
+        "false: errors.Is only works when ErrMissing is returned exactly, never wrapped.",
         "true, but only because the two errors happen to share the same message text.",
-        "false — err is a different error value than ErrMissing."
+        "false: err is a different error value than ErrMissing."
       ],
       "answer": 0,
-      "explanation": "fmt.Errorf with %w records the wrapped error and gives the new error an Unwrap method that points at it. errors.Is walks that chain of Unwrap calls looking for a value equal to its target, so it reports true even though err itself is not ErrMissing. That is exactly why you wrap with %w and not %v: %v keeps only the text and drops the link the walker needs to climb.",
+      "explanation": "fmt.Errorf with %w records the wrapped error and gives the new error an Unwrap method pointing at it. errors.Is walks that chain of Unwrap calls looking for a match to its target, so it reports true even though err itself is not ErrMissing. That is why you wrap with %w and not %v: %v keeps only the text and drops the link the walker needs to climb.",
       "hints": [
-        "%w does more than format text — it records a link errors.Is can follow."
+        "%w does more than format text; it records a link errors.Is can follow."
       ],
       "misconceptions": [
-        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
-        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
+        "Comparing a wrapped error with ==, the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
+        "Returning a non-nil error beside a result the caller might read, when the error is set, the value is meaningless."
       ]
     },
     "go-errors-do": {
@@ -2809,7 +2869,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-errors"
       ],
       "files": [
-        "errs.go"
+        "errs.go",
+        "errs_test.go",
+        "test/errs.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/errs.test.mjs",
       "checks": [
@@ -2841,14 +2903,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "hints": [
         "Open errs.go: it owns the book map, Lookup and Wrap. Lookup hands back a value and an error, and the map tells you whether the key is there. Run go test ./... and read the name of the test that failed.",
-        "When the key is missing, return ErrMissing — the exact sentinel the tests compare against.",
+        "When the key is missing, return ErrMissing, the exact sentinel the tests compare against.",
         "A present key returns its cents with a nil error.",
         "Wrap must not return the error unchanged and must not flatten it to text. Use fmt.Errorf with %w.",
         "Self-review: a missing key comes back as the sentinel the tests compare against, a present key comes back with no error at all, and a wrapped error still answers true when the suite asks whether the sentinel is inside it."
       ],
       "misconceptions": [
-        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
-        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
+        "Comparing a wrapped error with ==, the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
+        "Returning a non-nil error beside a result the caller might read, when the error is set, the value is meaningless."
       ]
     },
     "go-errors-review": {
@@ -2862,7 +2924,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-errors"
       ],
       "files": [
-        "recover.go"
+        "recover.go",
+        "recover_test.go",
+        "test/recover.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/recover.test.mjs",
       "checks": [
@@ -2880,14 +2944,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "a zero divisor becomes an error"
           ],
-          "feedback": "Rate(10,0) would panic. A deferred recover turns that panic into a non-nil error and a 0 result, so the caller gets a value to check instead of a crash. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Rate(10,0) would panic. A deferred recover turns that panic into a non-nil error and a 0 result, so the caller gets a value to check instead of a crash. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Comparing a wrapped error with == — the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
-        "Returning a non-nil error beside a result the caller might read — when the error is set, the value is meaningless."
+        "Comparing a wrapped error with ==, the wrap made a new value, so == is false while errors.Is finds the sentinel inside.",
+        "Returning a non-nil error beside a result the caller might read, when the error is set, the value is meaningless."
       ]
     },
     "go-lifecycle-learn": {
@@ -2909,7 +2973,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Some work must happen no matter how a function leaves: unlocking a mutex, closing a file, canceling a context. defer schedules a call for the moment its function returns — normally, or through a panic. Deferred calls run last-in-first-out, so nested acquisitions unwind in the reverse order they were taken."
+          "body": "Some work must happen no matter how a function leaves: unlocking a mutex, closing a file, canceling a context. defer schedules a call for the moment its function returns, normally, or through a panic. Deferred calls run last-in-first-out, so nested acquisitions unwind in the reverse order they were taken."
         },
         {
           "kind": "example",
@@ -2918,7 +2982,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Panic is for programmer bugs, not bad luck: an index that cannot exist, a contract the caller broke. Expected failures travel as error values — the errors phase already taught that road. recover catches a panic, but only inside a deferred call, which makes the deferred boundary the one place a panic can be turned back into a value. Everything a boundary does not own, it re-panics: swallowing a stranger's panic hides the bug from whoever could fix it."
+          "body": "Panic is for programmer bugs, not bad luck: an index that cannot exist, a contract the caller broke. Expected failures travel as error values, the errors phase already taught that road."
+        },
+        {
+          "kind": "prose",
+          "body": "recover catches a panic, but only inside a deferred call, which makes the deferred boundary the one place a panic can be turned back into a value. Everything a boundary does not own, it re-panics: swallowing a stranger's panic hides the bug from whoever could fix it."
         },
         {
           "kind": "keypoints",
@@ -2932,7 +3000,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         {
           "kind": "example",
           "body": "lifecycle.go is where this phase works.",
-          "code": "// WithCleanup runs fn, always running cleanup exactly once afterwards —\n// whether fn returns or panics. A panic propagates with its original value;"
+          "code": "// WithCleanup runs fn, always running cleanup exactly once afterwards, \n// whether fn returns or panics. A panic propagates with its original value;"
         },
         {
           "kind": "example",
@@ -2945,13 +3013,13 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "A deferred call with no arguments runs with the values it closed over, not with anything the return site knows. If go is command not found, run the environment check first.",
-        "recover() outside a deferred call returns nil and catches nothing — placement is the mechanism."
+        "A deferred call with no arguments runs with the values it closed over, not with anything the return site knows. If the terminal says go is not found, run the environment check first.",
+        "recover() outside a deferred call returns nil and catches nothing, placement is the mechanism."
       ],
       "misconceptions": [
-        "Defers run first-in-first-out — they stack: the last deferred runs first, which is what makes nested cleanup unwind correctly.",
-        "panic as Go's exceptions — expected failures are error values; panic is reserved for what the programmer got wrong.",
-        "recover() anywhere catches anything — it only works inside the deferred call that bounds the panic."
+        "Defers run first-in-first-out; they stack: the last deferred runs first, which is what makes nested cleanup unwind correctly.",
+        "panic as Go's exceptions, expected failures are error values; panic is reserved for what the programmer got wrong.",
+        "recover() anywhere catches anything; it only works inside the deferred call that bounds the panic."
       ],
       "resources": [
         {
@@ -2973,23 +3041,23 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Read the lesson's function again. Two deferred additions and a bare return of 5 — decide what the caller receives before you run anything."
+          "body": "Read the lesson's function again. Two deferred additions and a bare return of 5, decide what the caller receives before you run anything."
         }
       ],
       "options": [
-        "5 — deferred calls read the return value but cannot change it.",
-        "6 — the defers run in order, so only the first addition lands.",
-        "15 — the defers run in order, so only the second addition lands.",
-        "16 — last-in-first-out: the +10 lands first, then the +1."
+        "5, deferred calls read the return value but cannot change it.",
+        "6, the defers run in order, so only the first addition lands.",
+        "15, the defers run in order, so only the second addition lands.",
+        "16, last-in-first-out: the +10 lands first, then the +1."
       ],
       "answer": 3,
-      "explanation": "Defers run last-in-first-out against the named return n. return 5 sets n to 5; then the later defer (+10) runs, making 15; then the earlier defer (+1) runs, making 16. The named return is what makes this observable — the closures capture the variable n, not the value 5, so each addition lands on the running total. With an unnamed return the additions would have nowhere to land and the caller would still see 5.",
+      "explanation": "Defers run last-in-first-out against the named return n. return 5 sets n to 5; the later defer (+10) runs, making 15; the earlier defer (+1) runs, making 16. The named return is what makes this observable: the closures capture the variable n, not the value 5. With an unnamed return the additions would have nowhere to land and the caller would still see 5.",
       "hints": [
         "Run the stack backwards: which defer was registered last, and what does n hold when each one fires?"
       ],
       "misconceptions": [
-        "Deferred calls run in order — the stack unwinds last-in-first-out; order of registration is the reverse of order of execution.",
-        "return 5 freezes the answer — a named return stays writable until the function actually exits."
+        "Deferred calls run in order, the stack unwinds last-in-first-out; order of registration is the reverse of order of execution.",
+        "return 5 freezes the answer, a named return stays writable until the function actually exits."
       ]
     },
     "go-lifecycle-do": {
@@ -3003,7 +3071,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-lifecycle"
       ],
       "files": [
-        "lifecycle.go"
+        "lifecycle.go",
+        "lifecycle_test.go",
+        "test/lifecycle.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/lifecycle.test.mjs",
       "checks": [
@@ -3021,7 +3091,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "a panic still cleans up, then keeps panicking"
           ],
-          "feedback": "Deferred calls run through a panic, and an unrecovered panic keeps traveling after them. Do not recover here — run cleanup and let the panic continue."
+          "feedback": "Deferred calls run through a panic, and an unrecovered panic keeps traveling after them. Do not recover here, run cleanup and let the panic continue."
         },
         {
           "id": "edge-value",
@@ -3029,7 +3099,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "the propagated value is the original, even an int"
           ],
-          "feedback": "Re-panicking means the same value, same type: 42 arrives as int 42, not a string about 42. Pass the panic through untouched. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Re-panicking means the same value, same type: 42 arrives as int 42, not a string about 42. Pass the panic through untouched. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -3038,12 +3108,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "A deferred cleanup runs on return and on panic alike. That is the entire first check.",
         "Do not call recover in WithCleanup. Recovery belongs at a boundary that answers for the panic; this function only guarantees the cleanup.",
         "Run go test and read the failing test name first: calm behavior, then the panic path, then the int-valued edge.",
-        "Solution review: defer cleanup(); fn(). The panic travels through the deferred call with its value intact, and cleanup ran exactly once either way. Run the checks — three tests, three green."
+        "Solution review: defer cleanup(); fn(). The panic travels through the deferred call with its value intact, and cleanup ran exactly once either way. Run the checks, three tests, three green."
       ],
       "misconceptions": [
-        "Recovering inside WithCleanup — recovery converts the panic into a return; this contract propagates, so recovering here breaks it.",
-        "Running cleanup only on success — the panicking path is the one that needs cleanup most; defer covers both with one line.",
-        "Stringifying the panic value — the value travels as-is; formatting it changes its type and breaks typed recovery downstream."
+        "Recovering inside WithCleanup, recovery converts the panic into a return; this contract propagates, so recovering here breaks it.",
+        "Running cleanup only on success, the panicking path is the one that needs cleanup most; defer covers both with one line.",
+        "Stringifying the panic value, the value travels as-is; formatting it changes its type and breaks typed recovery downstream."
       ]
     },
     "go-lifecycle-review": {
@@ -3057,7 +3127,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-lifecycle"
       ],
       "files": [
-        "guard.go"
+        "guard.go",
+        "guard_test.go",
+        "test/guard.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/guard.test.mjs",
       "checks": [
@@ -3075,14 +3147,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "a calm run hands back nil, having run"
           ],
-          "feedback": "Without a panic, recover returns nil — but fn must still have run. Call it, then return whatever recover reported. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Without a panic, recover returns nil, but fn must still have run. Call it, then return whatever recover reported. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Returning a fixed nil on the panic path — the recovered value is the answer; discarding it reports nothing.",
-        "Skipping fn when a guard is present — the guard wraps the call, it never replaces it."
+        "Returning a fixed nil on the panic path, the recovered value is the answer; discarding it reports nothing.",
+        "Skipping fn when a guard is present, the guard wraps the call, it never replaces it."
       ]
     },
     "go-generics-learn": {
@@ -3104,7 +3176,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Before generics you wrote a helper for ints, then copied it for float64, then for strings — several bodies doing the same loop. A type parameter turns that into one function that stands for many: you declare a placeholder type, name the set of types it may hold (its constraint), then write the body once against the placeholder."
+          "body": "Before generics you wrote a helper for ints, then copied it for float64, then for strings, several bodies doing the same loop. A type parameter turns that into one function that stands for many: you declare a placeholder type, name the set of types it may hold (its constraint), then write the body once against the placeholder."
         },
         {
           "kind": "example",
@@ -3113,7 +3185,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The brackets after the name hold the type parameter: T is not a value, it is a type the caller chooses. cmp.Ordered is the constraint — it lists the types allowed (ints, floats, strings) and, crucially, hands the body the comparison operators. Call Largest(3, 9) and Go infers T=int; call it with strings and the identical compiled logic runs over them."
+          "body": "The brackets after the name hold the type parameter: T is not a value, it is a type the caller chooses. cmp.Ordered is the constraint; it lists the types allowed (ints, floats, strings) and, crucially, hands the body the comparison operators. Call Largest(3, 9) and Go infers T=int; call it with strings and the identical compiled logic runs over them."
         },
         {
           "kind": "keypoints",
@@ -3140,11 +3212,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Read the signature first: Max[T cmp.Ordered](xs []T) T means the caller picks a type T, and the body works on values of that T. If go is command not found, run the environment check first.",
+        "Read the signature first: Max[T cmp.Ordered](xs []T) T means the caller picks a type T, and the body works on values of that T. If the terminal says go is not found, run the environment check first.",
         "cmp.Ordered already grants the < and > operators, so you can compare two values of T directly without any assertion."
       ],
       "misconceptions": [
-        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
+        "Trying to add or compare a type parameter before its constraint says that is allowed, the constraint is what unlocks the operators for T.",
         "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
       ],
       "resources": [
@@ -3177,12 +3249,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "Because generic code cannot index a slice, so you have to use a range loop with an accumulator variable."
       ],
       "answer": 1,
-      "explanation": "A type parameter is only as capable as its constraint. any (the empty interface) promises nothing, so the compiler cannot assume < exists for whatever T turns out to be. cmp.Ordered is a constraint that lists the ordered types and thereby grants the comparison operators to the body. Swapping any for cmp.Ordered is the minimal fix — not a type assertion, and indexing a slice is perfectly fine in generic code.",
+      "explanation": "A type parameter is only as capable as its constraint. any (the empty interface) promises nothing, so the compiler cannot assume < exists for T. cmp.Ordered lists the ordered types and grants the comparison operators to the body. Swapping any for cmp.Ordered is the minimal fix, not a type assertion, and indexing a slice is fine in generic code.",
       "hints": [
         "Ask what the constraint promised. any promises nothing; the < operator needs an ordered constraint."
       ],
       "misconceptions": [
-        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
+        "Trying to add or compare a type parameter before its constraint says that is allowed, the constraint is what unlocks the operators for T.",
         "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
       ]
     },
@@ -3197,7 +3269,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-generics"
       ],
       "files": [
-        "gen.go"
+        "gen.go",
+        "gen_test.go",
+        "test/gen.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/gen.test.mjs",
       "checks": [
@@ -3228,14 +3302,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open gen.go: it declares the generic Max you are asked to finish — the caller picks the type, and the body sees values of that type. Run go test ./... and read the name of the test that failed.",
+        "Open gen.go: it declares the generic Max you are asked to finish, the caller picks the type, and the body sees values of that type. Run go test ./... and read the name of the test that failed.",
         "Start from var best T, the zero value, so the first element can overwrite it.",
         "Loop over positions rather than values, so the first element can start as the best so far and every later one has something to beat.",
         "An empty slice never enters the loop, so the function returns the zero value of T unchanged.",
-        "The one body must serve both ints and strings — do not hardcode int anywhere."
+        "The one body must serve both ints and strings, do not hardcode int anywhere."
       ],
       "misconceptions": [
-        "Trying to add or compare a type parameter before its constraint says that is allowed — the constraint is what unlocks the operators for T.",
+        "Trying to add or compare a type parameter before its constraint says that is allowed, the constraint is what unlocks the operators for T.",
         "Writing two near-identical functions, one for int and one for string, instead of a single generic that covers both."
       ]
     },
@@ -3250,7 +3324,9 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-generics"
       ],
       "files": [
-        "uniqgen.go"
+        "uniqgen.go",
+        "uniqgen_test.go",
+        "test/uniqgen.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/uniqgen.test.mjs",
       "checks": [
@@ -3268,14 +3344,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "no values produce no output"
           ],
-          "feedback": "Unique([]string{}) returns a slice of length 0. No element is ever marked seen, so the output stays empty. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Unique([]string{}) returns a slice of length 0. No element is ever marked seen, so the output stays empty. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Reaching for cmp.Ordered when you only need equality — deduping by map key needs comparable, which also allows types that are not ordered.",
-        "Thinking comparable lets you compare any two values with == — slices and maps are not comparable, only the listed scalar and simple struct types are."
+        "Reaching for cmp.Ordered when you only need equality, deduping by map key needs comparable, which also allows types that are not ordered.",
+        "Thinking comparable lets you compare any two values with ==, slices and maps are not comparable, only the listed scalar and simple struct types are."
       ]
     },
     "go-modules-learn": {
@@ -3297,7 +3373,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Go's unit of versioning and download is the module, declared in a file named go.mod. Its first line — the module path — is the prefix every package inside it is imported by. The tool does not care which folder holds the code; it cares that a directory tree under one go.mod belongs to a single named module."
+          "body": "Go's unit of versioning and download is the module, declared in a file named go.mod. Its first line, the module path, is the prefix every package inside it is imported by. The tool does not care which folder holds the code; it cares that a directory tree under one go.mod belongs to a single named module."
         },
         {
           "kind": "example",
@@ -3306,7 +3382,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "app imports the package by its full path — module path plus directory: example.com/moddemo/double. Because moddemo has its own go.mod it is its own module: running go test ./... at the ledger root will not reach into it, and running it inside moddemo will. That boundary is the whole point of a module."
+          "body": "app imports the package by its full path, module path plus directory: example.com/moddemo/double. Because moddemo has its own go.mod it is its own module: running go test ./... at the ledger root will not reach into it, and running it inside moddemo will. That boundary is the whole point of a module."
         },
         {
           "kind": "keypoints",
@@ -3320,7 +3396,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         {
           "kind": "example",
           "body": "moddemo/double/double.go is where this phase works.",
-          "code": "// Double returns twice n. It lives in its own package, whose full import path is\n// \"example.com/moddemo/double\" — the module path plus the directory.\nfunc Double(n int) int {\n\treturn -1\n}"
+          "code": "// Double returns twice n. It lives in its own package, whose full import path is\n// \"example.com/moddemo/double\", the module path plus the directory.\nfunc Double(n int) int {\n\treturn -1\n}"
         },
         {
           "kind": "example",
@@ -3333,12 +3409,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Every directory with its own go.mod is a separate module; go test ./... in one module never walks into another. If go is command not found, run the environment check first.",
-        "A package import path is the module path from go.mod with the directory appended — example.com/moddemo/double, not a folder path."
+        "Every directory with its own go.mod is a separate module; go test ./... in one module never walks into another. If the terminal says go is not found, run the environment check first.",
+        "A package import path is the module path from go.mod with the directory appended, example.com/moddemo/double, not a folder path."
       ],
       "misconceptions": [
-        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
-        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
+        "Assuming the module path must match where the code sits on disk; it is a logical name, and the same module can live in any folder.",
+        "Editing the module path and wondering why every import breaks, imports are rooted at that path, so all of them move with it."
       ],
       "resources": [
         {
@@ -3365,18 +3441,18 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "From GOPATH, where example.com/moddemo must be checked out under src/ before it can build.",
-        "Nowhere — you must add a require line naming example.com/moddemo/double before it compiles at all.",
+        "Nowhere, you must add a require line naming example.com/moddemo/double before it compiles at all.",
         "Inside the module: the path is the module prefix plus the directory, so double maps to moddemo/double on disk.",
         "From the module proxy, which serves example.com/moddemo over HTTPS at build time and caches what it returns for the next build."
       ],
       "answer": 2,
-      "explanation": "Within one module a package path is simply the module path with the subdirectory appended, and the go command resolves it straight from local files — no require entry, no proxy, no download. A require line is only needed for packages living in a different module. example.com is the conventional placeholder domain for teaching and internal modules precisely because nothing is fetched for an in-module path.",
+      "explanation": "Within one module a package path is simply the module path with the subdirectory appended, and the go command resolves it straight from local files, no require entry, no proxy, no download. A require line is only needed for packages living in a different module. example.com is the conventional placeholder domain for teaching and internal modules precisely because nothing is fetched for an in-module path.",
       "hints": [
-        "The import begins with the module's own path — so it is not an external dependency at all."
+        "The import begins with the module's own path, so it is not an external dependency at all."
       ],
       "misconceptions": [
-        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
-        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
+        "Assuming the module path must match where the code sits on disk; it is a logical name, and the same module can live in any folder.",
+        "Editing the module path and wondering why every import breaks, imports are rooted at that path, so all of them move with it."
       ]
     },
     "go-modules-do": {
@@ -3390,7 +3466,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-modules"
       ],
       "files": [
-        "moddemo/double/double.go"
+        "moddemo/double/double.go",
+        "moddemo/app/app.go",
+        "moddemo/app/app_test.go",
+        "moddemo/go.mod",
+        "test/moddemo.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/moddemo.test.mjs",
       "checks": [
@@ -3424,12 +3504,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "The file to change is moddemo/double/double.go; the app package already imports it and calls it. Run go test ./... and read the name of the test that failed.",
         "The import path example.com/moddemo/double is the module path (example.com/moddemo) plus the directory (double).",
         "Return n * 2 from Double; Use just forwards its argument, so Use(4) becomes Double(4).",
-        "Run the tests from inside moddemo — it is its own module, so go test ./... there, not at the ledger root.",
+        "Run the tests from inside moddemo; it is its own module, so go test ./... there, not at the ledger root.",
         "Keep the package clause as package double; renaming it would break the import."
       ],
       "misconceptions": [
-        "Assuming the module path must match where the code sits on disk — it is a logical name, and the same module can live in any folder.",
-        "Editing the module path and wondering why every import breaks — imports are rooted at that path, so all of them move with it."
+        "Assuming the module path must match where the code sits on disk; it is a logical name, and the same module can live in any folder.",
+        "Editing the module path and wondering why every import breaks, imports are rooted at that path, so all of them move with it."
       ]
     },
     "go-modules-review": {
@@ -3443,7 +3523,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-modules"
       ],
       "files": [
-        "moddemo/price/price.go"
+        "moddemo/price/price.go",
+        "moddemo/price/price_test.go",
+        "moddemo/go.mod",
+        "test/modprice.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/modprice.test.mjs",
       "checks": [
@@ -3461,14 +3544,14 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "tests": [
             "zero tax returns the original cents"
           ],
-          "feedback": "ApplyCents(1000, 0) returns 1000. No basis points means the added term is zero, so the original amount stands. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "ApplyCents(1000, 0) returns 1000. No basis points means the added term is zero, so the original amount stands. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Thinking a package is imported by its folder name alone — it is the module path plus the folder, so price is example.com/moddemo/price.",
-        "Expecting go test ./... at the ledger root to cover moddemo — moddemo is a separate module and is deliberately outside that pattern."
+        "Thinking a package is imported by its folder name alone; it is the module path plus the folder, so price is example.com/moddemo/price.",
+        "Expecting go test ./... at the ledger root to cover moddemo, moddemo is a separate module and is deliberately outside that pattern."
       ]
     },
     "go-checker-learn": {
@@ -3490,7 +3573,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A checker reads code and reports what it finds, and the line that makes it a tool rather than a guess is this: it reports facts. That a function is never called is a fact, because the file says so and you can read it off the source. That a function does the wrong thing is not a fact at all, and a checker that states one is lying."
+          "body": "A checker reads code and reports what it finds, and the line that makes it a tool rather than a guess is this: it reports facts. That a function is never called is a fact, because the file says so and you can read it off the source."
+        },
+        {
+          "kind": "prose",
+          "body": "That a function does the wrong thing is not a fact at all, and a checker that states one is lying."
         },
         {
           "kind": "prose",
@@ -3535,7 +3622,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Open cmd/check/main.go. It prints a placeholder; what it has to do is read a file and report on it. Run go test ./cmd/check/... and read the failure first. If go is command not found, run the environment check first.",
+        "Open cmd/check/main.go. It prints a placeholder; what it has to do is read a file and report on it. Run go test ./cmd/check/... and read the failure first. If the terminal says go is not found, run the environment check first.",
         "The file is text: os.ReadFile gives you the whole source, strings.Split gives you the lines, and a line that starts with \"func \" declares a function.",
         "The name is the second word on that line, without the parentheses: strings.Fields(line)[1], and then trim the \"()\" off the end.",
         "A function is called if its name appears with a parenthesis somewhere else in the file: strings.Count(source, name+\"(\") is 2 when the code calls it and 1 when it does not.",
@@ -3575,7 +3662,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "That the file is wrong, because a function nothing calls is always a mistake."
       ],
       "answer": 1,
-      "explanation": "The line is a fact and only a fact: the file declares Unused, nothing calls it, and the checker read that off the source. Everything else in the other three options is a judgement: that the code is wrong, that the function should be deleted, that the file is a mistake. A checker that states a judgement claims a certainty it does not have, and a reader who catches it once will not believe the next line either. So the checker reports the fact, names the function, and stops: whether an uncalled function is a bug, a leftover, or an entry point nobody can see from inside the file is a question for a reader, not for the tool.",
+      "explanation": "The line is only a fact: the file declares Unused, nothing calls it, and the checker read it off the source. The other three are judgements, and a checker that states one claims a certainty it lacks. So it reports the fact, names the function, and stops. Whether an uncalled function is a bug, a leftover, or an entry point is a reader's question, not the tool's.",
       "hints": [
         "Ask what the source can prove on its own, and what it would take a person to know before the tool could say it."
       ],
@@ -3595,7 +3682,10 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-checker"
       ],
       "files": [
-        "cmd/check/main.go"
+        "cmd/check/main.go",
+        "cmd/check/check_test.go",
+        "cmd/check/testdata/ledger.go",
+        "test/check.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/check.test.mjs",
       "checks": [
@@ -3618,7 +3708,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "The file you own is cmd/check/main.go, and the suite that judges it is test/check.test.mjs. Run go test ./cmd/check/... and read the failure before you change anything. If go is command not found, run the environment check first.",
+        "The file you own is cmd/check/main.go, and the suite that judges it is test/check.test.mjs. Run go test ./cmd/check/... and read the failure before you change anything. If the terminal says go is not found, run the environment check first.",
         "Read the whole file as text first: os.ReadFile gives you the source, and a line that starts with \"func \" declares a function.",
         "Then decide, for each declared name, whether the file calls it. A declaration is one appearance of the name with a parenthesis, so a name that appears once is a function nothing calls.",
         "Print one line per function nothing calls, naming the function, and stop there. The suite reads what the tool claims, so a verdict, a severity or a summary is a claim it cannot check.",
@@ -3640,7 +3730,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
         "go-checker"
       ],
       "files": [
-        "cmd/check/main.go"
+        "cmd/check/main.go",
+        "cmd/check/check_test.go",
+        "cmd/check/review_test.go",
+        "cmd/check/testdata/ledger.go",
+        "cmd/check/testdata/ledger2.go",
+        "test/check-review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/check-review.test.mjs",
       "checks": [

@@ -20,6 +20,8 @@
     "verify:e2e": "node --test scripts/verify.e2e.mjs",
     "verify:admin": "node --test scripts/verify-admin.mjs",
     "verify:cohorts": "node --test scripts/verify-cohorts.mjs",
+    "verify:updates": "node --test scripts/verify-updates.mjs",
+    "verify:journey": "node --test scripts/verify-journey.mjs",
     "healthcheck": "node scripts/healthcheck.mjs",
     "synthetic": "node scripts/synthetic.mjs",
     "metrics": "node scripts/metrics.mjs",

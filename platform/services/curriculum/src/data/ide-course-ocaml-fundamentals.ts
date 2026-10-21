@@ -3,7 +3,7 @@
 export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
   "id": "ocaml-fundamentals",
   "title": "OCaml fundamentals",
-  "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report the learner writes themselves.",
+  "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report you write yourself.",
   "version": 1,
   "freePhases": 1,
   "phases": [
@@ -284,6 +284,14 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "body": "The standard library comes with the compiler, so it is always there and always the version that compiler had. Everything else comes from opam, which puts packages in a switch, and the opam file of the project says which versions the project is written against. This one asks for OCaml 5.5.1 and dune 3.24."
         },
         {
+          "kind": "prose",
+          "body": "The toolchain itself comes from https://ocaml.org: opam installs the compiler and dune for you, and the switch it creates is where both of them live."
+        },
+        {
+          "kind": "prose",
+          "body": "This course works in the OCaml Calc project, at NEXORA/OCaml-Calc in your home folder, and the project file and the module this phase names, dune-project and lib/units/units.ml, are inside it."
+        },
+        {
           "kind": "example",
           "body": "The opam file, and the two lines that pin the toolchain:",
           "code": "depends: [\n  \"ocaml\" {>= \"5.5.1\"}\n  \"dune\" {>= \"3.24\"}\n]"
@@ -307,7 +315,19 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open bin/main.ml and make the program print the line the calculator asked for: calc says hello. Then run dune exec ./bin/main.exe and read the line it printed."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "read dune-project",
+            "read the dune files",
+            "compile each module",
+            "link the objects"
+          ]
+        },
+        "caption": "The compiler never sees the project as a whole. Dune reads the files, the compiler builds one module at a time, and the linker joins the pieces."
+      }
     },
     "ocaml-project-do": {
       "id": "ocaml-project-do",
@@ -345,7 +365,7 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "hints": [
         "Open bin/main.ml. It already holds the line that starts a program, and the comment above it says what the program owes. Run dune exec ./bin/main.exe before you change anything and read what it printed.",
         "The line is a sentence: three words and a space between them. The program prints it with print_endline, which ends the line for you.",
-        "If dune is command not found, run the environment check first. If dune says the lang line is too new, the project is asking for a newer dune than the one you have.",
+        "If the terminal says dune is not found, run the environment check first. If dune says the lang line is too new, the project is asking for a newer dune than the one you have.",
         "Run dune exec ./bin/main.exe again and read the line. If it still says the placeholder, the print is not inside the program, or it prints something other than the greeting.",
         "The line is exactly: calc says hello. One print_endline inside the program, and no second line after it."
       ],
@@ -378,13 +398,13 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "It gives back one object file for that module, and the linker joins the objects of a program into the file that runs.",
+        "It gives back one object file for that module, and the linker joins the objects into the program that runs.",
         "It gives back the whole program already linked, and the linker only checks it for mistakes.",
         "It gives back a listing of the module in words, and a person writes the object file by hand.",
         "It gives back nothing until every module in the project has been read, because the compiler needs the whole picture."
       ],
       "answer": 0,
-      "explanation": "The compiler works one module at a time and produces one object file for it. That is what makes a library possible: the object files of a library are kept apart so that other programs can use them later. The linker is the piece that joins the objects of a program into the single file a person runs. The listing the compiler prints is a warning about the code, not the code itself, and the compiler never waits for the whole project before it starts."
+      "explanation": "The compiler works one module at a time and produces one object file for it. That is what makes a library possible: its object files are kept apart for other programs to use later. The linker joins the objects into the file a person runs. The listing it prints is a warning about the code, not the code itself, and the compiler never waits for the whole project."
     },
     "ocaml-project-review": {
       "id": "ocaml-project-review",
@@ -500,7 +520,28 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/units/units.ml and write the body of show_int so that show_int 42 is \"42\" and show_int (-7) is \"-7\". Then run dune runtest test/values and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "without an annotation",
+            "lines": [
+              "the compiler works",
+              "the type out itself"
+            ]
+          },
+          "after": {
+            "title": "with an annotation",
+            "lines": [
+              "show_int : int -> string",
+              "the compiler checks",
+              "your word against it"
+            ]
+          }
+        },
+        "caption": "A written type is a promise the compiler checks. It could have worked the type out, but a promise in the file is a promise a reader can see."
+      }
     },
     "ocaml-values-do": {
       "id": "ocaml-values-do",
@@ -572,13 +613,13 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "It checks the body against it before the program runs, and a body that breaks the promise stops the build.",
+        "It checks the body against it before the program runs, and a body that breaks it stops the build.",
         "It runs the body once to see what comes out, and it keeps the result so the program starts faster.",
         "It is a note for the reader, and the compiler looks at the body and works the types out for itself.",
         "It is only used when a function is given to another function, and it is ignored in every other case."
       ],
       "answer": 0,
-      "explanation": "The annotation is a promise, and the compiler checks the body against it before anything runs. That check is free: the types are worked out while the code is compiled, and nothing is computed twice at run time. The compiler could have inferred most annotations, and often does, but the written one is the promise a reader can see, and a promise that is wrong is a build that stops. The annotation is not limited to functions that take other functions; it is checked everywhere it appears."
+      "explanation": "The annotation is a promise; the compiler checks the body against it before anything runs. The check is free: the types are worked out at compile time, and nothing runs twice. The compiler could infer most annotations and often does, but the written one is the promise a reader sees; a wrong promise stops the build. It is checked everywhere it appears, not only on functions taking functions."
     },
     "ocaml-values-review": {
       "id": "ocaml-values-review",
@@ -690,7 +731,27 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/classify/classify.ml and write the body of sign_of so that it names the side a number falls on: positive, negative or zero. Then run dune runtest test/control-flow and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "pattern-match",
+        "spec": {
+          "value": "the number 7",
+          "cases": [
+            {
+              "pattern": "n when n > 0",
+              "binds": "",
+              "note": "a condition inside a branch"
+            },
+            {
+              "pattern": "_",
+              "binds": "",
+              "note": "the branch that runs when nothing else did"
+            }
+          ],
+          "fired": 0
+        },
+        "caption": "A match tries the branches in the order they are written and stops at the first that fits. The underscore is the branch that runs when nothing else did."
+      }
     },
     "ocaml-control-flow-do": {
       "id": "ocaml-control-flow-do",
@@ -769,13 +830,13 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "The value is tried against the branches in the order they are written, and the first one that fits decides; if none fits, the match has no answer.",
-        "Every branch runs in turn, and the last one to run gives the answer.",
+        "The value is tried against the branches in the order they are written, and the first one that fits decides.",
+        "Every branch runs in turn, and the last one to run gives the answer, so a match computes the whole thing and keeps the last.",
         "The compiler counts the branches and picks one, so that every branch is used equally often.",
         "The match is skipped and the value is returned as it was, unchanged."
       ],
       "answer": 0,
-      "explanation": "A match tries the value against the patterns in the order they are written and stops at the first one that fits, which is why a broad pattern such as `_` belongs last. When no pattern fits, the match has no answer, and the compiler says so while it checks the code: a match over a variant type that leaves a case out is a match with a hole in it, and the compiler reports it rather than letting the program fall over later. The branches are not run in turn, and the compiler never counts them."
+      "explanation": "A match tries the value against the patterns in order and stops at the first one that fits, so a broad pattern such as `_` belongs last. When no pattern fits, the match has no answer, and the compiler says so while it checks the code, before the program runs. The branches are not run in turn, and the compiler never counts them."
     },
     "ocaml-control-flow-review": {
       "id": "ocaml-control-flow-review",
@@ -853,11 +914,19 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "The type of a function is written with an arrow: `int -> int` is a function that takes an int and gives an int back. `int -> int -> int` is a function that takes two ints, and the arrow points to the right, so it reads from the first argument to the last result. A function that takes a function has a function inside its type, and that is what makes it higher-order."
+          "body": "The type of a function is written with an arrow: `int -> int` is a function that takes an int and gives an int back. `int -> int -> int` is a function that takes two ints, and the arrow points to the right, so it reads from the first argument to the last result."
         },
         {
           "kind": "prose",
-          "body": "A function can also be written without a name, with `fun`, and a function built that way can be given to anything that takes a function. When a function is built inside another function, it keeps the values that were in scope where it was built. That is what a closure is, and it is why a function can be returned from a function and still know what it was made with."
+          "body": "A function that takes a function has a function inside its type, and that is what makes it higher-order."
+        },
+        {
+          "kind": "prose",
+          "body": "A function can also be written without a name, with `fun`, and a function built that way can be given to anything that takes a function."
+        },
+        {
+          "kind": "prose",
+          "body": "When a function is built inside another function, it keeps the values that were in scope where it was built. That is what a closure is, and it is why a function can be returned from a function and still know what it was made with."
         },
         {
           "kind": "example",
@@ -887,7 +956,28 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/transform/transform.ml and write the body of apply_twice so that it applies the function it is given to the number, and then applies it to the answer. Then run dune runtest test/functions and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "int -> int",
+            "lines": [
+              "takes an int",
+              "gives an int back"
+            ]
+          },
+          "after": {
+            "title": "int -> int -> int",
+            "lines": [
+              "takes an int",
+              "takes an int",
+              "gives an int back"
+            ]
+          }
+        },
+        "caption": "The arrow points to the right, so the type reads from the first argument to the last result. Give one argument of two and you get a function waiting for the other."
+      }
     },
     "ocaml-functions-do": {
       "id": "ocaml-functions-do",
@@ -959,12 +1049,12 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "A function of one argument, with the first one already inside it, waiting for the second.",
-        "The value of the first argument, with the second one dropped.",
+        "The value of the first argument, with the second one dropped and never looked at again by anybody.",
         "An error, because a function has to be given all of its arguments at once.",
         "The same function, unchanged, with the argument ignored until it is needed."
       ],
       "answer": 0,
-      "explanation": "Giving a function one argument of two gives back a function of one argument, and the argument you gave is already inside it. That is what makes a function of two arguments usable as a function of one, and it is why a list of functions can be mapped over without writing a loop. The argument is not dropped: the result is a function that will use it as soon as it is given the other one. Nothing is an error here, because a function does not have to be given all of its arguments at once."
+      "explanation": "Giving a function one argument of two gives back a function of one argument, with that argument already inside it. That is why a list of functions can be mapped over without a loop. The argument is not dropped: the result uses it as soon as it gets the other one. Nothing is an error: a function need not be given all its arguments at once."
     },
     "ocaml-functions-review": {
       "id": "ocaml-functions-review",
@@ -1055,7 +1145,11 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A function that walks a list has two cases and no more: what to do when the list is empty, and what to do when it has a head. The empty case is where the walk ends, and it is where the answer that does not need the rest of the list is written. The other case does one piece of work and then calls the function on the tail."
+          "body": "A function that walks a list has two cases and no more: what to do when the list is empty, and what to do when it has a head."
+        },
+        {
+          "kind": "prose",
+          "body": "The empty case is where the walk ends, and it is where the answer that does not need the rest of the list is written. The other case does one piece of work and then calls the function on the tail."
         },
         {
           "kind": "keypoints",
@@ -1076,7 +1170,27 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/series/series.ml and write the body of sum so that it adds up every number in the list, and so that the empty list adds up to zero. Then run dune runtest test/lists and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "pattern-match",
+        "spec": {
+          "value": "1 :: 2 :: 3 :: []",
+          "cases": [
+            {
+              "pattern": "[]",
+              "binds": "the list is empty",
+              "note": "the case that ends the walk"
+            },
+            {
+              "pattern": "x :: rest",
+              "binds": "x is 1, rest is 2 :: 3 :: []",
+              "note": "the case that does one piece of work"
+            }
+          ],
+          "fired": 1
+        },
+        "caption": "A list is taken apart by matching on its shape. The empty case ends the walk, and the other case does one piece of work and calls the function on the tail."
+      }
     },
     "ocaml-lists-do": {
       "id": "ocaml-lists-do",
@@ -1153,7 +1267,7 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         "It lets the function take more arguments than its type says, so that it can walk a list."
       ],
       "answer": 0,
-      "explanation": "Without rec, the name of a function inside its own body refers to whatever that name was bound to before the definition, and there is nothing there. With rec, the name stands for the function being defined, so the call on the tail reaches the function itself. The compiler does not turn the function into a loop: the tail call is a call, and the stack grows with the length of the list, which is why a long list wants a tail-recursive body. The keyword has nothing to do with the number of arguments."
+      "explanation": "Without rec, the name in its own body means whatever it was bound to before, and nothing is there. With rec, it stands for the function being defined, so the call on the tail reaches the function. A tail call is a call, not a loop: the stack grows with the list, so a long list wants a tail-recursive body. It says nothing about the number of arguments."
     },
     "ocaml-lists-review": {
       "id": "ocaml-lists-review",
@@ -1265,7 +1379,27 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/account/account.ml and write the body of balance so that it gives back the amount the account holds. Then run dune runtest test/records and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "the old record",
+            "lines": [
+              "name = Ada",
+              "cents = 199"
+            ]
+          },
+          "after": {
+            "title": "the new record",
+            "lines": [
+              "name = Ada",
+              "cents = 250"
+            ]
+          }
+        },
+        "caption": "A value never changes. The update builds a new record with one field replaced and the rest carried over, and the old record is still there for anyone holding it."
+      }
     },
     "ocaml-records-do": {
       "id": "ocaml-records-do",
@@ -1342,7 +1476,7 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         "Nothing can be done with an account, because a record is a fixed shape and its fields cannot hold new values."
       ],
       "answer": 0,
-      "explanation": "Every value in OCaml is immutable, and a record is a value, so a field is never written to. What the language gives you instead is the record update, which builds a new record from the old one with the field replaced and the others carried over, and the new record is what the function gives back. That is not a limitation dressed up: it is what lets a record be shared between functions without one of them being able to change what the other one sees. A record is not a fixed shape that cannot hold new values, and a record does not refuse anything."
+      "explanation": "Every value in OCaml is immutable, so no record field is written to. The record update builds a new record with the field replaced and the others carried over; that is what comes back. That is not a limitation dressed up: two functions can share a record, neither changes what the other sees, and it refuses nothing. It is not a fixed shape that cannot hold new values."
     },
     "ocaml-records-review": {
       "id": "ocaml-records-review",
@@ -1429,7 +1563,11 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The bar in front of a constructor is the same bar that starts a branch of a match, and it means the same thing: this branch is about that shape. A match over a variant is checked by the compiler against the constructors of the type, so a constructor nobody handled is reported while the code is compiled. That is the thing a chain of conditions cannot do: there is no way for the compiler to know that a value of a new shape has slipped through."
+          "body": "The bar in front of a constructor is the same bar that starts a branch of a match, and it means the same thing: this branch is about that shape."
+        },
+        {
+          "kind": "prose",
+          "body": "A match over a variant is checked by the compiler against the constructors of the type, so a constructor nobody handled is reported while the code is compiled. That is the thing a chain of conditions cannot do: there is no way for the compiler to know that a value of a new shape has slipped through."
         },
         {
           "kind": "prose",
@@ -1454,7 +1592,27 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/ast/ast.ml and write the body of show so that it writes an expression as the text a person reads: a number as its digits, and an addition with both sides inside brackets. Then run dune runtest test/variants and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "pattern-match",
+        "spec": {
+          "value": "Add (Num 2.5, Num 4.0)",
+          "cases": [
+            {
+              "pattern": "Num n",
+              "binds": "n is 2.5",
+              "note": "a shape that holds a number"
+            },
+            {
+              "pattern": "Add (a, b)",
+              "binds": "a and b are the two sides",
+              "note": "a shape that holds two expressions"
+            }
+          ],
+          "fired": 1
+        },
+        "caption": "The compiler checks a match against the constructors of the type, so a constructor nobody handled is reported while the code is compiled."
+      }
     },
     "ocaml-variants-do": {
       "id": "ocaml-variants-do",
@@ -1534,13 +1692,13 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "It reports the constructor nobody handled, because the type says which constructors a value of that type can have.",
+        "It reports the constructor nobody handled, because the type says which constructors a value can have.",
         "It says nothing, because the compiler cannot know what the value holds until the program runs.",
         "It reports a warning about a value that may not be a constructor at all, and it cannot say which one is missing.",
         "It refuses to compile the match, because a match has to handle every constructor."
       ],
       "answer": 0,
-      "explanation": "The type of the value says exactly which constructors it can have, so the compiler can read the match and see that one of them has no branch. It reports that as a warning, and it reports it while compiling, with the name of the constructor, so the gap is found before the program runs. A match that handles every constructor compiles without a word, and a catch-all pattern such as `_` makes the compiler stop reporting, because the value is handled even if the reader cannot tell how. The compiler does not run the match with sample values, and a match with a missing case is a warning rather than a refusal."
+      "explanation": "The type says which constructors a value can have, so the compiler sees which one has no branch. It reports that as a warning while compiling, naming the constructor, before the program runs. A catch-all `_` stops the reporting: the value is handled even if the reader cannot tell how. It does not run the match with sample values; a missing case is a warning, not a refusal."
     },
     "ocaml-variants-review": {
       "id": "ocaml-variants-review",
@@ -1618,7 +1776,11 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A module in OCaml is a file, and its name is the name of the file. A library is a group of modules, and the dune file of the library says which modules are in it. Another module reaches one by its name: `Eval.eval` is the function eval of the module Eval, and the compiler checks that the module Eval is one of the libraries this module depends on."
+          "body": "A module in OCaml is a file, and its name is the name of the file. A library is a group of modules, and the dune file of the library says which modules are in it."
+        },
+        {
+          "kind": "prose",
+          "body": "Another module reaches one by its name: `Eval.eval` is the function eval of the module Eval, and the compiler checks that the module Eval is one of the libraries this module depends on."
         },
         {
           "kind": "prose",
@@ -1662,7 +1824,26 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/eval/eval.ml and write the body of eval so that it gives back the value of an expression, and so that a division by zero raises the error the library provides. Then run dune runtest test/modules and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "the module",
+            "lines": [
+              "eval",
+              "a helper nobody promised"
+            ]
+          },
+          "after": {
+            "title": "what the signature allows",
+            "lines": [
+              "eval"
+            ]
+          }
+        },
+        "caption": "The signature is the promise. The compiler builds the module against it, so anything the signature does not name cannot be reached from outside."
+      }
     },
     "ocaml-modules-do": {
       "id": "ocaml-modules-do",
@@ -1742,13 +1923,13 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "It fixes what they can reach: the values it names are the ones they can use, and the compiler refuses the rest.",
-        "It is a summary of the module for the reader, and the compiler does not look at it.",
+        "It fixes what they can reach: the values it names are the ones they can use, and the rest are refused.",
+        "It is a summary of the module for the reader, and the compiler does not look at it when it builds the module.",
         "It makes the module run faster, because the compiler knows which of its values are used.",
         "It lets the module be written in another language, as long as the names line up."
       ],
       "answer": 0,
-      "explanation": "The signature is a promise, and the compiler builds the module against it. A caller can use the values the signature names and nothing else, so a helper the module keeps to itself really is kept to itself: the caller cannot reach it even by name. That is what lets the body of a module change without changing what the callers see, as long as the promise still holds. The signature is not a summary, and the compiler reads it while it compiles. It has nothing to do with speed, and a module written in another language is a different thing entirely."
+      "explanation": "The signature is a promise the compiler builds the module against: a caller can use only the values it names, so a helper kept to itself is out of reach. That lets the body change without changing what callers see. It is not a summary: the compiler reads it while it compiles. It has nothing to do with speed; a module in another language is a different thing."
     },
     "ocaml-modules-review": {
       "id": "ocaml-modules-review",
@@ -1866,9 +2047,29 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open lib/safe_eval/safe_eval.ml and write the body of safe_eval so that it gives back the value of an expression, or the reason there is none. Then run dune runtest test/errors and read what it said."
+          "body": "Open lib/safe_eval/safe_eval.ml and write the body of safe_eval so that it gives back the value of an expression, or the reason it has none. Then run dune runtest test/errors and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "pattern-match",
+        "spec": {
+          "value": "Ok 2.5",
+          "cases": [
+            {
+              "pattern": "Ok v",
+              "binds": "v is 2.5",
+              "note": "the answer"
+            },
+            {
+              "pattern": "Error e",
+              "binds": "e is the reason",
+              "note": "there is no answer"
+            }
+          ],
+          "fired": 0
+        },
+        "caption": "A result is a value, so the caller receives it like any other value and has to look at which one it got. An exception is the other way: it travels up the stack until a caller catches it."
+      }
     },
     "ocaml-errors-do": {
       "id": "ocaml-errors-do",
@@ -1947,13 +2148,13 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "The caller is handed the failure as a value, so the compiler makes them look at it, and the reason travels with it.",
+        "The caller is handed the failure as a value, so the compiler makes them look at it.",
         "The caller is spared the work of catching anything, because the failure never happened.",
         "The function is free to raise an exception as well, and the result is only used when it does not.",
         "The caller can use the result as if it were the plain value, because the compiler unwraps it for them."
       ],
       "answer": 0,
-      "explanation": "A result is a value, so the failure is handed to the caller rather than thrown at it, and the type of the result says what the failure holds. The compiler makes the caller look at which case it got, so a failure cannot be ignored by accident. An exception is the opposite: it travels up the stack on its own and the caller has to catch it, and a caller that forgets is found at run time. The two are not interchangeable, and the compiler does not unwrap a result for anybody."
+      "explanation": "A result is a value, so the failure is handed to the caller, not thrown, and the type says what it holds. The compiler makes the caller look at which case it got, so a failure cannot be ignored, and it unwraps no result for anybody. An exception travels up the stack on its own, and a caller who forgets to catch it is found at run time."
     },
     "ocaml-errors-review": {
       "id": "ocaml-errors-review",
@@ -2035,7 +2236,11 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Three of its types come up in this project. A list is a value that is empty or a head and a tail. A result is a value that is an Ok or an Error. An option is a value that is a Some holding a value or a None holding nothing, and it is what a function gives back when there may be no answer: the average of no numbers is None rather than a number that means nothing."
+          "body": "Three of its types come up in this project. A list is a value that is empty or a head and a tail. A result is a value that is an Ok or an Error."
+        },
+        {
+          "kind": "prose",
+          "body": "An option is a value that is a Some holding a value or a None holding nothing, and it is what a function gives back when there may be no answer: the average of no numbers is None rather than a number that means nothing."
         },
         {
           "kind": "example",
@@ -2065,7 +2270,27 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/report/report.ml and write the body of describe so that it turns an answer into a line of text: the value with its label, or the reason with its label. Then run dune runtest test/stdlib and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "pattern-match",
+        "spec": {
+          "value": "None",
+          "cases": [
+            {
+              "pattern": "Some x",
+              "binds": "x is the value",
+              "note": "there is an answer"
+            },
+            {
+              "pattern": "None",
+              "binds": "nothing is bound",
+              "note": "there is no answer"
+            }
+          ],
+          "fired": 1
+        },
+        "caption": "An option is the shape of an answer that may not be there. The average of no numbers is None, not a number that means nothing."
+      }
     },
     "ocaml-stdlib-do": {
       "id": "ocaml-stdlib-do",
@@ -2136,13 +2361,13 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "An option: a Some holding the value, or a None holding nothing, so the caller has to look at which one it got.",
+        "An option: a Some holding the value, or a None holding nothing, so the caller has to look.",
         "A plain value that stands for the missing number, with a number chosen for the purpose.",
         "An exception, because there is no value to give and an option would be a value too.",
         "Nothing at all: the function has no way to answer, so the compiler asks the caller to say what to do."
       ],
       "answer": 0,
-      "explanation": "An option is the type for a value that may not be there: Some holds the value and None holds nothing. Its type says which of the two the caller got, so the caller has to look, and a number that stands for the absence of a number never enters the calculation. A result is the other type: it says whether a computation worked, and it carries a reason when it did not, which an option does not. The compiler does not ask the caller what to do, and the function can always give something back."
+      "explanation": "An option is for a value that may not be there: Some holds it, None holds nothing, and its type says which one the caller got, so the caller has to look. No number stands for a missing one. A result says whether the work succeeded and carries a reason an option does not. The compiler does not ask the caller to decide: the function can always answer."
     },
     "ocaml-stdlib-review": {
       "id": "ocaml-stdlib-review",
@@ -2195,7 +2420,7 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       ],
       "objectives": [
         "Describe the contract the report has to keep, and the parts of it that are yours to choose.",
-        "Decide how the report is laid out, and say what the platform can check about that choice.",
+        "Choose how the report is laid out, and say what the platform can check about that choice.",
         "Write the report and prove it by running the phase test."
       ],
       "hints": [
@@ -2224,7 +2449,11 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The contract is small and it is not yours to change. The module is your_turn and it holds one function called report, which takes a list of expressions and gives back a string. The report has to name every expression it was given and carry the value of every one of them, the way the expression type is written. An expression that has no value is named with the reason instead."
+          "body": "The contract is small and it is not yours to change. The module is your_turn and it holds one function called report, which takes a list of expressions and gives back a string."
+        },
+        {
+          "kind": "prose",
+          "body": "The report has to name every expression it was given, the way the module of the variants phase writes them, and carry the value of every one of them. An expression that has no value is named with the reason instead."
         },
         {
           "kind": "example",
@@ -2233,7 +2462,11 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "What the platform checks is the answer: that the report names every expression it was given, that it carries the value of every expression, that an expression with no value is named with its reason, and that the report of no expressions is the empty text. What the platform cannot check is the part you chose: the layout, the order of the lines, the wording between the names and the values, and whether you wrote one function or three. Those are yours, and the checks do not read them."
+          "body": "What the platform checks is the answer: that the report names every expression it was given, that it carries the value of every expression, that an expression with no value is named with its reason, and that the report of no expressions is the empty text."
+        },
+        {
+          "kind": "prose",
+          "body": "What the platform cannot check is the part you chose: the layout, the order of the lines, the wording between the names and the values, and whether you wrote one function or three. Those are yours, and the checks do not read them."
         },
         {
           "kind": "keypoints",
@@ -2254,7 +2487,19 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "kind": "task",
           "body": "Open lib/your_turn/your_turn.ml and write the body of report. The check reads the text your function gives back, so it holds whatever shape you choose. Then run dune runtest test/your-turn and read what it said."
         }
-      ]
+      ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "the expressions",
+            "the value of each",
+            "the reason for the rest",
+            "one line each"
+          ]
+        },
+        "caption": "One line for every expression: the value when there is one, and the reason when there is not."
+      }
     },
     "ocaml-your-turn-do": {
       "id": "ocaml-your-turn-do",
@@ -2286,6 +2531,15 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
             "the report names every expression it was given"
           ],
           "feedback": "The report has to name each expression as the expression type writes it, and the module of the variants phase has the function that does that. A report with only the values in it says nothing about which value belongs to which expression."
+        },
+        {
+          "id": "edge-empty",
+          "label": "The report of no expressions is the empty string",
+          "tests": [
+            "the report of no expressions is the empty string"
+          ],
+          "feedback": "The report of no expressions is the empty text, and that is the case that catches a report that always writes a heading or a trailing mark. The check reads the empty report as well as a full one.",
+          "edge": true
         }
       ],
       "hints": [
@@ -2324,13 +2578,13 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "It can say the answer holds what the contract asks for, and it cannot say how the answer was produced or how it is laid out.",
+        "It can say the answer holds the contract, and it cannot say how the answer was made.",
         "It can say the answer holds, and it can also say the code is written the way the course taught.",
         "It can say the answer holds, and it cannot say whether the answer is any good.",
         "It can say nothing about the work, because only a person can judge an answer."
       ],
       "answer": 0,
-      "explanation": "The check is given the answer and the contract, and it says whether the answer holds. It is not given the code that produced it, so it cannot say how the work was written, and it has no opinion about the layout of a report it was told to leave free. That is what makes it a fair judge of a free piece of work: it checks the part that was fixed and leaves the rest to the person who wrote it. A check that passes is a statement about the answer, not about the quality of the work as a whole, and a person still has to read the rest."
+      "explanation": "The check is given the answer and the contract, and says whether it holds. It never sees the code, so it cannot say how the work was written or judge the layout. That is what makes it fair: it checks the fixed part and leaves the rest to you. A passing check says the answer holds, not that the work is good; the rest is yours to read."
     },
     "ocaml-your-turn-review": {
       "id": "ocaml-your-turn-review",
@@ -2356,12 +2610,12 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "feedback": "An expression that has no value still has to be in the report, named with the reason it has none. The reason is what the evaluator of the errors phase gives back in its failure case."
         },
         {
-          "id": "edge-empty",
-          "label": "The report of no expressions is the empty string",
+          "id": "edge-others",
+          "label": "The report keeps the other expressions when one of them has no value",
           "tests": [
-            "the report of no expressions is the empty string"
+            "the report keeps the other expressions when one of them has no value"
           ],
-          "feedback": "The report of no expressions is the empty text, and that is the case that catches a report that always writes a heading or a trailing mark. The check reads the empty report as well as a full one.",
+          "feedback": "One expression with no value does not shorten the report: the expressions beside it are still named and still carry their values. A report that stops at the first failure is a report about the failure and not about the list.",
           "edge": true
         }
       ],

@@ -43,7 +43,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { Pool } from "pg";
 import { createService } from "@nexora/service-kit";
-import { registerCohortRoutes } from "../services/auth/dist/cohorts.js";
+import { registerCohortRoutes, SHIPPED_COURSE_IDS } from "../services/auth/dist/cohorts.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -225,6 +225,26 @@ describe("the cohort surface (real database)", () => {
     await pool?.end();
     await server?.stop();
     await db?.close();
+  });
+
+  it("the courses a cohort can be bought for are the courses the platform ships", async () => {
+    // The auth service holds a copy of the curriculum's course list, because it
+    // does not know the curriculum. A copy is only as good as the check that
+    // holds it to the original: a course that landed in the IDE and was not
+    // added here is a course no cohort could be bought for, and a course that
+    // was renamed here and not there is a cohort for a course that does not
+    // exist. So the two are held to each other here.
+    const curriculum = await import("../services/curriculum/dist/data/ide-courses.js");
+    const shipped = Object.keys(curriculum.IDE_COURSES).sort();
+    assert.deepEqual(
+      [...SHIPPED_COURSE_IDS].sort(),
+      shipped,
+      "the auth service's course list is the curriculum service's catalogue"
+    );
+    for (const id of shipped) {
+      const cohort = await createCohort({ courseId: id, seats: 1 });
+      assert.equal(cohort.courseId, id, `a cohort can be bought for ${id}`);
+    }
   });
 
   it("a cohort is created pending, with a join code, and it grants nothing", async () => {

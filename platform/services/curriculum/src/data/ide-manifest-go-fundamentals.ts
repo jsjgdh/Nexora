@@ -109,7 +109,7 @@ export const IDE_MANIFEST_GO_FUNDAMENTALS: unknown = {
     {
       "id": "go-errors",
       "title": "Go errors",
-      "goal": "Errors are values: a sentinel you compare with errors.Is, context you add with %w, and — for the rare panic — a recover that turns a crash back into a value the caller can check.",
+      "goal": "Errors are values: a sentinel you compare with errors.Is, context you add with %w, and, for the rare panic, a recover that turns a crash back into a value the caller can check.",
       "level": 2,
       "tier": "pro",
       "authored": true,
@@ -118,7 +118,7 @@ export const IDE_MANIFEST_GO_FUNDAMENTALS: unknown = {
     {
       "id": "go-lifecycle",
       "title": "Go cleanup and panic",
-      "goal": "Defer runs at return, panic means programmer bug, recover belongs at one boundary — and cleanup always runs exactly once.",
+      "goal": "Defer runs at return, panic means programmer bug, recover belongs at one boundary, and cleanup always runs exactly once.",
       "level": 2,
       "tier": "pro",
       "authored": true,

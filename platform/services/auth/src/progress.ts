@@ -165,62 +165,92 @@ async function touchStreak(pool: Pool, userId: string): Promise<void> {
   );
 }
 
+/* The learner's own work, projected once.
+ *
+ * The progress route and the account export read the same rows, so they read
+ * them through one function: a screen a learner reads and a file a learner
+ * keeps are the same record, and two projections of it are two chances to
+ * disagree about what the learner did.
+ *
+ * The projection is keyed by the ids the learner earned it under: a phase id
+ * for a phase, an activity id inside an attempt, and the attempt's own id.
+ * Nothing here names a course, a title, or a content version, which is why a
+ * content update cannot move it. */
+export interface ProgressView {
+  drafts: { phaseId: string; content: Record<string, unknown>; updatedAt: string; createdAt: string }[];
+  attempts: {
+    id: string;
+    phaseId: string;
+    kind: string;
+    outcome: string;
+    payload: Record<string, unknown>;
+    createdAt: string;
+  }[];
+  completions: { phaseId: string; completedAt: string; source: string }[];
+  streak: { days: number; lastActiveOn: string | null };
+  placement: unknown;
+}
+
+export async function readProgress(pool: Pool, userId: string): Promise<ProgressView> {
+  const [drafts, attempts, completions, state] = await Promise.all([
+    pool.query(
+      "SELECT phase_id, content, updated_at, created_at FROM progress_drafts " +
+        "WHERE user_id = $1 ORDER BY updated_at DESC",
+      [userId]
+    ),
+    pool.query(
+      "SELECT id, phase_id, kind, outcome, payload, created_at FROM progress_attempts " +
+        "WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
+    ),
+    pool.query(
+      "SELECT phase_id, completed_at, source FROM progress_completions " +
+        "WHERE user_id = $1 ORDER BY completed_at DESC",
+      [userId]
+    ),
+    pool.query(
+      "SELECT streak_days, last_active_on::text AS last_active_on, placement FROM progress_state " +
+        "WHERE user_id = $1",
+      [userId]
+    ),
+  ]);
+  const row = state.rows[0];
+  return {
+    drafts: drafts.rows.map((d) => ({
+      phaseId: d.phase_id,
+      content: d.content,
+      updatedAt: new Date(d.updated_at).toISOString(),
+      createdAt: new Date(d.created_at).toISOString(),
+    })),
+    attempts: attempts.rows.map((a) => ({
+      id: a.id,
+      phaseId: a.phase_id,
+      kind: a.kind,
+      outcome: a.outcome,
+      payload: a.payload,
+      createdAt: new Date(a.created_at).toISOString(),
+    })),
+    completions: completions.rows.map((c) => ({
+      phaseId: c.phase_id,
+      completedAt: new Date(c.completed_at).toISOString(),
+      source: c.source,
+    })),
+    streak: {
+      days: row ? Number(row.streak_days) : 0,
+      lastActiveOn: row?.last_active_on ?? null,
+    },
+    placement: row?.placement ?? null,
+  };
+}
+
 export function registerProgressRoutes(app: FastifyInstance, pool: Pool): void {
   /* The learner's own record, and nothing else's. One query per kind, each
      scoped by the verified identity, so the answer cannot include another
      account's work even by accident. */
   app.get("/progress", async (req) => {
     const userId = requireUserId(req);
-    const [drafts, attempts, completions, state] = await Promise.all([
-      pool.query(
-        "SELECT phase_id, content, updated_at, created_at FROM progress_drafts " +
-          "WHERE user_id = $1 ORDER BY updated_at DESC",
-        [userId]
-      ),
-      pool.query(
-        "SELECT id, phase_id, kind, outcome, payload, created_at FROM progress_attempts " +
-          "WHERE user_id = $1 ORDER BY created_at DESC",
-        [userId]
-      ),
-      pool.query(
-        "SELECT phase_id, completed_at, source FROM progress_completions " +
-          "WHERE user_id = $1 ORDER BY completed_at DESC",
-        [userId]
-      ),
-      pool.query(
-        "SELECT streak_days, last_active_on::text AS last_active_on, placement FROM progress_state " +
-          "WHERE user_id = $1",
-        [userId]
-      ),
-    ]);
-    const row = state.rows[0];
-    return {
-      userId,
-      drafts: drafts.rows.map((d) => ({
-        phaseId: d.phase_id,
-        content: d.content,
-        updatedAt: new Date(d.updated_at).toISOString(),
-        createdAt: new Date(d.created_at).toISOString(),
-      })),
-      attempts: attempts.rows.map((a) => ({
-        id: a.id,
-        phaseId: a.phase_id,
-        kind: a.kind,
-        outcome: a.outcome,
-        payload: a.payload,
-        createdAt: new Date(a.created_at).toISOString(),
-      })),
-      completions: completions.rows.map((c) => ({
-        phaseId: c.phase_id,
-        completedAt: new Date(c.completed_at).toISOString(),
-        source: c.source,
-      })),
-      streak: {
-        days: row ? Number(row.streak_days) : 0,
-        lastActiveOn: row?.last_active_on ?? null,
-      },
-      placement: row?.placement ?? null,
-    };
+    const view = await readProgress(pool, userId);
+    return { userId, ...view };
   });
 
   /* Saving a draft. The newest draft wins, and the comparison is inside the

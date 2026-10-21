@@ -349,8 +349,12 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "example",
-          "body": "The workspace you are working in. It is one Cargo workspace with two crates: ledger-core holds the ledger, ledger-api holds the service. cargo build compiles both.",
-          "code": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/ledger-core\", \"crates/ledger-api\"]"
+          "body": "The workspace you are working in. It is one Cargo workspace with three crates: ledger-core holds the ledger, ledger-api holds the service, and ledger-check is a tool that reads code. cargo build compiles all three.",
+          "code": "[workspace]\nresolver = \"2\"\nmembers = [\"crates/ledger-core\", \"crates/ledger-api\", \"crates/ledger-check\"]"
+        },
+        {
+          "kind": "prose",
+          "body": "The project itself is Rust Ledger, at NEXORA/Rust-Ledger in your home folder: if that folder is not on the disk yet, run NEXORA: Setup Workspace from the palette and it makes the folder and opens it."
         },
         {
           "kind": "prose",
@@ -403,7 +407,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           "body": "Key Points",
           "items": [
             "rustup installs the toolchain, cargo builds and tests it.",
-            "One workspace, two crates: ledger-core and ledger-api.",
+            "One workspace, three crates: core, api and check.",
             "The Run button is a Node wrapper around cargo test.",
             "Money is a whole number of cents, the string is a view."
           ]
@@ -515,7 +519,13 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Putting the minus sign on the units only, so five cents prints as -0.05 by accident or as 0.-05."
       ],
       "files": [
-        "crates/ledger-core/src/money.rs"
+        "crates/ledger-core/src/money.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/values.rs",
+        "test/values.test.mjs",
+        "crates/ledger-core/Cargo.toml",
+        "Cargo.toml",
+        "Cargo.lock"
       ],
       "testCommand": "node --test --test-reporter=tap test/values.test.mjs",
       "checks": [
@@ -562,7 +572,13 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Treating a split into zero parts as a division by zero instead of an empty result."
       ],
       "files": [
-        "crates/ledger-core/src/money.rs"
+        "crates/ledger-core/src/money.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/values_review.rs",
+        "test/values_review.test.mjs",
+        "crates/ledger-core/Cargo.toml",
+        "Cargo.toml",
+        "Cargo.lock"
       ],
       "testCommand": "node --test --test-reporter=tap test/values_review.test.mjs",
       "checks": [
@@ -758,7 +774,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "It is cloned automatically whenever the caller still needs it."
       ],
       "answer": 1,
-      "explanation": "Passing a String by value transfers ownership to the function. When the function ends, the String is dropped, and the caller binding is no longer valid, so the compiler refuses to compile a use after that point. Borrowing is what keeps the caller usable, and it is written with an ampersand at the call site. Clone is explicit for the same reason a move is: the cost belongs in the code, not in a hidden copy. Returning the value is the other way to hand it back."
+      "explanation": "Passing a String by value transfers ownership to it. When the function ends, the String is dropped, the caller binding is no longer valid, so the compiler refuses a use after that point. Borrowing keeps the caller usable, written with an ampersand at the call site. Clone is explicit for the same reason a move is: the cost belongs in the code, and returning it hands it back."
     },
     "rust-ownership-do": {
       "id": "rust-ownership-do",
@@ -782,7 +798,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Believing an i64 needs special handling to survive a call, when Copy already gives that behaviour."
       ],
       "files": [
-        "crates/ledger-core/src/ownership.rs"
+        "crates/ledger-core/src/ownership.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/ownership.rs",
+        "test/ownership.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ownership.test.mjs",
       "checks": [
@@ -829,7 +848,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Assuming an empty note should be refused, when appending nothing is a valid no-op."
       ],
       "files": [
-        "crates/ledger-core/src/ownership.rs"
+        "crates/ledger-core/src/ownership.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/ownership_review.rs",
+        "test/ownership_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ownership_review.test.mjs",
       "checks": [
@@ -1030,7 +1052,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Because the caller keeps the original alive for the whole program run."
       ],
       "answer": 2,
-      "explanation": "The returned reference points into the bytes owned by the caller, so the compiler ties its lifetime to the input reference. That is enough to guarantee the owner outlives the slice, which is what makes a zero-copy return safe. Nothing is copied and nothing becomes static: a reference that escaped its owner would be a dangling pointer, and the lifetime rule is the check that stops it. This is why the signature can return a slice at all."
+      "explanation": "The returned reference points into the bytes the caller owns, so the compiler ties its lifetime to the input reference. That guarantees the owner outlives the slice, which makes a zero-copy return safe. Nothing is copied or made static: a reference that escaped its owner would dangle, and the lifetime rule stops it."
     },
     "rust-borrowing-do": {
       "id": "rust-borrowing-do",
@@ -1054,7 +1076,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Taking a String by value in total, which would consume the caller list on the first call."
       ],
       "files": [
-        "crates/ledger-core/src/borrowing.rs"
+        "crates/ledger-core/src/borrowing.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/borrowing.rs",
+        "test/borrowing.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/borrowing.test.mjs",
       "checks": [
@@ -1101,7 +1126,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Replacing the tie with an owned String, which sidesteps the borrow rule instead of applying it."
       ],
       "files": [
-        "crates/ledger-core/src/borrowing.rs"
+        "crates/ledger-core/src/borrowing.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/borrowing_review.rs",
+        "test/borrowing_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/borrowing_review.test.mjs",
       "checks": [
@@ -1299,7 +1327,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "The caller can rebuild the account from public fields at will."
       ],
       "answer": 0,
-      "explanation": "The value of a fallible constructor is not the error message; it is that no Account can exist in a state new would have refused, because every path to the value goes through that check. A panic also stops bad data, but it removes the caller choice of how to recover, which is why libraries prefer Result. Rechecking on every read does not stop the bad value from existing. The invariant belongs at the door."
+      "explanation": "The value of a fallible constructor is not the error message: no Account can exist in a state new would have refused, since every path to the value goes through that check. A panic stops bad data, but it removes the choice of how to recover, so libraries prefer Result. Rechecking on every read does not stop the bad value from existing. The invariant belongs at the door."
     },
     "rust-structs-do": {
       "id": "rust-structs-do",
@@ -1323,7 +1351,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Checking the owner only for length, so a string of spaces passes as a name."
       ],
       "files": [
-        "crates/ledger-core/src/account.rs"
+        "crates/ledger-core/src/account.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/account.rs",
+        "test/account.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/account.test.mjs",
       "checks": [
@@ -1370,7 +1401,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Signalling failure by leaving the balance untouched but returning Ok, which reports success for work not done."
       ],
       "files": [
-        "crates/ledger-core/src/account.rs"
+        "crates/ledger-core/src/account.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/account_review.rs",
+        "test/account_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/account_review.test.mjs",
       "checks": [
@@ -1554,7 +1588,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "One row is one variant, carrying only the fields it needs."
       ],
       "answer": 3,
-      "explanation": "An enum gives a value one shape at a time. A deposit carries cents, a transfer carries cents and a recipient, and no row can hold a recipient it never used. A struct with a kind string would carry every field of every shape on every row, and a row with the wrong combination would compile and then mean nothing. The match that reads the row is checked for every variant, so a new kind cannot slip past the code that prints it."
+      "explanation": "An enum gives a value one shape at a time: a deposit carries cents, a transfer carries cents and a recipient, and no row holds a recipient it never used. A struct with a kind string would carry every field of every shape, and a wrong combination would compile and mean nothing. The match is checked for every variant, so a new kind cannot slip past the printer."
     },
     "rust-enums-do": {
       "id": "rust-enums-do",
@@ -1578,7 +1612,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Adding a wildcard arm to quiet the compiler, when it also hides the next variant someone adds."
       ],
       "files": [
-        "crates/ledger-core/src/tx.rs"
+        "crates/ledger-core/src/tx.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/tx.rs",
+        "test/tx.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/tx.test.mjs",
       "checks": [
@@ -1625,7 +1662,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Returning a default kind for anything unknown, when absence is the honest answer to input you do not know."
       ],
       "files": [
-        "crates/ledger-core/src/tx.rs"
+        "crates/ledger-core/src/tx.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/tx_review.rs",
+        "test/tx_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/tx_review.test.mjs",
       "checks": [
@@ -1829,7 +1869,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Collapsing every failure into one variant, when the caller then cannot tell retryable input from unreadable input."
       ],
       "files": [
-        "crates/ledger-core/src/parse.rs"
+        "crates/ledger-core/src/parse.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/parse.rs",
+        "test/parse.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/parse.test.mjs",
       "checks": [
@@ -1876,7 +1919,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Reaching for format! when the answer is a static sentence, because a borrowed string is enough and allocates nothing."
       ],
       "files": [
-        "crates/ledger-core/src/parse.rs"
+        "crates/ledger-core/src/parse.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/parse_review.rs",
+        "test/parse_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/parse_review.test.mjs",
       "checks": [
@@ -2070,7 +2116,11 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Deleting the existing re-export to make a check pass, when the check is asking whether a second public path exists."
       ],
       "files": [
-        "crates/ledger-core/src/lib.rs"
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/modules.rs",
+        "crates/ledger-core/src/money.rs",
+        "crates/ledger-core/src/account.rs",
+        "test/modules.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/modules.test.mjs",
       "checks": [
@@ -2117,7 +2167,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Flattening every module into the crate root, when a short path is a choice and not a requirement."
       ],
       "files": [
-        "crates/ledger-core/src/lib.rs"
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/modules_review.rs",
+        "crates/ledger-core/src/money.rs",
+        "test/modules_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/modules_review.test.mjs",
       "checks": [
@@ -2305,7 +2358,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "The size of the store, so it can be copied into the caller frame."
       ],
       "answer": 0,
-      "explanation": "A trait is a promise about behaviour, and a generic function asks for exactly that promise, so the same code serves a database store, a memory store and a test fake without knowing which one it holds. A trait object, written dyn Store, asks for the same promise but decides the concrete type at runtime, which is what lets one list hold stores of different kinds. The size of a store is never what a caller should depend on."
+      "explanation": "A trait is a promise about behaviour, and a generic function asks for it, so one body of code serves a database store, a memory store and a test fake. A trait object, written dyn Store, asks the same promise but decides the type at run time, so one list can hold stores of different kinds. The size of a store is not what a caller depends on."
     },
     "rust-traits-do": {
       "id": "rust-traits-do",
@@ -2329,7 +2382,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Making the generic function take a concrete MemoryStore, when the second implementation then cannot be passed at all."
       ],
       "files": [
-        "crates/ledger-core/src/store.rs"
+        "crates/ledger-core/src/store.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/store.rs",
+        "test/store.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/store.test.mjs",
       "checks": [
@@ -2376,7 +2432,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Returning an empty string for a missing owner, when the caller cannot tell that from a real zero balance."
       ],
       "files": [
-        "crates/ledger-core/src/store.rs"
+        "crates/ledger-core/src/store.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/store_review.rs",
+        "test/store_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/store_review.test.mjs",
       "checks": [
@@ -2415,7 +2474,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-lifetimes"
       ],
       "hints": [
-        "Before reading on, say which value a reference must not outlive, and write that sentence down. If cargo is command not found, run the environment check first.",
+        "Before reading on, say which value a reference must not outlive, and write that sentence down. If the terminal says cargo is not found, run the environment check first.",
         "Look at the signature and ask which input the returned reference could have come from."
       ],
       "misconceptions": [
@@ -2606,7 +2665,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Thinking the lifetime parameter changes what render returns, when it only ties the borrow to its source."
       ],
       "files": [
-        "crates/ledger-core/src/statement.rs"
+        "crates/ledger-core/src/statement.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/statement.rs",
+        "test/statement.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/statement.test.mjs",
       "checks": [
@@ -2653,7 +2715,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Cloning the first line into a String, which turns a borrow into an allocation and changes the signature."
       ],
       "files": [
-        "crates/ledger-core/src/statement.rs"
+        "crates/ledger-core/src/statement.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/statement_review.rs",
+        "test/statement_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/statement_review.test.mjs",
       "checks": [
@@ -2692,7 +2757,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-collections"
       ],
       "hints": [
-        "Ask what the caller needs from the map: sorted iteration, or the fastest possible lookup by key. If cargo is command not found, run the environment check first.",
+        "Ask what the caller needs from the map: sorted iteration, or the fastest possible lookup by key. If the terminal says cargo is not found, run the environment check first.",
         "Before reading, predict what a lookup for a month with no rows returns, and why zero would be a lie."
       ],
       "misconceptions": [
@@ -2826,7 +2891,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "It refuses duplicate keys, which keeps a total from being written twice."
       ],
       "answer": 1,
-      "explanation": "entry looks the key up once and returns either a vacant slot to fill or an occupied one to update. Two calls hash the key twice and hold a borrow across both, which is exactly the shape the compiler rejects when you then insert. The Entry API is not about speed alone, because it states the operation as one decision. Sorting and duplicate refusal are properties of other collections, not of entry."
+      "explanation": "entry looks the key up once and returns either a vacant slot to fill or an occupied one to update. Two calls hash the key twice and hold a borrow across both, the shape the compiler rejects when you then insert. The Entry API is not about speed alone: it states the operation as one decision. Sorting and duplicate refusal are properties of other collections."
     },
     "rust-collections-do": {
       "id": "rust-collections-do",
@@ -2850,7 +2915,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Returning zero from a missing get, which erases the difference between no rows and a zero total."
       ],
       "files": [
-        "crates/ledger-core/src/collections.rs"
+        "crates/ledger-core/src/collections.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/collections.rs",
+        "test/collections.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/collections.test.mjs",
       "checks": [
@@ -2897,7 +2965,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Returning an Option for the filtered list, which makes an empty answer indistinguishable from a missing one."
       ],
       "files": [
-        "crates/ledger-core/src/collections.rs"
+        "crates/ledger-core/src/collections.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/collections_review.rs",
+        "test/collections_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/collections_review.test.mjs",
       "checks": [
@@ -2936,7 +3007,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-closures"
       ],
       "hints": [
-        "Before reading, write down whether a counter closure can be called twice without a mut binding, and why. If cargo is command not found, run the environment check first.",
+        "Before reading, write down whether a counter closure can be called twice without a mut binding, and why. If the terminal says cargo is not found, run the environment check first.",
         "Ask what the closure captures and whether the body reads it, changes it, or moves it out."
       ],
       "misconceptions": [
@@ -3097,7 +3168,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "It tells the compiler to inline the closure body at every call site."
       ],
       "answer": 2,
-      "explanation": "A call to an FnMut closure changes the state it captured, so the closure value itself is being written to through the binding. The binding must therefore be declared with mut, or the compiler rejects the call. The mut keyword does not pick the trait: the captures decide that, and the binding only has to match what they decided. Cloning, borrowing and inlining are separate matters and none of them is what mut means here."
+      "explanation": "A call to an FnMut closure changes the state it captured, so the closure value is being written to through the binding. The binding must therefore be declared with mut, or the compiler rejects the call. The mut keyword does not pick the trait: the captures decide that. Cloning, borrowing and inlining are separate matters, and none of them is what mut means here."
     },
     "rust-closures-do": {
       "id": "rust-closures-do",
@@ -3121,7 +3192,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Returning a named function pointer from make_counter, which cannot capture a per-call count."
       ],
       "files": [
-        "crates/ledger-core/src/closures.rs"
+        "crates/ledger-core/src/closures.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/closures.rs",
+        "test/closures.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/closures.test.mjs",
       "checks": [
@@ -3168,7 +3242,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Comparing with a strict greater-than, which drops the floor the check keeps."
       ],
       "files": [
-        "crates/ledger-core/src/iterators.rs"
+        "crates/ledger-core/src/iterators.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/iterators.rs",
+        "test/iterators.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/iterators.test.mjs",
       "checks": [
@@ -3215,7 +3292,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-tests"
       ],
       "hints": [
-        "Before reading, name the property a split must keep even when the parts look plausible. If cargo is command not found, run the environment check first.",
+        "Before reading, name the property a split must keep even when the parts look plausible. If the terminal says cargo is not found, run the environment check first.",
         "Ask what each test would do if the implementation were silently changed to a wrong answer."
       ],
       "misconceptions": [
@@ -3370,7 +3447,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "It asserts the exact output of one known input value."
       ],
       "answer": 0,
-      "explanation": "A test earns its place by failing for the reason it names. Coverage, speed, and exact-output assertions can all be true of a test that keeps passing after the behaviour breaks, which makes them evidence of activity rather than of correctness. The useful test is tied to a property: a split sums to its total, a rounded half goes away from zero. That is also why the name matters, because it states the property."
+      "explanation": "A test earns its place by failing for the reason it names. Coverage, speed and exact-output assertions can be true of a test that keeps passing after the behaviour breaks, which makes them evidence of activity. The useful test is tied to a property: a split sums to its total, a rounded half goes away from zero. That is why the name matters: it states the property."
     },
     "rust-tests-do": {
       "id": "rust-tests-do",
@@ -3394,7 +3471,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Splitting with integer division alone, which drops the remainder and makes the parts sum short."
       ],
       "files": [
-        "crates/ledger-core/src/rounding.rs"
+        "crates/ledger-core/src/rounding.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/rounding.rs",
+        "test/rounding.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/rounding.test.mjs",
       "checks": [
@@ -3441,7 +3521,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Casting before rounding, which truncates 66.67 to 66 and changes the reported share."
       ],
       "files": [
-        "crates/ledger-core/src/rounding.rs"
+        "crates/ledger-core/src/rounding.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/rounding_review.rs",
+        "test/rounding_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/rounding_review.test.mjs",
       "checks": [
@@ -3480,7 +3563,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-pointers"
       ],
       "hints": [
-        "Name the owner you need before you pick a type: one owner, several readers, or several threads. If cargo is command not found, run the environment check first.",
+        "Name the owner you need before you pick a type: one owner, several readers, or several threads. If the terminal says cargo is not found, run the environment check first.",
         "Read the error message for a wrong choice and say which guarantee the compiler is protecting."
       ],
       "misconceptions": [
@@ -3633,7 +3716,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "So two owners share one counter and either may mutate it."
       ],
       "answer": 3,
-      "explanation": "Rc gives the value more than one owner, and RefCell allows mutation through a shared handle by checking borrows at run time. Together they describe a counter that two parts of one thread can change. Box would give a single owner. RefCell alone still needs one owner to hold it. Arc is the thread-safe sibling, but there is no thread here, and Arc would add atomic overhead for a guarantee nobody asked for."
+      "explanation": "Rc gives the value more than one owner, and RefCell allows mutation through a shared handle by checking borrows at run time. Together they describe a counter that two parts of one thread can change. Box would give a single owner, and RefCell alone still needs one owner to hold it. Arc is the thread-safe sibling, but there is no thread here."
     },
     "rust-pointers-do": {
       "id": "rust-pointers-do",
@@ -3657,7 +3740,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Thinking Rc::clone copies the data, when it increments a count and the data stays in one place."
       ],
       "files": [
-        "crates/ledger-core/src/pointers.rs"
+        "crates/ledger-core/src/pointers.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/pointers.rs",
+        "test/pointers.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/pointers.test.mjs",
       "checks": [
@@ -3704,7 +3790,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Thinking a struct that holds an Arc is expensive to clone, when the clone copies the handle and counts it."
       ],
       "files": [
-        "crates/ledger-core/src/pointers.rs"
+        "crates/ledger-core/src/pointers.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/pointers_review.rs",
+        "test/pointers_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/pointers_review.test.mjs",
       "checks": [
@@ -3743,7 +3832,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-threads"
       ],
       "hints": [
-        "Say which data each thread must own before you write the spawn call. If cargo is command not found, run the environment check first.",
+        "Say which data each thread must own before you write the spawn call. If the terminal says cargo is not found, run the environment check first.",
         "Ask whether the thread needs to outlive the function or may finish inside it."
       ],
       "misconceptions": [
@@ -3906,7 +3995,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Because closures cannot read local variables without a copy."
       ],
       "answer": 1,
-      "explanation": "The spawned closure must own everything it names, so each thread gets a handle it can keep. Cloning the Arc increments the count and produces a second owner of the same allocation, and the counter itself is not copied. The original handle stays with the caller, and the last handle to drop frees the value. Borrowing instead of cloning is what the compiler refuses, because the thread could outlive the borrow. A Mutex is still required for writes, since Arc only shares ownership."
+      "explanation": "The spawned closure must own what it names, so each thread gets a handle. Cloning the Arc increments the count and gives a second owner of the same allocation, not a copy of the counter. Borrowing is what the compiler refuses, because a thread could outlive the borrow, and the last handle to drop frees the value. A Mutex is still required for writes: Arc only shares ownership."
     },
     "rust-threads-do": {
       "id": "rust-threads-do",
@@ -3930,7 +4019,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Believing sum_in_parallel is correct if the threads compile, when a sum that drops a partial result passes no test that checks the total."
       ],
       "files": [
-        "crates/ledger-core/src/threads.rs"
+        "crates/ledger-core/src/threads.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/threads.rs",
+        "test/threads.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/threads.test.mjs",
       "checks": [
@@ -3977,7 +4069,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Believing the received order is the spawn order, when threads finish when they finish and the ids must be sorted."
       ],
       "files": [
-        "crates/ledger-core/src/threads.rs"
+        "crates/ledger-core/src/threads.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/threads_review.rs",
+        "test/threads_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/threads_review.test.mjs",
       "checks": [
@@ -4016,7 +4111,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-async"
       ],
       "hints": [
-        "Call an async function and store the result without awaiting it. Ask whether its body has run. If cargo is command not found, run the environment check first.",
+        "Call an async function and store the result without awaiting it. Ask whether its body has run. If the terminal says cargo is not found, run the environment check first.",
         "Name what the executor is doing while your future waits: it polls other futures on the same thread."
       ],
       "misconceptions": [
@@ -4158,7 +4253,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Because an await blocks the thread until the value is ready."
       ],
       "answer": 2,
-      "explanation": "An async fn compiles into a function that returns a future. Building the future runs none of the body, it records the state needed to continue later. The body starts when an executor polls it, which is what await arranges. That laziness is why an async call can be stored, combined with join, or never run at all without anyone noticing. The other options describe eager execution, thread copying, or blocking, all of which are the opposite of how a future behaves."
+      "explanation": "An async fn compiles into a function that returns a future. Building the future runs none of the body, it records the state needed to continue later. The body starts when an executor polls it, and await is what arranges that. That laziness is why an async call can be stored, combined with join, or never run, and the other options describe eager execution, thread copying, or blocking."
     },
     "rust-async-do": {
       "id": "rust-async-do",
@@ -4182,7 +4277,14 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Believing join runs the two futures in sequence, when it polls both so one can make progress while the other waits."
       ],
       "files": [
-        "crates/ledger-api/src/async_basics.rs"
+        "crates/ledger-api/src/async_basics.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/async_basics.rs",
+        "test/async_basics.test.mjs",
+        "crates/ledger-api/Cargo.toml",
+        "Cargo.toml",
+        "Cargo.lock",
+        "crates/ledger-core/Cargo.toml"
       ],
       "testCommand": "node --test --test-reporter=tap test/async_basics.test.mjs",
       "timeoutMs": 300000,
@@ -4230,7 +4332,14 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Believing an empty slice is a special case, when a loop over nothing yields zero naturally."
       ],
       "files": [
-        "crates/ledger-api/src/async_basics.rs"
+        "crates/ledger-api/src/async_basics.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/async_basics_review.rs",
+        "test/async_basics_review.test.mjs",
+        "crates/ledger-api/Cargo.toml",
+        "Cargo.toml",
+        "Cargo.lock",
+        "crates/ledger-core/Cargo.toml"
       ],
       "testCommand": "node --test --test-reporter=tap test/async_basics_review.test.mjs",
       "timeoutMs": 300000,
@@ -4339,7 +4448,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         }
       ],
       "hints": [
-        "Ask what a function that takes cents could do wrong that a function that takes your type cannot. If cargo is command not found, run the environment check first.",
+        "Ask what a function that takes cents could do wrong that a function that takes your type cannot. If the terminal says cargo is not found, run the environment check first.",
         "The tests call the functions, not the type, so the name of the type is yours to choose."
       ],
       "misconceptions": [
@@ -4380,7 +4489,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "Because the label of an amount has to be stored with it."
       ],
       "answer": 0,
-      "explanation": "A newtype is a rule the compiler holds instead of a comment somebody has to remember. A function that takes your amount cannot be handed a count of items by mistake, and a function that returns one cannot be read as a number of rows. The other options describe things the type does not do: an integer holds negatives, the wrapper costs nothing, and the label is computed when it is needed.",
+      "explanation": "A newtype is a rule the compiler holds, not a comment somebody has to remember. A function that takes your amount cannot be handed a count of items, and one that returns it cannot be read as a number of rows. The other options describe what the type does not do: an integer holds negatives, the wrapper costs nothing, and the label is computed when it is needed.",
       "hints": [
         "Ask what a function that takes a plain number cannot tell about its argument."
       ],
@@ -4400,7 +4509,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-amount"
       ],
       "files": [
-        "crates/ledger-core/src/amount.rs"
+        "crates/ledger-core/src/amount.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/amount.rs",
+        "test/amount.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/amount.test.mjs",
       "timeoutMs": 300000,
@@ -4454,7 +4566,10 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
         "rust-amount"
       ],
       "files": [
-        "crates/ledger-core/src/amount.rs"
+        "crates/ledger-core/src/amount.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/amount_review.rs",
+        "test/amount_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/amount_review.test.mjs",
       "timeoutMs": 300000,

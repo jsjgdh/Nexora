@@ -109,7 +109,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-tests",
       "title": "Testing: tables, subtests, and httptest",
-      "goal": "Write code against a suite you cannot rewrite. A hidden, table-driven test is the machine-checkable definition of correct behaviour here: it pins every band of a grader through a slice of cases run under t.Run subtests, and it checks an HTTP handler over a real loopback listener with httptest. Your job is the implementation that survives such a suite — boundaries exact, the out-of-range case refused, the status and the body both right — and the literacy to know that coverage counts what ran, never what you actually asserted.",
+      "goal": "Write code against a suite you cannot rewrite. A hidden, table-driven test is the machine-checkable definition of correct behaviour here: it pins every band of a grader through a slice of cases run under t.Run subtests, and it checks an HTTP handler over a real loopback listener with httptest. Your job is the implementation that survives such a suite, boundaries exact, the out-of-range case refused, the status and the body both right, and the literacy to know that coverage counts what ran, never what you actually asserted.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -118,7 +118,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-perf",
       "title": "Performance: the cost of a line",
-      "goal": "Ship the function a senior ships. Two implementations can both be correct and one of them is a landmine that only goes off at real size: building a string with += in a loop copies everything gathered so far each turn, so it is O(n^2), while a single-pass build is O(n). This phase makes that cost something you see rather than guess — the standard library as the senior one-liner, sizing a slice when you already know its length, and measuring with benchmarks, AllocsPerRun, and pprof instead of trusting a hunch.",
+      "goal": "Ship the function a senior ships. Two implementations can both be correct and one of them is a landmine that only goes off at real size: building a string with += in a loop copies everything gathered so far each turn, so it is O(n^2), while a single-pass build is O(n). This phase makes that cost something you see rather than guess, the standard library as the senior one-liner, sizing a slice when you already know its length, and measuring with benchmarks, AllocsPerRun, and pprof instead of trusting a hunch.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -127,7 +127,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-store",
       "title": "Data modeling: what the ledger refuses",
-      "goal": "A data model is not the shape of the happy path, it is the set of states you have decided are representable. This phase moves the rules to the one seam every writer shares — the store — so a handler, a migration and a seed script are all held to the same contract: a record with nothing naming it is refused by name, the same id cannot be stored twice, and a refusal changes nothing at all.",
+      "goal": "A data model is not the shape of the happy path, it is the set of states you have decided are representable. This phase moves the rules to the one seam every writer shares, the store, so a handler, a migration and a seed script are all held to the same contract: a record with nothing naming it is refused by name, the same id cannot be stored twice, and a refusal changes nothing at all.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -154,7 +154,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-resilience",
       "title": "Resilience: retries, backoff, and failing fast",
-      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes — so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
+      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes, so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -163,7 +163,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-ops",
       "title": "Operations: what the running service admits",
-      "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest — the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
+      "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest, the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -190,7 +190,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-ship",
       "title": "Ship: containers and the pipeline that proves it",
-      "goal": "Your machine builds your code because it holds a toolchain you installed and modules you already downloaded; none of that travels. This phase makes the build itself portable — a Dockerfile that compiles in one stage and ships from another, so the artifact is identical everywhere, and a pipeline that re-runs the same commands in a clean room on every push. The lab judges at two altitudes: the file structure is linted on every machine, and when a Docker daemon answers the image is really built and the suite really runs inside it — while a machine without one says so plainly and still gets every file check. Missing infrastructure is never a verdict about your work; a runtime image that ships its toolchain always is.",
+      "goal": "Your machine builds your code because it holds a toolchain you installed and modules you already downloaded; none of that travels. This phase makes the build itself portable, a Dockerfile that compiles in one stage and ships from another, so the artifact is identical everywhere, and a pipeline that re-runs the same commands in a clean room on every push. The lab judges at two altitudes: the file structure is linted on every machine, and when a Docker daemon answers the image is really built and the suite really runs inside it, while a machine without one says so plainly and still gets every file check. Missing infrastructure is never a verdict about your work; a runtime image that ships its toolchain always is.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -199,7 +199,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-incident",
       "title": "Debugging, for real",
-      "goal": "Until now the broken apps in this course were models you investigated on paper. This one is your own code: a journal whose flush silently drops the last buffered entry, a suite that is red on arrival, and no list of candidate fixes to pick from. Run the suite, read the failure, form a hypothesis before you touch the code, cite the evidence your fix rests on, then make the real suite green. What is judged is the run — and the order of your reasoning.",
+      "goal": "Until now the broken apps in this course were models you investigated on paper. This one is your own code: a journal whose flush silently drops the last buffered entry, a suite that is red on arrival, and no list of candidate fixes to pick from. Run the suite, read the failure, form a hypothesis before you touch the code, cite the evidence your fix rests on, then make the real suite green. What is judged is the run, and the order of your reasoning.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -208,7 +208,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "incident-labs",
       "title": "Debugging labs",
-      "goal": "Three broken apps you investigate rather than run: read the symptom, log, and failing tests, record a hypothesis, then choose the fix that resolves the real cause without a regression. The process is what is judged — a hypothesis must come before the fix. Each lab carries the arc itself: the report frames it, the hypothesis and fix are the work, and the verdict on your own event order is the review.",
+      "goal": "Three broken apps you investigate rather than run: read the symptom, log, and failing tests, record a hypothesis, then choose the fix that resolves the real cause without a regression. The process is what is judged: a hypothesis must come before the fix. Each lab carries the arc itself: the report frames it, the hypothesis and fix are the work, and the verdict on your own event order is the review.",
       "level": 3,
       "tier": "pro",
       "authored": true,
@@ -217,7 +217,7 @@ export const IDE_MANIFEST_GO_IN_PRODUCTION: unknown = {
     {
       "id": "design-labs",
       "title": "Design labs",
-      "goal": "Take a concern you have already built in code and design it: decide where state that must survive a reload actually lives, defend the choice against a store that is unreachable, and read your own graph back as an architecture rather than a picture. Judged by the Studio rubric over the graph you draw — no test suite runs here. Each lab carries the arc itself: the brief frames it, the graph and its rationale are the work, and reading the rubric back is the review.",
+      "goal": "Take a concern you have already built in code and design it: decide where state that must survive a reload actually lives, defend the choice against a store that is unreachable, and read your own graph back as an architecture rather than a picture. Judged by the Studio rubric over the graph you draw. No test suite runs here. Each lab carries the arc itself: the brief frames it, the graph and its rationale are the work, and reading the rubric back is the review.",
       "level": 3,
       "tier": "pro",
       "authored": true,

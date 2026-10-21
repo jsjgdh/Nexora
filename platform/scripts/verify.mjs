@@ -2745,13 +2745,14 @@ describe("curriculum service (in-process)", () => {
     const doc = (await import("../services/curriculum/dist/data/ide-course-task-manager.js")).IDE_COURSE_TASK_MANAGER;
     assert.equal(m.phases.length, doc.phases.length, "the whole road is visible, not just the free loop");
     const free = m.phases.filter((p) => p.tier === "free");
-    // The free tier is setup + fundamentals (FREE_PHASE_COUNT 2, D-023): a true
-    // beginner finishes two complete loops offline before any paywall. Not one.
-    assert.equal(free.length, 2, "the free tier is the two leading phases (D-023)");
+    // The free tier is the FIRST phase of every course (D-023, revised): one
+    // complete loop offline before any paywall, and the same rule in every
+    // course, so a learner can try each one before paying for any of them.
+    assert.equal(free.length, 1, "the free tier is the first phase");
     assert.deepEqual(
       free.map((p) => p.id),
-      ["setup", "fundamentals"],
-      "free loop is setup then fundamentals, in order"
+      ["setup"],
+      "the free loop is the first phase, in order"
     );
     // A roadmap row is a name and a size, never the work itself.
     for (const p of m.phases) {
@@ -2793,7 +2794,7 @@ describe("curriculum service (in-process)", () => {
     assert.match(b.ideVersion, /^[0-9a-f]{12}$/);
     // Counts move with authored content; assert the endpoint agrees with the
     // snapshot (the drift test pins that snapshot to the IDE source) and that
-    // the free tier stays the fixed two-phase D-023 loop.
+    // the free tier stays the first phase of every course.
     const courses = (await import("../services/curriculum/dist/data/ide-courses.js")).IDE_COURSES;
     const ids = Object.keys(courses);
     const phases = ids.reduce((sum, id) => sum + courses[id].manifest.phases.length, 0);

@@ -339,7 +339,7 @@ export const SPEC = [
       {
         param: "what it costs to start",
         value: "Nothing",
-        note: "Nine phases ship inside the installer. Every check is free, forever.",
+        note: "The free phases ship inside the installer. Every check is free, forever.",
       },
     ],
   },
@@ -702,6 +702,36 @@ export const API_BASICS: [string, string, "free" | "pro"][] = [
   ["api-payload", "Trust nothing on the wire", "free"],
 ];
 
+export const ZIG_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
+  ["zig-program", "Zig program", "free"],
+  ["zig-values", "Zig values and types", "pro"],
+  ["zig-control-flow", "Zig control flow", "pro"],
+  ["zig-functions", "Zig functions", "pro"],
+  ["zig-structs", "Zig structs and methods", "pro"],
+  ["zig-pointers", "Zig pointers", "pro"],
+  ["zig-errors", "Zig error unions", "pro"],
+  ["zig-allocator", "Zig allocator", "pro"],
+  ["zig-defer", "Zig defer", "pro"],
+  ["zig-comptime", "Zig comptime and generics", "pro"],
+  ["zig-stdlib", "Zig standard library", "pro"],
+  ["zig-tests", "Zig test runner", "pro"],
+  ["zig-audit", "Zig audit", "pro"],
+];
+
+export const OCAML_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
+  ["ocaml-project", "The first program", "free"],
+  ["ocaml-values", "Values and types", "pro"],
+  ["ocaml-control-flow", "Control flow and pattern matching", "pro"],
+  ["ocaml-functions", "Functions", "pro"],
+  ["ocaml-lists", "Lists and recursion", "pro"],
+  ["ocaml-records", "Records", "pro"],
+  ["ocaml-variants", "Variants and pattern matching", "pro"],
+  ["ocaml-modules", "Modules and functors", "pro"],
+  ["ocaml-errors", "Errors", "pro"],
+  ["ocaml-stdlib", "The standard library", "pro"],
+  ["ocaml-your-turn", "Your turn: the report", "pro"],
+];
+
 /**
  * The five shipped courses, with the real counts that follow from the lists
  * above.
@@ -764,6 +794,22 @@ export const COURSES = [
     phases: SQL_FUNDAMENTALS,
   },
   {
+    slug: "zig-fundamentals",
+    role: "main",
+    label: "the Zig language",
+    title: "Zig fundamentals",
+    sub: "the language itself, from values and error unions to memory you own and comptime you can read",
+    phases: ZIG_FUNDAMENTALS,
+  },
+  {
+    slug: "ocaml-fundamentals",
+    role: "main",
+    label: "the OCaml language",
+    title: "OCaml fundamentals",
+    sub: "the language itself, from values and variants to the modules and functors that build programs",
+    phases: OCAML_FUNDAMENTALS,
+  },
+  {
     slug: "api-basics",
     role: "side",
     label: "reading an API from the outside",
@@ -781,6 +827,8 @@ export const ALL_PHASES: [string, string, "free" | "pro"][] = [
   ...RUST_FUNDAMENTALS,
   ...RUST_IN_PRODUCTION,
   ...SQL_FUNDAMENTALS,
+  ...ZIG_FUNDAMENTALS,
+  ...OCAML_FUNDAMENTALS,
   ...API_BASICS,
 ] as const;
 
@@ -935,7 +983,7 @@ export const STEPS = [
     id: "tier",
     title: "Your tier opens the courses.",
     caption:
-      "The first phase of every course is free, and so is the whole API primer: nine phases, free forever, and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.",
+      `The first phase of every course is free, and so is the whole API primer: ${FREE_PHASES_IN_WORDS} phases, free forever, and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.`,
     points: [
       "Free: the first phase of every course, and the API primer whole",
       "Pro: every further phase, fetched per entitlement",

@@ -54,15 +54,25 @@ import { randomInt } from "node:crypto";
  * added or removed in the IDE changes there and not here. The auth service does
  * not know the curriculum, so this constant is a copy of a truth held
  * elsewhere, and it is here so that a cohort cannot name a course that does
- * not exist. The verification suite holds the two to each other: this list and
- * the curriculum service's own catalogue must be the same five ids, and the
- * suite fails when they drift.
+ * not exist.
+ *
+ * A copy is only as good as the check that holds it to the original, so the
+ * verification suite holds the two to each other: this list and the curriculum
+ * service's own catalogue must be the same ids, and the suite fails when they
+ * drift. A course that landed in the IDE and was not added here would be a
+ * course no cohort could be bought for, which is a quiet way to lose a sale;
+ * a course that was renamed here and not there would be a cohort for a course
+ * that does not exist.
  */
 export const SHIPPED_COURSE_IDS = [
   "task-manager",
   "go-fundamentals",
   "go-in-production",
-  "rust-ledger",
+  "rust-fundamentals",
+  "rust-in-production",
+  "sql-fundamentals",
+  "zig-fundamentals",
+  "ocaml-fundamentals",
   "api-basics",
 ] as const;
 

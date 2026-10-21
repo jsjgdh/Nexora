@@ -19,7 +19,7 @@ export const IDE_MANIFEST_TASK_MANAGER: unknown = {
     {
       "id": "fundamentals",
       "title": "Programming fundamentals",
-      "goal": "The words every later phase uses as if you already knew them — a value, a variable, a function, a list, a loop — each defined in plain language and run in a two-line program, so the next phase is reading, not guessing.",
+      "goal": "The words every later phase uses as if you already knew them, a value, a variable, a function, a list, a loop, each defined in plain language and run in a two-line program, so the next phase is reading, not guessing.",
       "level": 1,
       "tier": "pro",
       "authored": true,
@@ -127,7 +127,7 @@ export const IDE_MANIFEST_TASK_MANAGER: unknown = {
     {
       "id": "testing",
       "title": "Test the application",
-      "goal": "Write tests that would catch a broken implementation — judged by whether they can fail.",
+      "goal": "Write tests that would catch a broken implementation, judged by whether they can fail.",
       "level": 3,
       "tier": "pro",
       "authored": true,

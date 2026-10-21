@@ -283,12 +283,28 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "Explain what build.zig is and what the build system decides that the compiler alone cannot.",
         "Trace a dependency from build.zig.zon to the hash that pins it, and say what that hash buys a reproducible build.",
         "Name the three commands this project answers to and the file each of them acts on.",
-        "Print the banner the sheet program owes, and read the line back out of the terminal"
+        "Write the banner the sheet program owes, and read the line back out of the terminal"
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A Zig project is three things. The sources are the code. The build script, build.zig, says what to build and in what order. The package manifest, build.zig.zon, says what the project is called and what it depends on. The compiler compiles one file at a time; the build system is what decides which files those are."
+          "body": "A Zig project is three things. The sources are the code. The build script, build.zig, says what to build and in what order. The package manifest, build.zig.zon, says what the project is called and what it depends on."
+        },
+        {
+          "kind": "prose",
+          "body": "The compiler compiles one file at a time; the build system is what decides which files those are."
+        },
+        {
+          "kind": "prose",
+          "body": "The build script is a Zig program, so you need the Zig toolchain before you can read it. Zig comes as one download from https://ziglang.org/download, and it holds the compiler and the build system together."
+        },
+        {
+          "kind": "prose",
+          "body": "Node is the second tool: the suite the Run button calls is a small wrapper that calls zig build test and reports what it said. If the terminal says zig is not found, install Zig from the download page and run the environment check before you open a file."
+        },
+        {
+          "kind": "prose",
+          "body": "This course works in the Zig Sheet project, at NEXORA/Zig-Sheet in your home folder, and the build script and the source this phase names, build.zig and src/main.zig, are inside it."
         },
         {
           "kind": "example",
@@ -297,7 +313,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "That module is why src/main.zig can say `@import(\"sheet\")`. The compiler has no other way to find a module named sheet: the build script creates it, hands it to the executable, and the import resolves against it. Compile src/main.zig by hand with `zig build-exe src/main.zig` and the compiler stops with \"no module named 'sheet' available within module root\". The build script is not decoration around the compiler. It is how the compiler is told what to compile."
+          "body": "That module is why src/main.zig can say `@import(\"sheet\")`. The compiler has no other way to find a module named sheet: the build script creates it, hands it to the executable, and the import resolves against it. Compile src/main.zig by hand with `zig build-exe src/main.zig` and the compiler stops with \"no module named 'sheet' available within module root\"."
+        },
+        {
+          "kind": "prose",
+          "body": "The build script is not decoration around the compiler. It is how the compiler is told what to compile."
         },
         {
           "kind": "prose",
@@ -310,7 +330,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A dependency comes from the manifest, and the manifest is where the pinning happens. This project has no dependencies of its own, but the field is there, and the rule it follows is the rule every Zig package follows: a dependency names a url and a hash, and the hash is the pin. A package is fetched by its hash. The url is only one mirror of the same bytes, so a mirror going quiet does not change what you build against."
+          "body": "A dependency comes from the manifest, and the manifest is where the pinning happens. This project has no dependencies of its own, but the field is there, and the rule it follows is the rule every Zig package follows: a dependency names a url and a hash, and the hash is the pin. A package is fetched by its hash."
+        },
+        {
+          "kind": "prose",
+          "body": "A url is only one mirror of the same bytes, so a mirror going quiet does not change what you build against."
         },
         {
           "kind": "example",
@@ -341,6 +365,18 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/main.zig and make the program print the sheet banner and stop there: \"sheet reads a grid of cells\". Then run zig build run and read the line it printed. If zig is not on this machine, run the environment check first."
         }
       ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "the step is asked for",
+            "the runner reads the graph",
+            "its dependencies run first",
+            "the result is kept"
+          ]
+        },
+        "caption": "The build script is a graph of steps. The runner works out the order from the dependencies and keeps each result, so the next build is fast."
+      },
       "hints": [
         "Say what the line has to be before you open the file, and write it in a comment. A wrong guess costs a comment, not a run.",
         "The program already has its writer, its buffer and its flush. What it does not have is the line you were asked for.",
@@ -381,12 +417,12 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "There has to be a file called src/sheet.zig next to main.zig.",
-        "There has to be a module named sheet handed to the compilation, and only the build script hands it over.",
+        "The build script hands the compilation a module named sheet.",
         "The standard library has to be imported first, so that sheet can be found inside it.",
         "The project has to be fetched first, because sheet is one of the dependencies in the manifest."
       ],
       "answer": 1,
-      "explanation": "A module is something the build creates and hands to the compiler, and the build script is what creates it. The name in the import is a label the script chose, not a file name the compiler goes looking for, which is why a file called src/sheet.zig would not help either. The standard library is always available and is not where a project module comes from, and the manifest lists the dependencies of the package, not the modules inside it. The whole point of a build script is that it is the place where the pieces of a project are named and wired together, so a file that is compiled outside that wiring is a file whose imports have nowhere to point.",
+      "explanation": "A module is something the build creates and hands to the compiler, and the build script is what creates it. The name in the import is a label the script chose, not a file name the compiler looks for, so a file called src/sheet.zig would not help either. The standard library is always available, and the manifest lists package dependencies, not the modules inside.",
       "hints": [
         "Ask what the build script does with the word sheet in it, and what the compiler is told about that word when the program is built the usual way."
       ],
@@ -552,6 +588,24 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/values.zig and make add return the sum of its two amounts and scale return the amount multiplied by its factor. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "a cell that says \"notes\"",
+            "lines": [
+              "no amount at all"
+            ]
+          },
+          "after": {
+            "title": "a cell that says \"0\"",
+            "lines": [
+              "an amount of zero"
+            ]
+          }
+        },
+        "caption": "A missing amount is not a zero amount. The optional holds a value or null, and the compiler will not let you use it as a number until the missing case is handled."
+      },
       "hints": [
         "Write down what add(199, 1) has to return before you open the file. The type is already there; only the arithmetic is missing.",
         "The two functions take two Amounts and return an Amount, so the arithmetic is ordinary: the sum of two amounts, and an amount times a factor.",
@@ -598,7 +652,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "It compiles only where the caller compares the result with null, and refuses it everywhere else."
       ],
       "answer": 1,
-      "explanation": "An optional is a type that holds a value or nothing, and the compiler refuses to let you use it as the value until the nothing case has been dealt with. That is the whole difference between an optional and a plain number with a zero in it: with a plain number the missing case is invisible, and the code that reads it has to know a convention nobody wrote down. The other three answers each describe a language that decided the missing case was not worth the caller's attention. Zig does not fill in a zero, it does not forbid the function, and it does not make the check depend on where the comparison happens.",
+      "explanation": "An optional holds a value or nothing, and the compiler refuses to let you use it as the value until the nothing case is dealt with. With a plain number the missing case is invisible, and the code that reads it follows a convention nobody wrote down. Zig does not fill in a zero, forbid the function, or tie the check to where the comparison happens.",
       "hints": [
         "Ask what would have to be true of the compiler for a missing amount to be indistinguishable from a zero amount, and then ask whether that is what you want."
       ],
@@ -728,11 +782,19 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "for over a slice walks the items and hands each one to the body, so there is no index to keep and no length to get wrong. A while loop with a continue expression is the other shape: the condition is the loop, and the expression after the colon runs at the end of every pass. The sheet uses one of them to count the digits a text starts with."
+          "body": "for over a slice walks the items and hands each one to the body, so there is no index to keep and no length to get wrong. A while loop with a continue expression is the other shape: the condition is the loop, and the expression after the colon runs at the end of every pass."
         },
         {
           "kind": "prose",
-          "body": "The branches are read top to bottom and the first one that holds decides the cell. That is why the order matters: a text of spaces is blank, a text of digits is a number, a text that starts with an equals sign is an expression, and anything else is text. A text of spaces is not a number, so the blank test has to come before the number test, or a text of spaces would be read as a number with no digits in it."
+          "body": "The sheet uses one of these two shapes to count the digits a text starts with."
+        },
+        {
+          "kind": "prose",
+          "body": "The branches are read top to bottom and the first one that holds decides the cell. That is why the order matters: a text of spaces is blank, a text of digits is a number, a text that starts with an equals sign is an expression, and anything else is text."
+        },
+        {
+          "kind": "prose",
+          "body": "A text of spaces is not a number, so the blank test has to come before the number test, or a text of spaces would be read as a number with no digits in it."
         },
         {
           "kind": "example",
@@ -741,7 +803,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The other way to branch in Zig is the switch, and it is stricter than a chain of ifs. A switch over an enum has to mention every case of that enum, and the compiler refuses the code that does not. That is the difference between a chain of ifs and a switch: adding a case to the enum breaks every switch that forgot it, and the compiler says so."
+          "body": "The other way to branch in Zig is the switch, and it is stricter than a chain of ifs. A switch over an enum has to mention every case of that enum, and the compiler refuses the code that does not."
+        },
+        {
+          "kind": "prose",
+          "body": "The difference between a chain of ifs and a switch is this: adding a case to the enum breaks every switch that forgot it, and the compiler says so."
         },
         {
           "kind": "example",
@@ -768,6 +834,18 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/control_flow.zig and make isDigit say whether a byte is a digit, isBlank say whether a text is nothing but spaces, isNumber say whether a text is digits, and kindName say whether a text is blank, a number, an expression or text. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "is it blank?",
+            "is it a number?",
+            "does it start with =?",
+            "otherwise it is text"
+          ]
+        },
+        "caption": "The branches are read top to bottom and the first one that holds decides the cell, so the order of the tests is the meaning."
+      },
       "hints": [
         "Write down the four kinds a cell can be before you open the file, in the order the reader has to test them.",
         "The byte type is u8 and the characters are numbers, so a digit is a byte in a range, and the range is written with and.",
@@ -813,7 +891,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "The build fails only if the new operator is used, and the message is about the use and not about the switch."
       ],
       "answer": 0,
-      "explanation": "A switch over an enum has to mention every case of that enum, so adding a case makes the switch that forgot it a compile error, and the error names the place. That is what makes an enum worth having: the set of values is closed, and the code that works on the set is checked against it. The other three answers describe a switch that quietly does something for the case nobody planned for, which is exactly the bug an enum is supposed to make impossible. The failure arrives at build time rather than at run time, so it cannot reach a reader as a wrong total.",
+      "explanation": "A switch over an enum has to mention every case, so the switch that forgot it is a compile error, and the error names the place. The set of values is closed, and the code that works on it is checked against it. The other answers describe a switch that quietly does something for the case nobody planned for, which is the bug an enum makes impossible.",
       "hints": [
         "Ask what the compiler knows about the set of values an enum holds, and what it can therefore check about every switch over it."
       ],
@@ -942,7 +1020,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The body is a loop over the bytes, and the number is built as it goes: the total so far times ten, plus the digit. That is how a text of digits becomes a number, and it is the same work in every language. The part that is Zig is the types: the digit is cast to the amount type, because a byte and an amount are not the same type and the compiler will not add them for you."
+          "body": "The body is a loop over the bytes, and the number is built as it goes: the total so far times ten, plus the digit. That is how a text of digits becomes a number, and it is the same work in every language."
+        },
+        {
+          "kind": "prose",
+          "body": "The part that is Zig is the types: the digit is cast to the amount type, because a byte and an amount are not the same type and the compiler will not add them for you."
         },
         {
           "kind": "example",
@@ -973,6 +1055,37 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/functions.zig and make parseAmount read the digits of a text and return the amount they spell. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "memory-layout",
+        "spec": {
+          "parts": [
+            {
+              "label": "slice",
+              "fields": [
+                "pointer",
+                "length"
+              ],
+              "note": "two words, and the length travels with the pointer"
+            },
+            {
+              "label": "sentinel array",
+              "fields": [
+                "pointer",
+                "0"
+              ],
+              "note": "one word, and the end is a byte in the data"
+            },
+            {
+              "label": "raw pointer",
+              "fields": [
+                "pointer"
+              ],
+              "note": "one word, and no length at all"
+            }
+          ]
+        },
+        "caption": "A slice carries its own length, so a text does not have to be null terminated. A sentinel array ends with a byte in the data, and a raw pointer says nothing about how long it is."
+      },
       "hints": [
         "Write down what parseAmount(\"199\") has to return before you open the file. The signature already promises it.",
         "The loop is over the bytes of the text, and the number is built one digit at a time: the total so far times ten, plus the new digit.",
@@ -1013,12 +1126,12 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "Nothing. The signature promises an Amount and the body returns one, and the promise is kept.",
-        "The compiler refuses the body, because the text the signature accepts includes one the body cannot read.",
+        "The compiler refuses the body, because the signature accepts a text the body cannot read.",
         "The compiler warns about it and lets the build continue, and the warning is the only warning there is.",
         "The caller is told at run time that the text could not be read."
       ],
       "answer": 1,
-      "explanation": "The signature of parseAmount promises an Amount for every slice of bytes it accepts, and a body that cannot keep that promise for a text such as \"12x\" is refused by the compiler. That is the difference between a typed signature and a comment: a comment says what the function should do, and a signature says what it will do, and the compiler holds the code to it. The other answers each describe a promise that is not kept. A warning is not a refusal, and a run-time message arrives after the caller has already trusted the value.",
+      "explanation": "The signature of parseAmount promises an Amount for every text it accepts, so a body that cannot keep that promise for \"12x\" is refused. A comment says what the function should do; a signature says what it will do. The other answers describe a promise that is not kept: a warning is not a refusal, and a run-time message comes after the caller has trusted the value.",
       "hints": [
         "Ask what the signature promises about every text it accepts, and then ask whether the body keeps that promise for a text with a letter in it."
       ],
@@ -1183,6 +1296,26 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/cells.zig and make Cell.of build a cell that keeps the text it was read from and the amount in it, and make Cell.value give that amount back. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "a cell holding a number",
+            "lines": [
+              "the tag says number",
+              "the amount is 42"
+            ]
+          },
+          "after": {
+            "title": "a cell holding words",
+            "lines": [
+              "the tag says text",
+              "the words are \"notes\""
+            ]
+          }
+        },
+        "caption": "A tagged union holds one of several shapes and carries the tag that says which one is there now."
+      },
       "hints": [
         "Write down what Cell.of(\"199\").text and Cell.of(\"199\").amount have to be before you open the file.",
         "The struct is built with the field names: .{ .text = ..., .amount = ... }. The parser from the previous phase is what turns the text into an amount.",
@@ -1223,12 +1356,12 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "Nothing. The union still has the fields it had, and the extra field belongs to the struct.",
-        "The build fails, and the compiler names the switch that did not handle the new field.",
         "The build succeeds, and the switch runs the branch of the field it knows best.",
+        "The build fails, and the compiler names the switch that did not handle the new field.",
         "The build succeeds, and the new field is read as an empty value."
       ],
-      "answer": 1,
-      "explanation": "A switch over a tagged union has to mention every field of that union, so a field that is added makes the switch that forgot it a compile error, and the error names the place. The point of the tag is that the set of shapes is closed and the code that reads it is checked against that set: the sheet cannot read a cell as a number without saying what it does with the other shapes. The other answers each describe code that carries on without saying what it means, which is the failure the tag exists to prevent. The build stops, so the mistake cannot reach a reader as a wrong total.",
+      "answer": 2,
+      "explanation": "A switch over a tagged union has to mention every field, so a new field makes the switch that forgot it a compile error, and the error names the place. The set of shapes is closed, and the code that reads it is checked against it. The other answers describe code that carries on without saying what it means, which is the failure the tag prevents.",
       "hints": [
         "Ask what the compiler knows about the set of fields a tagged union holds, and what it can therefore check about every switch over it."
       ],
@@ -1389,6 +1522,26 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/pointers.zig and make setAmount write the new amount through the pointer it was given. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "setAmount(cell: Amount)",
+            "lines": [
+              "the function gets a copy",
+              "the caller never hears"
+            ]
+          },
+          "after": {
+            "title": "setAmount(cell: *Amount)",
+            "lines": [
+              "the function gets the address",
+              "the caller sees the change"
+            ]
+          }
+        },
+        "caption": "The whole difference between the two signatures is visible in the type, before the body is read."
+      },
       "hints": [
         "Write down what the caller's amount has to be after setAmount(&amount, 42) before you open the file.",
         "The parameter is a pointer, so the amount is not in the function: it is at the address the pointer names.",
@@ -1424,13 +1577,13 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "It asked for the value, so the function worked on a copy of the cell and the caller keeps its own.",
+        "It asked for the value, so the function worked on a copy and the caller keeps its own.",
         "It asked for a pointer, so the function should have changed the caller's cell and the bug is in the body.",
         "It asked for the value, so the compiler should have refused the call.",
         "It asked for a pointer, so the compiler should have refused the call."
       ],
       "answer": 0,
-      "explanation": "A parameter written as a plain Amount is a value, and Zig passes values by value, so the function works on a copy and the caller keeps what it had. To change the caller's cell the signature has to ask for the address, written as a star before the type, and the caller has to pass the address of its own value. The other answers each mix the two up: the compiler does not refuse a call that matches the signature, and the signature in the question is a value, not a pointer, so nothing about the call was wrong. The failure this prevents is the quiet one: a function that looks like it changes something and changes nothing.",
+      "explanation": "A plain Amount parameter is a value, and Zig passes values by value, so the function works on a copy and the caller keeps what it had. To change the caller's cell the signature has to ask for the address, written as a star before the type. The other answers mix the two up: this signature asks for a value, and a matching call is not refused.",
       "hints": [
         "Ask what a parameter of that type carries when the function is called, and whether a copy of a number is the same number as the one the caller holds."
       ],
@@ -1476,7 +1629,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "Open src/pointers.zig. setAmount has its signature and a placeholder body; the address is already in the parameter.",
         "The amount is not in the function. It is at the address the pointer names, and a star is how you get at it.",
         "Run zig build test and read the failing test name. The first test wants 42 where 1 was, and the second wants 0 where 42 was.",
-        "Do not return the new amount. The signature says the function returns nothing, because the change happens at the address."
+        "Do not return the new amount. The signature says the function returns nothing, because the change happens at the address.",
+        "The parameter already holds the address, so the only thing left to write is the value that lives there."
       ],
       "misconceptions": [
         "Returning the new amount instead of writing it. The signature says void, and the caller is waiting for its own amount to have changed.",
@@ -1590,6 +1744,21 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/evaluate.zig and make evaluate read the number, the operator and the number of an expression, and do the arithmetic. A text that is not an expression has to come back as error.MalformedExpression. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "error-union",
+        "spec": {
+          "call": "evaluate(\"12 + 30\")",
+          "type": "ParseError!Amount",
+          "value": "the amount 42",
+          "errors": [
+            "error.MalformedExpression",
+            "error.UnknownOperator",
+            "error.DivisionByZero"
+          ],
+          "caught": "error.MalformedExpression"
+        },
+        "caption": "The compiler refuses a call whose error is dropped, so a failure cannot be forgotten three functions down."
+      },
       "hints": [
         "Write down the three failures in the error set before you open the file, and which one of them each can happen for.",
         "An expression is a number, an operator and a number. The parser from the functions phase reads the numbers, and the operator is one byte.",
@@ -1630,12 +1799,12 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "Nothing. The amount is used, and if the function failed the value is whatever the error union held.",
-        "The compiler refuses the call, because the error has not been propagated or handled.",
         "The compiler refuses it, because the error union cannot be used as an amount without being unwrapped.",
+        "The compiler refuses the call, because the error has not been propagated or handled.",
         "The compiler allows it, and the program crashes at run time if the function failed."
       ],
-      "answer": 1,
-      "explanation": "The point of the error union in the return type is that the failure cannot be dropped: a caller has to propagate the error with try, handle it with catch, or name it in its own return type, and a call that does none of those is refused. The third answer is close but describes the wrong reason: the compiler is not complaining about unwrapping the value, it is complaining that the error was never dealt with at all. The fourth answer describes a language that checks at run time what this one checks at compile time, which is how a failure three functions down turns into a wrong total instead of a stack trace.",
+      "answer": 2,
+      "explanation": "The compiler refuses the call because the error was never dealt with: a caller must propagate it with try, handle it with catch, or name it in its own return type. The unwrapping answer is close but wrong: the error, not the value, is what was never dealt with. The crash answer describes a language that checks at run time what this one checks at compile time.",
       "hints": [
         "Ask what the compiler is complaining about: the value, or the error that was never handled."
       ],
@@ -1743,7 +1912,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "Explain why Zig has no default allocator and what a function that allocates takes instead.",
         "Name the two halves of an owning struct in this project and say who frees each.",
         "Predict what the testing allocator says when a function allocates and never gives the memory back.",
-        "Add a row to a sheet that owns its rows, and report how many rows it holds"
+        "Write a row into a sheet that owns its rows, and report how many rows it holds"
       ],
       "lesson": [
         {
@@ -1801,6 +1970,26 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/memory.zig and make addRow ask the sheet's allocator for room and keep the row, and make rowCount report how many rows the sheet holds. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "the memory the sheet owns",
+            "lines": [
+              "the rows it asked for",
+              "freed by its deinit"
+            ]
+          },
+          "after": {
+            "title": "the memory it only points at",
+            "lines": [
+              "a row of text",
+              "nothing to free"
+            ]
+          }
+        },
+        "caption": "Memory a struct owns is freed by its deinit, and memory it only points at is not freed at all, because nothing was copied."
+      },
       "hints": [
         "Write down what a sheet with two rows has to report before you open the file, and who has to give the memory back.",
         "The list is empty at the start and it does not own its memory, so every call that touches it says which allocator it is using.",
@@ -1841,12 +2030,12 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "Nothing. The memory was taken, so the program owns it and the test is done.",
-        "It reports the leak, with the address of the memory that was never given back, and the test run fails.",
-        "It reports a warning, and the test run still passes.",
-        "It fails only if the assertions failed, because a leak is not an assertion."
+        "It reports a warning about the leak, and the test run still passes with every assertion green.",
+        "It fails only if an assertion failed, because a leak is not an assertion at all.",
+        "It reports the leak, with the address of the memory, and the test run fails."
       ],
-      "answer": 1,
-      "explanation": "The testing allocator keeps track of what it handed out, and at the end of the test it reports anything that was never given back, with the address of the leak, and the run fails. That is the point of using it in a test: a leak is a bug the test can find, not a slow death in production. The other answers each describe an allocator that cannot tell, and the fourth one is the confusion that matters most: the assertions and the leak are two different verdicts, and a test run can pass every assertion and still be red because it leaked.",
+      "answer": 3,
+      "explanation": "The testing allocator tracks what it handed out, and at the end of the test it reports anything never given back, with the address of the leak, and the run fails. A leak is a bug the test can find, not an assertion. The other answers describe an allocator that cannot tell. A run can pass every assertion and still be red because it leaked.",
       "hints": [
         "Ask what the testing allocator is for, and what it would have to keep in order to answer that question."
       ],
@@ -1953,12 +2142,12 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "Explain what defer runs and when it runs, and say what it stops you having to remember.",
         "Predict what a function does with a copy it made when the function returns early with an error.",
         "Describe what errdefer is for, and how it differs from a defer that runs on every path.",
-        "Make a copy of a text, report what it measures, and give the copy back"
+        "Build a copy of a text, report what it measures, and give the copy back"
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "The previous phase made a function allocate. Allocating is half of the job: the other half is giving the memory back, and the half that is easy to forget is the half that leaks."
+          "body": "The previous phase made a function allocate. Allocating is half of the job: the other half is giving the memory back, and the half nobody gives back is the half that leaks."
         },
         {
           "kind": "prose",
@@ -2006,6 +2195,18 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/defer.zig and make trimmedLength copy the text, free the copy on the way out, and report the length of the copy once its spaces are gone. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "the scope opens",
+            "defer is written",
+            "the scope ends",
+            "the defer runs"
+          ]
+        },
+        "caption": "A defer runs when the scope it was written in ends, however it ends: on the normal path, on an early return, and on a failure that leaves the scope with an error."
+      },
       "hints": [
         "Write down what trimmedLength(\"  42  \") has to return before you open the file, and what has to happen to the copy before the function returns.",
         "The copy is made with the allocator the caller handed over, and the defer that frees it goes on the line below.",
@@ -2051,7 +2252,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "Neither has to give it back, because the caller never received the pair."
       ],
       "answer": 0,
-      "explanation": "A defer runs whenever the scope ends, so it is the one that gives a copy back on every path out of the function. An errdefer runs only when the scope ends with an error, which makes it the right tool for undoing the half-finished work: the first copy was made, the second was not, and the error is what says the work did not finish. The third answer is a real temptation and it is wrong: a copy the function made is the function's to give back whatever the caller ends up with, and the testing allocator reports the one that was left behind.",
+      "explanation": "A defer runs whenever the scope ends, so it gives a copy back on every path. An errdefer runs only when the scope ends with an error, so it is the tool for undoing half-finished work: the first copy was made, the second was not. The third answer is wrong: a copy the function made is the function's to give back, and the testing allocator reports it.",
       "hints": [
         "Ask which of the two runs on the success path, and which of the two runs on the failure path."
       ],
@@ -2158,7 +2359,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "Explain what a comptime value is and how it differs from a value the program computes.",
         "Describe what a comptime parameter does to the code the compiler keeps.",
         "Explain how a comptime parameter of type type is what makes a function generic.",
-        "Fill in the table of operators and look up the power an operator binds with"
+        "Write the table of operators and look up the power an operator binds with"
       ],
       "lesson": [
         {
@@ -2216,6 +2417,26 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/comptime.zig and fill in the table of operators with the symbols the sheet uses and the power each one binds with, then make bindingPower find the power of an operator. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "at run time",
+            "lines": [
+              "the table is read from memory",
+              "the cost is paid while it runs"
+            ]
+          },
+          "after": {
+            "title": "at comptime",
+            "lines": [
+              "the table is folded into the program",
+              "the cost is paid by the compiler"
+            ]
+          }
+        },
+        "caption": "A value known at comptime is not stored and not computed at run time: it is folded into the program before the program starts."
+      },
       "hints": [
         "Write down the four operators and how tightly each one binds before you open the file. The tests will tell you the order the table is in.",
         "The symbol is a byte, so the operators are written as characters, and the power is a small number: two binds tighter than one.",
@@ -2255,13 +2476,13 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "It keeps one copy of the function for each choice of the parameter, and the call picks the copy it needs.",
-        "It keeps one copy of the function, and the parameter is read out of it at run time.",
+        "It keeps one copy of the function, and the parameter is read out of it at run time by the caller.",
         "It inlines both calls into the program and throws the function away.",
+        "It keeps one copy of the function for each choice of the parameter, and the call picks it.",
         "It refuses the second call, because a comptime parameter may only be given one value."
       ],
-      "answer": 0,
-      "explanation": "A comptime parameter is known while the compiler reads the code, so the compiler makes a copy of the function for each distinct value the callers choose, and each call names the copy it wants. That is why a comptime parameter may not be a runtime value: there would be no copy to pick. The second answer describes a normal parameter, and the third describes an optimization the compiler may or may not do: the copies are still there, and inlining one of them is not what makes the parameter comptime.",
+      "answer": 2,
+      "explanation": "A comptime parameter is known while the compiler reads the code, so the compiler makes a copy of the function for each value. Each call names the copy it wants. That is why it may not be a runtime value: there would be no copy to pick. The run-time answer describes a normal parameter, and the inlining answer describes an optimization: the copies are still there.",
       "hints": [
         "Ask what the compiler would have to do at run time if the parameter were a normal one, and what it does instead."
       ],
@@ -2426,6 +2647,27 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/io.zig and make writeRow write the cells of a row side by side, separated by a tab, and end the row with a newline. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "the function",
+            "lines": [
+              "takes a writer",
+              "writes the row"
+            ]
+          },
+          "after": {
+            "title": "the writer it is given",
+            "lines": [
+              "the screen",
+              "a file",
+              "a buffer the test reads back"
+            ]
+          }
+        },
+        "caption": "The function never knows which writer it was given, and that is why the same function can be tested by reading back what it wrote."
+      },
       "hints": [
         "Write down what the sheet prints for the row 1, 42 before you open the file, and what it prints for a row of one cell.",
         "The cells go one after another with a tab between them, and the row ends with a newline.",
@@ -2465,13 +2707,13 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "Nothing. The test runs the program and reads what it printed.",
-        "The function has to take a writer and write to it, so the test can hand it a writer over a buffer and read the row back.",
-        "The function has to return the row as a text, and the test prints it.",
-        "The function has to take a flag that says whether it is being tested."
+        "Nothing. The test runs the whole program and reads what it printed on the screen instead.",
+        "The function has to return the row as a text, and the test prints it to compare.",
+        "The function has to take a flag that says whether it is being tested.",
+        "The function has to take a writer, so the test can read the row back out of a buffer."
       ],
-      "answer": 1,
-      "explanation": "A function that prints writes to the screen and nowhere else, so the only way to see what it wrote is to run the whole program and read the screen, which is a test of the program rather than of the function. A function that takes a writer writes to whatever writer it is given: the program hands it one that writes to the screen, and the test hands it one that writes to a buffer it can read back. The other answers each move the problem rather than solve it: returning a text moves the formatting to the caller, and a flag that says whether it is being tested is a second code path that only the test uses.",
+      "answer": 3,
+      "explanation": "A function that prints writes to the screen, so seeing what it wrote means running the program: a test of the program, not the function. A function that takes a writer writes to whatever writer it is given: the program gives it one over the screen, the test one over a buffer it can read back. The other answers move the problem, not solve it.",
       "hints": [
         "Ask what a test can read: what the function returned, or what it wrote somewhere the test owns."
       ],
@@ -2640,6 +2882,18 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/selftest.zig and write the assertion the first two tests need, over the function roundTrip in that file. Then run zig build test and read what the Zig test runner said."
         }
       ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "the test block",
+            "the name in front",
+            "the body runs",
+            "the runner reads it"
+          ]
+        },
+        "caption": "The name is not decoration: it is what a failure reports, so it has to say what the check is about."
+      },
       "hints": [
         "Read the name of the test before you write anything in it. The name is the sentence the assertion has to make true.",
         "The function under test is in the same file, and the assertion compares what it gives back with the value you expect.",
@@ -2679,13 +2933,13 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "Nothing about the code. It establishes that the test fails, whatever the code does.",
+        "Nothing about the code: it fails whatever the code does.",
         "That the code under test is broken, because the test says so.",
         "That the assertion is wrong, because the code passed the test before.",
         "That the test runner reports the first failure and stops there."
       ],
       "answer": 0,
-      "explanation": "A test that asserts false fails no matter what the code does, so it establishes nothing about the code and is a test that can never be satisfied. The second answer is the confusion worth naming: a failing test is evidence about the code only when the assertion is a statement about the code, and expect(false) is a statement about nothing. The fourth answer is a fact about the runner but not about this test: the runner does keep going after a failure and report every one of them, so a suite of tests like this reports a wall of red lines rather than one.",
+      "explanation": "A test that asserts false fails whatever the code does, so it establishes nothing about the code and can never be satisfied. A failing test is evidence about the code only when the assertion is about the code, and expect(false) is a statement about nothing. The fourth answer is about the runner, not about this test: the runner keeps going after a failure and reports every one.",
       "hints": [
         "Ask what the assertion says about the function it calls, and then ask what would have to change for the test to pass."
       ],
@@ -2775,7 +3029,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "hints": [],
       "misconceptions": [
         "Copying the first assertion and changing nothing. The two functions are different, and the assertion has to be about the one under test.",
-        "Skipping the short number because it looks easy. One digit is the case where a parser that reads pairs of digits breaks."
+        "Skipping the short number because it looks like it cannot break anything. One digit is the case where a parser that reads pairs of digits breaks."
       ]
     },
     "zig-audit-learn": {
@@ -2810,11 +3064,19 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The honesty rule of this phase is about the third case. A grid with no numbers in it has no largest amount. That is not the same as a largest amount of zero, and the report has to say which of the two it is. A tool that prints a number where there is none has claimed something it did not establish, and a reader who trusts it will be wrong about a grid they can see."
+          "body": "The honesty rule of this phase is about the third case. A grid with no numbers in it has no largest amount. That is not the same as a largest amount of zero, and the report has to say which of the two it is."
         },
         {
           "kind": "prose",
-          "body": "The tools are the ones this course built. The rows come from the file, the cells of a row are cut out by the function in the memory phase, the amount of a cell comes from the optionals phase, and the report is written through a writer. Nothing new has to be learned here, which is the point: this phase is about putting what you know to work on a question you have not been told the answer to."
+          "body": "A tool that prints a number where there is none has claimed something it did not establish, and a reader who trusts it will be wrong about a grid they can see."
+        },
+        {
+          "kind": "prose",
+          "body": "The tools are the ones this course built. The rows come from the file, the cells of a row are cut out by the function in the memory phase, the amount of a cell comes from the optionals phase, and the report is written through a writer."
+        },
+        {
+          "kind": "prose",
+          "body": "Nothing new has to be learned here, which is the point: this phase is about putting what you know to work on a question you have not been told the answer to."
         },
         {
           "kind": "example",
@@ -2845,6 +3107,26 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "body": "Open src/audit.zig and make the program read the grid it is given and report how many of its cells hold a number, and the largest of those numbers. Then run zig build audit -- sheet.txt and read what it printed. The check reads the same lines."
         }
       ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "a grid with numbers",
+            "lines": [
+              "the count is 3",
+              "the largest is 42"
+            ]
+          },
+          "after": {
+            "title": "a grid with none",
+            "lines": [
+              "the count is 0",
+              "there is no largest"
+            ]
+          }
+        },
+        "caption": "A count of zero is not a largest amount of zero. A tool that prints a number where there is none has claimed something it did not establish."
+      },
       "hints": [
         "Write down what the report has to say for the grid 1, 42, =1 + 2, =3 * 4, 7, notes before you open the file.",
         "The grid comes from the command line, the same way the sheet program reads it, and the cells of a row are cut out by the function in the memory phase.",
@@ -2855,6 +3137,16 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "Printing a largest amount of zero for a grid with no amounts in it. The count is zero and the largest is not there, and the report has to say which is which.",
         "Counting the cells that hold an expression as well. An expression holds a number only once it has been evaluated, and the audit is counting amounts.",
         "Judging the grid yourself and printing the answer. The report is only worth anything if the program worked it out."
+      ],
+      "resources": [
+        {
+          "label": "Zig language reference: the standard library",
+          "url": "https://ziglang.org/documentation/master/#Zig-Standard-Library"
+        },
+        {
+          "label": "Zig build system guide: running a program",
+          "url": "https://ziglang.org/learn/build-system/"
+        }
       ]
     },
     "zig-audit-ask": {
@@ -2875,12 +3167,12 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "Nothing. A count of zero and a largest of zero are the same fact said twice.",
-        "That the largest amount in the grid is zero, when the grid has no amounts in it at all.",
         "That the grid was read twice, once for the count and once for the largest.",
-        "That the grid is empty, rather than holding two cells that are not numbers."
+        "That the grid is empty, rather than holding two cells that are not numbers.",
+        "That the largest amount in the grid is zero, when it has no amounts at all."
       ],
-      "answer": 1,
-      "explanation": "The count of zero is established: no cell holds a number. The largest amount is not established at all, because there is no largest amount in a grid with no amounts, and printing a zero for it claims a fact about the grid that is false. A reader who takes the report at its word will believe the grid contains an amount of zero, and there is nothing in the grid to support that. The other answers each describe a report that is either correct and merely redundant, or a report about something other than the amount.",
+      "answer": 3,
+      "explanation": "The count of zero is established: no cell holds a number. The largest amount is not established at all, because a grid with no amounts has no largest amount, and a zero printed for it claims a fact that is false. The other answers describe a report that is correct but redundant, or about something other than the amount.",
       "hints": [
         "Ask what the two numbers mean, and whether they mean the same thing in every grid."
       ],

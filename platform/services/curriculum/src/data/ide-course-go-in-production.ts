@@ -116,8 +116,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-json-learn",
-        "go-json-do",
         "go-json-ask",
+        "go-json-do",
         "go-json-review"
       ],
       "interviewQuestions": [
@@ -228,7 +228,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-tests",
       "title": "Testing: tables, subtests, and httptest",
-      "goal": "Write code against a suite you cannot rewrite. A hidden, table-driven test is the machine-checkable definition of correct behaviour here: it pins every band of a grader through a slice of cases run under t.Run subtests, and it checks an HTTP handler over a real loopback listener with httptest. Your job is the implementation that survives such a suite — boundaries exact, the out-of-range case refused, the status and the body both right — and the literacy to know that coverage counts what ran, never what you actually asserted.",
+      "goal": "Write code against a suite you cannot rewrite. A hidden, table-driven test is the machine-checkable definition of correct behaviour here: it pins every band of a grader through a slice of cases run under t.Run subtests, and it checks an HTTP handler over a real loopback listener with httptest. Your job is the implementation that survives such a suite, boundaries exact, the out-of-range case refused, the status and the body both right, and the literacy to know that coverage counts what ran, never what you actually asserted.",
       "level": 3,
       "authored": true,
       "project": "go-ledger",
@@ -242,13 +242,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "What makes a Go test table-driven, and why is one slice of cases plus a loop better than a separate test function for every input?",
         "How do t.Run subtests change what a failure tells you, and what do they cost once a table has hundreds of rows?",
         "Why test an http.Handler with httptest.NewServer instead of calling it directly with a hand-rolled ResponseWriter, and what does t.Cleanup protect you from?",
-        "Go reports coverage as the percentage of statements a suite executed — give an example of a test at 100 percent coverage that still fails to catch a bug."
+        "Go reports coverage as the percentage of statements a suite executed, give an example of a test at 100 percent coverage that still fails to catch a bug."
       ]
     },
     {
       "id": "go-perf",
       "title": "Performance: the cost of a line",
-      "goal": "Ship the function a senior ships. Two implementations can both be correct and one of them is a landmine that only goes off at real size: building a string with += in a loop copies everything gathered so far each turn, so it is O(n^2), while a single-pass build is O(n). This phase makes that cost something you see rather than guess — the standard library as the senior one-liner, sizing a slice when you already know its length, and measuring with benchmarks, AllocsPerRun, and pprof instead of trusting a hunch.",
+      "goal": "Ship the function a senior ships. Two implementations can both be correct and one of them is a landmine that only goes off at real size: building a string with += in a loop copies everything gathered so far each turn, so it is O(n^2), while a single-pass build is O(n). This phase makes that cost something you see rather than guess, the standard library as the senior one-liner, sizing a slice when you already know its length, and measuring with benchmarks, AllocsPerRun, and pprof instead of trusting a hunch.",
       "level": 3,
       "authored": true,
       "project": "go-ledger",
@@ -268,7 +268,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-store",
       "title": "Data modeling: what the ledger refuses",
-      "goal": "A data model is not the shape of the happy path, it is the set of states you have decided are representable. This phase moves the rules to the one seam every writer shares — the store — so a handler, a migration and a seed script are all held to the same contract: a record with nothing naming it is refused by name, the same id cannot be stored twice, and a refusal changes nothing at all.",
+      "goal": "A data model is not the shape of the happy path, it is the set of states you have decided are representable. This phase moves the rules to the one seam every writer shares, the store, so a handler, a migration and a seed script are all held to the same contract: a record with nothing naming it is refused by name, the same id cannot be stored twice, and a refusal changes nothing at all.",
       "level": 3,
       "authored": true,
       "project": "go-ledger",
@@ -280,7 +280,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "interviewQuestions": [
         "Where does the validation of a stored record belong, and why not only in the handler that first receives it?",
-        "What does a store owe a caller when it refuses a record — a panic, a silent drop, or an error that names the field?",
+        "What does a store owe a caller when it refuses a record, a panic, a silent drop, or an error that names the field?",
         "Why must a refused record leave the store exactly as it was, and what makes a half-stored write worse than a rejected one?"
       ]
     },
@@ -293,8 +293,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-persist",
       "activities": [
         "go-db-learn",
-        "go-db-do",
         "go-db-ask",
+        "go-db-do",
         "go-db-review"
       ],
       "interviewQuestions": [
@@ -319,13 +319,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "interviewQuestions": [
         "What does a TTL actually promise, and what refreshing it on every read do to that promise?",
         "Why does singleflight still need a mutex around the map, and what exactly does each of them protect?",
-        "Who should invalidate — every write path or the cache, and what does each choice cost when one of them forgets?"
+        "Who should invalidate, every write path or the cache, and what does each choice cost when one of them forgets?"
       ]
     },
     {
       "id": "go-resilience",
       "title": "Resilience: retries, backoff, and failing fast",
-      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes — so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
+      "goal": "A backend that assumes the network, the database, and the downstream service all work is a backend that falls over the first time they do. This phase makes you write for the failure: retry a flaky operation a bounded number of times, stop the instant it succeeds instead of hammering it further, and surface the last error when it never recovers rather than swallowing it into a clean-looking nil. The judgement is a hidden suite that counts every call your retry makes, so an implementation that loops one time too many, or that returns success after exhausting its attempts, fails on the arithmetic of attempts and the identity of the error, not just on the happy path. Along the way you learn why a retry must also grow its wait, so that a service already on fire is not poured over by every client at once.",
       "level": 3,
       "authored": true,
       "project": "go-ledger",
@@ -345,7 +345,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-ops",
       "title": "Operations: what the running service admits",
-      "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest — the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
+      "goal": "Code that runs somewhere else answers questions a supervisor asks in machine-readable form: is this instance ready to take traffic (a status code, and an empty list when nothing is wrong), and did this run die (an exit code that is nonzero for every failure, including the ones nobody enumerated). This phase makes both answers honest, the health output names the dependency and never repeats how to reach it, and a failure class nobody remembered still stops the process.",
       "level": 3,
       "authored": true,
       "project": "go-ledger",
@@ -370,8 +370,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "project": "go-ledger",
       "activities": [
         "go-logging-learn",
-        "go-logging-do",
         "go-logging-ask",
+        "go-logging-do",
         "go-logging-review"
       ],
       "interviewQuestions": [
@@ -402,7 +402,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-ship",
       "title": "Ship: containers and the pipeline that proves it",
-      "goal": "Your machine builds your code because it holds a toolchain you installed and modules you already downloaded; none of that travels. This phase makes the build itself portable — a Dockerfile that compiles in one stage and ships from another, so the artifact is identical everywhere, and a pipeline that re-runs the same commands in a clean room on every push. The lab judges at two altitudes: the file structure is linted on every machine, and when a Docker daemon answers the image is really built and the suite really runs inside it — while a machine without one says so plainly and still gets every file check. Missing infrastructure is never a verdict about your work; a runtime image that ships its toolchain always is.",
+      "goal": "Your machine builds your code because it holds a toolchain you installed and modules you already downloaded; none of that travels. This phase makes the build itself portable, a Dockerfile that compiles in one stage and ships from another, so the artifact is identical everywhere, and a pipeline that re-runs the same commands in a clean room on every push. The lab judges at two altitudes: the file structure is linted on every machine, and when a Docker daemon answers the image is really built and the suite really runs inside it, while a machine without one says so plainly and still gets every file check. Missing infrastructure is never a verdict about your work; a runtime image that ships its toolchain always is.",
       "level": 3,
       "authored": true,
       "project": "go-ledger",
@@ -421,7 +421,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
     {
       "id": "go-incident",
       "title": "Debugging, for real",
-      "goal": "Until now the broken apps in this course were models you investigated on paper. This one is your own code: a journal whose flush silently drops the last buffered entry, a suite that is red on arrival, and no list of candidate fixes to pick from. Run the suite, read the failure, form a hypothesis before you touch the code, cite the evidence your fix rests on, then make the real suite green. What is judged is the run — and the order of your reasoning.",
+      "goal": "Until now the broken apps in this course were models you investigated on paper. This one is your own code: a journal whose flush silently drops the last buffered entry, a suite that is red on arrival, and no list of candidate fixes to pick from. Run the suite, read the failure, form a hypothesis before you touch the code, cite the evidence your fix rests on, then make the real suite green. What is judged is the run, and the order of your reasoning.",
       "level": 3,
       "project": "go-ledger",
       "authored": true,
@@ -429,7 +429,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "lab-journal-loss"
       ],
       "interviewQuestions": [
-        "When a suite is red on arrival, what do you read first — the failing assertion, or the code it points at?",
+        "When a suite is red on arrival, what do you read first, the failing assertion, or the code it points at?",
         "Why is a hypothesis recorded before the edit worth more than an explanation written after the suite went green?",
         "What does a green regression check that was green from the start protect you from?",
         "How do you tell the difference between a fix and a lucky edit that happened to satisfy the tests?"
@@ -438,7 +438,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
     {
       "id": "incident-labs",
       "title": "Debugging labs",
-      "goal": "Three broken apps you investigate rather than run: read the symptom, log, and failing tests, record a hypothesis, then choose the fix that resolves the real cause without a regression. The process is what is judged — a hypothesis must come before the fix. Each lab carries the arc itself: the report frames it, the hypothesis and fix are the work, and the verdict on your own event order is the review.",
+      "goal": "Three broken apps you investigate rather than run: read the symptom, log, and failing tests, record a hypothesis, then choose the fix that resolves the real cause without a regression. The process is what is judged: a hypothesis must come before the fix. Each lab carries the arc itself: the report frames it, the hypothesis and fix are the work, and the verdict on your own event order is the review.",
       "level": 3,
       "authored": true,
       "activities": [
@@ -451,13 +451,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "How do you tell a fix that addresses the root cause from one that only hides the symptom?",
         "Why can a fix that makes the test pass still be the wrong fix?",
         "How do you prove you understood a bug rather than stumbled onto a change that worked?",
-        "When a dependency gets slow, what decides how much of your load you keep sending at it — and what should stop it?"
+        "When a dependency gets slow, what decides how much of your load you keep sending at it, and what should stop it?"
       ]
     },
     {
       "id": "design-labs",
       "title": "Design labs",
-      "goal": "Take a concern you have already built in code and design it: decide where state that must survive a reload actually lives, defend the choice against a store that is unreachable, and read your own graph back as an architecture rather than a picture. Judged by the Studio rubric over the graph you draw — no test suite runs here. Each lab carries the arc itself: the brief frames it, the graph and its rationale are the work, and reading the rubric back is the review.",
+      "goal": "Take a concern you have already built in code and design it: decide where state that must survive a reload actually lives, defend the choice against a store that is unreachable, and read your own graph back as an architecture rather than a picture. Judged by the Studio rubric over the graph you draw. No test suite runs here. Each lab carries the arc itself: the brief frames it, the graph and its rationale are the work, and reading the rubric back is the review.",
       "level": 3,
       "authored": true,
       "activities": [
@@ -469,7 +469,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "What is the difference between state that is fast to show and state that is safe to lose?",
         "How would you design a reload so that acknowledged work can never vanish, even if the page closes?",
         "Why route every read and write through one service instead of letting the app touch the store directly?",
-        "When the durable store is unreachable, what should the app show — and what must it never claim?",
+        "When the durable store is unreachable, what should the app show, and what must it never claim?",
         "When is a stale read the right answer, and what must be declared before you are allowed to serve one?"
       ]
     }
@@ -493,7 +493,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A goroutine is any function you start with the go keyword: go work(). It runs on its own, concurrently with the code that started it. The safe way for goroutines to cooperate is a channel — a typed pipe you send values into and receive them out of — so the sharing is done by passing values, not by both sides poking one variable."
+          "body": "A goroutine is any function you start with the go keyword: go work(). It runs on its own, concurrently with the code that started it. The safe way for goroutines to cooperate is a channel, a typed pipe you send values into and receive them out of, so the sharing is done by passing values, not by both sides poking one variable."
         },
         {
           "kind": "example",
@@ -502,7 +502,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "prose",
-          "body": "make(chan int) opens an unbuffered channel: a send waits until a receiver is ready, and the other way round. That handoff is the synchronisation — once FanSum has received n values it knows all n goroutines have sent, so it can stop counting. No sleep, no guessing."
+          "body": "make(chan int) opens an unbuffered channel: a send waits until a receiver is ready, and the other way round. That handoff is the synchronisation, once FanSum has received n values it knows all n goroutines have sent, so it can stop counting. No sleep, no guessing."
         },
         {
           "kind": "keypoints",
@@ -529,12 +529,12 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "FanSum must launch n goroutines with the go keyword, not add the numbers in the loop that starts them. If go is command not found, run the environment check first.",
+        "FanSum must launch n goroutines with the go keyword, not add the numbers in the loop that starts them. If the terminal says go is not found, run the environment check first.",
         "A send on an unbuffered channel blocks until someone receives, so a loop that reads n values needs no WaitGroup."
       ],
       "misconceptions": [
-        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
-        "Believing a goroutine sends the value you meant — it reads the variable when it runs, so anything the loop changes after that is what arrives. Passing the index in as an argument pins it."
+        "Adding to a shared total from inside each goroutine instead of sending the value down the channel; that is sharing memory, not communicating.",
+        "Believing a goroutine sends the value you meant; it reads the variable when it runs, so anything the loop changes after that is what arrives. Passing the index in as an argument pins it."
       ],
       "visualization": {
         "type": "goroutine-timeline",
@@ -604,13 +604,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "A send only completes when a receive takes the value, so five receives prove five sends."
       ],
       "answer": 3,
-      "explanation": "An unbuffered channel is a rendezvous: a send blocks until a receiver is ready to take that exact value, and the sender only proceeds after the handoff. Five receives therefore cannot all complete unless five sends handed over a value, so reading the expected count is itself the wait — no WaitGroup or timer needed. A buffered channel is different: sends could finish into the buffer before anyone read, so a completed send would no longer prove a receive happened.",
+      "explanation": "An unbuffered channel is a rendezvous: a send blocks until a receiver takes that value, and proceeds only after the handoff. Five receives cannot all complete unless five sends handed over a value, so reading the expected count is itself the wait. A buffered channel differs: a send could finish into the buffer before anyone read, so it no longer proves a receive.",
       "hints": [
-        "Ask what a send waits for on an unbuffered channel — the answer is a receiver."
+        "Ask what a send waits for on an unbuffered channel, the answer is a receiver."
       ],
       "misconceptions": [
-        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
-        "Believing a goroutine sends the value you meant — it reads the variable when it runs, so anything the loop changes after that is what arrives."
+        "Adding to a shared total from inside each goroutine instead of sending the value down the channel; that is sharing memory, not communicating.",
+        "Believing a goroutine sends the value you meant; it reads the variable when it runs, so anything the loop changes after that is what arrives."
       ]
     },
     "go-goroutines-do": {
@@ -624,7 +624,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-goroutines"
       ],
       "files": [
-        "chan.go"
+        "chan.go",
+        "chan_test.go",
+        "test/chan.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/chan.test.mjs",
       "checks": [
@@ -662,8 +664,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "FanSum(0) starts nothing and receives nothing, so it must return 0."
       ],
       "misconceptions": [
-        "Adding to a shared total from inside each goroutine instead of sending the value down the channel — that is sharing memory, not communicating.",
-        "Believing a goroutine sends the value you meant — it reads the variable when it runs, so anything the loop changes after that is what arrives."
+        "Adding to a shared total from inside each goroutine instead of sending the value down the channel; that is sharing memory, not communicating.",
+        "Believing a goroutine sends the value you meant; it reads the variable when it runs, so anything the loop changes after that is what arrives."
       ]
     },
     "go-goroutines-review": {
@@ -677,7 +679,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-goroutines"
       ],
       "files": [
-        "merge.go"
+        "merge.go",
+        "merge_test.go",
+        "test/merge.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/merge.test.mjs",
       "checks": [
@@ -695,13 +699,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "empty inputs merge to zero"
           ],
-          "feedback": "MergeSum(nil,nil) is 0. Two goroutines each send a sum of 0, and adding them gives 0 — both sends still happen and both must be read. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "MergeSum(nil,nil) is 0. Two goroutines each send a sum of 0, and adding them gives 0, both sends still happen and both must be read. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Reusing one goroutine for both slices — MergeSum needs two senders, one per half, each sending its own total.",
+        "Reusing one goroutine for both slices. MergeSum needs two senders, one per half, each sending its own total.",
         "Reading a fixed value instead of draining exactly two receives, so a missing sender would hang the read forever."
       ]
     },
@@ -721,18 +725,18 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-sync"
       ],
       "hints": [
-        "Bump adds m to one shared count from n goroutines; without a lock two increments can read the same value and one is lost. If go is command not found, run the environment check first.",
-        "You must wait for all goroutines with a WaitGroup before reading the count, or you read it too early. If the suite cannot run because `node` is command not found, run the environment check first."
+        "Bump adds m to one shared count from n goroutines; without a lock two increments can read the same value and one is lost. If the terminal says go is not found, run the environment check first.",
+        "You must wait for all goroutines with a WaitGroup before reading the count, or you read it too early. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Assuming += on a shared int is atomic — it is read-modify-write, so concurrent increments lose updates and the total comes in low.",
+        "Assuming += on a shared int is atomic; it is read-modify-write, so concurrent increments lose updates and the total comes in low.",
         "Reading the result before the goroutines finish: starting work is not the same as waiting for it to complete.",
-        "Writing defer wg.Done() in a loop and expecting Wait to move on — each Done is saved up until the enclosing function returns."
+        "Writing defer wg.Done() in a loop and expecting Wait to move on, each Done is saved up until the enclosing function returns."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Channels shine when each goroutine produces its own value. But sometimes a single piece of state really is shared — one counter that everyone bumps. Two goroutines doing count++ at once can both read the old value and write back the same new one, silently losing an update. That is a data race, and the fix is to take turns."
+          "body": "Channels shine when each goroutine produces its own value. But sometimes a single piece of state really is shared, one counter that everyone bumps. Two goroutines doing count++ at once can both read the old value and write back the same new one, silently losing an update. That is a data race, and the fix is to take turns."
         },
         {
           "kind": "example",
@@ -831,7 +835,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "A race is not a crash: the count still holds an int, it is just the wrong int."
       ],
       "misconceptions": [
-        "Assuming += on a shared int is atomic — it is read-modify-write, so concurrent increments lose updates and the total comes in low.",
+        "Assuming += on a shared int is atomic; it is read-modify-write, so concurrent increments lose updates and the total comes in low.",
         "Reading the result before the goroutines finish: starting work is not the same as waiting for it to complete."
       ],
       "lesson": [
@@ -841,13 +845,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "Fewer than 400, because unlocked read-modify-write races lose updates — nothing crashes.",
+        "Fewer than 400, because read-modify-write races with no lock lose updates, nothing crashes.",
         "Exactly 400, because Go runs each goroutine to completion one at a time, so no write is ever interleaved.",
         "A panic, because two goroutines wrote the same variable without a mutex and the runtime detects it.",
         "Always 0, because the goroutines never get a chance to run before Wait returns to the caller."
       ],
       "answer": 0,
-      "explanation": "count++ is really a load, an add, and a store. With no lock two goroutines can both load the same old value and each store old+1, so one bump vanishes. Nothing crashes — the memory is valid — yet the total lands short and, worse, varies run to run. The WaitGroup only guarantees you read after everyone finished; it does not make the increments themselves safe. That is why the mutex, or an atomic add, is required on top of the wait."
+      "explanation": "count++ is a load, an add, and a store. With no lock two goroutines can both load the same old value and each store old+1, so one bump vanishes. Nothing crashes, the memory is valid, yet the total lands short and varies run to run. The WaitGroup makes the read safe, not the increments, so a mutex or an atomic add is still required."
     },
     "go-sync-do": {
       "id": "go-sync-do",
@@ -862,16 +866,18 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "hints": [
         "The file to change is counter.go, which owns Bump: declare a sync.Mutex, a shared count, and a sync.WaitGroup inside it. Run go test ./... and read the name of the test that failed.",
         "Before each go call wg.Add(1); inside the goroutine defer wg.Done().",
-        "Wrap the increment: mu.Lock(); count++; mu.Unlock() — the mutex keeps every bump.",
+        "Wrap the increment: mu.Lock(); count++; mu.Unlock(), the mutex keeps every bump.",
         "Call wg.Wait() after starting all n goroutines and before you return count.",
-        "The total is always n*m, so Bump(4,100) is 400 and Bump(0,5) is 0. If the suite cannot run because `node` is command not found, run the environment check first."
+        "The total is always n*m, so Bump(4,100) is 400 and Bump(0,5) is 0. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Assuming += on a shared int is atomic — it is read-modify-write, so concurrent increments lose updates and the total comes in low.",
+        "Assuming += on a shared int is atomic; it is read-modify-write, so concurrent increments lose updates and the total comes in low.",
         "Reading the result before the goroutines finish: starting work is not the same as waiting for it to complete."
       ],
       "files": [
-        "counter.go"
+        "counter.go",
+        "counter_test.go",
+        "test/counter.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/counter.test.mjs",
       "checks": [
@@ -914,11 +920,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Reaching for a full Mutex when a single counter is all you share — atomic.AddInt64 guards that one update with far less ceremony.",
-        "Reading the total with a plain load while other goroutines may still be adding — finish with Wait, then Load once."
+        "Reaching for a full Mutex when a single counter is all you share, atomic.AddInt64 guards that one update with far less ceremony.",
+        "Reading the total with a plain load while other goroutines may still be adding, finish with Wait, then Load once."
       ],
       "files": [
-        "atomic.go"
+        "atomic.go",
+        "atomic_test.go",
+        "test/atomic.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/atomic.test.mjs",
       "checks": [
@@ -936,7 +944,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "no numbers sum to zero"
           ],
-          "feedback": "ParallelAdd([]) is 0. Both chunks are empty, nothing is added, and the atomic total loads as its zero value. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "ParallelAdd([]) is 0. Both chunks are empty, nothing is added, and the atomic total loads as its zero value. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ]
@@ -974,7 +982,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "kind": "quickcheck",
           "body": "Who owns close(jobs), and why does closing the channel end the workers' range?",
           "items": [
-            "The sender, after the last send — close ends every range.",
+            "The sender, after the last send, close ends every range.",
             "Any worker, as soon as it finds the channel has gone quiet.",
             "Nobody: each worker stops when the queue happens to run dry.",
             "The collector, once it has read every partial result back."
@@ -1007,12 +1015,12 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Start workers goroutines that each range a jobs channel into a local partial, then send that partial on a results channel. If go is command not found, run the environment check first.",
-        "Send every element on jobs, close it, wait for all workers, close results, then sum results. If the suite cannot run because node is command not found, run the environment check first."
+        "Start workers goroutines that each range a jobs channel into a local partial, then send that partial on a results channel. If the terminal says go is not found, run the environment check first.",
+        "Send every element on jobs, close it, wait for all workers, close results, then sum results. If the suite cannot run because the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Closing the jobs channel before every value is sent — the remaining sends then panic on a closed channel and workers stop early.",
-        "Summing into one shared total from every worker without a lock — that is a data race; send partials on a channel instead."
+        "Closing the jobs channel before every value is sent, the remaining sends then panic on a closed channel and workers stop early.",
+        "Summing into one shared total from every worker without a lock; that is a data race; send partials on a channel instead."
       ],
       "visualization": {
         "type": "goroutine-timeline",
@@ -1098,13 +1106,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Because Go always hands the first job to the first goroutine it started, so the split never really changes between runs."
       ],
       "answer": 2,
-      "explanation": "The union of values across all workers is always the full input: every send goes to exactly one waiting reader, and the workers together drain the channel before it closes. Summing each partial reproduces the total, so the split changes only which worker holds which share, not the grand sum. This is why range-and-close is safe: it partitions without double-counting or dropping. The other options invent a fixed order or a magic inside the channel that does not exist.",
+      "explanation": "The union of values across all workers is always the full input: every send goes to exactly one waiting reader, and the workers drain the channel before it closes. Summing each partial reproduces the total, so the split changes only who holds which share. Range-and-close is safe because it partitions without double-counting or dropping. The other options invent a fixed order or a magic in the channel.",
       "hints": [
         "Adding is associative, so the total does not care how the terms are grouped among workers."
       ],
       "misconceptions": [
-        "Closing the jobs channel before every value is sent — the remaining sends then panic on a closed channel and workers stop early.",
-        "Summing into one shared total from every worker without a lock — that is a data race; send partials on a channel instead."
+        "Closing the jobs channel before every value is sent, the remaining sends then panic on a closed channel and workers stop early.",
+        "Summing into one shared total from every worker without a lock; that is a data race; send partials on a channel instead."
       ]
     },
     "go-concur-do": {
@@ -1118,7 +1126,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-concur"
       ],
       "files": [
-        "pool.go"
+        "pool.go",
+        "pool_test.go",
+        "test/pool.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/pool.test.mjs",
       "checks": [
@@ -1153,11 +1163,11 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Every worker ranges over jobs, adding each value to its partial, and sends that partial on results once jobs closes.",
         "Feed the jobs channel from nums, then close(jobs) so the workers finish their ranges.",
         "Use a WaitGroup to know when all workers have sent, then close(results) from a goroutine that waits.",
-        "Range results and add the partials; an empty nums gives 0, and one worker with one job gives that job. If the suite cannot run because node is command not found, run the environment check first."
+        "Range results and add the partials; an empty nums gives 0, and one worker with one job gives that job. If the suite cannot run because the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Closing the jobs channel before every value is sent — the remaining sends then panic on a closed channel and workers stop early.",
-        "Summing into one shared total from every worker without a lock — that is a data race; send partials on a channel instead."
+        "Closing the jobs channel before every value is sent, the remaining sends then panic on a closed channel and workers stop early.",
+        "Summing into one shared total from every worker without a lock; that is a data race; send partials on a channel instead."
       ]
     },
     "go-concur-review": {
@@ -1171,7 +1181,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-concur"
       ],
       "files": [
-        "pipeline.go"
+        "pipeline.go",
+        "pipeline_test.go",
+        "test/pipeline.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/pipeline.test.mjs",
       "checks": [
@@ -1197,14 +1209,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "no values from either producer total zero"
           ],
-          "feedback": "RangeSum(0, 0) is 0. Both loops run zero times, the WaitGroup still closes the channel, and the range finishes immediately with nothing added. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "RangeSum(0, 0) is 0. Both loops run zero times, the WaitGroup still closes the channel, and the range finishes immediately with nothing added. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Starting the producers but closing the channel before they finish — a producer sending on a closed channel panics, so wait for both, then close.",
-        "Ranging the shared channel forever because nobody closes it — without a close the collector blocks on the receive and never returns."
+        "Starting the producers but closing the channel before they finish, a producer sending on a closed channel panics, so wait for both, then close.",
+        "Ranging the shared channel forever because nobody closes it, without a close the collector blocks on the receive and never returns."
       ]
     },
     "go-context-learn": {
@@ -1232,6 +1244,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         {
           "kind": "prose",
           "body": "A goroutine that nobody can stop is a leak waiting to happen. Go passes a context.Context as the first argument to functions that might block, so the caller can say enough. The context carries a Done channel that closes the moment the caller cancels or a deadline passes, plus the deadline itself and any request-scoped values."
+        },
+        {
+          "kind": "prose",
+          "body": "This phase runs Go, so Go has to be on the machine: it comes from https://go.dev/dl, and the suite the Run button calls is a small Node wrapper around go test. If the terminal says go is not found, install Go from that page and run the environment check before you open a file."
+        },
+        {
+          "kind": "prose",
+          "body": "This course works in the Go Ledger project, at NEXORA/Go-Ledger in your home folder. The Go course opens on this phase, so this is where that folder is made, and the files this phase names are inside it."
         },
         {
           "kind": "example",
@@ -1267,12 +1287,12 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "A cancelled or timed-out context closes its Done channel, so select on <-ctx.Done() against <-time.After(d). If go is command not found, run the environment check first.",
+        "A cancelled or timed-out context closes its Done channel, so select on <-ctx.Done() against <-time.After(d). If the terminal says go is not found, run the environment check first.",
         "Return ctx.Err() when Done wins and nil when the timer wins; the deadline case needs the real DeadlineExceeded error."
       ],
       "misconceptions": [
-        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
-        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+        "Thinking cancel() stops a goroutine by force; it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout, skipping it holds the parent timer alive until the deadline actually fires."
       ]
     },
     "go-context-ask": {
@@ -1298,13 +1318,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "context.Canceled, because a deadline is just another name for a manual cancel of the same context."
       ],
       "answer": 1,
-      "explanation": "WithTimeout derives a context that cancels itself when the deadline passes, and that cancellation closes Done. WaitCtx selects on Done against the 50 ms timer, so after 1 ms the Done branch is ready first and it returns ctx.Err, which reads context.DeadlineExceeded rather than context.Canceled. The wait is abandoned early instead of running to completion; returning nil would ignore the caller giving up, and nothing panics because a deadline is perfectly ordinary.",
+      "explanation": "WithTimeout derives a context that cancels itself when the deadline passes, and that cancellation closes Done. WaitCtx selects on Done against the 50 ms timer, so after 1 ms the Done branch is ready and it returns ctx.Err, which reads context.DeadlineExceeded rather than context.Canceled. The wait is abandoned early; returning nil would ignore the caller giving up, and nothing panics because a deadline is ordinary.",
       "hints": [
         "A deadline is a timer that cancels the context for you; ctx.Err then reads DeadlineExceeded, not Canceled."
       ],
       "misconceptions": [
-        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
-        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+        "Thinking cancel() stops a goroutine by force; it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout, skipping it holds the parent timer alive until the deadline actually fires."
       ]
     },
     "go-context-do": {
@@ -1318,7 +1338,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-context"
       ],
       "files": [
-        "ctxwork.go"
+        "ctxwork.go",
+        "ctxwork_test.go",
+        "test/ctxwork.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ctxwork.test.mjs",
       "checks": [
@@ -1353,11 +1375,11 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "When <-ctx.Done() is ready, return ctx.Err() so the caller can tell cancel from timeout.",
         "When <-time.After(d) is ready, the wait finished on schedule: return nil.",
         "A pre-cancelled context makes Done fire immediately, so WaitCtx returns an error without waiting the full 50 ms.",
-        "With a 1 ms deadline against a 50 ms wait, the Done branch wins and ctx.Err() is context.DeadlineExceeded. If the suite cannot run because node is command not found, run the environment check first."
+        "With a 1 ms deadline against a 50 ms wait, the Done branch wins and ctx.Err() is context.DeadlineExceeded. If the suite cannot run because the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Thinking cancel() stops a goroutine by force — it only closes Done, so the work must select on it and return on its own.",
-        "Ignoring the cancel function returned by WithTimeout — skipping it holds the parent timer alive until the deadline actually fires."
+        "Thinking cancel() stops a goroutine by force; it only closes Done, so the work must select on it and return on its own.",
+        "Ignoring the cancel function returned by WithTimeout, skipping it holds the parent timer alive until the deadline actually fires."
       ]
     },
     "go-context-review": {
@@ -1371,7 +1393,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-context"
       ],
       "files": [
-        "ctxprop.go"
+        "ctxprop.go",
+        "ctxprop_test.go",
+        "test/ctxprop.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ctxprop.test.mjs",
       "checks": [
@@ -1395,8 +1419,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Assuming every context has a deadline — context.Background carries none, so ctx.Deadline reports ok as false.",
-        "Reading the deadline time without checking the ok flag first — when there is no deadline the time is the zero value, not a real bound."
+        "Assuming every context has a deadline, context.Background carries none, so ctx.Deadline reports ok as false.",
+        "Reading the deadline time without checking the ok flag first, when there is no deadline the time is the zero value, not a real bound."
       ]
     },
     "go-pipeline-learn": {
@@ -1460,7 +1484,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Each stage gets its own channel: the goroutine sends its result on it and the next stage receives from it. If go is command not found, run the environment check first.",
+        "Each stage gets its own channel: the goroutine sends its result on it and the next stage receives from it. If the terminal says go is not found, run the environment check first.",
         "Start the goroutine for a stage, then read its result off the channel you gave it, and feed that result to the next stage."
       ],
       "misconceptions": [
@@ -1535,7 +1559,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "The whole chain is restarted from the first stage with a fresh value."
       ],
       "answer": 1,
-      "explanation": "A stage waiting on a channel has to wait on two things at once: the value it is waiting for and the context it belongs to. The select that carries both is what lets the stage give up when the caller does. A chain that only watches the value keeps a goroutine parked on a channel that will never be written to, and one such goroutine per cancelled request is how a service runs out of memory under load. The third stage never starts, because the stage before it never produced a value.",
+      "explanation": "A stage waiting on a channel must wait on two things: the value and the context. A select carrying both lets the stage give up when the caller does. A chain that only watches the value parks a goroutine on a channel nobody writes to, and one per cancelled request leaks memory. The third stage never starts: the stage before it produced no value.",
       "hints": [
         "A stage that is waiting has to be able to stop waiting, so the wait has to name both the value and the context."
       ],
@@ -1555,7 +1579,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-concur"
       ],
       "files": [
-        "stages.go"
+        "stages.go",
+        "stages_test.go",
+        "test/stages.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/stages.test.mjs",
       "checks": [
@@ -1608,7 +1634,11 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-concur"
       ],
       "files": [
-        "ctxpipe.go"
+        "ctxpipe.go",
+        "ctxpipe_test.go",
+        "stages.go",
+        "stages_test.go",
+        "test/ctxpipe.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ctxpipe.test.mjs",
       "checks": [
@@ -1626,7 +1656,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a cancelled context stops the chain"
           ],
-          "feedback": "A context that was cancelled before the call must come back with context.Canceled and no result. Waiting only for the stage means the call hangs on a value that will never arrive. If the suite cannot run because node is command not found, run the environment check first."
+          "feedback": "A context that was cancelled before the call must come back with context.Canceled and no result. Waiting only for the stage means the call hangs on a value that will never arrive. If the suite cannot run because the terminal says node is not found, run the environment check first."
         },
         {
           "id": "ctxpipe-deadline",
@@ -1665,6 +1695,15 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "url": "https://go.dev/blog/json"
         }
       ],
+      "hints": [
+        "Read a tag as a promise to the other side: whatever is in the quotes is the key, letter for letter.",
+        "encoding/json does the work; your functions decide the contract around it."
+      ],
+      "misconceptions": [
+        "The Go field name travels, only the tag does; without one the capitalized field name is the key, which is how silent renames leak.",
+        "Decoding fills what it can and skips the rest, a syntax error fails the whole decode; partial structs come only from valid JSON missing keys.",
+        "omitempty means optional input; it controls the output only; decoding an absent key leaves the zero value either way."
+      ],
       "lesson": [
         {
           "kind": "prose",
@@ -1673,11 +1712,15 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         {
           "kind": "example",
           "body": "The same struct, two names for each field:",
-          "code": "type Task struct {\n    Title string `json:\"title\"`\n    Cents int    `json:\"cents\"`\n}\n\nMarshal(Task{Title: \"Milk\", Cents: 199})\n// {\"title\":\"Milk\",\"cents\":199}  — tags, not Go names"
+          "code": "type Task struct {\n    Title string `json:\"title\"`\n    Cents int    `json:\"cents\"`\n}\n\nMarshal(Task{Title: \"Milk\", Cents: 199})\n// {\"title\":\"Milk\",\"cents\":199}: tags, not Go names"
         },
         {
           "kind": "prose",
-          "body": "Three rules cover almost every bug. First, a misspelled tag is silent: `json:\"titel\"` marshals fine and produces the wrong key, and no compiler complains, because a tag is a string the compiler never reads. Second, `omitempty` drops empty values from the output — a missing note stays missing instead of traveling as an empty string. Third, decoding never trusts the bytes: unknown fields are ignored, and malformed input is an error, never a half-filled struct you go on to save."
+          "body": "Three rules cover almost every bug. First, a misspelled tag is silent: `json:\"titel\"` marshals fine and produces the wrong key, and no compiler complains, because a tag is a string the compiler never reads."
+        },
+        {
+          "kind": "prose",
+          "body": "Second, `omitempty` drops empty values from the output, a missing note stays missing instead of traveling as an empty string. Third, decoding never trusts the bytes: unknown fields are ignored, and malformed input is an error, never a half-filled struct you go on to save."
         },
         {
           "kind": "quickcheck",
@@ -1689,21 +1732,16 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
             "A runtime error naming the misspelled tag, before any bytes."
           ],
           "answer": 0,
-          "explain": "A tag is a string the compiler never reads, and Marshal reproduces it letter for letter — so the wire key is titel while the other side looks up title and finds nothing. The typo is silent at build time and shows up as a missing field on the wire."
+          "explain": "A tag is a string the compiler never reads, and Marshal reproduces it letter for letter, so the wire key is titel while the other side looks up title and finds nothing. The typo is silent at build time and shows up as a missing field on the wire."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "Tags name the wire keys; Go names stay in the program.",
-            "A tag typo is silent — wrong key, no error, no warning.",
+            "A tag typo is silent, wrong key, no error, no warning.",
             "Decode either fills the struct or errors; there is no middle."
           ]
-        },
-        {
-          "kind": "example",
-          "body": "codec.go is where this phase works.",
-          "code": "// Encode renders a task as JSON.\nfunc Encode(t Task) string {\n\treturn \"\"\n}"
         },
         {
           "kind": "example",
@@ -1714,15 +1752,6 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "kind": "task",
           "body": "Open codec.go. Before you change anything, write in a comment the exact bytes Encode(Task{Title: \"Milk\", Cents: 199}) must produce, then implement Encode and Decode so the comment is true."
         }
-      ],
-      "hints": [
-        "Read a tag as a promise to the other side: whatever is in the quotes is the key, letter for letter. If go is command not found, run the environment check first.",
-        "encoding/json does the work; your functions decide the contract around it."
-      ],
-      "misconceptions": [
-        "The Go field name travels — only the tag does; without one the capitalized field name is the key, which is how silent renames leak.",
-        "Decoding fills what it can and skips the rest — a syntax error fails the whole decode; partial structs come only from valid JSON missing keys.",
-        "omitempty means optional input — it controls the output only; decoding an absent key leaves the zero value either way."
       ]
     },
     "go-json-ask": {
@@ -1735,10 +1764,17 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "competencyIds": [
         "go-json"
       ],
+      "hints": [
+        "Cover the options that mix Go names with tag names; Marshal never mixes."
+      ],
+      "misconceptions": [
+        "Marshal prefers Go names, a present tag always wins, even a misspelled one.",
+        "A suspicious tag is an error, tags are strings; the compiler has no opinion about their contents."
+      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "One field is mistagged. Say exactly what crosses the wire — not what the author meant, what Marshal actually writes."
+          "body": "One field is mistagged. Say exactly what crosses the wire, not what the author meant, what Marshal actually writes."
         },
         {
           "kind": "example",
@@ -1747,20 +1783,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "{\"Name\":\"Tea\",\"Price\":3} — Marshal uses the Go names it can see.",
-        "{\"name\":\"Tea\",\"Price\":3} — tags win where present, Go names where absent.",
-        "{\"name\":\"Tea\",\"price_usd\":3} — each key is its tag, letter for letter.",
-        "{\"name\":\"Tea\"} — Price has no valid tag, so it is dropped."
+        "{\"Name\":\"Tea\",\"Price\":3}: Marshal uses the Go names it can see.",
+        "{\"name\":\"Tea\",\"Price\":3}: tags win where present, Go names where absent.",
+        "{\"name\":\"Tea\",\"price_usd\":3}: each key is its tag, letter for letter.",
+        "{\"name\":\"Tea\"}: Price has no valid tag, so it is dropped."
       ],
       "answer": 2,
-      "explanation": "Both keys come from their tags, letter for letter: name and price_usd. Marshal never consults the Go names when tags are present, and it never validates them — price_usd could be a typo for price and the output would still say price_usd. That silence is the whole lesson: the compiler checks the struct, nobody checks the string. A field without any tag would fall back to its Go name, but every field here is tagged.",
-      "hints": [
-        "Cover the options that mix Go names with tag names; Marshal never mixes."
-      ],
-      "misconceptions": [
-        "Marshal prefers Go names — a present tag always wins, even a misspelled one.",
-        "A suspicious tag is an error — tags are strings; the compiler has no opinion about their contents."
-      ]
+      "explanation": "Both keys come from their tags, letter for letter: name and price_usd. Marshal never consults the Go names when tags are present, and it never validates them: price_usd could be a typo for price and the output would still say price_usd. The compiler checks the struct, nobody checks the string. Every field here is tagged, so none falls back to its Go name."
     },
     "go-json-do": {
       "id": "go-json-do",
@@ -1799,21 +1828,21 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "malformed input is an error, never a half task"
           ],
-          "feedback": "On unmarshal failure return the zero Task alongside the error. Never hand back the partial struct the decoder left behind. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "On unmarshal failure return the zero Task alongside the error. Never hand back the partial struct the decoder left behind. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [
-        "Open codec.go. encoding/json already knows the shape; your job is the two one-line calls plus the contract around them. Run go test ./... and read the name of the test that failed.",
+        "Open codec.go. encoding/json already knows the shape; your job is the two one-line calls plus the contract around them.",
         "Encode is Marshal-then-string. The tags on Task do the naming, so there is nothing to format by hand.",
-        "Decode is Unmarshal-into-a-Task. On error, return Task{} and the error together — that pairing is the whole contract.",
+        "Decode is Unmarshal-into-a-Task. On error, return Task{} and the error together; that pairing is the whole contract.",
         "Run go test and read the failing test name first: keys, then round trip, then the malformed edge.",
-        "Solution review: Encode returns string(Marshal(t)); Decode unmarshals and returns (Task{}, err) on failure, (t, nil) on success. Run the checks — three tests, three green. If the suite cannot start because `node` is command not found, run the environment check first."
+        "Solution review: Encode returns string(Marshal(t)); Decode unmarshals and returns (Task{}, err) on failure, (t, nil) on success. Run the checks, three tests, three green. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Building the JSON by hand — hand-built strings drift from the tags; Marshal reads them so you cannot disagree.",
-        "Returning the partial struct with the error — the caller asked for a task or a reason; a half task is a third answer that poisons everything downstream.",
-        "Ignoring the Marshal error — this shape cannot fail, but the blank identifier teaches callers that errors are decoration."
+        "Building the JSON by hand, hand-built strings drift from the tags; Marshal reads them so you cannot disagree.",
+        "Returning the partial struct with the error, the caller asked for a task or a reason; a half task is a third answer that poisons everything downstream.",
+        "Ignoring the Marshal error; this shape cannot fail, but the blank identifier teaches callers that errors are decoration."
       ]
     },
     "go-json-review": {
@@ -1845,15 +1874,15 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "unknown fields are ignored, not errors"
           ],
-          "feedback": "A peer that sends one extra key is newer than you, not broken. Unmarshal already skips unknown fields; keep that behavior and never error on it. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "A peer that sends one extra key is newer than you, not broken. Unmarshal already skips unknown fields; keep that behavior and never error on it. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
-      "hints": [],
       "misconceptions": [
-        "Rejecting unknown fields for safety — strictness here breaks forward compatibility; the safe default ignores what it does not know.",
-        "A bool always travels — false is a real value; only omitempty (absent here) would drop it."
-      ]
+        "Rejecting unknown fields for safety, strictness here breaks forward compatibility; the safe default ignores what it does not know.",
+        "A bool always travels, false is a real value; only omitempty (absent here) would drop it."
+      ],
+      "hints": []
     },
     "go-server-learn": {
       "id": "go-server-learn",
@@ -1923,7 +1952,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "The http.Server struct has a field for each deadline: ReadHeaderTimeout, ReadTimeout, WriteTimeout and IdleTimeout. If go is command not found, run the environment check first.",
+        "The http.Server struct has a field for each deadline: ReadHeaderTimeout, ReadTimeout, WriteTimeout and IdleTimeout. If the terminal says go is not found, run the environment check first.",
         "Compare each field of the Timeouts you were given with zero, and use the matching Default constant when it is zero."
       ],
       "misconceptions": [
@@ -1954,7 +1983,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "It closes every connection the server has, so one slow client cannot hold the others up."
       ],
       "answer": 0,
-      "explanation": "A write that nobody reads does not fail: the bytes go into the socket buffer and the server waits for room that the client will never make. Without a write deadline the handler, the goroutine and the connection stay held by a client that has gone, and a service that meets enough of those stops answering the clients that are still there. The deadline is what bounds the wait, and it bounds it for the client that misbehaves rather than for everyone else.",
+      "explanation": "A write nobody reads does not fail: the bytes go into the socket buffer and the server waits for room the client will never make. Without a write deadline the handler and the connection stay held by a client that has gone, and enough of those stop the service answering the clients that are there. The deadline bounds that wait, for the misbehaving client rather than everyone else.",
       "hints": [
         "A write to a client that stopped reading does not fail straight away, so something else has to end the wait."
       ],
@@ -1974,7 +2003,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-http"
       ],
       "files": [
-        "server.go"
+        "server.go",
+        "server_test.go",
+        "test/server.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/server.test.mjs",
       "checks": [
@@ -1992,7 +2023,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a timeout the caller left out falls back to the default"
           ],
-          "feedback": "A Timeouts with nothing in it must still produce a server with a deadline on every field: the DefaultReadHeader, DefaultRead, DefaultWrite and DefaultIdle constants. A server with no deadline is the failure this check exists for. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "A Timeouts with nothing in it must still produce a server with a deadline on every field: the DefaultReadHeader, DefaultRead, DefaultWrite and DefaultIdle constants. A server with no deadline is the failure this check exists for. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -2019,7 +2050,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-http"
       ],
       "files": [
-        "shutdown.go"
+        "shutdown.go",
+        "shutdown_test.go",
+        "test/shutdown.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/shutdown.test.mjs",
       "checks": [
@@ -2046,7 +2079,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the request in flight gets its answer"
           ],
-          "feedback": "A request that is running when the drain starts must still get its answer, and the drain must not return before it does. Closing the connections instead of draining them cuts the request off. If the suite cannot run because node is command not found, run the environment check first."
+          "feedback": "A request that is running when the drain starts must still get its answer, and the drain must not return before it does. Closing the connections instead of draining them cuts the request off. If the suite cannot run because the terminal says node is not found, run the environment check first."
         }
       ],
       "hints": [],
@@ -2101,9 +2134,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "kind": "quickcheck",
           "body": "tasks is a []Task that was never appended to. What does the encoder write?",
           "items": [
-            "null — the client reads that as a missing field.",
-            "[] — an empty JSON array, exactly what an empty non-nil slice writes.",
-            "{} — an empty object, because the slice has no elements.",
+            "null, the client reads that as a missing field.",
+            "[]: an empty JSON array, exactly what an empty non-nil slice writes.",
+            "{}: an empty object, because the slice has no elements.",
             "A compile error: a nil slice cannot be encoded at all."
           ],
           "answer": 0,
@@ -2136,14 +2169,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "A handler reads the request, decides the status, then writes headers and a body to the ResponseWriter — in that order. If go is command not found, run the environment check first.",
+        "A handler reads the request, decides the status, then writes headers and a body to the ResponseWriter, in that order. If the terminal says go is not found, run the environment check first.",
         "Register each path on an http.ServeMux and return the mux from your handler function; the mux writes 404 for paths you never added."
       ],
       "misconceptions": [
-        "Thinking the server keeps your session or your last request in memory between calls — HTTP is stateless, so every request arrives as a stranger unless it carries its own identity and data.",
-        "Thinking the status code is implied by the body — it is not; you call WriteHeader, and the first call wins, with 200 assumed if you never call it.",
-        "Writing the body before the headers or status — once bytes are flushed the status and header set are already on the wire and cannot change.",
-        "Encoding an empty list is the same as encoding nothing — a nil slice goes out as null, so a client looking for the field finds no list and blames its own parsing."
+        "Thinking the server keeps your session or your last request in memory between calls. HTTP is stateless, so every request arrives as a stranger unless it carries its own identity and data.",
+        "Thinking the status code is implied by the body; it is not; you call WriteHeader, and the first call wins, with 200 assumed if you never call it.",
+        "Writing the body before the headers or status, once bytes are flushed the status and header set are already on the wire and cannot change.",
+        "Encoding an empty list is the same as encoding nothing, a nil slice goes out as null, so a client looking for the field finds no list and blames its own parsing."
       ],
       "visualization": {
         "type": "http-lifecycle",
@@ -2198,13 +2231,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "The first already wrote the task, so it shows on every later GET; refusing before the write leaves no trace."
       ],
       "answer": 3,
-      "explanation": "A status code describes the response, not the side effects that happened before it. If the handler writes the store first, the invalid task is real and will come back on the next GET even though this call answered 400 — a silent corruption the status hides. Validating before mutating makes rejection atomic: nothing was stored, so nothing needs undoing. This is why \"check, then act\" is the default shape of a write endpoint, and why the router does not do it for you: only your handler knows what a valid task is.",
+      "explanation": "A status code describes the response, not the side effects before it. Write the store first and the invalid task is real: it comes back on the next GET, corruption the 400 status hides. Validating before mutating makes rejection atomic: nothing was stored, nothing to undo. Only your handler knows what a valid task is, which is why \"check, then act\" is the default shape of a write.",
       "hints": [
         "A request that fails validation should leave no trace in the system it hit."
       ],
       "misconceptions": [
-        "Believing a 400 after the write is harmless because the response still says \"error\" — the bad record is already persisted and every later read now shows it.",
-        "Thinking the router will reject a malformed body for you — it routes, it does not know your domain rules about what counts as valid."
+        "Believing a 400 after the write is harmless because the response still says \"error\", the bad record is already persisted and every later read now shows it.",
+        "Thinking the router will reject a malformed body for you; it routes, it does not know your domain rules about what counts as valid."
       ]
     },
     "go-http-do": {
@@ -2218,7 +2251,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-http"
       ],
       "files": [
-        "httpapi.go"
+        "httpapi.go",
+        "httpapi_test.go",
+        "test/httpapi.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/httpapi.test.mjs",
       "checks": [
@@ -2271,7 +2306,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-http"
       ],
       "files": [
-        "middleware.go"
+        "middleware.go",
+        "middleware_test.go",
+        "test/middleware.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/middleware.test.mjs",
       "checks": [
@@ -2289,13 +2326,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the wrapper still runs the inner handler"
           ],
-          "feedback": "The wrapper must still call next.ServeHTTP(w, r), so the inner handler's body reaches the client. Adding the header while discarding next is a wrapper that answers nothing. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "The wrapper must still call next.ServeHTTP(w, r), so the inner handler's body reaches the client. Adding the header while discarding next is a wrapper that answers nothing. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Returning a brand-new handler that never calls next — the wrapper adds its header but drops the response the inner handler was supposed to write.",
+        "Returning a brand-new handler that never calls next, the wrapper adds its header but drops the response the inner handler was supposed to write.",
         "Calling next.ServeHTTP before setting the header, so the inner handler flushes the response and the wrapper header never lands on the wire."
       ]
     },
@@ -2321,12 +2358,12 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-routes"
       ],
       "hints": [
-        "Register method-and-path patterns like “GET /tasks/{id}” on one http.ServeMux and read the id with r.PathValue; the mux itself answers 405 for a verb you never registered. If go is command not found, run the environment check first.",
+        "Register method-and-path patterns like “GET /tasks/{id}” on one http.ServeMux and read the id with r.PathValue; the mux itself answers 405 for a verb you never registered. If the terminal says go is not found, run the environment check first.",
         "Parse ?limit= with r.URL.Query().Get(“limit”) and strconv.Atoi, clamp it to len(tasks), and slice the list before you encode it."
       ],
       "misconceptions": [
-        "Believing a missing route and a wrong method are the same failure — 404 means no route matched the path, 405 means the path is a route but not for the verb you used.",
-        "Trusting a query parameter to already be a number — r.URL.Query().Get(“limit”) is a string, and parsing it with strconv.Atoi is what turns a malformed value into a safe default instead of a crash."
+        "Believing a missing route and a wrong method are the same failure, 404 means no route matched the path, 405 means the path is a route but not for the verb you used.",
+        "Trusting a query parameter to already be a number, r.URL.Query().Get(“limit”) is a string, and parsing it with strconv.Atoi is what turns a malformed value into a safe default instead of a crash."
       ],
       "lesson": [
         {
@@ -2381,8 +2418,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "A status code is a message to the caller, so the honest one names the actual problem rather than a nearby-sounding one."
       ],
       "misconceptions": [
-        "Thinking 400 and 405 are interchangeable because both mean “the client got it wrong” — they point at different mistakes and a client can only act on the right one.",
-        "Believing an unknown path and a known-path-wrong-method are the same case — one is 404 because no route matched, the other is 405 because a route matched but not for that verb."
+        "Thinking 400 and 405 are interchangeable because both mean “the client got it wrong”; they point at different mistakes and a client can only act on the right one.",
+        "Believing an unknown path and a known-path-wrong-method are the same case, one is 404 because no route matched, the other is 405 because a route matched but not for that verb."
       ],
       "lesson": [
         {
@@ -2391,13 +2428,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "Server A answers 405: /tasks is a known route, just not for DELETE — which names the real mistake, where B’s 400 claims a malformed request.",
+        "Server A answers 405: /tasks is a known route, just not for DELETE, which names the real mistake, where B’s 400 claims a malformed request.",
         "Both answer 404, because nowhere in either program is there a written route for DELETE /tasks, so the path itself is unknown.",
         "Server B is more honest, because a single handler that always answers tells the caller something concrete instead of relying on the mux to decide.",
         "The number cannot differ, because the status is decided by the body each handler writes, rather than by how the routes were declared."
       ],
       "answer": 0,
-      "explanation": "A status code is the server telling the caller what went wrong, so the truthful one names the actual fault. 405 Method Not Allowed says “I know this URL; it simply is not for that method,” and it even carries an Allow header listing the verbs that do work — information a client can act on. 400 Bad Request instead claims the request itself was broken, which is a lie here: the URL and the body were fine, only the verb was not. The Go 1.22 ServeMux gives you the honest answer for free once GET and POST own /tasks; folding the wrong verb into a 400 throws that signal away. Over on the other fork, 404 belongs to a path no route matched at all — a genuinely unknown URL, not a known one used badly."
+      "explanation": "A status code tells the caller what went wrong, so the truthful one names the fault. 405 Method Not Allowed says “I know this URL, it is not for that method,” and carries an Allow header. 400 Bad Request claims the request was broken, a lie here: the URL and body were fine, only the verb was not. 404 belongs to a path no route matched."
     },
     "go-routes-do": {
       "id": "go-routes-do",
@@ -2414,14 +2451,16 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "In the /tasks/{id} handler read the segment with r.PathValue(“id”), find the task whose id matches and encode it as JSON, or WriteHeader 404 if none does.",
         "For the list, read the query with r.URL.Query().Get(“limit”) and parse it with strconv.Atoi, treating a missing or unparsable value as “no limit”.",
         "Clamp the limit so you never slice past len(tasks), then json-encode that trimmed slice with Content-Type application/json.",
-        "Do not handle DELETE yourself: once GET and POST own /tasks, the ServeMux returns 405 for any other method on that path on its own. If the suite cannot run because `node` is command not found, run the environment check first."
+        "Do not handle DELETE yourself: once GET and POST own /tasks, the ServeMux returns 405 for any other method on that path on its own. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
         "Writing a single catch-all handler for /tasks and switching on the method, so the mux never learns the other verbs and cannot answer 405 for you.",
         "Slicing tasks[:limit] straight from the parsed number, so a caller asking for ?limit=9999 or a negative value runs off the end of the slice."
       ],
       "files": [
-        "routes.go"
+        "routes.go",
+        "routes_test.go",
+        "test/routes.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/routes.test.mjs",
       "checks": [
@@ -2468,7 +2507,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Resetting the count on every request instead of letting it accumulate, so the limiter never actually refuses anything."
       ],
       "files": [
-        "ratelimit.go"
+        "ratelimit.go",
+        "ratelimit_test.go",
+        "test/ratelimit.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ratelimit.test.mjs",
       "checks": [
@@ -2486,7 +2527,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the limiter blocks once the burst is spent"
           ],
-          "feedback": "Once more than three requests have arrived, answer 429 Too Many Requests and return without calling next, so refused work never reaches the wrapped handler. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "Once more than three requests have arrived, answer 429 Too Many Requests and return without calling next, so refused work never reaches the wrapped handler. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ]
@@ -2547,7 +2588,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Wrapping is a loop: the handler you have so far becomes the inner handler of the next wrapper. If go is command not found, run the environment check first.",
+        "Wrapping is a loop: the handler you have so far becomes the inner handler of the next wrapper. If the terminal says go is not found, run the environment check first.",
         "The first middleware in the list has to end up on the outside, so build the chain from the last one backwards."
       ],
       "misconceptions": [
@@ -2578,7 +2619,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "The connection is cut and the panic is logged, so the client sees a broken connection."
       ],
       "answer": 3,
-      "explanation": "net/http recovers a panic in a handler so the process survives it, and it closes the connection rather than finishing a response that was never written. The client sees a broken connection, not a status, and the answer is lost. A middleware that catches the panic turns that into a 500 the client can read, and it decides what the body says: the panic value often carries a connection string or a token, so a wrapper that writes it out has published a secret to whoever asked.",
+      "explanation": "net/http recovers a panic in a handler so the process survives it, and closes the connection rather than finishing a response that was never written. The client sees a broken connection, not a status, and the answer is lost. A middleware that catches the panic turns that into a 500 the client can read, and decides what the body says: the panic value often carries a secret.",
       "hints": [
         "A response that was never finished cannot be turned into a status code after the fact, so the client is left with a connection that ended early."
       ],
@@ -2598,7 +2639,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-http"
       ],
       "files": [
-        "chain.go"
+        "chain.go",
+        "chain_test.go",
+        "test/chain.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/chain.test.mjs",
       "checks": [
@@ -2651,7 +2694,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-http"
       ],
       "files": [
-        "recovery.go"
+        "recovery.go",
+        "recovery_test.go",
+        "test/recovery.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/recovery.test.mjs",
       "checks": [
@@ -2669,7 +2714,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the panic value never reaches the body"
           ],
-          "feedback": "The body must not carry the panic value, because a panic often holds a connection string or a token. Say the request failed and nothing more. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "The body must not carry the panic value, because a panic often holds a connection string or a token. Say the request failed and nothing more. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         },
         {
@@ -2715,7 +2760,11 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every API the ledger serves so far answers anyone who asks — there is no who, only what. Authentication adds the who in two halves that must never be confused: passwords are hashed, never stored, and tokens are signed, never encrypted. A hash proves a password was known without keeping anything an attacker can reuse; a signature proves a token was issued by someone holding the secret without hiding its contents from anyone reading it."
+          "body": "Every API the ledger serves so far answers anyone who asks; there is no who, only what. Authentication adds the who in two halves that must never be confused: passwords are hashed, never stored, and tokens are signed, never encrypted."
+        },
+        {
+          "kind": "prose",
+          "body": "A hash proves a password was known without keeping anything an attacker can reuse; a signature proves a token was issued by someone holding the secret without hiding its contents from anyone reading it."
         },
         {
           "kind": "example",
@@ -2724,7 +2773,19 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "prose",
-          "body": "bcrypt's cost is the work factor: each step up doubles the hashing time, slowing attackers and logins alike, and the salt it generates per password means two identical passwords hash differently — so == on hashes is always false, even for the right password, and comparison goes through CompareHashAndPassword. The token's three segments are readable by design: header names the algorithm, claims carry the subject and the expiry, and the HMAC-SHA256 signature over the first two is the only part that must verify. Expiry is a claim, not enforcement: a stateless token cannot be un-issued without a revocation list somewhere checking it, so a short lifetime is the honest substitute. The module vendors golang.org/x/crypto v0.33.0 (go 1.22 floor, like the rest of the ledger) so every build below stays offline; the JWT shape is hand-rolled over stdlib hmac and base64, never a JWT library — the point is understanding the three segments, not the API."
+          "body": "bcrypt's cost is the work factor: each step up doubles the hashing time, slowing attackers and logins alike, and the salt it generates per password means two identical passwords hash differently, so == on hashes is always false, even for the right password, and comparison goes through CompareHashAndPassword."
+        },
+        {
+          "kind": "prose",
+          "body": "The token's three segments are readable by design: header names the algorithm, claims carry the subject and the expiry, and the HMAC-SHA256 signature over the first two is the only part that must verify."
+        },
+        {
+          "kind": "prose",
+          "body": "Expiry is a claim, not enforcement: a stateless token cannot be un-issued without a revocation list somewhere checking it, so a short lifetime is the honest substitute."
+        },
+        {
+          "kind": "prose",
+          "body": "The module vendors golang.org/x/crypto v0.33.0 (go 1.22 floor, like the rest of the ledger) so every build below stays offline; the JWT shape is hand-rolled over stdlib hmac and base64, never a JWT library, the point is understanding the three segments, not the API."
         },
         {
           "kind": "keypoints",
@@ -2738,7 +2799,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         {
           "kind": "example",
           "body": "auth.go is where this phase works.",
-          "code": "// Vendored bcrypt, blank until Hash names it: the course vendors this module\n// so builds stay offline, and your implementation will call it by name —\n// deleting the underscore below is the first edit. Until then the import\n// only keeps the vendored copy shipping.\nimport _ \"golang.org/x/crypto/bcrypt\"\n\n// The two ways a token can be refused. They are distinct on purpose: an\n// expired token was once honest (re-login fixes it), a tampered one never\n// was. Handlers — and the suite — tell them apart with errors.Is.\nvar ErrTokenExpired = errors.New(\"auth: token expired\")\nvar ErrTokenInvalid = errors.New(\"auth: token invalid\")\n\n// Hash turns a password into something storable: a salted bcrypt hash, never\n// the password itself. The cost is the work factor — higher costs slower\n// attackers and slower logins alike.\nfunc Hash(password string) (string, error) {\n\treturn \"\", nil\n}"
+          "code": "// Vendored bcrypt, blank until Hash names it: the course vendors this module\n// so builds stay offline, and your implementation will call it by name, \n// deleting the underscore below is the first edit. Until then the import\n// only keeps the vendored copy shipping.\nimport _ \"golang.org/x/crypto/bcrypt\"\n\n// The two ways a token can be refused. They are distinct on purpose: an\n// expired token was once honest (re-login fixes it), a tampered one never\n// was. Handlers, and the suite, tell them apart with errors.Is.\nvar ErrTokenExpired = errors.New(\"auth: token expired\")\nvar ErrTokenInvalid = errors.New(\"auth: token invalid\")\n\n// Hash turns a password into something storable: a salted bcrypt hash, never\n// the password itself. The cost is the work factor, higher costs slower\n// attackers and slower logins alike.\nfunc Hash(password string) (string, error) {\n\treturn \"\", nil\n}"
         },
         {
           "kind": "example",
@@ -2747,17 +2808,17 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open auth.go. Before you change anything, write in a comment what Hash must return for a password and what it must never return, and what Verify must check before it reads the subject. Then implement it — deleting the underscore on the bcrypt import is the first edit."
+          "body": "Open auth.go. Before you change anything, write in a comment what Hash must return for a password and what it must never return, and what Verify must check before it reads the subject. Then implement it, deleting the underscore on the bcrypt import is the first edit."
         }
       ],
       "hints": [
-        "GenerateFromPassword salts for you; the returned bytes are the whole stored secret. If go is command not found, run the environment check first.",
-        "A token is two readable segments plus a signature — build the signature last, check it first."
+        "GenerateFromPassword salts for you; the returned bytes are the whole stored secret. If the terminal says go is not found, run the environment check first.",
+        "A token is two readable segments plus a signature, build the signature last, check it first."
       ],
       "misconceptions": [
-        "Encrypting the token for secrecy — claims are readable by design; the signature is the security, not hiding.",
-        "Comparing hashes with == — the random salt makes == always false; comparison is a function call, not an operator.",
-        "Trusting the admin claim because it is signed — the signature proves who issued it, not that the issuer was careful."
+        "Encrypting the token for secrecy, claims are readable by design; the signature is the security, not hiding.",
+        "Comparing hashes with ==, the random salt makes == always false; comparison is a function call, not an operator.",
+        "Trusting the admin claim because it is signed, the signature proves who issued it, not that the issuer was careful."
       ]
     },
     "go-auth-ask": {
@@ -2773,7 +2834,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Four login handlers. Each one trusts something — exactly one of them trusts the wrong thing. Find it."
+          "body": "Four login handlers. Each one trusts something, exactly one of them trusts the wrong thing. Find it."
         },
         {
           "kind": "example",
@@ -2782,19 +2843,19 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "A — plaintext storage means the database is the password list.",
-        "B — the fresh salt makes == false for the right password, so nobody can log in.",
-        "C — the discarded error skips the expiry check, so old tokens live forever.",
-        "D — the admin claim is client-readable, so anyone can grant themselves the role."
+        "A, plaintext storage means the database is the password list.",
+        "B, the fresh salt makes == false for the right password, so nobody can log in.",
+        "C, the discarded error skips the expiry check, so old tokens live forever.",
+        "D, the admin claim is client-readable, so anyone can grant themselves the role."
       ],
       "answer": 2,
-      "explanation": "C discards the error Verify exists to return, and with it the expiry verdict: tampered and ancient tokens log in alike, because nothing reads the refusal. A is worse practice but visibly wrong — plaintext in the open. B is broken but fail-closed: nobody logs in, and the outage announces itself. D misreads the threat: claims are readable, not writable — the signature guards writing, so the role stands unless the secret leaks, which is a different failure. The lesson is the shape of silent failures: C is the only handler that looks working while authenticating nobody correctly, and error-discarding is how every expiry, revocation, and tamper check dies.",
+      "explanation": "C discards the error Verify exists to return, and with it the expiry verdict: tampered and ancient tokens log in alike, because nothing reads the refusal. A is plainly wrong, plaintext in the open; B fails closed and loudly; D misreads the threat, claims are readable, not writable. Silent failure is the lesson: only C looks working, and discarding an error kills every expiry, revocation, and tamper check.",
       "hints": [
         "Ask of each handler: when it is wrong, does it fail loudly or log the attacker in quietly?"
       ],
       "misconceptions": [
-        "Readable claims mean writable claims — base64 is not encryption, but the signature still guards forgery.",
-        "A broken login is the worst outcome — B locks everyone out loudly; C lets the wrong someone in silently."
+        "Readable claims mean writable claims, base64 is not encryption, but the signature still guards forgery.",
+        "A broken login is the worst outcome. B locks everyone out loudly; C lets the wrong someone in silently."
       ]
     },
     "go-auth-do": {
@@ -2808,7 +2869,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-auth"
       ],
       "files": [
-        "auth.go"
+        "auth.go",
+        "auth_test.go",
+        "test/auth.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/auth.test.mjs",
       "checks": [
@@ -2826,7 +2889,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a hash rejects a different password"
           ],
-          "feedback": "CompareHashAndPassword returns nil only for the matching password — return that verdict as the bool, and never reach for == on two hashes."
+          "feedback": "CompareHashAndPassword returns nil only for the matching password, return that verdict as the bool, and never reach for == on two hashes."
         },
         {
           "id": "issue-verify",
@@ -2834,7 +2897,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a fresh token verifies back to its subject"
           ],
-          "feedback": "Mint three segments — header naming HS256, claims with sub and exp, HMAC-SHA256 over the first two — and verify the signature before reading the subject back out."
+          "feedback": "Mint three segments, header naming HS256, claims with sub and exp, HMAC-SHA256 over the first two, and verify the signature before reading the subject back out."
         },
         {
           "id": "edge-expired",
@@ -2842,7 +2905,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "an expired token verifies as expired, never as valid"
           ],
-          "feedback": "Compare the exp claim against now on every verify: past means ErrTokenExpired with an empty subject, never the subject with a warning. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Compare the exp claim against now on every verify: past means ErrTokenExpired with an empty subject, never the subject with a warning. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         },
         {
@@ -2851,21 +2914,21 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a tampered signature fails closed"
           ],
-          "feedback": "Recompute the HMAC over the presented first two segments and compare in constant time: any mismatch is ErrTokenInvalid with an empty subject. A token that fails verification never yields anything. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Recompute the HMAC over the presented first two segments and compare in constant time: any mismatch is ErrTokenInvalid with an empty subject. A token that fails verification never yields anything. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [
         "Open auth.go. Hash is one GenerateFromPassword call; the question is only what cost honesty requires. Run go test ./... and read the name of the test that failed.",
-        "bcrypt.DefaultCost is the documented default — it is slow enough to hurt attackers, fast enough for tests.",
+        "bcrypt.DefaultCost is the documented default; it is slow enough to hurt attackers, fast enough for tests.",
         "Issue builds head.body.signature with RawURLEncoding; the header is {\"alg\":\"HS256\",\"typ\":\"JWT\"}.",
-        "Verify splits on dots, re-checks the HMAC first, then reads exp — a token that fails either check returns an empty subject.",
-        "Solution review: Hash generates salted and opaque, Check delegates to CompareHashAndPassword, Issue signs sub plus exp, Verify checks signature then expiry and refuses everything else closed. Run the checks — five tests, five green. If the suite cannot start because node is command not found, run the environment check first."
+        "Verify splits on dots, re-checks the HMAC first, then reads exp, a token that fails either check returns an empty subject.",
+        "Solution review: Hash generates salted and opaque, Check delegates to CompareHashAndPassword, Issue signs sub plus exp, Verify checks signature then expiry and refuses everything else closed. Run the checks, five tests, five green. If the suite cannot start because the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Hashing twice to compare — the fresh salt guarantees a different hash; comparison is CompareHashAndPassword, not equality.",
-        "Reading claims before verifying — the signature is the only reason to believe a single byte; unverified claims are attacker input.",
-        "Returning the subject alongside the expiry error — a refusal with a subject is an authentication that failed open."
+        "Hashing twice to compare, the fresh salt guarantees a different hash; comparison is CompareHashAndPassword, not equality.",
+        "Reading claims before verifying, the signature is the only reason to believe a single byte; unverified claims are attacker input.",
+        "Returning the subject alongside the expiry error, a refusal with a subject is an authentication that failed open."
       ]
     },
     "go-auth-review": {
@@ -2879,7 +2942,11 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-auth"
       ],
       "files": [
-        "gate.go"
+        "gate.go",
+        "gate_test.go",
+        "auth.go",
+        "auth_test.go",
+        "test/gate.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/gate.test.mjs",
       "checks": [
@@ -2889,7 +2956,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a valid token reaches the handler carrying its subject"
           ],
-          "feedback": "Verify the Bearer token, then carry the subject on the request context into next — Subject reads it back, and the handler must see exactly the issued name."
+          "feedback": "Verify the Bearer token, then carry the subject on the request context into next. Subject reads it back, and the handler must see exactly the issued name."
         },
         {
           "id": "edge-refuses",
@@ -2897,14 +2964,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a missing or bad token is refused before the handler"
           ],
-          "feedback": "No header, a malformed token, and an expired one all earn 401, and the handler never runs for any of them — refusal happens before next, not inside it. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "No header, a malformed token, and an expired one all earn 401, and the handler never runs for any of them, refusal happens before next, not inside it. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Checking auth inside the handler — the middleware exists so no route has to remember; remembered checks are forgotten.",
-        "Passing the subject in a response header — the subject travels server-side on the context, never where the client can rewrite it."
+        "Checking auth inside the handler, the middleware exists so no route has to remember; remembered checks are forgotten.",
+        "Passing the subject in a response header, the subject travels server-side on the context, never where the client can rewrite it."
       ]
     },
     "go-tests-learn": {
@@ -2930,12 +2997,12 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "testing-quality"
       ],
       "hints": [
-        "A table-driven test keeps its cases as a slice of {input, want} structs and runs them in one loop, so widening coverage means adding a row, not copy-pasting a function. If go is command not found, run the environment check first.",
+        "A table-driven test keeps its cases as a slice of {input, want} structs and runs them in one loop, so widening coverage means adding a row, not copy-pasting a function. If the terminal says go is not found, run the environment check first.",
         "Wrap each row in t.Run with a name built from its input, and test an http.Handler through httptest.NewServer with t.Cleanup(srv.Close) rather than faking the transport."
       ],
       "misconceptions": [
-        "Believing a test that passes proves the code is correct — a suite only shows the cases it actually asserts, so a single green call can hide every boundary you never checked.",
-        "Treating a high coverage percentage as quality — coverage counts statements executed, not outcomes verified, and a test that runs the code without comparing its result scores full marks and guarantees nothing."
+        "Believing a test that passes proves the code is correct, a suite only shows the cases it actually asserts, so a single green call can hide every boundary you never checked.",
+        "Treating a high coverage percentage as quality, coverage counts statements executed, not outcomes verified, and a test that runs the code without comparing its result scores full marks and guarantees nothing."
       ],
       "lesson": [
         {
@@ -2991,7 +3058,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "A suite is judged by the wrong code it catches, not by whether it is green against the right code."
       ],
       "misconceptions": [
-        "Thinking two suites are equivalent because both pass a correct implementation — what separates them is the broken implementations each one turns red.",
+        "Thinking two suites are equivalent because both pass a correct implementation, what separates them is the broken implementations each one turns red.",
         "Assuming more assertions always means a slower or worse test; a table that pins every boundary is cheap to write and hard to fool."
       ],
       "lesson": [
@@ -3007,7 +3074,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "The single case is better, because fewer assertions mean a failure is easier for a human to read at a glance when CI goes red."
       ],
       "answer": 1,
-      "explanation": "A suite is only as good as the wrong code it catches. Both are green against a correct Grade, but the moment the implementation slips — 89 graded A, or -1 quietly mapped to F — only the table has rows asserting those outcomes, so only it turns red. The single-case test executed one path and compared one value; it would pass a function that returns “A” for everything. Subtests make the gap concrete: each row prints its own name and re-runs alone, so a failure tells you exactly which boundary broke rather than only that TestGrade did. And coverage would score both suites identically on a correct Grade, which is precisely why the percentage is a hint and never the verdict."
+      "explanation": "A suite is only as good as the wrong code it catches. Only the table has rows asserting the boundaries, so only it turns red when the code slips. The single-case test would pass a function that returns “A” for everything; subtests make the gap concrete, each row re-running alone under its own name. Coverage scores both suites alike: the percentage is a hint, never the verdict."
     },
     "go-tests-do": {
       "id": "go-tests-do",
@@ -3024,14 +3091,16 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Return the ok bool alongside the letter rather than encoding “no grade” as an empty string with ok == true, so the bool is what the suite checks on its own.",
         "Walk the bands top to bottom and let the first range score falls in win, so 90 is an A and 89 is a B with no special cases bolted on.",
         "A boundary test checks both edges of every band, so trace 90 and 89, 80 and 79, 70 and 69, 60 and 59 across your logic before you trust a single middle value.",
-        "Returning early for the out-of-range case is what lets the guard be tested separately from the bands; keep the two concerns in different lines. If the suite cannot run because `node` is command not found, run the environment check first."
+        "Returning early for the out-of-range case is what lets the guard be tested separately from the bands; keep the two concerns in different lines. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
         "Mapping an out-of-range score to the nearest band (101 becomes A) instead of refusing it, so the guard check and the band check disagree about what Grade promises.",
         "Encoding “no grade” as an empty string with ok == true, so a caller that trusts the bool never learns the score was invalid."
       ],
       "files": [
-        "grade.go"
+        "grade.go",
+        "grade_test.go",
+        "test/grade.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/grade.test.mjs",
       "checks": [
@@ -3078,7 +3147,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Forgetting t.Cleanup(srv.Close) on an httptest server, so a loopback listener stays open across every subtest instead of being released when the test ends."
       ],
       "files": [
-        "probe.go"
+        "probe.go",
+        "probe_test.go",
+        "test/probe.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/probe.test.mjs",
       "checks": [
@@ -3096,7 +3167,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a failing query is rejected with 400"
           ],
-          "feedback": "When the query asks the handler to fail, answer 400 Bad Request and write no body — refuse the request instead of pretending it succeeded. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "When the query asks the handler to fail, answer 400 Bad Request and write no body, refuse the request instead of pretending it succeeded. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ]
@@ -3152,15 +3223,15 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "task",
-          "body": "In join.go, make JoinWords return the parts glued with sep between them (no leading or trailing separator) so it passes the correctness table AND the allocation budget — build the result in a single pass instead of copying on every element."
+          "body": "In join.go, make JoinWords return the parts glued with sep between them (no leading or trailing separator) so it passes the correctness table AND the allocation budget, build the result in a single pass instead of copying on every element."
         }
       ],
       "hints": [
-        "A string built with += inside a loop copies the whole result every turn, so it does O(n^2) work; strings.Builder writes into one growing buffer and strings.Join is the one-line version that already handles it. If go is command not found, run the environment check first.",
+        "A string built with += inside a loop copies the whole result every turn, so it does O(n^2) work; strings.Builder writes into one growing buffer and strings.Join is the one-line version that already handles it. If the terminal says go is not found, run the environment check first.",
         "When you know the size of the answer up front, make([]T, n) allocates one backing array instead of letting append copy the slice several times as it doubles."
       ],
       "misconceptions": [
-        "Assuming a line must be fast because it is short — a one-call strings.Join beats a hand-rolled loop because of the work it avoids under the hood, not because it has fewer characters.",
+        "Assuming a line must be fast because it is short, a one-call strings.Join beats a hand-rolled loop because of the work it avoids under the hood, not because it has fewer characters.",
         "Treating performance as something you only look at after it breaks, when the O(n^2) copy was written on day one and the input was simply too small to reveal it yet."
       ],
       "resources": [
@@ -3193,13 +3264,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "A does, because append is the idiomatic way to build a slice and the compiler turns the loop into a single allocation for you."
       ],
       "answer": 2,
-      "explanation": "The result is the same; the work is not. A begins with a nil slice and appends: each time it hits capacity, Go allocates a larger array and copies everything it had already stored, and it repeats that growth several times on the way to a million, so all those copies and allocations ride along behind the loop. B already knows the answer will be n long, so make([]int, n) reserves the array once and the loop simply writes into it — no growth, no re-copying. Option four points at the wrong cause: indexing is not magic, the saving comes from sizing up front, not from out[i] over append. That is the senior instinct in miniature — you attend to what each line costs even when every line is correct, because a version that is only correct, and slow at scale, is still a version you will have to rewrite.",
+      "explanation": "The result is the same; the work is not. A appends to a nil slice: on each growth, Go allocates a bigger array and copies what it stored. B knows the answer is n long, so make([]int, n) reserves the array once and the loop writes into it. Option four names the wrong cause: the saving comes from sizing up front, so attend to what each line costs.",
       "hints": [
         "Correctness is the same for both; the difference is how many allocations and copies each one makes along the way to that answer."
       ],
       "misconceptions": [
         "Believing append into a nil slice is free because it reads cleanly, when every growth step copies the elements you already stored.",
-        "Thinking that because two functions return the identical value their cost must be identical too — the length of the result is not the only thing you pay for."
+        "Thinking that because two functions return the identical value their cost must be identical too, the length of the result is not the only thing you pay for."
       ]
     },
     "go-perf-do": {
@@ -3213,7 +3284,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "algo-complexity"
       ],
       "files": [
-        "join.go"
+        "join.go",
+        "join_test.go",
+        "test/join.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/join.test.mjs",
       "checks": [
@@ -3236,14 +3309,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "join.go owns JoinWords, and the body it ships with already joins the words — it is the obvious version, not the cheap one. Change that file only. Run go test ./... and read the name of the test that failed.",
+        "join.go owns JoinWords, and the body it ships with already joins the words; it is the obvious version, not the cheap one. Change that file only. Run go test ./... and read the name of the test that failed.",
         "If you build it yourself, a strings.Builder writes into one growing buffer, so you copy each byte once instead of copying the whole result every time you add a piece.",
-        "Cost the line you were given before replacing it: every round builds a brand-new string and throws the old one away, so a thousand parts mean thousands of copies — that is what the allocation budget is measuring.",
+        "Cost the line you were given before replacing it: every round builds a brand-new string and throws the old one away, so a thousand parts mean thousands of copies; that is what the allocation budget is measuring.",
         "The separator belongs between items, not after them: three parts use two separators, and that off-by-one is exactly what a hand-rolled trailing-sep loop gets wrong.",
         "When you truly must loop, decide the size first and write into it, so a single allocation covers the whole result instead of one per element."
       ],
       "misconceptions": [
-        "Believing the two implementations are equivalent because both return the right string — a correct result built with a copy per element is O(n^2) work and quietly falls over as the input grows.",
+        "Believing the two implementations are equivalent because both return the right string, a correct result built with a copy per element is O(n^2) work and quietly falls over as the input grows.",
         "Reaching for out += item to build a string in a loop, unaware that Go strings are immutable so each += allocates and copies everything gathered so far."
       ]
     },
@@ -3258,7 +3331,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "algo-complexity"
       ],
       "files": [
-        "squares.go"
+        "squares.go",
+        "squares_test.go",
+        "test/squares.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/squares.test.mjs",
       "checks": [
@@ -3268,7 +3343,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the squares are the first n in order"
           ],
-          "feedback": "Squares(n) must return exactly n elements, the squares of 0 through n-1, in order. Squares(4) is [0 1 4 9], not [0 1 4 9 16] — the loop bound decides whether you overshoot."
+          "feedback": "Squares(n) must return exactly n elements, the squares of 0 through n-1, in order. Squares(4) is [0 1 4 9], not [0 1 4 9 16]: the loop bound decides whether you overshoot."
         },
         {
           "id": "perf-squares-alloc",
@@ -3276,7 +3351,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the slice is allocated once"
           ],
-          "feedback": "You know the length before the loop starts, so make([]int, n) reserves it in one allocation and you fill it by index. Appending into an empty slice forces Go to grow and re-copy the backing array many times over a large n. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "You know the length before the loop starts, so make([]int, n) reserves it in one allocation and you fill it by index. Appending into an empty slice forces Go to grow and re-copy the backing array many times over a large n. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -3291,7 +3366,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "title": "Learn: the model is what the store refuses",
       "objectives": [
         "Explain why the store, not the HTTP handler, is where the ledger's rules are enforced.",
-        "Trace each refusal — missing id, missing account, duplicate id — to the state the store must not reach.",
+        "Trace each refusal, missing id, missing account, duplicate id, to the state the store must not reach.",
         "Implement Add so every guard runs before the append and a refused entry changes nothing."
       ],
       "kind": "lesson",
@@ -3302,13 +3377,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "data-modeling"
       ],
       "hints": [
-        "Every rule written in a handler protects only the requests that pass through that handler. The store is the seam every writer shares, so the store is where the ledger's rules live. If go is command not found, run the environment check first.",
+        "Every rule written in a handler protects only the requests that pass through that handler. The store is the seam every writer shares, so the store is where the ledger's rules live. If the terminal says go is not found, run the environment check first.",
         "An error is a value in Go, and the useful part of that value is the name of the thing that was wrong. \"invalid input\" tells a caller nothing; \"entry is missing account\" tells them what to fix."
       ],
       "misconceptions": [
-        "Validating in the handler is enough, because that is where requests arrive — a migration, a seed script and an import job do not arrive through the handler, and they write through the same store.",
-        "A refusal should skip the bad record and keep going, because one bad line should not lose the good ones — a silently skipped line is a discrepancy somebody reconciles by hand months later, and the caller was never told.",
-        "Storing first and checking later is simpler — a check that happens after the append has already let the invalid state into the data every reader then has to defend against."
+        "Validating in the handler is enough, because that is where requests arrive, a migration, a seed script and an import job do not arrive through the handler, and they write through the same store.",
+        "A refusal should skip the bad record and keep going, because one bad line should not lose the good ones, a silently skipped line is a discrepancy somebody reconciles by hand months later, and the caller was never told.",
+        "Storing first and checking later is simpler, a check that happens after the append has already let the invalid state into the data every reader then has to defend against."
       ],
       "lesson": [
         {
@@ -3336,7 +3411,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         {
           "kind": "example",
           "body": "store.go is where this phase works.",
-          "code": "// Add stores the entry. What it must refuse — and how the caller is told — is\n// the whole of this exercise; the hidden suite asks for the refusal by name.\nfunc (s *Store) Add(e Entry) error {\n\ts.entries = append(s.entries, e)\n\treturn nil\n}"
+          "code": "// Add stores the entry. What it must refuse, and how the caller is told, is\n// the whole of this exercise; the hidden suite asks for the refusal by name.\nfunc (s *Store) Add(e Entry) error {\n\ts.entries = append(s.entries, e)\n\treturn nil\n}"
         },
         {
           "kind": "example",
@@ -3366,11 +3441,11 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "data-modeling"
       ],
       "hints": [
-        "List every path that writes to the store — the HTTP handler, yes, but what else?"
+        "List every path that writes to the store, the HTTP handler, yes, but what else?"
       ],
       "misconceptions": [
         "Application-level checks make a database constraint redundant 2014 the constraint is the last line of defence for the writers that do not share your application.",
-        "A nicer error message is worth duplicating the rule in two places — the message belongs to the seam; the handler may translate it, never re-implement it."
+        "A nicer error message is worth duplicating the rule in two places, the message belongs to the seam; the handler may translate it, never re-implement it."
       ],
       "lesson": [
         {
@@ -3385,7 +3460,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "In the store's Add, because it is the one seam every writer shares; a rule in the handler guards only requests that pass through it."
       ],
       "answer": 3,
-      "explanation": "The handler is one writer among several; a migration and a seed script do not arrive through it, and a rule living there protects exactly the traffic that already follows the happy path. Duplicating the rule in both places is the tempting answer because the early rejection is genuinely nicer — but two copies of a rule is two places to update and a third writer still escapes both. The database-schema-only answer is real defence and worth having, but it is the last line, not the first: it fires after the write reaches the database, its errors are harder to act on, and the suite this phase runs cannot see it. The store is where the contract is stated once, where every writer meets it, and where the tests can judge it."
+      "explanation": "A rule in the handler guards only the happy path: migrations and seed scripts do not come through it. Duplicating it is tempting: two copies is two places to update and a third writer escapes both. A database constraint is real defence, but the last line: it fires after the write. The store states the contract once, where every writer meets it and the tests judge it."
     },
     "go-store-do": {
       "id": "go-store-do",
@@ -3399,18 +3474,20 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "hints": [
         "store.go is the file you own, and Add on its Store is where every writer is checked. Start with the refusals before the append: every check that returns early is a state the store never reaches. Run go test ./... and read the name of the test that failed.",
-        "The two required fields are id and account, and the caller has only the error text to learn which one was wrong — so the refusal has to name that field, in the same shape whichever field it is.",
-        "The duplicate check is a pass over s.entries comparing IDs — the same loop Get already uses, asking the other question.",
+        "The two required fields are id and account, and the caller has only the error text to learn which one was wrong, so the refusal has to name that field, in the same shape whichever field it is.",
+        "The duplicate check is a pass over s.entries comparing IDs, the same loop Get already uses, asking the other question.",
         "Every refusal has to be decided before anything is written, so a refused entry changes nothing. Ask which single action in Add must still not have happened when you refuse.",
         "A complete answer refuses first and writes last: the missing id, the missing account and the duplicate id each return their own named error, and nothing has been appended by the time any of them fires. Read your Add back once and confirm that the only append in the function is the one that stored a valid entry."
       ],
       "misconceptions": [
-        "Returning nil after not storing the entry keeps the caller calm — nil means \"stored\", so the caller reports success for a line that will never exist.",
-        "Checking for the duplicate after appending is the same ordering, since the store ends in the same place — it ends with the duplicate inside it, which is the one place it must not be.",
-        "One error value for any refusal is enough for the caller to act on — the caller has to know which of the three things was wrong to fix any of them."
+        "Returning nil after not storing the entry keeps the caller calm, nil means \"stored\", so the caller reports success for a line that will never exist.",
+        "Checking for the duplicate after appending is the same ordering, since the store ends in the same place; it ends with the duplicate inside it, which is the one place it must not be.",
+        "One error value for any refusal is enough for the caller to act on, the caller has to know which of the three things was wrong to fix any of them."
       ],
       "files": [
-        "store.go"
+        "store.go",
+        "store_test.go",
+        "test/store.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/store.test.mjs",
       "checks": [
@@ -3420,7 +3497,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "an entry missing a required field is refused by name"
           ],
-          "feedback": "Add returns nil for everything, so the store holds entries that name nothing. Guard the two required fields before the append and return an error whose message contains the field's name (\"account\" or \"id\") — the name is what lets the caller fix it, and it is all the log downstream ever needs."
+          "feedback": "Add returns nil for everything, so the store holds entries that name nothing. Guard the two required fields before the append and return an error whose message contains the field's name (\"account\" or \"id\"), the name is what lets the caller fix it, and it is all the log downstream ever needs."
         },
         {
           "id": "store-refuses-duplicate",
@@ -3436,7 +3513,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a refused entry leaves the store exactly as it was"
           ],
-          "feedback": "Something is being stored before the refusal happens. Every guard must return before the append line — the append is the only statement that may change the store, and a refusal that runs it half-stores an entry no reader asked for.",
+          "feedback": "Something is being stored before the refusal happens. Every guard must return before the append line, the append is the only statement that may change the store, and a refusal that runs it half-stores an entry no reader asked for.",
           "edge": true
         }
       ]
@@ -3453,11 +3530,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "out[account] = cents totals an account — assignment keeps the last line, while a total is the accumulation of every line that names the account.",
-        "Skipping an entry with no account keeps the report useful — the report then silently disagrees with the store, and nobody is told the two answers differ."
+        "out[account] = cents totals an account, assignment keeps the last line, while a total is the accumulation of every line that names the account.",
+        "Skipping an entry with no account keeps the report useful, the report then silently disagrees with the store, and nobody is told the two answers differ."
       ],
       "files": [
-        "report.go"
+        "report.go",
+        "report_test.go",
+        "store.go",
+        "test/report.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/report.test.mjs",
       "checks": [
@@ -3467,7 +3547,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "every account's total is the exact sum of its entries"
           ],
-          "feedback": "The report overwrites instead of accumulating: out[e.Account] = e.Cents keeps only the last line seen for that account. A total is every line added — out[e.Account] += e.Cents — so cash holding +100 and -40 reads 60, not -40."
+          "feedback": "The report overwrites instead of accumulating: out[e.Account] = e.Cents keeps only the last line seen for that account. A total is every line added, out[e.Account] += e.Cents, so cash holding +100 and -40 reads 60, not -40."
         },
         {
           "id": "report-refuses-accountless",
@@ -3475,7 +3555,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "an entry with no account stops the report instead of being skipped"
           ],
-          "feedback": "The report happily sums an entry nobody named under the empty-string key. The same rule the store enforces has to hold here: an entry with no account stops the report with an error naming the account, and the caller gets no numbers to act on — nil, not a map quietly missing a line.",
+          "feedback": "The report happily sums an entry nobody named under the empty-string key. The same rule the store enforces has to hold here: an entry with no account stops the report with an error naming the account, and the caller gets no numbers to act on, nil, not a map quietly missing a line.",
           "edge": true
         }
       ]
@@ -3501,14 +3581,27 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "url": "https://pkg.go.dev/database/sql"
         }
       ],
+      "hints": [
+        "CREATE TABLE IF NOT EXISTS makes OpenDB safe to call on every boot, first or fiftieth.",
+        "INSERT with ON CONFLICT(id) DO UPDATE turns a second save into an overwrite instead of a duplicate-key error."
+      ],
+      "misconceptions": [
+        "Opening the database connects to it. Open validates arguments; the first query is what reaches the file.",
+        "A missing row reads as zero. Scan on no rows returns ErrNoRows; zero with a nil error means a row holding zero.",
+        "Concatenating values into SQL, parameters exist precisely so data can never become syntax."
+      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "The ledger has lived in memory, which means every restart is amnesia. This phase moves it into SQLite, a real database in a single file — and it runs in a third project on your disk, Go Persist, because persistence deserves its own workspace. Two requirements before anything else: Go 1.26 or newer (check with go version; the SQLite driver needs it), and the driver import you will find already sitting in driver.go."
+          "body": "The ledger has lived in memory, which means every restart is amnesia. This phase moves it into SQLite, a real database in a single file, and it runs in a third project on your disk, Go Persist, because persistence deserves its own workspace."
         },
         {
           "kind": "prose",
-          "body": "database/sql is an interface, not a database. sql.Open names a driver and a file; the driver translates. Your code talks to *sql.DB and never to SQLite directly, which is why swapping the file for a server later changes one line. The driver line in driver.go is vendored with the project, so builds stay offline — application code never imports it again."
+          "body": "Two requirements before anything else: Go 1.26 or newer (check with go version; the SQLite driver needs it), and the driver import you will find already sitting in driver.go."
+        },
+        {
+          "kind": "prose",
+          "body": "database/sql is an interface, not a database. sql.Open names a driver and a file; the driver translates. Your code talks to *sql.DB and never to SQLite directly, which is why swapping the file for a server later changes one line. The driver line in driver.go is vendored with the project, so builds stay offline, application code never imports it again."
         },
         {
           "kind": "example",
@@ -3516,8 +3609,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "code": "db, _ := sql.Open(\"sqlite3\", path)   // handle, not connection\ndefer db.Close()                     // the caller owns it\ndb.Exec(`INSERT ... VALUES (?, ?)`, id, cents)   // ? marks values, never text\nrow := db.QueryRow(`SELECT ... WHERE id = ?`, id)\nrow.Scan(&cents)                     // missing row: sql.ErrNoRows"
         },
         {
+          "kind": "example",
+          "body": "storedb.go is where this phase works.",
+          "code": "package persist\n\nimport \"database/sql\"\n\n// OpenDB opens the ledger database at path, creating the tasks table it\n// needs. The caller owns the handle and closes it.\nfunc OpenDB(path string) (*sql.DB, error) {\n\tpanic(\"unimplemented\")\n}\n\n// SaveTask records cents under id, replacing any earlier row for that id.\n// An upsert, not an append: saving twice leaves one row.\nfunc SaveTask(db *sql.DB, id string, cents int) error {\n\tpanic(\"unimplemented\")\n}\n\n// LoadTask reads back the cents saved under id. An id that was never saved\n// is sql.ErrNoRows, never a zero masquerading as data.\nfunc LoadTask(db *sql.DB, id string) (int, error) {\n\tpanic(\"unimplemented\")\n}"
+        },
+        {
           "kind": "prose",
-          "body": "The question marks are the security model. Values travel separately from the statement, so a task id containing a quote is data, never syntax — string-concatenated SQL turns that same id into an injection. And rows are resources: every Query opens a cursor that Close releases, and a missing row is sql.ErrNoRows, an error you check with errors.Is, never a zero you mistake for data."
+          "body": "The question marks are the security model. Values travel separately from the statement, so a task id containing a quote is data, never syntax, string-concatenated SQL turns that same id into an injection. And rows are resources: every Query opens a cursor that Close releases, and a missing row is sql.ErrNoRows, an error you check with errors.Is, never a zero you mistake for data."
         },
         {
           "kind": "quickcheck",
@@ -3526,7 +3624,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
             "The value travels separately, so it can never be read as SQL.",
             "The driver strips the quotes out of the value before concatenating it.",
             "Parameters are faster, because the driver caches the parsed statement.",
-            "Readability only — the finished SQL text ends up the same either way."
+            "Readability only, the finished SQL text ends up the same either way."
           ],
           "answer": 0,
           "explain": "String-concatenated SQL lets a value become syntax, which is how an id containing a quote turns into an injected statement. A ? keeps the value in a separate channel the driver binds after the statement is parsed, so the stranger stays data."
@@ -3537,13 +3635,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "items": [
             "database/sql is the interface; the driver is one import, vendored.",
             "Values ride as parameters (?), never inside the statement text.",
-            "A missing row is sql.ErrNoRows — an error, not a zero."
+            "A missing row is sql.ErrNoRows, an error, not a zero."
           ]
-        },
-        {
-          "kind": "example",
-          "body": "storedb.go is where this phase works.",
-          "code": "// OpenDB opens the ledger database at path, creating the tasks table it\n// needs. The caller owns the handle and closes it.\nfunc OpenDB(path string) (*sql.DB, error) {\n\tpanic(\"unimplemented\")\n}"
         },
         {
           "kind": "example",
@@ -3552,17 +3645,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open storedb.go and read driver.go beside it. Before you change anything, write in a comment what LoadTask must return for an id that was never saved — value and error both — then implement all three functions so the comment is true."
+          "body": "Open storedb.go and read driver.go beside it. Before you change anything, write in a comment what LoadTask must return for an id that was never saved, value and error both, then implement all three functions so the comment is true."
         }
-      ],
-      "hints": [
-        "CREATE TABLE IF NOT EXISTS makes OpenDB safe to call on every boot, first or fiftieth. If go is command not found, run the environment check first.",
-        "INSERT with ON CONFLICT(id) DO UPDATE turns a second save into an overwrite instead of a duplicate-key error."
-      ],
-      "misconceptions": [
-        "Opening the database connects to it — Open validates arguments; the first query is what reaches the file.",
-        "A missing row reads as zero — Scan on no rows returns ErrNoRows; zero with a nil error means a row holding zero.",
-        "Concatenating values into SQL — parameters exist precisely so data can never become syntax."
       ]
     },
     "go-db-ask": {
@@ -3574,6 +3658,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "guidance": 1,
       "competencyIds": [
         "go-db"
+      ],
+      "hints": [
+        "Ask when each version decides what is syntax and what is data, before sending, or while parsing."
+      ],
+      "misconceptions": [
+        "Quoting user input makes concatenation safe, every quoting scheme has an escape hatch; parameters remove the question.",
+        "Validation replaces parameters, validated-today input rots; the placeholder is safe for every input, forever."
       ],
       "lesson": [
         {
@@ -3587,20 +3678,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "Both are fine — the driver escapes the id either way, so the quotes do not matter.",
+        "Both are fine, the driver escapes the id either way, so the quotes do not matter.",
         "The first is fine: quotes delimit the value, so the id cannot escape the string.",
-        "Only the second is safe — the value travels separately and is never parsed as SQL.",
-        "Neither is safe — ids from strangers must be rejected before they reach the database."
+        "Only the second is safe, the value travels separately and is never parsed as SQL.",
+        "Neither is safe, ids from strangers must be rejected before they reach the database."
       ],
       "answer": 2,
-      "explanation": "Only the parameterized form is safe. In the first, the id is text inside the statement before the driver ever sees it: the quote in x\" closes the value early and DROP TABLE becomes syntax. In the second, the statement is fixed with two placeholders and the id travels as a bound value the parser never reads — there is no quoting to escape because there is no textual substitution at all. Rejecting strange ids is a policy, not a fix: the next feature needs quotes in names, and parameters already allow them.",
-      "hints": [
-        "Ask when each version decides what is syntax and what is data — before sending, or while parsing."
-      ],
-      "misconceptions": [
-        "Quoting user input makes concatenation safe — every quoting scheme has an escape hatch; parameters remove the question.",
-        "Validation replaces parameters — validated-today input rots; the placeholder is safe for every input, forever."
-      ]
+      "explanation": "Only the parameterized form is safe. In the first, the id is text inside the statement: the quote in x\" closes the value early and DROP TABLE becomes syntax. In the second, the statement is fixed with two placeholders and the id travels as a bound value the parser never reads. Rejecting strange ids is a policy, not a fix: parameters already allow quotes in names."
     },
     "go-db-do": {
       "id": "go-db-do",
@@ -3613,7 +3697,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-db"
       ],
       "files": [
-        "storedb.go"
+        "storedb.go",
+        "driver.go"
       ],
       "testCommand": "node --test --test-reporter=tap test/storedb.test.mjs",
       "checks": [
@@ -3647,21 +3732,21 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a missing id is ErrNoRows, never a zero"
           ],
-          "feedback": "Scan on no rows returns sql.ErrNoRows — return it with errors.Is intact so callers can tell \"absent\" from \"zero\". If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "Scan on no rows returns sql.ErrNoRows, return it with errors.Is intact so callers can tell \"absent\" from \"zero\". If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [
-        "Open storedb.go. OpenDB opens sql.Open(\"sqlite3\", path) and runs CREATE TABLE IF NOT EXISTS; every other function assumes the table. Run go test ./... and read the name of the test that failed.",
-        "SaveTask is one Exec with two placeholders and an ON CONFLICT(id) DO UPDATE tail — that tail is the upsert.",
+        "Open storedb.go. OpenDB opens sql.Open(\"sqlite3\", path) and runs CREATE TABLE IF NOT EXISTS; every other function assumes the table.",
+        "SaveTask is one Exec with two placeholders and an ON CONFLICT(id) DO UPDATE tail; that tail is the upsert.",
         "LoadTask is QueryRow plus Scan. Do not special-case absence: Scan already returns ErrNoRows, and returning it untouched is the whole edge.",
         "Run go test and read the failing test name first: round trip, then upsert, then reopen, then the missing edge.",
-        "Solution review: table created at open, parameterized upsert on save, Scan error returned as-is on load. Run the checks — four tests, four green. If the suite cannot start because `node` is command not found, run the environment check first."
+        "Solution review: table created at open, parameterized upsert on save, Scan error returned as-is on load. Run the checks, four tests, four green. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Opening with :memory: — memory forgets on close, and the reopen check exists to prove the file remembers.",
-        "Checking existence before insert — the upsert clause already decides; a select-first round trip races with itself.",
-        "Mapping ErrNoRows to a custom error — callers test with errors.Is against the standard value; a private error breaks that contract."
+        "Opening with :memory:, memory forgets on close, and the reopen check exists to prove the file remembers.",
+        "Checking existence before insert, the upsert clause already decides; a select-first round trip races with itself.",
+        "Mapping ErrNoRows to a custom error, callers test with errors.Is against the standard value; a private error breaks that contract."
       ]
     },
     "go-db-review": {
@@ -3693,15 +3778,15 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a report is a read: fresh is zeros, then it follows writes"
           ],
-          "feedback": "An empty table reports (0, 0) with no error, and a later write shows up on the next read — no caching, no snapshot. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "An empty table reports (0, 0) with no error, and a later write shows up on the next read, no caching, no snapshot. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
-      "hints": [],
       "misconceptions": [
-        "Erroring on an empty table — nothing saved yet is a state to report, not a failure.",
-        "Reading the report from memory — the database is the source; a cached copy is how reports go stale."
-      ]
+        "Erroring on an empty table, nothing saved yet is a state to report, not a failure.",
+        "Reading the report from memory, the database is the source; a cached copy is how reports go stale."
+      ],
+      "hints": []
     },
     "go-cache-learn": {
       "id": "go-cache-learn",
@@ -3731,23 +3816,39 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "The database phase made every read real — and every read expensive. Cache-aside puts a memory between the reader and the source: the read checks the cache first, a hit answers there, a miss reads the source, fills the cache, and answers. The source never learns the cache exists; the cache alone decides when its copies stop being believed. That decision is the TTL — not a guess about correctness, but a promise about staleness: no entry older than this is ever served."
+          "body": "The database phase made every read real, and every read expensive. Cache-aside puts a memory between the reader and the source: the read checks the cache first, a hit answers there, a miss reads the source, fills the cache, and answers."
+        },
+        {
+          "kind": "prose",
+          "body": "The source never learns the cache exists; the cache alone decides when its copies stop being believed. That decision is the TTL, not a guess about correctness, but a promise about staleness: no entry older than this is ever served."
         },
         {
           "kind": "example",
           "body": "The flow, and the herd it invites:",
-          "code": "v, err := m.Get(\"task:a\")   // hit: memory. miss: loader, then memory.\nclock.Advance(ttl)           // the entry is now expired.\n// 8 readers find that expired key at once — without singleflight, 8 loads."
+          "code": "v, err := m.Get(\"task:a\")   // hit: memory. miss: loader, then memory.\nclock.Advance(ttl)           // the entry is now expired.\n// 8 readers find that expired key at once, without singleflight, 8 loads."
         },
         {
           "kind": "prose",
-          "body": "Two failure shapes decide whether a cache is an asset or a lie. The stampede: when one key expires, every reader misses together and hits the source at once — the fix is singleflight, where the first miss starts the fetch and the late arrivals wait on that one result instead of starting their own. The stale read: a write lands in the source while the cache still holds the old value — the fix is invalidation, the write path dropping the key so the next read misses honestly. Expiry needs nobody to remember anything but bounds staleness only to the TTL; invalidation is immediate but only works if every write path remembers to call it — forget once and the entry lies until the TTL ends the argument. Redis is the production shape of exactly this pattern — cache-aside with TTLs and key invalidation at scale — but the pattern is what is judged here, so the fixture is in-memory with an injected clock: tests move time instead of sleeping, and no infrastructure is demanded to learn the shape."
+          "body": "Two failure shapes decide whether a cache is an asset or a lie. The stampede: when one key expires, every reader misses together and hits the source at once, the fix is singleflight, where the first miss starts the fetch and the late arrivals wait on that one result instead of starting their own."
+        },
+        {
+          "kind": "prose",
+          "body": "The stale read: a write lands in the source while the cache still holds the old value, the fix is invalidation, the write path dropping the key so the next read misses honestly."
+        },
+        {
+          "kind": "prose",
+          "body": "Expiry needs nobody to remember anything but bounds staleness only to the TTL; invalidation is immediate but only works if every write path remembers to call it, forget once and the entry lies until the TTL ends the argument."
+        },
+        {
+          "kind": "prose",
+          "body": "Redis is the production shape of exactly this pattern, cache-aside with TTLs and key invalidation at scale, but the pattern is what is judged here, so the fixture is in-memory with an injected clock: tests move time instead of sleeping, and no infrastructure is demanded to learn the shape."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "Cache-aside: the reader checks memory first, a miss loads the source and fills it; the source never knows.",
-            "TTL is a promise about staleness measured from the fetch — refreshing it on read lets a hot stale key live forever.",
+            "TTL is a promise about staleness measured from the fetch, refreshing it on read lets a hot stale key live forever.",
             "Singleflight turns N simultaneous misses into one load; invalidation turns a write into an honest next read."
           ]
         },
@@ -3763,17 +3864,17 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open cache.go. Before you change anything, write in a comment what a hit must never call, what Invalidate must drop, and where the second reader of an expired key should wait instead of fetching. Then implement it — NewMemo is three fields; the state you add is the design."
+          "body": "Open cache.go. Before you change anything, write in a comment what a hit must never call, what Invalidate must drop, and where the second reader of an expired key should wait instead of fetching. Then implement it. NewMemo is three fields; the state you add is the design."
         }
       ],
       "hints": [
-        "A loader error is not an answer — return it, never store it, so the next Get is free to try again. If go is command not found, run the environment check first.",
+        "A loader error is not an answer, return it, never store it, so the next Get is free to try again. If the terminal says go is not found, run the environment check first.",
         "The injected clock is the whole reason tests can prove a TTL without sleeping on one."
       ],
       "misconceptions": [
-        "Caching the loader's error — a failure is not a value; caching one freezes the outage that caused it.",
-        "A mutex alone stops the herd — it only lines readers up; each one still fetches in turn without a shared flight.",
-        "Invalidating on read — a read cannot know a write happened; the write path is the only place that knows."
+        "Caching the loader's error, a failure is not a value; caching one freezes the outage that caused it.",
+        "A mutex alone stops the herd; it only lines readers up; each one still fetches in turn without a shared flight.",
+        "Invalidating on read, a read cannot know a write happened; the write path is the only place that knows."
       ]
     },
     "go-cache-ask": {
@@ -3798,19 +3899,19 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "A — the TTL was too short; a longer one would have kept the entry consistent with the database it is meant to mirror.",
-        "B — the write path never invalidated the key, so the entry outlived the write that disproved it.",
-        "C — the loader returned an error once and the cache stored it as if it were the price.",
-        "D — the clock was not injected, so the entry could not tell that it had expired."
+        "A, the TTL was too short; a longer one would have kept the entry consistent with the database it is meant to mirror.",
+        "B, the write path never invalidated the key, so the entry outlived the write that disproved it.",
+        "C, the loader returned an error once and the cache stored it as if it were the price.",
+        "D, the clock was not injected, so the entry could not tell that it had expired."
       ],
       "answer": 1,
-      "explanation": "B is the missing piece: every write must drop the keys it disproved, and here nobody did, so the entry served until its TTL ran out on schedule while being wrong the whole time. A has it backwards — a longer TTL guarantees more staleness, not less, because the entry was stale from the moment the other writer committed. C describes a different bug with a different symptom: a cached error fails every reader at once instead of serving an old price. D mistakes the test harness for the production concern — the injected clock makes the TTL provable in tests, but an uninjected clock in production just means time still passes. The lesson: staleness is a write-path responsibility, because only the writer knows something changed.",
+      "explanation": "B is missing: every write must drop the keys it disproved, so the entry served stale until its TTL ran out. A has it backwards: a longer TTL means more staleness, not less. C is a different bug: a cached error fails every reader at once; D mistakes the harness for production. Staleness is a write-path responsibility: only the writer knows something changed.",
       "hints": [
         "Ask of each diagnosis: does it explain why the OLD value kept being served, rather than a different failure?"
       ],
       "misconceptions": [
-        "A longer TTL as consistency — the TTL bounds how long you may be wrong; stretching it stretches the lie.",
-        "Blaming the read path for a write-path bug — readers only ever see what invalidation failed to remove."
+        "A longer TTL as consistency, the TTL bounds how long you may be wrong; stretching it stretches the lie.",
+        "Blaming the read path for a write-path bug, readers only ever see what invalidation failed to remove."
       ]
     },
     "go-cache-do": {
@@ -3824,7 +3925,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-cache"
       ],
       "files": [
-        "cache.go"
+        "cache.go",
+        "cache_test.go",
+        "test/cache.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/cache.test.mjs",
       "checks": [
@@ -3834,7 +3937,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a fresh memo entry is served from memory, not the loader"
           ],
-          "feedback": "Store the loader's value with the time your injected now() reported, and on every Get check freshness (now().Sub(at) < ttl) BEFORE deciding to fetch — a hit returns the stored value and never calls the loader."
+          "feedback": "Store the loader's value with the time your injected now() reported, and on every Get check freshness (now().Sub(at) < ttl) BEFORE deciding to fetch, a hit returns the stored value and never calls the loader."
         },
         {
           "id": "expiry",
@@ -3850,7 +3953,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "an invalidated key is fetched again"
           ],
-          "feedback": "Invalidate deletes the key under the same mutex Get uses — no fetch of its own, no copy left behind — so the next Get misses and goes to the loader."
+          "feedback": "Invalidate deletes the key under the same mutex Get uses, no fetch of its own, no copy left behind, so the next Get misses and goes to the loader."
         },
         {
           "id": "edge-stampede",
@@ -3858,21 +3961,21 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "concurrent readers of one expired key share a single fetch"
           ],
-          "feedback": "Under the mutex, the first miss records an in-flight fetch for the key before releasing it; late arrivals find that flight and wait on its done channel instead of fetching. The winner publishes value and error, stores the entry only on success, deletes the flight, then closes the channel so every waiter wakes. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Under the mutex, the first miss records an in-flight fetch for the key before releasing it; late arrivals find that flight and wait on its done channel instead of fetching. The winner publishes value and error, stores the entry only on success, deletes the flight, then closes the channel so every waiter wakes. If the suite cannot run because node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [
-        "Open cache.go. NewMemo is three fields — fetch, ttl, clock — and the state you add is yours to design: an entry map under a mutex is the floor. Run go test ./... and read the name of the test that failed.",
+        "Open cache.go. NewMemo is three fields, fetch, ttl, clock, and the state you add is yours to design: an entry map under a mutex is the floor. Run go test ./... and read the name of the test that failed.",
         "An entry is a value plus the time it was stored; freshness is now().Sub(at) < ttl on the injected clock, which is why tests move time instead of sleeping.",
-        "Invalidate is a map delete under the same mutex — drop the key and let the next Get miss.",
+        "Invalidate is a map delete under the same mutex, drop the key and let the next Get miss.",
         "For the herd: keep a per-key flight (a done channel plus the result) that the first miss creates; later readers find it and wait instead of fetching.",
-        "The clock is injected, so the tests move time instead of sleeping — a cache that reads time.Now directly ignores the ttl it was given and never expires."
+        "The clock is injected, so the tests move time instead of sleeping, a cache that reads time.Now directly ignores the ttl it was given and never expires."
       ],
       "misconceptions": [
-        "Storing the loader's error in the entry — return it and leave the key empty, or one timeout is served until the TTL expires.",
-        "Refreshing the timestamp on every hit — a hot stale key then never expires; the TTL is measured from the fetch, not from the last read.",
-        "Locking the whole Get including the load — correct but serialized; the flight exists so waiters wait once while one loader runs."
+        "Storing the loader's error in the entry, return it and leave the key empty, or one timeout is served until the TTL expires.",
+        "Refreshing the timestamp on every hit, a hot stale key then never expires; the TTL is measured from the fetch, not from the last read.",
+        "Locking the whole Get including the load, correct but serialized; the flight exists so waiters wait once while one loader runs."
       ]
     },
     "go-cache-review": {
@@ -3886,7 +3989,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-cache"
       ],
       "files": [
-        "reportcache.go"
+        "cache.go",
+        "cache_test.go",
+        "reportcache.go",
+        "reportcache_test.go",
+        "storedb.go",
+        "reportdb.go",
+        "driver.go",
+        "test/reportcache.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/reportcache.test.mjs",
       "checks": [
@@ -3896,7 +4006,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a fresh report is served from memory and expires back to the database"
           ],
-          "feedback": "Store what Report returned with a timestamp; while now().Sub(at) < ttl, Get answers from memory — which is exactly why a row saved behind the cache's back does not show, and why advancing the clock past the TTL does."
+          "feedback": "Store what Report returned with a timestamp; while now().Sub(at) < ttl, Get answers from memory, which is exactly why a row saved behind the cache's back does not show, and why advancing the clock past the TTL does."
         },
         {
           "id": "edge-follows",
@@ -3904,14 +4014,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "an invalidated report follows the writes"
           ],
-          "feedback": "Invalidate drops the stored report under the mutex so the next Get re-reads the database — the write path sending its message before the TTL would have noticed on its own. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "Invalidate drops the stored report under the mutex so the next Get re-reads the database, the write path sending its message before the TTL would have noticed on its own. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Re-reading the database on every Get — then nothing is cached and the TTL is decoration.",
-        "Invalidating from inside Get — only the write path knows a write happened; a read has nothing to notice."
+        "Re-reading the database on every Get, then nothing is cached and the TTL is decoration.",
+        "Invalidating from inside Get, only the write path knows a write happened; a read has nothing to notice."
       ]
     },
     "go-resilience-learn": {
@@ -3937,7 +4047,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         {
           "kind": "example",
           "body": "A bounded retry that stops on the first success and reports the final error:",
-          "code": "func DoWithRetry(attempts int, op func() error) error {\n    var err error\n    for i := 0; i < attempts; i++ {\n        if err = op(); err == nil {\n            return nil // succeeded — stop calling it\n        }\n    }\n    return err // exhausted: hand back the last real failure\n}"
+          "code": "func DoWithRetry(attempts int, op func() error) error {\n    var err error\n    for i := 0; i < attempts; i++ {\n        if err = op(); err == nil {\n            return nil // succeeded, stop calling it\n        }\n    }\n    return err // exhausted: hand back the last real failure\n}"
         },
         {
           "kind": "prose",
@@ -3977,12 +4087,12 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "A retry is a bounded loop: call the operation, return the moment it succeeds, and give up after a fixed number of attempts instead of looping forever or once. If go is command not found, run the environment check first.",
+        "A retry is a bounded loop: call the operation, return the moment it succeeds, and give up after a fixed number of attempts instead of looping forever or once. If the terminal says go is not found, run the environment check first.",
         "Two rules make a retry safe: cap the attempts so a hard-down dependency cannot be hammered forever, and grow the delay between them (backoff) so you stop adding load to something already failing."
       ],
       "misconceptions": [
-        "Believing more retries make you more reliable — an unbounded retry loop turns one slow dependency into a pile-up of your own callers, and a fleet of clients retrying in lockstep can knock a recovering service flat again the instant it comes back.",
-        "Throwing away the last error when every attempt fails — returning nil on exhaustion tells the caller the work succeeded, which is the single most expensive lie a resilient helper can tell."
+        "Believing more retries make you more reliable, an unbounded retry loop turns one slow dependency into a pile-up of your own callers, and a fleet of clients retrying in lockstep can knock a recovering service flat again the instant it comes back.",
+        "Throwing away the last error when every attempt fails, returning nil on exhaustion tells the caller the work succeeded, which is the single most expensive lie a resilient helper can tell."
       ],
       "resources": [
         {
@@ -4009,18 +4119,18 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "options": [
         "They are equivalent, because both return nil on success, and success is the only outcome an endpoint behind a flaky dependency really cares about.",
-        "Mine A — five attempts is an arbitrary ceiling that abandons a call which would have recovered on the sixth, so a helper that gives up early fails.",
+        "Mine A: five attempts is an arbitrary ceiling that abandons a call which would have recovered on the sixth, so a helper that gives up early fails.",
         "Mine B: it caps attempts, returns on success, and hands back the last error on exhaustion; Mine A loops until success, so it hangs with no failure path.",
-        "Mine A — retrying forever is strictly more resilient, because with enough attempts it eventually succeeds and the caller never writes a failure path at all."
+        "Mine A: retrying forever is strictly more resilient, because with enough attempts it eventually succeeds and the caller never writes a failure path at all."
       ],
       "answer": 2,
-      "explanation": "The two helpers are indistinguishable when the flaky call succeeds on try two, which is exactly why the screen recording proves nothing. They part company when the dependency is genuinely down. Mine A's unbounded loop never returns and never yields: against a service that will not recover, it is not a retry, it is a hung goroutine, and every caller of it piles up hammering the thing that is already failing — the amplification that turns one bad dependency into an outage of everything that depends on it. Mine B refuses that role: the cap on attempts bounds both the work and the pressure, the early return means it stops bothering the dependency the instant it answers, and returning the last error on exhaustion gives the caller something to log, alert on, or fall back from. That third property is the one people miss — a helper whose only exit is success has no way to lose, which means it cannot tell you it lost. A finite bound is not pessimism; five attempts is a deliberate choice, and the correct response to a call that would have recovered on six is to alert on the exhaustion rate, not to remove the ceiling.",
+      "explanation": "Mine A loops until the call succeeds, so a dependency that stays down leaves it a hung goroutine while callers pile onto the failing service. Mine B caps the attempts, returns early on success, and hands back the last error on exhaustion, so the caller can alert on it. A helper whose only exit is success cannot say it lost, so a finite bound is deliberate.",
       "hints": [
-        "A helper is only as good as the wrong outcomes it refuses — judge these by what each one does when the operation keeps failing, not when it works first time."
+        "A helper is only as good as the wrong outcomes it refuses, judge these by what each one does when the operation keeps failing, not when it works first time."
       ],
       "misconceptions": [
-        "Thinking a retry that runs forever is the most robust option — against a dependency that is hard down it is a loop that never yields and never reports, which is a hung request wearing the costume of resilience.",
-        "Believing that because an error is returned it will be handled — a helper that drops the last error on exhaustion hands the caller nothing to act on, so the failure becomes invisible."
+        "Thinking a retry that runs forever is the safest option, against a dependency that is hard down it is a loop that never yields and never reports, which is a hung request wearing the costume of resilience.",
+        "Believing that because an error is returned it will be handled, a helper that drops the last error on exhaustion hands the caller nothing to act on, so the failure becomes invisible."
       ]
     },
     "go-resilience-do": {
@@ -4034,7 +4144,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "resilience"
       ],
       "files": [
-        "retry.go"
+        "retry.go",
+        "retry_test.go",
+        "test/retry.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/retry.test.mjs",
       "checks": [
@@ -4044,7 +4156,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a retry that succeeds first try stops there"
           ],
-          "feedback": "When op returns nil on the very first call, DoWithRetry must return nil and stop — it may not call op again. A helper that loops a fixed number of times regardless of success calls op too many times. If node is missing when the suite runs, the environment check names the install."
+          "feedback": "When op returns nil on the very first call, DoWithRetry must return nil and stop; it may not call op again. A helper that loops a fixed number of times regardless of success calls op too many times. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "retry-recovers",
@@ -4060,20 +4172,20 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "an exhausted retry returns the last error"
           ],
-          "feedback": "When op fails on all attempts, DoWithRetry must call op exactly that many times and return the error from the final call — not nil. Return the stored last error after the loop so the failure survives.",
+          "feedback": "When op fails on all attempts, DoWithRetry must call op exactly that many times and return the error from the final call, not nil. Return the stored last error after the loop so the failure survives.",
           "edge": true
         }
       ],
       "hints": [
         "retry.go is the file you own, and DoWithRetry in it is what the suite calls. Keep the last error in a variable declared outside the loop, so that after the loop ends you still have the failure from the final attempt to return. Run go test ./... and read the name of the test that failed.",
         "The loop runs at most as many times as the caller allowed, and the suite counts those calls: one more than that fails the count it keeps.",
-        "Inside the loop call op once, assign its result to your error variable, and if it is nil return nil immediately — do not call op again after it succeeded.",
+        "Inside the loop call op once, assign its result to your error variable, and if it is nil return nil immediately, do not call op again after it succeeded.",
         "A suite calls op and counts the calls: success on try one must make exactly one call, and failure on all four of four attempts must make exactly four before you give up.",
-        "Solution review: the finished loop makes one attempt per pass, treats the caller's budget as its bound, keeps every failure in the error variable it declared, and returns non-nil the moment the attempts run out — the flake is contained, and no call is ever spent twice."
+        "Solution review: the finished loop makes one attempt per pass, treats the caller's budget as its bound, keeps every failure in the error variable it declared, and returns non-nil the moment the attempts run out, the flake is contained, and no call is ever spent twice."
       ],
       "misconceptions": [
         "Returning nil once attempts run out, so a caller that trusts the result thinks the flaky operation eventually succeeded when it never did.",
-        "Calling op a fixed number of times regardless of its result, so an operation that succeeded on the first try still gets retried — duplicating a side effect the caller expected to happen once."
+        "Calling op a fixed number of times regardless of its result, so an operation that succeeded on the first try still gets retried, duplicating a side effect the caller expected to happen once."
       ]
     },
     "go-resilience-review": {
@@ -4087,7 +4199,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "resilience"
       ],
       "files": [
-        "backoff.go"
+        "backoff.go",
+        "backoff_test.go",
+        "test/backoff.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/backoff.test.mjs",
       "checks": [
@@ -4105,14 +4219,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the delay never exceeds the cap"
           ],
-          "feedback": "However many doublings the attempt number implies, Backoff must return no more than limit. Clamp the grown value to the ceiling so a late attempt cannot produce an absurd wait. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "However many doublings the attempt number implies, Backoff must return no more than limit. Clamp the grown value to the ceiling so a late attempt cannot produce an absurd wait. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Letting the delay grow without an upper bound — after enough doublings the computed wait becomes absurd (days between retries), so a healthy cap keeps the backoff sane no matter how many attempts it has climbed through.",
-        "Thinking exponential backoff needs a real sleep to be worth anything — the delay is a pure function of the attempt number, so you can compute and test it instantly without ever waiting it out."
+        "Letting the delay grow without an upper bound, after enough doublings the computed wait becomes absurd (days between retries), so a healthy cap keeps the backoff sane no matter how many attempts it has climbed through.",
+        "Thinking exponential backoff needs a real sleep to be worth anything, the delay is a pure function of the attempt number, so you can compute and test it instantly without ever waiting it out."
       ]
     },
     "go-ops-learn": {
@@ -4169,13 +4283,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "A load balancer routes on the status code and a supervisor acts on the exit code; neither of them reads your prose. Everything else in the response is for the human who arrives after the pager. If go is command not found, run the environment check first.",
+        "A load balancer routes on the status code and a supervisor acts on the exit code; neither of them reads your prose. Everything else in the response is for the human who arrives after the pager. If the terminal says go is not found, run the environment check first.",
         "Driver and SDK error strings routinely embed the connection string they failed on, so err.Error() is the classic way a secret reaches a dashboard anybody can open."
       ],
       "misconceptions": [
-        "Answering 200 from a health endpoint keeps monitoring green while you investigate — the load balancer uses that same 200 to decide this instance can still take traffic, so the green dashboard is also a routing decision.",
-        "Including the full error text in the health body is more helpful, because the operator can act faster — the same text often carries the DSN, the password inside it, and a copy of it lands in every log aggregator and screenshot downstream.",
-        "Any nonzero exit code means failure, so the exact number does not matter — documented per-class codes are what let a supervisor decide restart vs. alert vs. give up without parsing a log line."
+        "Answering 200 from a health endpoint keeps monitoring green while you investigate, the load balancer uses that same 200 to decide this instance can still take traffic, so the green dashboard is also a routing decision.",
+        "Including the full error text in the health body is more helpful, because the operator can act faster, the same text often carries the DSN, the password inside it, and a copy of it lands in every log aggregator and screenshot downstream.",
+        "Any nonzero exit code means failure, so the exact number does not matter, documented per-class codes are what let a supervisor decide restart vs. alert vs. give up without parsing a log line."
       ],
       "resources": [
         {
@@ -4207,13 +4321,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "The problems list grows until the response exceeds the probe timeout, which is the actual failure mode at 3am."
       ],
       "answer": 0,
-      "explanation": "Routing components act on the status code — it is the only part of the answer guaranteed to be machine-readable and stable across vendors. A 200 with an excuse is indistinguishable from ready, so the instance keeps receiving traffic while it cannot serve it, and the \"documentation\" in the body is read by nobody until after the incident. Parsing bodies (option two) is not something a load balancer does. Option three imagines a validator that does not exist. And option four names a real phenomenon — unbounded health output can time out a probe, which is the actual failure mode at 3am, but it is not what happens here: the list is fixed at two entries, and the defect is the status code, not the size.",
+      "explanation": "Routing components act on the status code, the only machine-readable part of the answer, stable across vendors. A 200 with an excuse is indistinguishable from ready, so the instance keeps taking traffic it cannot serve. Options two and three invent machinery: a balancer that parses bodies, a probe validator. Option four names a real but different failure, unbounded output timing out a probe, not the status code.",
       "hints": [
         "Ask who consumes the status code before anyone reads the body."
       ],
       "misconceptions": [
-        "A 200 with an explanatory body is as good as a 503, because the body says what is wrong — the routing component reads the code and never the prose.",
-        "The problems list is a chance to document what was checked — a list that is always full is a list nobody can read a failure out of."
+        "A 200 with an explanatory body is as good as a 503, because the body says what is wrong, the routing component reads the code and never the prose.",
+        "The problems list is a chance to document what was checked, a list that is always full is a list nobody can read a failure out of."
       ]
     },
     "go-ops-do": {
@@ -4227,7 +4341,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "deployment-ops"
       ],
       "files": [
-        "health.go"
+        "health.go",
+        "health_test.go",
+        "test/health.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/health.test.mjs",
       "checks": [
@@ -4237,7 +4353,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a healthy service answers ready with no problems"
           ],
-          "feedback": "The healthy path reports problems it does not have (\"checked: db\"), and a caller cannot tell a list of successes from a list of failures. Only failed probes append to Problems — when nothing is wrong the list is empty, and the status is 200. If node is missing when the suite runs, the environment check names the install."
+          "feedback": "The healthy path reports problems it does not have (\"checked: db\"), and a caller cannot tell a list of successes from a list of failures. Only failed probes append to Problems, when nothing is wrong the list is empty, and the status is 200. If node is missing when the suite runs, the environment check names the install."
         },
         {
           "id": "ops-503-named",
@@ -4253,7 +4369,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the health body never contains a dependency's connection string"
           ],
-          "feedback": "The problem line repeats err.Error(), and driver errors begin with the DSN they failed to dial — so the health body now prints the password to every dashboard that scrapes it. Append p.Name, not the error text: the name is what an operator acts on, and it is the only part of the failure guaranteed to be safe to publish.",
+          "feedback": "The problem line repeats err.Error(), and driver errors begin with the DSN they failed to dial, so the health body now prints the password to every dashboard that scrapes it. Append p.Name, not the error text: the name is what an operator acts on, and it is the only part of the failure guaranteed to be safe to publish.",
           "edge": true
         }
       ],
@@ -4261,13 +4377,13 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "health.go is the file you own, and Health in it is the answer the suite reads. Walk the probes once, remembering only two things: which ones failed, by name. Run go test ./... and read the name of the test that failed.",
         "A failed probe appends its Name to body.Problems and flips body.OK to false. The error value tells you it failed; the caller is owed the name, not the text.",
         "The status depends on the result: 200 when OK survived the loop, 503 the moment any probe failed. http.StatusServiceUnavailable is the constant.",
-        "Read back the line that appends to Problems and check what you are appending — p.Name belongs there and err.Error() does not, because driver errors begin with the DSN they failed to dial.",
+        "Read back the line that appends to Problems and check what you are appending, p.Name belongs there and err.Error() does not, because driver errors begin with the DSN they failed to dial.",
         "A complete answer walks the probes once, keeps only the names of the ones that failed, answers 200 while the body still reports OK and 503 the moment it does not, and never repeats a connection string anywhere in the body."
       ],
       "misconceptions": [
-        "Keeping 200 while listing the problems keeps monitoring calm — the 200 is the routing decision that sends traffic into the outage.",
-        "A partially healthy service is \"degraded but up\", so the status should stay 200 until everything fails — readiness is per-dependency: any required dependency down means this instance cannot do its job.",
-        "Including err.Error() costs nothing because the endpoint is internal — internal dashboards are scraped by log aggregators, and the health endpoint is exactly the request that fires during an incident."
+        "Keeping 200 while listing the problems keeps monitoring calm, the 200 is the routing decision that sends traffic into the outage.",
+        "A partially healthy service is \"degraded but up\", so the status should stay 200 until everything fails, readiness is per-dependency: any required dependency down means this instance cannot do its job.",
+        "Including err.Error() costs nothing because the endpoint is internal, internal dashboards are scraped by log aggregators, and the health endpoint is exactly the request that fires during an incident."
       ]
     },
     "go-ops-review": {
@@ -4281,7 +4397,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "deployment-ops"
       ],
       "files": [
-        "runbook.go"
+        "runbook.go",
+        "runbook_test.go",
+        "test/runbook.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/runbook.test.mjs",
       "checks": [
@@ -4299,14 +4417,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "an unrecognized failure stops the process nonzero"
           ],
-          "feedback": "A failure matching neither sentinel exits 0. The default at the end of the mapping must be nonzero — an error nobody enumerated is still an error, and 0 is the one value a supervisor will never recover a process from. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "A failure matching neither sentinel exits 0. The default at the end of the mapping must be nonzero, an error nobody enumerated is still an error, and 0 is the one value a supervisor will never recover a process from. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Every failure can exit 1, because nonzero is nonzero — documented per-class codes are how a supervisor distinguishes \"fix your input\" from \"restart me\" without parsing a log.",
-        "A failure nobody enumerated is close enough to success to exit 0 — the supervisor reads 0 as \"finished, nothing to restart\", so the process stays dead and the dashboard stays green."
+        "Every failure can exit 1, because nonzero is nonzero, documented per-class codes are how a supervisor distinguishes \"fix your input\" from \"restart me\" without parsing a log.",
+        "A failure nobody enumerated is close enough to success to exit 0, the supervisor reads 0 as \"finished, nothing to restart\", so the process stays dead and the dashboard stays green."
       ]
     },
     "go-logging-learn": {
@@ -4318,16 +4436,21 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Design a request logger that falls back on nil and never publishes a token."
       ],
       "kind": "lesson",
-      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
         "go-logging"
       ],
+      "resources": [
+        {
+          "label": "log/slog package reference",
+          "url": "https://pkg.go.dev/log/slog"
+        }
+      ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Nobody watches a log stream for fun. Logs are read at 3am by someone paging through a failure, so every line answers three questions: when, at what level, and in which request. Go's log/slog writes structured lines — key=value pairs a machine can filter — instead of sentences a human must parse."
+          "body": "Nobody watches a log stream for fun. Logs are read at 3am by someone paging through a failure, so every line answers three questions: when, at what level, and in which request. Go's log/slog writes structured lines, key=value pairs a machine can filter, instead of sentences a human must parse."
         },
         {
           "kind": "example",
@@ -4335,22 +4458,26 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "code": "log := slog.New(slog.NewTextHandler(os.Stderr, nil))\nreq := log.With(\"request_id\", \"r-1\")\nreq.Info(\"done\")\n// time=... level=INFO msg=done request_id=r-1"
         },
         {
+          "kind": "example",
+          "body": "logging.go is where this phase works.",
+          "code": "package ledger\n\nimport \"log/slog\"\n\n// RequestLog returns a logger carrying the request id in every line it\n// writes. A nil base never panics: it falls back to the default logger, so\n// helper code can ask for a request logger without knowing whether logging\n// was configured.\nfunc RequestLog(base *slog.Logger, requestID string) *slog.Logger {\n\treturn base\n}"
+        },
+        {
           "kind": "prose",
-          "body": "With() derives a logger that carries attributes into every line it writes — the request id travels without being passed to every function. Levels decide what survives: Debug for development detail, Info for the normal path, Warn for wrong-but-handled, Error for failed. And one absolute rule, shared with the ops phase that refuses to print connection strings: secrets never reach the output. A token in a log is a token published."
+          "body": "With() derives a logger that carries attributes into every line it writes, the request id travels without being passed to every function. Levels decide what survives: Debug for development detail, Info for the normal path, Warn for wrong-but-handled, Error for failed."
+        },
+        {
+          "kind": "prose",
+          "body": "And one absolute rule, shared with the ops phase that refuses to print connection strings: secrets never reach the output. A token in a log is a token published."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "With() carries context into every line; pass the logger, not the id.",
-            "Levels filter noise: Debug, Info, Warn, Error — each with a job.",
+            "Levels filter noise: Debug, Info, Warn, Error, each with a job.",
             "Secrets never reach output; scrub what you cannot prevent."
           ]
-        },
-        {
-          "kind": "example",
-          "body": "logging.go is where this phase works.",
-          "code": "// RequestLog returns a logger carrying the request id in every line it\n// writes. A nil base never panics: it falls back to the default logger, so\n// helper code can ask for a request logger without knowing whether logging\n// was configured.\nfunc RequestLog(base *slog.Logger, requestID string) *slog.Logger {\n\treturn base\n}"
         },
         {
           "kind": "example",
@@ -4363,26 +4490,19 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "base.With returns a new logger; the base itself is unchanged and stays clean for other requests. If go is command not found, run the environment check first.",
-        "A nil *slog.Logger has no methods to call — decide the fallback before the first dot."
+        "base.With returns a new logger; the base itself is unchanged and stays clean for other requests.",
+        "A nil *slog.Logger has no methods to call, decide the fallback before the first dot."
       ],
       "misconceptions": [
-        "Logging the request id by hand on every call — derive once with With and the id rides along.",
-        "fmt.Println debugging in production code — unstructured lines cannot be filtered when it matters.",
-        "A nil logger means quiet — calling methods on nil panics; quiet must be chosen, with a fallback or a discard handler."
-      ],
-      "resources": [
-        {
-          "label": "log/slog package reference",
-          "url": "https://pkg.go.dev/log/slog"
-        }
+        "Logging the request id by hand on every call, derive once with With and the id rides along.",
+        "fmt.Println debugging in production code, unstructured lines cannot be filtered when it matters.",
+        "A nil logger means quiet, calling methods on nil panics; quiet must be chosen, with a fallback or a discard handler."
       ]
     },
     "go-logging-ask": {
       "id": "go-logging-ask",
       "title": "Reason: whose secret is it",
       "kind": "question",
-      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -4391,30 +4511,29 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Four log lines from a login handler. Exactly one of them publishes something an attacker can reuse — find it."
+          "body": "Four log lines from a login handler. Exactly one of them publishes something an attacker can reuse, find it."
         }
       ],
       "options": [
-        "The first — usernames identify accounts and must never be logged.",
-        "The second — the token is a reusable secret; the rest is metadata.",
-        "The third — failed attempts invite brute force, so counts leak.",
-        "The fourth — Debug lines ship internals like latency to production."
+        "The first: usernames identify accounts and must never be logged.",
+        "The second: the token is a reusable secret; the rest is metadata.",
+        "The third: failed attempts invite brute force, so counts leak.",
+        "The fourth: Debug lines ship internals like latency to production."
       ],
       "answer": 1,
-      "explanation": "The token is the only line carrying something an attacker can spend: it authenticates as the user until it expires, and logs are read by more people and kept longer than anyone plans. Usernames, attempt counts, and latencies are operational metadata — useful, attributable, and not reusable as credentials. The fix is Scrub-shaped: mask token values at the boundary so no call site has to remember, because call sites never remember.",
+      "explanation": "The token is the only line carrying something an attacker can spend: it authenticates as the user until it expires, and logs are read by more people and kept longer than anyone plans. Usernames, attempt counts, and latencies are operational metadata, not reusable as credentials. The fix is Scrub-shaped: mask token values at the boundary so no call site has to remember, because call sites never remember.",
       "hints": [
         "Ask of each line: if an attacker reads exactly this, what can they do that they could not do before?"
       ],
       "misconceptions": [
-        "Usernames are secrets — they identify; tokens authenticate. Only the second reuses.",
-        "Debug level hides the leak — levels filter noise, they do not unpublish what they carry."
+        "Usernames are secrets; they identify; tokens authenticate. Only the second reuses.",
+        "Debug level hides the leak, levels filter noise, they do not unpublish what they carry."
       ]
     },
     "go-logging-do": {
       "id": "go-logging-do",
       "title": "Solve: RequestLog",
       "kind": "challenge",
-      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
@@ -4439,28 +4558,27 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a nil logger falls back instead of panicking"
           ],
-          "feedback": "A nil base must fall back — slog.Default() is the honest default — and still carry the request id. Decide before the first method call. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "A nil base must fall back, slog.Default() is the honest default, and still carry the request id. Decide before the first method call. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [
-        "Open logging.go. One With call does the carrying; the question is only what it is called on. Run go test ./... and read the name of the test that failed.",
+        "Open logging.go. One With call does the carrying; the question is only what it is called on.",
         "base.With(\"request_id\", requestID) returns the logger every later line needs.",
         "A nil *slog.Logger cannot take a method call. Check for nil first and fall back to slog.Default().",
         "Run go test and read the failing test name first: the id line, then the nil edge.",
-        "Solution review: nil falls back to the default, then With attaches the id either way. Run the checks — two tests, two green."
+        "Solution review: nil falls back to the default, then With attaches the id either way. Run the checks, two tests, two green."
       ],
       "misconceptions": [
-        "Mutating the base logger — With derives; the shared base must stay clean for the next request.",
-        "Returning nil for nil — the caller was promised a logger; nil just moves the panic one frame over.",
-        "Putting the id in the message text — attributes filter; prose does not."
+        "Mutating the base logger. With derives; the shared base must stay clean for the next request.",
+        "Returning nil for nil, the caller was promised a logger; nil just moves the panic one frame over.",
+        "Putting the id in the message text, attributes filter; prose does not."
       ]
     },
     "go-logging-review": {
       "id": "go-logging-review",
       "title": "Review: Scrub",
       "kind": "retrieval",
-      "direction": "guided",
       "mode": "review",
       "guidance": 2,
       "competencyIds": [
@@ -4485,14 +4603,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "a clean line passes through exactly"
           ],
-          "feedback": "No token means no change: return the line byte-for-byte. A scrubber that rewrites clean lines cannot be trusted on dirty ones. If the suite cannot run because node is command not found, run the environment check first.",
+          "feedback": "No token means no change: return the line byte-for-byte. A scrubber that rewrites clean lines cannot be trusted on dirty ones. If the suite cannot run because the terminal says node is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Masking the whole line — the context around the secret is the debugging value; only the value is the leak.",
-        "Dropping token lines entirely — a missing line at 3am reads as a missing event, worse than a masked one."
+        "Masking the whole line, the context around the secret is the debugging value; only the value is the leak.",
+        "Dropping token lines entirely, a missing line at 3am reads as a missing event, worse than a masked one."
       ]
     },
     "go-deps-learn": {
@@ -4529,6 +4647,10 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "body": "go mod tidy reads the imports and reconciles both files: it adds a requirement the code adopted, drops one nothing imports, and records the checksums. It is the tool that writes the pair, which is why a hand edit that skips it resurfaces as a build error on someone else's machine."
         },
         {
+          "kind": "prose",
+          "body": "This phase cannot stand on its own: the module it reconciles is fetched from the proxy rather than vendored, so nothing in it compiles until tidy has written the pair."
+        },
+        {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
@@ -4540,8 +4662,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "example",
-          "body": "go.mod is where this phase works.",
-          "code": "module example.com/ledger\n\ngo 1.22\n\nrequire golang.org/x/crypto v0.33.0 // indirect\n"
+          "body": "depsdemo/go.mod is where this phase works.",
+          "code": "module example.com/depsdemo\n\ngo 1.22\n"
         },
         {
           "kind": "example",
@@ -4554,11 +4676,11 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "The two files answer different questions: go.mod says what to fetch, go.sum says what must arrive. If go is command not found, run the environment check first."
+        "The two files answer different questions: go.mod says what to fetch, go.sum says what must arrive. If the terminal says go is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Hand-editing go.mod and skipping tidy — the next build finds a pair the tool no longer recognises.",
-        "Expecting a local replace to appear in go.sum — a directory has no content to checksum."
+        "Hand-editing go.mod and skipping tidy, the next build finds a pair the tool no longer recognises.",
+        "Expecting a local replace to appear in go.sum, a directory has no content to checksum."
       ],
       "resources": [
         {
@@ -4599,8 +4721,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Direct and transitive are two different questions: what your own code imports, and what an imported module imports in turn."
       ],
       "misconceptions": [
-        "Thinking tidy upgrades a direct require — it keeps the version already declared and records what the graph needs beneath it.",
-        "Expecting go.sum to hold only the top-level module — every version the build fetched, direct or not, earns a line."
+        "Thinking tidy upgrades a direct require; it keeps the version already declared and records what the graph needs beneath it.",
+        "Expecting go.sum to hold only the top-level module, every version the build fetched, direct or not, earns a line."
       ]
     },
     "go-deps-do": {
@@ -4614,9 +4736,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-deps"
       ],
       "files": [
-        "go.mod",
-        "go.sum",
-        "depsdemo/main.go"
+        "depsdemo/go.mod",
+        "depsdemo/main.go",
+        "test/deps.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/deps.test.mjs",
       "checks": [
@@ -4626,7 +4748,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "go.mod declares every module the code imports"
           ],
-          "feedback": "main.go imports a module go.mod never declared, so the pair is out of step. Reconcile the module directory so the requirement appears — go mod tidy reads the imports and writes it for you."
+          "feedback": "main.go imports a module go.mod never declared, so the pair is out of step. Reconcile the module directory so the requirement appears, go mod tidy reads the imports and writes it for you."
         },
         {
           "id": "checksums",
@@ -4648,14 +4770,14 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "hints": [
         "Open depsdemo/main.go first and read its imports; then open depsdemo/go.mod and compare what is declared against what is imported. Run go test ./... and read the name of the test that failed.",
-        "go mod tidy reads the imports of every package in the module and rewrites the pair to match — that is the one command this task is built around.",
+        "go mod tidy reads the imports of every package in the module and rewrites the pair to match; that is the one command this task is built around.",
         "Tidy needs to fetch the module it has never seen, so this is the one step in the Go track that reaches the module proxy; offline it stops rather than guessing, and if go is not installed the environment check names the install.",
         "A solved pair looks like this: a require line naming the imported module at a released version, and a go.sum line carrying that version's hash.",
-        "Reconciled means stable: run tidy a second time and neither file should change. If it still edits one, an import and a requirement disagree — read the diff it prints."
+        "Reconciled means stable: run tidy a second time and neither file should change. If it still edits one, an import and a requirement disagree, read the diff it prints."
       ],
       "misconceptions": [
-        "Thinking tidy invents a version — it resolves what the imports ask for and records the released version it fetched.",
-        "Thinking go.sum is regenerated from thin air — its lines come from the content that was actually downloaded."
+        "Thinking tidy invents a version; it resolves what the imports ask for and records the released version it fetched.",
+        "Thinking go.sum is regenerated from thin air, its lines come from the content that was actually downloaded."
       ]
     },
     "go-deps-review": {
@@ -4669,9 +4791,9 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "go-deps"
       ],
       "files": [
-        "go.mod",
-        "go.sum",
-        "depsdemo/main.go"
+        "depsdemo/go.mod",
+        "depsdemo/main.go",
+        "test/deps.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/deps.test.mjs",
       "checks": [
@@ -4695,8 +4817,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Reading go.sum as a cache it may delete — it is the record that makes the build reproducible.",
-        "Thinking indirect means unimportant — an indirect requirement is still pinned and still checksummed."
+        "Reading go.sum as a cache it may delete; it is the record that makes the build reproducible.",
+        "Thinking indirect means unimportant, an indirect requirement is still pinned and still checksummed."
       ]
     },
     "go-ship-learn": {
@@ -4708,7 +4830,6 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Read a Dockerfile and say what the runtime stage must not carry, and which line fixes its user."
       ],
       "kind": "lesson",
-      "direction": "guided",
       "mode": "learn",
       "guidance": 1,
       "competencyIds": [
@@ -4725,30 +4846,34 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "A container is not a slim VM — it is a file that names a base image, a toolchain version, and the exact commands, so the next machine that builds your service is the machine you tested on. If go is command not found, run the environment check first.",
+        "A container is not a slim VM; it is a file that names a base image, a toolchain version, and the exact commands, so the next machine that builds your service is the machine you tested on.",
         "Two FROM lines are the whole idea: the first stage owns the toolchain and the compile, the last stage owns only what runs."
       ],
       "misconceptions": [
-        "Believing one carefully slimmed stage is as good as two — no amount of deleting from the golang image removes what the runtime must not carry: the compiler, the module cache, and the source. Two stages separate the roles instead of negotiating with one image.",
-        "Copying the whole tree with COPY . . as the first instruction and expecting the build to stay fast — that layer, and every layer after it, re-runs on every edit. The module files get their own layer precisely because they change least."
+        "Believing one carefully slimmed stage is as good as two, no amount of deleting from the golang image removes what the runtime must not carry: the compiler, the module cache, and the source. Two stages separate the roles instead of negotiating with one image.",
+        "Copying the whole tree with COPY . . as the first instruction and expecting the build to stay fast; that layer, and every layer after it, re-runs on every edit. The module files get their own layer precisely because they change least."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "Your service builds on your machine because that machine holds a toolchain you installed, modules you already downloaded, and an operating system you configured by hand. None of that travels. A colleague clones the repository and spends a day discovering your machine. A container closes that gap the way production expects: the Dockerfile names the base image, the exact toolchain version, and the exact commands, so the next build — yours, a teammate’s, or a runner nobody has ever seen — is the same build."
+          "body": "Your service builds on your machine because that machine holds a toolchain you installed, modules you already downloaded, and an operating system you configured by hand. None of that travels. A colleague clones the repository and spends a day discovering your machine."
+        },
+        {
+          "kind": "prose",
+          "body": "A container closes that gap the way production expects: the Dockerfile names the base image, the exact toolchain version, and the exact commands, so the next build, yours, a teammate\\u2019s, or a runner nobody has ever seen, is the same build."
         },
         {
           "kind": "example",
-          "body": "A multi-stage Dockerfile for a Go service — the shape every check in this lab is looking for:",
+          "body": "A multi-stage Dockerfile for a Go service, the shape every check in this lab is looking for:",
           "code": "FROM golang:1.26 AS builder\nWORKDIR /src\nCOPY go.mod go.sum ./\nRUN go mod download\nCOPY . .\nRUN CGO_ENABLED=0 go build -o /out/ledger ./cmd/ledger\n\nFROM gcr.io/distroless/static:nonroot\nCOPY --from=builder /out/ledger /usr/local/bin/ledger\nUSER nonroot\nENTRYPOINT [\"/usr/local/bin/ledger\"]"
         },
         {
           "kind": "prose",
-          "body": "Read that file as two images. The builder owns the toolchain and the compile: go.mod and go.sum are copied first so the module download gets a layer of its own, and only a source edit invalidates it — a changed .go file never re-downloads the dependency tree. The last FROM opens the runtime stage, and it owns nothing but the artifact: a static binary (CGO_ENABLED=0, so it carries no C-library dependency and runs on a base image that has none) copied out of the builder with COPY --from, started as a user that is not root. The toolchain never reaches production, and neither does the source — what ships is exactly what was proved."
+          "body": "Read that file as two images. The builder owns the toolchain and the compile: go.mod and go.sum are copied first so the module download gets a layer of its own, and only a source edit invalidates it, a changed .go file never re-downloads the dependency tree."
         },
         {
           "kind": "prose",
-          "body": "The binary that comes out of the builder is built from ./cmd/ledger: that directory holds the ledger's own program, a package main whose func main starts the HTTP server. It is the one thing the image has to be able to run, and the runtime stage runs nothing else."
+          "body": "The last FROM opens the runtime stage, and it owns nothing but the artifact: a static binary (CGO_ENABLED=0, so it carries no C-library dependency and runs on a base image that has none) copied out of the builder with COPY --from, started as a user that is not root. The toolchain never reaches production, and neither does the source, what ships is exactly what was proved."
         },
         {
           "kind": "keypoints",
@@ -4757,22 +4882,16 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
             "Two stages: the builder holds the toolchain, the runtime ships the artifact alone.",
             "Copy go.mod and go.sum first, then go mod download, so the module layer survives every source edit.",
             "Build static with CGO_ENABLED=0: the binary runs where no C library exists.",
-            "A pipeline re-runs your exact commands in a clean room on every push — the proof a local run can never give."
+            "A pipeline re-runs your exact commands in a clean room on every push, the proof a local run can never give."
           ]
         },
         {
-          "kind": "example",
-          "body": "Dockerfile is where this phase works.",
-          "code": "# Starter for the go-ship lab: one stage, the toolchain shipped as the\n# runtime, and every edit re-downloading every module. Replace it with a\n# multi-stage build: a cacheable builder that compiles a static binary, and a\n# minimal runtime that runs that binary as a non-root user. Run\n# `go test ./...` to watch the checks.\nFROM golang:1.26\nWORKDIR /src\nCOPY . .\nRUN go build -o ledger ./cmd/ledger\nCMD [\"/src/ledger\"]\n"
-        },
-        {
-          "kind": "example",
-          "body": "The command you run, and the one the Run button calls for you:",
-          "code": "go test ./...   # the command you run: every test in the module\nnode --test --test-reporter=tap test/ship.test.mjs   # what the Run button calls for this phase"
-        },
-        {
           "kind": "task",
-          "body": "In Dockerfile, replace the single stage with a multi-stage build: a NAMED builder stage (FROM golang:1.26 AS builder) that copies go.mod and go.sum first, downloads modules, copies the source, and builds a static binary; then a runtime stage on a minimal base that copies only that binary and runs it as a non-root user. In workflow.yml, give the workflow a push trigger and a go test ./... step behind actions/checkout and actions/setup-go. Run go test ./... to watch the starter fail."
+          "body": "In Dockerfile, replace the single stage with a multi-stage build: a NAMED builder stage (FROM golang:1.26 AS builder) that copies go.mod and go.sum first, downloads modules, copies the source, and builds a static binary; then a runtime stage on a minimal base that copies only that binary and runs it as a non-root user."
+        },
+        {
+          "kind": "prose",
+          "body": "In workflow.yml, give the workflow a push trigger and a go test ./... step behind actions/checkout and actions/setup-go. Run node --test --test-reporter=tap test/ship.test.mjs to watch the starter fail."
         }
       ]
     },
@@ -4780,7 +4899,6 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       "id": "go-ship-ask",
       "title": "Reason: an image that builds is not an image that ships",
       "kind": "question",
-      "direction": "guided",
       "mode": "review",
       "guidance": 1,
       "competencyIds": [
@@ -4790,8 +4908,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         "Judge the file by what it puts in the image a customer’s cluster pulls, not by whether the build exits zero."
       ],
       "misconceptions": [
-        "Thinking a working Dockerfile is a shippable one — the build succeeding proves the commands ran, not that production should receive a compiler, a module cache, and the whole source tree.",
-        "Assuming the toolchain in the runtime image is harmless because it is only used for debugging — every tool in the shipped layers is a tool an attacker finds without installing anything."
+        "Thinking a working Dockerfile is a shippable one, the build succeeding proves the commands ran, not that production should receive a compiler, a module cache, and the whole source tree.",
+        "Assuming the toolchain in the runtime image is harmless because it is only used for debugging, every tool in the shipped layers is a tool an attacker finds without installing anything."
       ],
       "lesson": [
         {
@@ -4800,34 +4918,33 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
         }
       ],
       "options": [
-        "Nothing — keeping the toolchain in production lets you inspect a live process, and disk is cheap enough that size no longer matters.",
-        "The COPY order — go.sum belongs before go.mod, so the layer cache never hits. That is the only defect in an otherwise sound file.",
-        "It ships the toolchain and source as runtime — surface that cannot help. Fix: build in one stage, ship the static binary, non-root.",
-        "The base is wrong — Go services belong on Alpine, not the Debian-based golang image, so production runs an unsupported distribution."
+        "Nothing, keeping the toolchain in production lets you inspect a live process, and disk is cheap enough that size no longer matters.",
+        "The COPY order, go.sum belongs before go.mod, so the layer cache never hits. That is the only defect in an otherwise sound file.",
+        "It ships the toolchain and source as runtime, surface that cannot help. Fix: build in one stage, ship the static binary, non-root.",
+        "The base is wrong. Go services belong on Alpine, not the Debian-based golang image, so production runs an unsupported distribution."
       ],
       "answer": 2,
-      "explanation": "The image builds, and that is exactly why the mistake survives review: a working Dockerfile and a shippable one are different claims. The single golang stage carries the compiler, the module cache, and the entire source tree into production — each layer is bandwidth on every deploy and surface area in every cluster, and none of them can help the process at runtime. The two-stage fix separates the roles instead of negotiating with one image: the builder owns the toolchain and the compile, and the runtime receives exactly one artifact — the static binary, built with CGO_ENABLED=0 so it runs on a base with no C library — and starts it as a non-root user, so even a compromised process begins with nothing to escalate from. The COPY-order distractor is the one worth respecting: layer caching is real, and go.mod before source before build is the pattern — but it is a performance detail, not the reason this image was rejected."
+      "explanation": "The image builds, and that is why the mistake survives review: a working Dockerfile and a shippable one are different claims. The single golang stage carries the compiler, the module cache, and the source into production. The two-stage fix separates the roles: the builder owns the toolchain, the runtime receives one artifact, the static binary. The COPY order is a performance detail, not the reason."
     },
     "go-ship-do": {
       "id": "go-ship-do",
       "title": "Solve: a Dockerfile that ships the artifact, and a pipeline that proves it",
       "kind": "challenge",
-      "direction": "guided",
       "mode": "solve",
       "guidance": 2,
       "competencyIds": [
         "deployment-ops"
       ],
       "hints": [
-        "Open Dockerfile. Start from the bottom of the file you want, not the top of the file you have: a second FROM line is what turns one image into two — everything before the last FROM is the builder, everything after it is what ships. Run go test ./... and read the name of the test that failed.",
+        "Start from the bottom of the file you want, not the top of the file you have: a second FROM line is what turns one image into two, everything before the last FROM is the builder, everything after it is what ships.",
         "Copy go.mod and go.sum on their own line before anything else, then run go mod download: that gives the module cache a layer of its own, so editing a .go file never re-downloads your dependencies.",
         "The runtime stage must not mention go at all. Copy the binary out of the builder with COPY --from=builder, point the final FROM at a minimal base, and build with CGO_ENABLED=0 so the binary needs no C library to run there.",
-        "Two checks look at who the process runs as: a USER line in the final stage naming someone who is not root. And the workflow needs a push trigger with actions/setup-go and a go test step — the same commands this machine runs.",
-        "If the suite cannot run because node is command not found, run the environment check first. With a Docker daemon present the container check builds your image and runs the suite inside the builder; without one it reports itself not-run — every file check above still judges what you wrote."
+        "Two checks look at who the process runs as: a USER line in the final stage naming someone who is not root. And the workflow needs a push trigger with actions/setup-go and a go test step, the same commands this machine runs.",
+        "If the suite cannot run because the terminal says node is not found, run the environment check first. With a Docker daemon present the container check builds your image and runs the suite inside the builder; without one it reports itself not-run, every file check above still judges what you wrote."
       ],
       "misconceptions": [
-        "Leaving the golang image as the runtime so you can debug in production — the artifact should be debuggable before it ships, and every tool such a runtime would offer production is a tool an attacker would find there too.",
-        "Running the container as root because a container is \"just a container\" — the runtime image is a deliverable, not a workspace, and the USER line is where you decide what a compromised process starts as."
+        "Leaving the golang image as the runtime so you can debug in production, the artifact should be debuggable before it ships, and every tool such a runtime would offer production is a tool an attacker would find there too.",
+        "Running the container as root because a container is \"just a container\", the runtime image is a deliverable, not a workspace, and the USER line is where you decide what a compromised process starts as."
       ],
       "files": [
         "Dockerfile",
@@ -4865,7 +4982,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the runtime process does not run as root"
           ],
-          "feedback": "Add a USER line to the final stage naming a non-root user — distroless images ship a nonroot user for exactly this. A container that starts as root hands a compromised process the whole namespace."
+          "feedback": "Add a USER line to the final stage naming a non-root user, distroless images ship a nonroot user for exactly this. A container that starts as root hands a compromised process the whole namespace."
         },
         {
           "id": "ship-pipeline-runs-suite",
@@ -4873,7 +4990,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the pipeline runs the suite on every push"
           ],
-          "feedback": "The workflow needs a push trigger, actions/checkout, a pinned toolchain behind actions/setup-go, and a go test step: the same commands this machine runs, in a clean room, on every push — not only on the machine that wrote the change."
+          "feedback": "The workflow needs a push trigger, actions/checkout, a pinned toolchain behind actions/setup-go, and a go test step: the same commands this machine runs, in a clean room, on every push, not only on the machine that wrote the change."
         },
         {
           "id": "ship-container-suite",
@@ -4881,7 +4998,7 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
           "tests": [
             "the suite passes inside the container"
           ],
-          "feedback": "With a Docker daemon available this check builds your image and runs go test ./... inside the builder it came from, and a failure shows Docker’s own output. Without a daemon it reports itself not-run with that reason — missing infrastructure never fails a check here.",
+          "feedback": "With a Docker daemon available this check builds your image and runs go test ./... inside the builder it came from, and a failure shows Docker’s own output. Without a daemon it reports itself not-run with that reason, missing infrastructure never fails a check here.",
           "edge": true
         }
       ]
@@ -4898,7 +5015,10 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
       ],
       "incidentId": "incident-journal-loss",
       "files": [
-        "journal/journal.go"
+        "journal/journal.go",
+        "journal/journal_test.go",
+        "journal/go.mod",
+        "test/journal-incident.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/journal-incident.test.mjs",
       "checks": [

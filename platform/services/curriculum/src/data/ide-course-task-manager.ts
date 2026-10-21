@@ -32,7 +32,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
     {
       "id": "fundamentals",
       "title": "Programming fundamentals",
-      "goal": "The words every later phase uses as if you already knew them — a value, a variable, a function, a list, a loop — each defined in plain language and run in a two-line program, so the next phase is reading, not guessing.",
+      "goal": "The words every later phase uses as if you already knew them, a value, a variable, a function, a list, a loop, each defined in plain language and run in a two-line program, so the next phase is reading, not guessing.",
       "level": 1,
       "authored": true,
       "activities": [
@@ -232,7 +232,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "What should the UI show while a request is in flight, and what should it show on failure?",
         "Why must you handle a request that succeeds but returns unusable data?",
         "What is the difference between an error status and a network failure?",
-        "A test prints start, end, between — why does the promise callback run last, and what does that say about the line after an await?"
+        "A test prints start, end, between, why does the promise callback run last, and what does that say about the line after an await?"
       ]
     },
     {
@@ -256,7 +256,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
     {
       "id": "testing",
       "title": "Test the application",
-      "goal": "Write tests that would catch a broken implementation — judged by whether they can fail.",
+      "goal": "Write tests that would catch a broken implementation, judged by whether they can fail.",
       "level": 3,
       "authored": true,
       "activities": [
@@ -379,6 +379,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "action": "terminal-created"
         }
       ],
+      "excerpt": {
+        "file": "package.json",
+        "start": 1,
+        "end": 9
+      },
       "lesson": [
         {
           "kind": "prose",
@@ -390,7 +395,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Each read ends with Mark as Complete, which unlocks the next step. A read that watches what you do finishes itself, and Mark as Complete is still there when you need it."
+          "body": "Each read ends with Mark as Complete, which opens the next step. A read that watches what you do finishes itself, and Mark as Complete is still there when you need it."
         },
         {
           "kind": "example",
@@ -406,7 +411,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "body": "You type an edit, then close the tab without saving. What is on disk now?",
           "items": [
             "The edit, because a tab is only a view of the file on disk.",
-            "Nothing new — the unsaved edit is gone with the tab.",
+            "Nothing new, the unsaved edit is gone with the tab.",
             "The file itself, deleted along with its tab."
           ],
           "answer": 1,
@@ -423,7 +428,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "On first run the IDE asks where the project should live. The default is NEXORA/Task-Manager in your home directory: choose it and the project is created there and opened. If you skip the ask, run NEXORA: Setup Workspace from the palette and reopen there. Then expand one folder, click a file to open it, press Ctrl+` to show the terminal and again to hide it, then close the tab you opened. You touched all three regions and changed nothing."
+          "body": "On first run the IDE asks where the project should live. The default is NEXORA/Task-Manager in your home directory: choose it and the project is created and opened. If you skip the ask, run NEXORA: Setup Workspace from the palette."
+        },
+        {
+          "kind": "task",
+          "body": "Then expand a folder, click a file, press Ctrl+` to show the terminal and again to hide it, then close the tab. You touched three regions and changed nothing."
         }
       ],
       "hints": [
@@ -469,6 +478,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "shows": "v20.11.0"
         }
       ],
+      "excerpt": {
+        "file": "test/setup.test.mjs",
+        "start": 16,
+        "end": 19
+      },
       "lesson": [
         {
           "kind": "prose",
@@ -476,7 +490,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Step 1 — Node.js 20 or newer. Open nodejs.org and take the download labeled LTS, the long-support release the tests are written against. On Windows run the .msi, on macOS the .pkg, on Linux use your package manager, or paste the commands below into a terminal."
+          "body": "Step 1: Node.js 20 or newer. Open nodejs.org and take the download labeled LTS, the long-support release the tests are written against. On Windows run the .msi, on macOS the .pkg, on Linux use your package manager, or paste the commands below into a terminal."
         },
         {
           "kind": "example",
@@ -485,11 +499,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "If a line answers command not found, that package manager is not on your machine — use the website installer from Step 1 instead. One Linux warning: distro repositories can ship a Node older than 20. If node -v reports under 20 after an apt install, take Node from nodejs.org."
+          "body": "If a line answers command not found, that package manager is not on your machine, use the website installer from Step 1 instead. One Linux warning: distro repositories can ship a Node older than 20. If node -v reports under 20 after an apt install, take Node from nodejs.org."
         },
         {
           "kind": "prose",
-          "body": "Step 2 — close the terminal, open a new one, and prove it. Open Terminal ▸ New Terminal from the menu. A terminal already open keeps the environment it started with, so it cannot see what an installer changed afterwards. Run the two commands below."
+          "body": "Step 2: close the terminal, open a new one, and prove it. Open Terminal ▸ New Terminal from the menu. A terminal already open keeps the environment it started with, so it cannot see what an installer changed afterwards. Run the two commands below."
         },
         {
           "kind": "example",
@@ -498,11 +512,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Step 3 — Git, if the second command said not found. Install it from git-scm.com, open one more new terminal, and run the same check. Git is not needed to write code, only to record it later, so a missing Git today is not a wall."
+          "body": "Step 3: Git, if the second command said not found. Install it from git-scm.com, open one more new terminal, and run the same check. Git is not needed to write code, only to record it later, so a missing Git today is not a wall."
         },
         {
           "kind": "prose",
-          "body": "Step 4 — run the environment check. Press Ctrl+Shift+P (Cmd+Shift+P on macOS), type NEXORA, and choose it. It reports Node, Git, and the project's files, and every failure names its own fix. If it still says Node is missing, quit and reopen the editor — it started its terminal before your install."
+          "body": "Step 4: run the environment check. Press Ctrl+Shift+P (Cmd+Shift+P on macOS), type NEXORA, and choose it. It reports Node, Git, and the project's files, and every failure names its own fix. If it still says Node is missing, quit and reopen the editor; it started its terminal before your install."
         },
         {
           "kind": "quickcheck",
@@ -521,23 +535,23 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "items": [
             "Node 20+ runs the project and tests; Git comes in for version control.",
             "A new terminal sees the new PATH; an old one does not.",
-            "The environment check names the fix — run it first."
+            "The environment check names the fix, run it first."
           ]
         },
         {
           "kind": "task",
-          "body": "Open a new terminal and run node -v. Read the version it prints. If it prints nothing, or a number below 20, stop here and install — nothing later can work around a missing runtime, and every failure after it would point at the wrong thing."
+          "body": "Open a new terminal and run node -v. Read the version it prints. If it prints nothing, or a number below 20, stop here and install, nothing later can work around a missing runtime, and every failure after it would point at the wrong thing."
         }
       ],
       "hints": [
         "The Command Palette is Ctrl+Shift+P; every command the editor has is in there, by name, with its shortcut written beside it.",
         "If the terminal does not know node, close that terminal tab and open a new one. The tab was started before the installer changed your PATH.",
-        "On Windows, take the installer's default options: the default already adds Node to PATH, and the checkbox that does it is easy to unset by accident."
+        "On Windows, take the installer's default options: the default already adds Node to PATH, and the checkbox that does it is one you can unset by accident."
       ],
       "misconceptions": [
-        "Installing Node means the editor now sees it — the editor and its terminals keep the environment they started with; reopen the editor or open a new terminal.",
-        "Any Node version will do — the tests assume 20 or newer, and an older runtime fails in ways that look exactly like bugs in your code.",
-        "Git is needed to write code — it is not; it is needed when the phase asks you to record changes."
+        "Installing Node means the editor now sees it, the editor and its terminals keep the environment they started with; reopen the editor or open a new terminal.",
+        "Any Node version will do, the tests assume 20 or newer, and an older runtime fails in ways that look exactly like bugs in your code.",
+        "Git is needed to write code; it is not; it is needed when the phase asks you to record changes."
       ]
     },
     "setup-learn-editor": {
@@ -564,19 +578,24 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Apply Ctrl+D, F12 and F2 to edit repeated words, jump to a definition, and rename a symbol.",
         "Explain why a per-pane shortcut does nothing when the focus is in another pane."
       ],
+      "excerpt": {
+        "file": "package.json",
+        "start": 1,
+        "end": 9
+      },
       "lesson": [
         {
           "kind": "prose",
-          "body": "You will spend this whole course inside one editor, so its shortcuts are not trivia. They are the difference between looking for a file and being in it. Ten of them carry most of the weight — learn them by doing the task at the bottom of this panel, not by reading the list twice."
+          "body": "You will spend this whole course inside one editor, so its shortcuts are not trivia. They are the difference between looking for a file and being in it. Ten of them carry most of the weight, learn them by doing the task at the bottom of this panel, not by reading the list twice."
         },
         {
           "kind": "example",
           "body": "On macOS, Cmd replaces Ctrl and Option replaces Alt. The first three earn their keep immediately:",
-          "code": "Ctrl+Shift+P    Command Palette — every command, by name\nCtrl+P          Quick Open — type part of a file name; @ for a symbol, : for a line\nCtrl+`          Toggle the integrated terminal\n\nCtrl+B          Show or hide the sidebar\nCtrl+Shift+F    Search across every file in the project\nCtrl+Shift+M    Problems panel — errors and warnings with file and line\nCtrl+\\          Split the editor; Ctrl+1 and Ctrl+2 move between groups\n\nF12             Go to the definition; Alt+← comes back\nF2              Rename a symbol everywhere it is used\nShift+Alt+F     Format the document\nCtrl+/          Comment or uncomment the current line\nCtrl+D          Select the next occurrence — edit several places at once\nAlt+↑ / Alt+↓   Move the current line up or down\nShift+Alt+↓     Duplicate the current line\nCtrl+K Z        Zen mode — everything but the code (Esc leaves)"
+          "code": "Ctrl+Shift+P    Command Palette, every command, by name\nCtrl+P          Quick Open, type part of a file name; @ for a symbol, : for a line\nCtrl+`          Toggle the integrated terminal\n\nCtrl+B          Show or hide the sidebar\nCtrl+Shift+F    Search across every file in the project\nCtrl+Shift+M    Problems panel, errors and warnings with file and line\nCtrl+\\          Split the editor; Ctrl+1 and Ctrl+2 move between groups\n\nF12             Go to the definition; Alt+← comes back\nF2              Rename a symbol everywhere it is used\nShift+Alt+F     Format the document\nCtrl+/          Comment or uncomment the current line\nCtrl+D          Select the next occurrence, edit several places at once\nAlt+↑ / Alt+↓   Move the current line up or down\nShift+Alt+↓     Duplicate the current line\nCtrl+K Z        Zen mode, everything but the code (Esc leaves)"
         },
         {
           "kind": "prose",
-          "body": "Two habits outlive the list. The first: when you want to do something and cannot see how, press Ctrl+Shift+P and type what you want — the command is almost always there, and the palette shows its shortcut next to the result, which is how these keys become yours. The second: read the Problems panel before running anything. The tooling usually knows what is wrong before you do."
+          "body": "Two habits outlive the list. The first: when you want to do something and cannot see how, press Ctrl+Shift+P and type what you want, the command is almost always there, and the palette shows its shortcut next to the result, which is how these keys become yours. The second: read the Problems panel before running anything. The tooling usually knows what is wrong before you do."
         },
         {
           "kind": "quickcheck",
@@ -594,24 +613,24 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "body": "Key Points",
           "items": [
             "Ctrl+Shift+P finds any command by name; Ctrl+P finds any file by name.",
-            "Ctrl+D edits several places at once — the fast fix for repeated words.",
+            "Ctrl+D edits several places at once, the fast fix for repeated words.",
             "F12 and the Problems panel answer most questions before you finish asking them."
           ]
         },
         {
           "kind": "task",
-          "body": "Do four things without touching the mouse: open package.json with Ctrl+P, split the editor with Ctrl+\\, open a terminal with Ctrl+`, then press Ctrl+Shift+P and type rename — watch the palette show F2 beside it. Every one of these works from anywhere in the window, which is why they replace the menus."
+          "body": "Do four things without touching the mouse: open package.json with Ctrl+P, split the editor with Ctrl+\\, open a terminal with Ctrl+`, then press Ctrl+Shift+P and type rename, watch the palette show F2 beside it. Every one of these works from anywhere in the window, which is why they replace the menus."
         }
       ],
       "hints": [
         "Inside Quick Open, @ lists the symbols in the current file and : followed by a number jumps to a line.",
-        "If a shortcut seems to do nothing, the focus is in the wrong place — the palette opens from anywhere, per-pane commands do not.",
+        "If a shortcut seems to do nothing, the focus is in the wrong place, the palette opens from anywhere, per-pane commands do not.",
         "Esc closes the palette without running anything; typing there changes nothing in the project."
       ],
       "misconceptions": [
-        "Shortcuts replace knowing the menu — the palette shows the same commands beside their keys; the keys are the shortcut to the command, not a separate world.",
-        "Ctrl+D selects the whole file — it adds the next occurrence of the current selection; Ctrl+Shift+L is the select-everything version.",
-        "The terminal must be restarted after every change — only a change to the environment needs a new terminal; edits to files do not."
+        "Shortcuts replace knowing the menu, the palette shows the same commands beside their keys; the keys are the shortcut to the command, not a separate world.",
+        "Ctrl+D selects the whole file; it adds the next occurrence of the current selection; Ctrl+Shift+L is the select-everything version.",
+        "The terminal must be restarted after every change, only a change to the environment needs a new terminal; edits to files do not."
       ]
     },
     "setup-ask-toolchain": {
@@ -623,6 +642,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "competencyIds": [
         "project-setup"
       ],
+      "excerpt": {
+        "file": "package.json",
+        "start": 6,
+        "end": 8
+      },
       "lesson": [
         {
           "kind": "prose",
@@ -630,19 +654,19 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "Reinstall Node — a second install adds the missing piece and puts the new bin folder on the PATH.",
+        "Reinstall Node, a second install adds the missing piece and puts the new bin folder on the PATH.",
         "Open a new terminal and run node -v there; the proof is a version the tool prints itself.",
-        "Trust the installer's success message — the terminal is usually just slow to notice the change.",
+        "Trust the installer's success message, the terminal is usually just slow to notice the change.",
         "Copy the node executable into the project folder so the project can find it when it runs."
       ],
       "answer": 1,
-      "explanation": "A version printed by the tool is evidence; an installer's success message is a claim about its own work. Terminals inherit the environment that was current when they started, so a terminal opened before the install cannot see it — open a new one. Reinstalling changes nothing if the first install was fine, a slow terminal can still be tested rather than trusted, and a second copy of the executable inside the project is one more thing to keep in sync instead of a fix.",
+      "explanation": "A version the tool prints is evidence; an installer's success message is a claim about its own work. Terminals inherit the environment they started with, so one opened before the install cannot see it: open a new one. Reinstalling changes nothing if the first install was fine, a slow terminal can be tested, not trusted, and a second copy of the executable is one more thing to sync.",
       "hints": [
         "Ask which of these four produces something you can read back to yourself."
       ],
       "misconceptions": [
-        "The installer's message is the proof — it reports what it did, not whether your shell can use it afterwards.",
-        "The terminal is the environment — the shell inherits a snapshot of it when it launches, and the snapshot is the part that goes stale."
+        "The installer's message is the proof; it reports what it did, not whether your shell can use it afterwards.",
+        "The terminal is the environment, the shell inherits a snapshot of it when it launches, and the snapshot is the part that goes stale."
       ]
     },
     "setup-do-firstrun": {
@@ -666,7 +690,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the manifest declares a dev script"
           ],
-          "feedback": "package.json has no dev script, so nothing declares how the project starts. Add a dev entry to the scripts block — a name and a non-empty command."
+          "feedback": "package.json has no dev script, so nothing declares how the project starts. Add a dev entry to the scripts block, a name and a non-empty command."
         },
         {
           "id": "entry-file",
@@ -674,7 +698,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the app entry file exists"
           ],
-          "feedback": "The suite cannot find src/main.jsx. Create it in src/, next to the components — the dev script points at the entry, not the other way round."
+          "feedback": "The suite cannot find src/main.jsx. Create it in src/, next to the components, the dev script points at the entry, not the other way round."
         },
         {
           "id": "edge-mounts",
@@ -694,9 +718,9 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "A complete answer satisfies the pair together: a declared dev entry with a non-empty command, and an entry file that finds the root element before rendering anything. If `node -v` reports command not found the suite cannot start: open a new terminal, or install Node per the first lesson, then retry."
       ],
       "misconceptions": [
-        "The dev script is the same thing as the entry file — they are two halves of one idea: the script starts the project, and it fails immediately without the file.",
-        "The entry file belongs at the project root — it sits in src/ with the rest of the source, and the page's HTML points at it.",
-        "Editing the test to match the code — the suite is this phase's acceptance criteria, not a suggestion."
+        "The dev script is the same thing as the entry file; they are two halves of one idea: the script starts the project, and it fails immediately without the file.",
+        "The entry file belongs at the project root; it sits in src/ with the rest of the source, and the page's HTML points at it.",
+        "Editing the test to match the code, the suite is this phase's acceptance criteria, not a suggestion."
       ]
     },
     "setup-learn-project": {
@@ -719,6 +743,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Explain what a script entry is and when the package manager reads it.",
         "Identify the project root that holds package.json, and say why commands run from there."
       ],
+      "excerpt": {
+        "file": "package.json",
+        "start": 6,
+        "end": 8
+      },
       "lesson": [
         {
           "kind": "prose",
@@ -765,11 +794,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "The manifest sits at the project root — the folder you opened, not a subfolder. If node is command not found, run the environment check first."
+        "The manifest sits at the project root, the folder you opened, not a subfolder. If the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Running commands from the wrong folder — the terminal's location is part of every command.",
-        "Editing build output instead of source — generated files are rewritten on the next build."
+        "Running commands from the wrong folder, the terminal's location is part of every command.",
+        "Editing build output instead of source, generated files are rewritten on the next build."
       ]
     },
     "setup-ask-terminal": {
@@ -802,6 +831,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "shows": "project folder"
         }
       ],
+      "excerpt": {
+        "file": "package.json",
+        "start": 6,
+        "end": 8
+      },
       "lesson": [
         {
           "kind": "prose",
@@ -827,15 +861,15 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open a terminal in the project folder, run the command above, and read what it prints. Then open a terminal in your home folder, run it there, and read what it prints. If node is command not found, run the environment check first."
+          "body": "Open a terminal in the project folder, run the command above, and read what it prints. Then open a terminal in your home folder, run it there, and read what it prints. If the terminal says node is not found, run the environment check first."
         }
       ],
       "hints": [
         "The project folder is the one that holds package.json, and the terminal has to be standing in it."
       ],
       "misconceptions": [
-        "The terminal follows the open file — it follows the folder it was opened in.",
-        "The terminal is the environment — the shell inherits a snapshot of it when it launches, and the snapshot is the part that goes stale."
+        "The terminal follows the open file; it follows the folder it was opened in.",
+        "The terminal is the environment, the shell inherits a snapshot of it when it launches, and the snapshot is the part that goes stale."
       ]
     },
     "setup-review-transfer": {
@@ -858,7 +892,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the second manifest declares a start script"
           ],
-          "feedback": "extras/ has no package.json yet, or has one whose scripts block never names start. A manifest is the file that says what can be run: name the project, then give scripts a start entry whose value is an actual command. If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "extras/ has no package.json yet, or has one whose scripts block never names start. A manifest is the file that says what can be run: name the project, then give scripts a start entry whose value is an actual command. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "setup-review-points",
@@ -866,7 +900,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the start command points at a file that is really there"
           ],
-          "feedback": "The script names a file the folder does not contain. Write that file beside the manifest and point the command at it, the way the project's dev script points at its entry — a script and the file it runs are two halves of one shape, and either one alone starts nothing."
+          "feedback": "The script names a file the folder does not contain. Write that file beside the manifest and point the command at it, the way the project's dev script points at its entry, a script and the file it runs are two halves of one shape, and either one alone starts nothing."
         },
         {
           "id": "edge-setup-untouched",
@@ -874,14 +908,14 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the project you were handed still declares its dev script"
           ],
-          "feedback": "Building the second shape cost you the first: the root manifest lost its dev entry, or its entry file went missing. Adding a project means adding a folder, not moving what was already declared — every later phase runs against those files.",
+          "feedback": "Building the second shape cost you the first: the root manifest lost its dev entry, or its entry file went missing. Adding a project means adding a folder, not moving what was already declared, every later phase runs against those files.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "One manifest can serve two folders — a script means what it says only in the folder holding the file that declares it.",
-        "An empty scripts entry still counts as a start — the name is a promise that a command and a real file are waiting behind it."
+        "One manifest can serve two folders, a script means what it says only in the folder holding the file that declares it.",
+        "An empty scripts entry still counts as a start, the name is a promise that a command and a real file are waiting behind it."
       ]
     },
     "fund-learn-values": {
@@ -920,7 +954,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "The types side by side. typeof asks a value what it is:",
-          "code": "3            // number\n\"Ada\"        // string\ntrue         // boolean\nundefined    // undefined — nothing put here yet"
+          "code": "3            // number\n\"Ada\"        // string\ntrue         // boolean\nundefined    // undefined, nothing put here yet"
         },
         {
           "kind": "prose",
@@ -936,11 +970,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "quickcheck",
-          "body": "function f() { console.log(1); } — what does const x = f(); put in x?",
+          "body": "function f() { console.log(1); }: what does const x = f(); put in x?",
           "items": [
-            "1 — the value it printed comes back as the result.",
-            "undefined — printing is not returning.",
-            "null — a function with no return gives null."
+            "1, the value it printed comes back as the result.",
+            "undefined, printing is not returning.",
+            "null, a function with no return gives null."
           ],
           "answer": 1,
           "explain": "console.log writes to the screen and hands back nothing, so the call has the value undefined. Only return gives a value to the caller, which is why a function can print the right thing and still leave x empty."
@@ -966,7 +1000,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "Reading out of both shapes:",
-          "code": "const nums = [1, 2, 3];\nnums[0];        // 1  — the first, because counting starts at 0\nnums.length;    // 3\n\nconst task = { title: \"Buy milk\", done: false };\ntask.title;     // \"Buy milk\""
+          "code": "const nums = [1, 2, 3];\nnums[0];        // 1, the first, because counting starts at 0\nnums.length;    // 3\n\nconst task = { title: \"Buy milk\", done: false };\ntask.title;     // \"Buy milk\""
         },
         {
           "kind": "prose",
@@ -990,7 +1024,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "src/foundations.js is where this phase works.",
-          "code": "// Return the greeting \"Hello, <name>!\" — Hello, a comma, a space, the name, a bang.\nexport function greet(name) {\n\t// TODO: build the string from the name you were given.\n\tthrow new Error('greet is not implemented yet');\n}"
+          "code": "// Return the greeting \"Hello, <name>!\", Hello, a comma, a space, the name, a bang.\nexport function greet(name) {\n\t// TODO: build the string from the name you were given.\n\tthrow new Error('greet is not implemented yet');\n}"
         },
         {
           "kind": "example",
@@ -1018,19 +1052,19 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "lines": [
               "total = 6",
               "i = 3 (one past the end)",
-              "nums = [1, 2, 3] — unchanged"
+              "nums = [1, 2, 3]: unchanged"
             ]
           }
         }
       },
       "hints": [
-        "Read a call as its result: wherever you see greet(\"Ada\"), picture \"Hello, Ada!\" replacing it. If node is command not found, run the environment check first.",
+        "Read a call as its result: wherever you see greet(\"Ada\"), picture \"Hello, Ada!\" replacing it. If the terminal says node is not found, run the environment check first.",
         "Index 0 is the first item, so the last item of a list of length n is always at index n - 1."
       ],
       "misconceptions": [
-        "console.log is how a function gives its answer back — it only prints for a human; only return changes what the calling line becomes.",
-        "The first item of a list is at index 1 — counting starts at 0, so index 1 is the second item and the last is one less than the length.",
-        "A variable is its value — it is a box that holds one value now and can hold a different one later, while the name stays the same."
+        "console.log is how a function gives its answer back; it only prints for a human; only return changes what the calling line becomes.",
+        "The first item of a list is at index 1, counting starts at 0, so index 1 is the second item and the last is one less than the length.",
+        "A variable is its value; it is a box that holds one value now and can hold a different one later, while the name stays the same."
       ]
     },
     "fund-learn-collections": {
@@ -1069,7 +1103,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "One list, four questions asked of it:",
-          "code": "const nums = [1, 2, 3];\n\nnums.map(n => n * 2);     // [2, 4, 6] — one result per item\nnums.filter(n => n > 1);  // [2, 3]    — only the ones that passed\nnums.find(n => n > 1);    // 2         — the first that passed\nnums.some(n => n > 2);    // true      — did any pass?\nnums.every(n => n > 0);   // true      — did all pass?"
+          "code": "const nums = [1, 2, 3];\n\nnums.map(n => n * 2);     // [2, 4, 6]: one result per item\nnums.filter(n => n > 1);  // [2, 3]: only the ones that passed\nnums.find(n => n > 1);    // 2, the first that passed\nnums.some(n => n > 2);    // true, did any pass?\nnums.every(n => n > 0);   // true, did all pass?"
         },
         {
           "kind": "prose",
@@ -1087,7 +1121,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "One list, sorted two ways:",
-          "code": "const ages = [1, 10, 2, 9];\n\nages.sort();                // [1, 10, 2, 9] — text order, nothing moved\nages.sort((a, b) => a - b); // [1, 2, 9, 10] — number order\n\nconst copy = [...ages].sort((a, b) => a - b); // ages itself left alone"
+          "code": "const ages = [1, 10, 2, 9];\n\nages.sort();                // [1, 10, 2, 9]: text order, nothing moved\nages.sort((a, b) => a - b); // [1, 2, 9, 10]: number order\n\nconst copy = [...ages].sort((a, b) => a - b); // ages itself left alone"
         },
         {
           "kind": "prose",
@@ -1097,9 +1131,9 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "kind": "quickcheck",
           "body": "What does [10, 9, 1].sort() hand back?",
           "items": [
-            "[1, 9, 10] — sorted by numeric value, smallest first.",
-            "[1, 10, 9] — text order, not number order.",
-            "[10, 9, 1] — unchanged, because numbers never sort."
+            "[1, 9, 10]: sorted by numeric value, smallest first.",
+            "[1, 10, 9]: text order, not number order.",
+            "[10, 9, 1]: unchanged, because numbers never sort."
           ],
           "answer": 1,
           "explain": "With no compare function, sort turns each item into text first, so 10 comes before 9. Pass (a, b) => a - b to compare numbers, and copy the list first if the original order still matters."
@@ -1117,7 +1151,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "In src/foundations.js, sum is a stub that throws. Write it twice in your Notes — once with a for loop, once with reduce — and check on paper that an empty list answers 0 both ways. Then say which version a reviewer reads at a glance. Then write down, before running it, what the example’s bare ages.sort() left behind."
+          "body": "In src/foundations.js, sum is a stub that throws. Write it twice in your Notes, once with a for loop, once with reduce, and check on paper that an empty list answers 0 both ways. Then say which version a reviewer reads at a glance. Then write down, before running it, what the example’s bare ages.sort() left behind."
         }
       ],
       "hints": [
@@ -1125,11 +1159,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Need the same length? map. A shorter list? filter. One value? reduce."
       ],
       "misconceptions": [
-        "map and forEach are the same method — map collects each result into a new list and returns it; forEach walks the list and returns nothing at all.",
-        "map, filter and reduce change the list you called them on — each returns a new value and leaves the original exactly where it was.",
-        "Believing arr.sort() leaves the original alone because it hands back a sorted list — it rearranges the one you passed in, then returns that same array.",
-        "reduce has no starting value to worry about — you hand it one, and a list can be empty, so that seed is the only thing that guarantees an answer.",
-        "Loose equality is a convenient shorthand — it converts one side before comparing, so a string and a number can look equal when they are not."
+        "map and forEach are the same method, map collects each result into a new list and returns it; forEach walks the list and returns nothing at all.",
+        "map, filter and reduce change the list you called them on, each returns a new value and leaves the original exactly where it was.",
+        "Believing arr.sort() leaves the original alone because it hands back a sorted list; it rearranges the one you passed in, then returns that same array.",
+        "reduce has no starting value to worry about, you hand it one, and a list can be empty, so that seed is the only thing that guarantees an answer.",
+        "Loose equality is a convenient shorthand; it converts one side before comparing, so a string and a number can look equal when they are not."
       ]
     },
     "fund-ask-predict": {
@@ -1144,7 +1178,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Read this line by line and decide what it prints. Do not run it first — predict it, then run it to see whether your model was right. Being able to say what code will do before it does it is the whole skill this phase builds toward."
+          "body": "Read this line by line and decide what it prints. Do not run it first, predict it, then run it to see whether your model was right. Being able to say what code will do before it does it is the whole skill this phase builds toward."
         },
         {
           "kind": "example",
@@ -1153,19 +1187,19 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "0 — reduce starts at 0 and never gets past its first argument.",
-        "6 — every number in the list is added together.",
-        "5 — only 2 and 3 pass the test, and those two are added.",
-        "3 — filter leaves the largest number standing on its own."
+        "0, reduce starts at 0 and never gets past its first argument.",
+        "6, every number in the list is added together.",
+        "5, only 2 and 3 pass the test, and those two are added.",
+        "3, filter leaves the largest number standing on its own."
       ],
       "answer": 2,
-      "explanation": "filter(n => n > 1) drops the 1 and keeps [2, 3], because only those two are greater than 1. reduce then folds that smaller list into one number, starting from the 0 you handed it: 0 + 2 is 2, then 2 + 3 is 5. So the answer is 5, not 6 — the value that filter removes never reaches the addition, which is exactly the kind of thing that stays invisible until you trace it by hand.",
+      "explanation": "filter(n => n > 1) drops the 1 and keeps [2, 3], only those two are greater than 1. reduce then folds that list into one number, from the 0 you gave it: 0 + 2 is 2, then 2 + 3 is 5. So the answer is 5, not 6: what filter removes never reaches the addition, and that stays invisible until you trace it by hand.",
       "hints": [
         "Work in stages: write down what filter leaves behind, then add only those numbers."
       ],
       "misconceptions": [
-        "filter and reduce both run over the original list — reduce only ever sees what filter left behind, one item at a time.",
-        "The starting value of 0 in reduce is the answer — it is the first sum the additions grow from, not the final result itself."
+        "filter and reduce both run over the original list, reduce only ever sees what filter left behind, one item at a time.",
+        "The starting value of 0 in reduce is the answer; it is the first sum the additions grow from, not the final result itself."
       ]
     },
     "fund-do-values": {
@@ -1188,7 +1222,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "greet wraps a name in a friendly sentence"
           ],
-          "feedback": "greet is not returning the right string yet. It takes one name and must hand back \"Hello, \" plus that name plus \"!\". Use return, not console.log — the test reads what the call becomes, not what you printed to the screen."
+          "feedback": "greet is not returning the right string yet. It takes one name and must hand back \"Hello, \" plus that name plus \"!\". Use return, not console.log, the test reads what the call becomes, not what you printed to the screen."
         },
         {
           "id": "sum",
@@ -1212,21 +1246,21 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "sum of an empty list is zero"
           ],
-          "feedback": "An empty list has nothing to add, so the total you started the loop with is exactly what comes back. If it returns undefined or throws, you are reading past the end — begin at index 0 and stop at length.",
+          "feedback": "An empty list has nothing to add, so the total you started the loop with is exactly what comes back. If it returns undefined or throws, you are reading past the end, begin at index 0 and stop at length.",
           "edge": true
         }
       ],
       "hints": [
-        "Open src/foundations.js: it owns all three functions, and every one of them throws today — that throw line is the placeholder standing where your return belongs. Run node --test --test-reporter=tap test/foundations.test.mjs and read the name of the check that failed.",
+        "Open src/foundations.js: it owns all three functions, and every one of them throws today; that throw line is the placeholder standing where your return belongs. Run node --test --test-reporter=tap test/foundations.test.mjs and read the name of the check that failed.",
         "The failing names are the spec: a greeting built from the name it was handed, a total over every number in the list, the longest entry, and an empty list that still totals zero.",
         "sum wants a running total and a walk over the list; longestWord wants a best-so-far plus one length comparison per word; greet just builds its sentence from the name it was given.",
         "The edge is the empty list: whatever the walk starts from is also the answer when there is nothing to walk, so ask what your total holds before the loop ever runs.",
-        "A complete solution hands answers back rather than printing them: each function returns its value, the total starts at zero so an empty list still answers, and the longest word is compared by length rather than assumed. Run the checks — four tests, and the suite is the judge. If the suite cannot start because `node` is command not found, run the environment check or finish the setup phase first."
+        "A complete solution hands answers back rather than printing them: each function returns its value, the total starts at zero so an empty list still answers, and the longest word is compared by length rather than assumed. Run the checks, four tests, and the suite is the judge. If the suite cannot start because the terminal says `node` is not found, run the environment check or finish the setup phase first."
       ],
       "misconceptions": [
-        "Making console.log print the right thing passes the test — the suite checks the value the function returns, and a print-only function returns undefined.",
-        "The loop should run while i <= length — that reads one slot past the end, which is undefined, and breaks the empty and the full case alike.",
-        "Seed the running total with the first item instead of 0 — it looks fine until the list is empty and there is no first item to start from."
+        "Making console.log print the right thing passes the test, the suite checks the value the function returns, and a print-only function returns undefined.",
+        "The loop should run while i <= length; that reads one slot past the end, which is undefined, and breaks the empty and the full case alike.",
+        "Seed the running total with the first item instead of 0; it looks fine until the list is empty and there is no first item to start from."
       ]
     },
     "fund-review-transfer": {
@@ -1249,7 +1283,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "isEven is true for even and false for odd"
           ],
-          "feedback": "isEven must answer with a boolean. The remainder operator, n % 2, is 0 exactly when n divides by 2 with nothing left over — compare it to 0 and return that comparison."
+          "feedback": "isEven must answer with a boolean. The remainder operator, n % 2, is 0 exactly when n divides by 2 with nothing left over, compare it to 0 and return that comparison."
         },
         {
           "id": "vowels",
@@ -1273,14 +1307,14 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "largest of a single item is that item"
           ],
-          "feedback": "With only one item there is nothing to compare it against, so the answer is that item. If this fails you started the loop at index 1 expecting a second item — seed the best from index 0 instead. If the suite cannot run because `node` is command not found, run the environment check or finish setup first.",
+          "feedback": "With only one item there is nothing to compare it against, so the answer is that item. If this fails you started the loop at index 1 expecting a second item, seed the best from index 0 instead. If the suite cannot run because the terminal says `node` is not found, run the environment check or finish setup first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "A loop that starts at index 1 is safe for every list — it skips the only item a one-item list has, so that single case is where it quietly breaks.",
-        "Return the tally or the best only once you found something — the empty and single cases still need an answer, and undefined is never it."
+        "A loop that starts at index 1 is safe for every list; it skips the only item a one-item list has, so that single case is where it quietly breaks.",
+        "Return the tally or the best only once you found something, the empty and single cases still need an answer, and undefined is never it."
       ]
     },
     "web-learn-basics": {
@@ -1392,7 +1426,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Say a status out loud as its band, not its number: \"a 4xx\" already means the trouble is in what was sent. If node is command not found, run the environment check first.",
+        "Say a status out loud as its band, not its number: \"a 4xx\" already means the trouble is in what was sent. If the terminal says node is not found, run the environment check first.",
         "Parse turns text into data, and write turns data into text. Every JSON example here crosses that bridge one way or the other."
       ],
       "misconceptions": [
@@ -1432,7 +1466,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A thrown error is an ordinary value on a journey. It leaves the function it started in and travels outward through every caller until something catches it. If nothing does, it reaches the top and the program stops — the page simply never draws."
+          "body": "A thrown error is an ordinary value on a journey. It leaves the function it started in and travels outward through every caller until something catches it. If nothing does, it reaches the top and the program stops, the page simply never draws."
         },
         {
           "kind": "example",
@@ -1458,13 +1492,13 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Read a throw as \"stop here and send this value up\" — the nearest try is where the value lands.",
+        "Read a throw as \"stop here and send this value up\", the nearest try is where the value lands.",
         "A step that can fail needs an answer on both ends, and the caller is who needs it."
       ],
       "misconceptions": [
-        "A thrown error is a value you read back like a return — it does not come back to the caller at all; it skips past them, up the stack, until a catch names it.",
-        "try/catch is only for code you already expect to be broken — it is for any step that can refuse, including a parse of text that came from somewhere you do not control.",
-        "A failed parse means the program is dead — the throw only ends the program if nothing catches it, and a catch turns it back into an ordinary value."
+        "A thrown error is a value you read back like a return; it does not come back to the caller at all; it skips past them, up the stack, until a catch names it.",
+        "try/catch is only for code you already expect to be broken; it is for any step that can refuse, including a parse of text that came from somewhere you do not control.",
+        "A failed parse means the program is dead, the throw only ends the program if nothing catches it, and a catch turns it back into an ordinary value."
       ]
     },
     "web-ask-status": {
@@ -1486,10 +1520,10 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "The connection failed and no reply came back at all, so there is no status number to read.",
         "The request worked but returned an empty task, because 404 means nothing was found in the list.",
         "The server crashed and must be restarted, because any status above 400 is a server failure.",
-        "The request arrived and was understood; nothing lives at that address — the fault is yours."
+        "The request arrived and was understood; nothing lives at that address, the fault is yours."
       ],
       "answer": 3,
-      "explanation": "A 404 is a complete, successful conversation that ended on your side of it. The request reached the server, was understood, and was answered honestly with the news that nothing lives at that address. That is why it is a 4xx and not a 5xx: the server is fine, it is the address or id you sent that matches nothing stored. A 500 would say the server itself stumbled while trying to answer, and a connection that never reached a server would carry no status at all. So the number points where to look, at your request, before a single line of the body is read.",
+      "explanation": "A 404 is a complete, successful conversation that ended on your side. The request reached the server, was understood, and answered: nothing lives there. That is why it is a 4xx, not a 5xx: the server is fine, the address you sent matches nothing. A 500 says the server stumbled, and a connection that never reached a server carries no status, so the number points at your request.",
       "hints": [
         "Read the first digit as the owner of the problem: 2 you got a good answer, 4 you asked wrongly, 5 the server broke."
       ],
@@ -1548,11 +1582,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/web-basics.js: statusClass names a status band, parseJson reads JSON text back into data, and buildRequest shapes a request — all three throw today where your real return belongs. Run node --test --test-reporter=tap test/web-basics.test.mjs and read the name of the check that failed.",
+        "Open src/web-basics.js: statusClass names a status band, parseJson reads JSON text back into data, and buildRequest shapes a request, all three throw today where your real return belongs. Run node --test --test-reporter=tap test/web-basics.test.mjs and read the name of the check that failed.",
         "The failing names are the spec: text read back into data, a 201 called a success, a 404 called a client error, the method and the path both named, and a 300 that is not a success.",
         "statusClass compares the number against the point each band starts at and returns that word; parseJson is one standard call that reads the text into data; buildRequest hands back the method, the path, and the two joined into a single request line.",
         "The edge sits at the top of the success band: a number that begins the next band must not be labelled with the one before it. Ask what your comparison does at exactly 300.",
-        "A complete solution answers every question the suite asks: the text turned back into data, each band named from the number it starts at, and one request line built from its two parts. Run the checks — five tests, and the suite is the judge. If the suite cannot start because `node` is command not found, run the environment check first."
+        "A complete solution answers every question the suite asks: the text turned back into data, each band named from the number it starts at, and one request line built from its two parts. Run the checks, five tests, and the suite is the judge. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
         "Making the code print something passes the test. The suite reads the value each function returns, and a function that only logs answers undefined the moment a check asks what it got.",
@@ -1580,7 +1614,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "toText turns data back into JSON text"
           ],
-          "feedback": "toText is not producing JSON yet. It is the mirror of the parse you just learned: one standard call turns a value into the text a server would send, and you return that string. If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "toText is not producing JSON yet. It is the mirror of the parse you just learned: one standard call turns a value into the text a server would send, and you return that string. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "ok-band",
@@ -1674,7 +1708,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Before any code, write the four operations as you would do them to a to-do list: add a task, look one up, mark one finished, remove one. For each, say which record it targets and what the list looks like when it is done. Then name the HTTP verb that carries each one from the last phase. If all eight line up, you hold the whole idea of this phase."
+          "body": "Before any code, write the four operations as you would do them to a to-do list: add a task, look one up, mark one finished, remove one. For each, say which record it targets and what the list looks like when it is done."
+        },
+        {
+          "kind": "task",
+          "body": "Then name the HTTP verb that carries each one from the last phase. If all eight line up, you hold the whole idea of this phase."
         }
       ],
       "visualization": {
@@ -1698,7 +1736,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Read each operation as a before and an after: the list it starts with, and the one list it hands back changed. If node is command not found, run the environment check first.",
+        "Read each operation as a before and an after: the list it starts with, and the one list it hands back changed. If the terminal says node is not found, run the environment check first.",
         "Create and delete change how many records there are. Read and update leave the count alone and touch only one."
       ],
       "misconceptions": [
@@ -1729,7 +1767,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Read, sent as GET, because the app is only checking whether the task was already done."
       ],
       "answer": 0,
-      "explanation": "Marking a task done adds nothing and takes nothing away, so it is neither create nor delete, and it is not a read, because the app is telling the server something rather than asking. One existing record is being changed, and that is exactly what an update does; over the network it arrives as a PUT or a PATCH carrying the new value. The task keeps its id the whole time, which is the tell. Update is the only one of the four that leaves both the count and the identity of the records alone while editing what one of them holds.",
+      "explanation": "Marking done adds nothing and takes nothing away, so it is not create, delete or read: the app tells the server, not asks. One existing record is being changed, which is an update; over the network it is a PUT or a PATCH with the new value. The task keeps its id, which is the tell: update leaves the count and the identity alone, editing what one holds.",
       "hints": [
         "Ask which of the four leaves the number of tasks unchanged and edits one record that already has an id. That is the update."
       ],
@@ -1795,11 +1833,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/crud.js: it owns all four operations — add a task, find one by id, mark one done, remove one — and each throws today where your return belongs. Run node --test --test-reporter=tap test/crud.test.mjs and read the name of the check that failed.",
+        "Open src/crud.js: it owns all four operations, add a task, find one by id, mark one done, remove one, and each throws today where your return belongs. Run node --test --test-reporter=tap test/crud.test.mjs and read the name of the check that failed.",
         "The failing names are the spec, one per operation: a new task at the end, a lookup that finds the named id, only the named task marked done, and a removed id gone from the list.",
         "All four hand back a new list instead of editing the one they were given: create adds one to a copy, update rebuilds the list changing only the matching id, delete keeps every task whose id is not the one to drop.",
         "The edge is an id that is nowhere on the list: dropping something absent is not an error and must leave every task standing. Ask what your delete returns when nothing matches.",
-        "A complete solution keeps each promise without touching the list it was handed: the list grows by exactly one, a lookup with no match answers undefined, one record changes while the rest do not, and a missing id deletes nothing. Run the checks — five tests, and the suite is the judge. If the suite cannot start because `node` is command not found, run the environment check first."
+        "A complete solution keeps each promise without touching the list it was handed: the list grows by exactly one, a lookup with no match answers undefined, one record changes while the rest do not, and a missing id deletes nothing. Run the checks, five tests, and the suite is the judge. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
         "Editing the list in place with push is fine. Other code reads the same list, so a quiet in place edit changes results they did not ask for; return a new list instead.",
@@ -1851,7 +1889,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "drop of an absent id changes nothing"
           ],
-          "feedback": "Dropping an id that no person holds shortened the book. When the id is not present, keeping every person whose id differs from it keeps all of them, and that is the whole answer. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "Dropping an id that no person holds shortened the book. When the id is not present, keeping every person whose id differs from it keeps all of them, and that is the whole answer. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -1957,7 +1995,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Read a pattern as a sentence from its anchor: what must come first, what repeats, what must come last. If node is command not found, run the environment check first.",
+        "Read a pattern as a sentence from its anchor: what must come first, what repeats, what must come last. If the terminal says node is not found, run the environment check first.",
         "Anchored at both ends asks about the whole string; with no anchors it only asks whether the shape shows up somewhere inside."
       ],
       "misconceptions": [
@@ -1988,7 +2026,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Both are the same, because a pattern with no anchors still checks the whole string against the rule by default."
       ],
       "answer": 1,
-      "explanation": "A pattern with no anchors is a search: it reports a match the moment its shape appears anywhere in the string. So a bare digit run finds the 555 hiding inside 555-1234 and answers yes, which is exactly wrong for a field that must be nothing but digits. Adding a caret at the front and a dollar at the end turns the same run into a demand about the whole value: it must begin as digits and finish as digits with nothing else between. A fixed count would still be only a search unless it too were anchored. The anchors are not decoration, they are what changes a find-some into an only-this, and only that reading is a real validation.",
+      "explanation": "Without anchors a pattern is a search: it matches wherever its shape appears. So a bare digit run finds the 555 inside 555-1234 and says yes, wrong for a digits-only field. A caret and a dollar turn it into a demand about the whole value: digits at both ends, nothing else. A fixed count is still a search unless anchored too, so only the anchored reading validates.",
       "hints": [
         "Ask whether the pattern looks for a shape anywhere or demands it be the whole value: only the anchored form does the second."
       ],
@@ -2054,11 +2092,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Open src/regex.js: it owns the three shape checks — the whole string is digits, a digit appears anywhere, and the string is a hash plus six hex characters — and each throws today where your pattern call belongs. Run node --test --test-reporter=tap test/regex.test.mjs and read the name of the check that failed.",
+        "Open src/regex.js: it owns the three shape checks, the whole string is digits, a digit appears anywhere, and the string is a hash plus six hex characters, and each throws today where your pattern call belongs. Run node --test --test-reporter=tap test/regex.test.mjs and read the name of the check that failed.",
         "The failing names are the spec: a whole run of digits accepted, a value holding a letter rejected, a digit found anywhere in text, the hash-and-six shape accepted, and the empty string rejected.",
         "Each function returns the answer of one test call on its pattern: the whole-string checks pin both ends so only a complete match passes, while the check that looks for a digit anywhere is deliberately left unpinned.",
-        "The edges are where the anchors and the quantifiers disagree: a stray letter and an empty value must both fail the whole-string checks, so ask which quantifier refuses nothing at all — the one meaning at least one, or the one meaning none.",
-        "A complete solution reads as three sentences: only digits from end to end, a single digit somewhere inside, and a hash followed by exactly six hex characters with the ends pinned. Run the checks — five tests, and the suite is the judge. If the suite cannot start because `node` is command not found, run the environment check first."
+        "The edges are where the anchors and the quantifiers disagree: a stray letter and an empty value must both fail the whole-string checks, so ask which quantifier refuses nothing at all, the one meaning at least one, or the one meaning none.",
+        "A complete solution reads as three sentences: only digits from end to end, a single digit somewhere inside, and a hash followed by exactly six hex characters with the ends pinned. Run the checks, five tests, and the suite is the judge. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
         "A pattern that returns true somewhere is a good validator. A validator answers about the whole value, which is the job of the anchors, not of the match any single digit anywhere would give.",
@@ -2110,7 +2148,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "isAllLetters rejects the empty string"
           ],
-          "feedback": "The empty string came back as all letters. One or more of the class cannot be satisfied by nothing, so anchored with a plus the empty value is false. If it passes, your pattern allowed zero repeats. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "The empty string came back as all letters. One or more of the class cannot be satisfied by nothing, so anchored with a plus the empty value is false. If it passes, your pattern allowed zero repeats. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
@@ -2144,11 +2182,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Static UI shows data; behavior changes it. An event (a click, a submit) calls a handler, the handler updates state, and the update re-renders the interface. The chain always runs in that order — event, state, render — so a screen that does not change means one of the three links broke."
+          "body": "Static UI shows data; behavior changes it. An event (a click, a submit) calls a handler, the handler updates state, and the update re-renders the interface. The chain always runs in that order, event, state, render, so a screen that does not change means one of the three links broke."
         },
         {
           "kind": "prose",
-          "body": "A handler is usually a callback: a function one component hands to another so it can call it back. onAdd and onDelete are callbacks — the row calls one, the parent decides what happens."
+          "body": "A handler is usually a callback: a function one component hands to another so it can call it back. onAdd and onDelete are callbacks, the row calls one, the parent decides what happens."
         },
         {
           "kind": "prose",
@@ -2161,7 +2199,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "What the row handler actually remembers:",
-          "code": "function makeRow(task, onDelete) {\n  // this inner function closes over task and onDelete\n  return () => onDelete(task.id);\n}\n\nconst row = makeRow({ id: 7 }, id => console.log(id));\nrow();   // 7 — it still remembers the task it was built with"
+          "code": "function makeRow(task, onDelete) {\n  // this inner function closes over task and onDelete\n  return () => onDelete(task.id);\n}\n\nconst row = makeRow({ id: 7 }, id => console.log(id));\nrow();   // 7; it still remembers the task it was built with"
         },
         {
           "kind": "prose",
@@ -2226,13 +2264,13 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Follow one keystroke: input event, state variable, submit handler, parent list. If node is command not found, run the environment check first."
+        "Follow one keystroke: input event, state variable, submit handler, parent list. If the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Updating a variable re-renders — only state updates schedule a render; plain variables change silently.",
-        "Reading the input from the DOM on submit — the draft already lives in state; the DOM is the display, not the memory.",
-        "A closure is a snapshot of the values it closes over — it holds the variables themselves, so a later change to one the inner function reads is visible to it.",
-        "An arrow function binds this to whoever calls it — it has no this of its own; it keeps the one from where it was written."
+        "Updating a variable re-renders, only state updates schedule a render; plain variables change silently.",
+        "Reading the input from the DOM on submit, the draft already lives in state; the DOM is the display, not the memory.",
+        "A closure is a snapshot of the values it closes over; it holds the variables themselves, so a later change to one the inner function reads is visible to it.",
+        "An arrow function binds this to whoever calls it; it has no this of its own; it keeps the one from where it was written."
       ]
     },
     "behavior-ask-state": {
@@ -2251,18 +2289,18 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "The list never shows the task — adds require a server round-trip.",
-        "The list shows the task twice — appends duplicate without keys.",
-        "The list shows the task, then shows it again — a delete only queues a refetch.",
-        "The list shows the task, then removes it — each state update re-renders."
+        "The list never shows the task, adds require a server round-trip.",
+        "The list shows the task twice, appends duplicate without keys.",
+        "The list shows the task, then shows it again, a delete only queues a refetch.",
+        "The list shows the task, then removes it, each state update re-renders."
       ],
       "answer": 3,
-      "explanation": "Every state update re-renders from the current data. Add appends the task to the array and the screen redraws with it; delete filters it out and the screen redraws without it — the view is always the array drawn fresh, so it shows the task once and then not at all. A local state change needs no server round-trip before it appears, an add writes the item a single time rather than duplicating it, and a delete leaves a smaller array to draw rather than a stale copy that lingers until something refreshes.",
+      "explanation": "Every state update re-renders from the current data: add appends the task and the screen redraws with it, delete filters it out and the screen redraws without it, so the view is the array drawn fresh. A local change needs no server round-trip to appear. An add writes the item once, not twice, and a delete leaves a smaller array to draw, not a stale copy that lingers.",
       "hints": [
         "Ask what the array holds after each step; the screen follows the array."
       ],
       "misconceptions": [
-        "The UI remembers past renders — each render draws the current state and nothing else."
+        "The UI remembers past renders, each render draws the current state and nothing else."
       ]
     },
     "behavior-do-delete": {
@@ -2294,7 +2332,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "deleting a task removes it from the list"
           ],
-          "feedback": "The handler runs but the row stays. Filter the deleted id out of state — the render follows the array."
+          "feedback": "The handler runs but the row stays. Filter the deleted id out of state, the render follows the array."
         },
         {
           "id": "edge-last",
@@ -2302,20 +2340,20 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "deleting the only task empties the list cleanly"
           ],
-          "feedback": "Works with several tasks but breaks on the last one. An empty array is valid state — render it, don't guard around it.",
+          "feedback": "Works with several tasks but breaks on the last one. An empty array is valid state, render it, don't guard around it.",
           "edge": true
         }
       ],
       "hints": [
-        "Two files share this: src/components/TaskItem.jsx owns one row and the delete button inside it, and src/App.jsx owns the array and the function that shrinks it. Each file already receives what it needs — the acting half is what is missing. Run node --test --test-reporter=tap test/behavior.test.mjs and read the name of the check that failed.",
+        "Two files share this: src/components/TaskItem.jsx owns one row and the delete button inside it, and src/App.jsx owns the array and the function that shrinks it. Each file already receives what it needs, the acting half is what is missing. Run node --test --test-reporter=tap test/behavior.test.mjs and read the name of the check that failed.",
         "Three failing names, in the order they lead: the delete button reports the task id, deleting a task removes it from the list, and deleting the only task empties the list cleanly.",
-        "The row reports and the parent decides, so an id travels up and the decision stays down. In the parent, the next array is the old one with that id left out — state is replaced, never edited in place.",
+        "The row reports and the parent decides, so an id travels up and the decision stays down. In the parent, the next array is the old one with that id left out, state is replaced, never edited in place.",
         "The boundary is the last task: one row left is still a list, and nothing about it needs a guard. Ask what your function returns once every task is gone, and let an empty list render like any other.",
-        "A complete answer calls the parent handler from the button with this row's id, builds a new array without that task, and leaves an empty array as valid state. Then run the checks and read which name still fails; if `node` is command not found, run the environment check or finish the setup phase first."
+        "A complete answer calls the parent handler from the button with this row's id, builds a new array without that task, and leaves an empty array as valid state. Then run the checks and read which name still fails; if the terminal says `node` is not found, run the environment check or finish the setup phase first."
       ],
       "misconceptions": [
-        "Removing the DOM node directly — the next render redraws from state and resurrects it.",
-        "Mutating the array in place — the update must be a new array or nothing re-renders."
+        "Removing the DOM node directly, the next render redraws from state and resurrects it.",
+        "Mutating the array in place, the update must be a new array or nothing re-renders."
       ]
     },
     "behavior-review-transfer": {
@@ -2338,7 +2376,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "adding a note appends it and leaves the list it was given alone"
           ],
-          "feedback": "The new note did not arrive, or the list you were handed changed on the way out. Build a new array with the extra entry in it — a note nobody has marked starts as not done. The parent still holds the array it gave you, so that one has to stay exactly as it was. If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "The note did not arrive, or the list you were handed changed on the way out. Build a new array with the extra entry, and a note nobody marked starts as not done. The parent still holds the array it gave you, so that one must stay as it was. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "note-toggle",
@@ -2354,14 +2392,14 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the first note added to an empty list still gets its own id"
           ],
-          "feedback": "The list grows, but two notes answer to the same id, so one delete takes two rows. The id has to be earned from what the list already holds — the next number nobody is using yet — not written as a constant, which is what an empty first list lets you get away with until the second add.",
+          "feedback": "The list grows, but two notes answer to the same id, so one delete takes two rows. The id has to be earned from what the list already holds, the next number nobody is using yet, not written as a constant, which is what an empty first list lets you get away with until the second add.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Pushing onto the array you were handed — the parent still holds that array, so the screen ends up drawn from two different truths.",
-        "Reusing one id for every new note — nothing looks wrong until a delete on one row answers for both."
+        "Pushing onto the array you were handed, the parent still holds that array, so the screen ends up drawn from two different truths.",
+        "Reusing one id for every new note, nothing looks wrong until a delete on one row answers for both."
       ]
     },
     "data-learn-state": {
@@ -2387,11 +2425,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Your list disappears when the program runs again, and that is not a bug in your code — it is the difference between two kinds of memory. State lives in memory: it exists while the process runs, and a reload throws it away. Storage survives, but nothing reads it unless you tell the app to. Persistence is the bridge, and you build it."
+          "body": "Your list disappears when the program runs again, and that is not a bug in your code; it is the difference between two kinds of memory. State lives in memory: it exists while the process runs, and a reload throws it away. Storage survives, but nothing reads it unless you tell the app to. Persistence is the bridge, and you build it."
         },
         {
           "kind": "prose",
-          "body": "The instinct is to keep two copies and edit both; resist it. Keep one truth — the array in state — and treat storage as a copy you write after every change and read once, at start. One direction: state → storage. If you ever edit storage first and hope state follows, you have two truths that can disagree and no way to tell which is right."
+          "body": "The instinct is to keep two copies and edit both; resist it. Keep one truth, the array in state, and treat storage as a copy you write after every change and read once, at start. One direction: state → storage. If you edit storage first and hope state follows, you have two truths that can disagree and no way to tell which is right."
         },
         {
           "kind": "example",
@@ -2400,11 +2438,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Storage holds text, so objects travel through JSON: JSON.stringify to write, JSON.parse to read. That conversion is lossy on purpose — functions, undefined and class instances do not survive it, only data does. What you persist is data, and data is the thing you can reason about."
+          "body": "Storage holds text, so objects travel through JSON: JSON.stringify to write, JSON.parse to read. That conversion is lossy on purpose, functions, undefined and class instances do not survive it, only data does. What you persist is data, and data is what you can reason about."
         },
         {
           "kind": "prose",
-          "body": "Storage holds text, and text can arrive wrong. When a stored value is not JSON — truncated, or written by an older version of your app — JSON.parse throws instead of handing back a value. Wrap the parse in try and answer empty in the catch."
+          "body": "Storage holds text, and text can arrive wrong. A stored value that is not JSON, truncated or written by an older version of your app, makes JSON.parse throw instead of handing back a value. Wrap the parse in try and answer empty in the catch."
         },
         {
           "kind": "example",
@@ -2416,7 +2454,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "body": "Key Points",
           "items": [
             "State is the truth; storage is a copy written from it.",
-            "Read once at start, write after every change — one direction.",
+            "Read once at start, write after every change, one direction.",
             "Storage holds text: stringify going out, parse coming back.",
             "A value you read back may not be what you wrote.",
             "Catch a failing parse; the caller still needs a list."
@@ -2434,7 +2472,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open src/App.jsx and find the array the list is drawn from. Nothing writes it anywhere, so a fresh import starts from nothing, with the tasks gone. Then run test/persistence.test.mjs and read the failure; if `node` is command not found, run the environment check first."
+          "body": "Open src/App.jsx and find the array the list is drawn from. Nothing writes it anywhere, so a fresh import starts from nothing, with the tasks gone. Then run test/persistence.test.mjs and read the failure; if the terminal says `node` is not found, run the environment check first."
         },
         {
           "kind": "example",
@@ -2464,15 +2502,15 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "The array in state is the truth; anything else is a copy of it. If node is command not found, run the environment check first.",
-        "localStorage is a key and a string. Anything with getItem and setItem behaves the same way — which is exactly what makes this testable without a browser.",
+        "The array in state is the truth; anything else is a copy of it. If the terminal says node is not found, run the environment check first.",
+        "localStorage is a key and a string. Anything with getItem and setItem behaves the same way, which is exactly what makes this testable without a browser.",
         "Writing during a render is not a change event: renders happen for other reasons too, so a save tied to how often the screen draws is a save you cannot predict."
       ],
       "misconceptions": [
-        "Keeping a second copy in storage and editing both — then there are two truths, and nothing tells you which one is right.",
-        "The screen is the data — changing what is on screen changes nothing that survives a reload; the screen is redrawn from the array.",
-        "JSON round-trips everything — it carries data only: functions, undefined and class instances do not come back.",
-        "A parse that throws is a crash you cannot recover from — the catch is exactly the place that turns the thrown value back into an ordinary answer the caller can use."
+        "Keeping a second copy in storage and editing both, then there are two truths, and nothing tells you which one is right.",
+        "The screen is the data, changing what is on screen changes nothing that survives a reload; the screen is redrawn from the array.",
+        "JSON round-trips everything; it carries data only: functions, undefined and class instances do not come back.",
+        "A parse that throws is a crash you cannot recover from, the catch is exactly the place that turns the thrown value back into an ordinary answer the caller can use."
       ]
     },
     "data-ask-shape": {
@@ -2487,7 +2525,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "The list has to survive a reload. Four changes could make that happen — only one is both the smallest and still correct."
+          "body": "The list has to survive a reload. Four changes could make that happen, only one is both the smallest and still correct."
         }
       ],
       "options": [
@@ -2497,13 +2535,13 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Keep a second copy in storage and edit whichever copy is closer to the code you are already writing today."
       ],
       "answer": 0,
-      "explanation": "One truth, one direction: read once at start, write after every change. Two copies edited independently drift, and nothing tells you which one is right — the app's behaviour then depends on the order you happened to write things in. Saving during a render ties persistence to how often the screen draws, which is not the same thing as the data changing. Per-task keys turn the array into something you reconstruct on every read, so every save becomes several writes and every bug becomes a question about key ordering. The smallest correct change is the boring one.",
+      "explanation": "One truth, one direction: read once at start, write after every change. Two copies edited independently drift, and nothing tells you which is right, so behaviour depends on the order you wrote things in. Saving during a render ties persistence to how often the screen draws, not to the data changing, and per-task keys turn every save into several writes. The smallest correct change is the boring one.",
       "hints": [
         "Ask which option leaves exactly one source of truth."
       ],
       "misconceptions": [
-        "Writing during a render is the same as writing on a change — a render is a redraw, and it happens for reasons that have nothing to do with your data.",
-        "Saving more often is safer — saving in the wrong place makes behaviour depend on timing you do not control; saving after the change is what makes the copy predictable."
+        "Writing during a render is the same as writing on a change, a render is a redraw, and it happens for reasons that have nothing to do with your data.",
+        "Saving more often is safer, saving in the wrong place makes behaviour depend on timing you do not control; saving after the change is what makes the copy predictable."
       ]
     },
     "data-do-persist": {
@@ -2527,7 +2565,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a new task is saved to storage"
           ],
-          "feedback": "The task never reached storage. Save the array after the state update, from state — the copy is written from the truth, never the other way round. If the suite cannot start because `node` is command not found, run the environment check first."
+          "feedback": "The task never reached storage. Save the array after the state update, from state, the copy is written from the truth, never the other way round. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "loads",
@@ -2543,21 +2581,21 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a corrupt saved value does not crash the app"
           ],
-          "feedback": "A stored value that is not valid JSON throws on parse. Reading is where other people's data arrives — catch the failure and return an empty list instead of letting it reach the screen.",
+          "feedback": "A stored value that is not valid JSON throws on parse. Reading is where other people's data arrives, catch the failure and return an empty list instead of letting it reach the screen.",
           "edge": true
         }
       ],
       "hints": [
-        "Two files are in play: src/storage.js is the module you write and it owns storage and nothing else, and src/App.jsx is where it gets wired in — read once for the starting array, saved after every change. Run node --test --test-reporter=tap test/persistence.test.mjs and read the name of the check that failed.",
+        "Two files are in play: src/storage.js is the module you write and it owns storage and nothing else, and src/App.jsx is where it gets wired in, read once for the starting array, saved after every change. Run node --test --test-reporter=tap test/persistence.test.mjs and read the name of the check that failed.",
         "Three failing names from test/persistence.test.mjs: a new task is saved to storage, the saved list is loaded at start, and a corrupt saved value does not crash the app. The suite drives your module with a stand-in storage object, so no browser is involved.",
         "One key holds the whole array as text: stringify on the way out, parse on the way back. The suite imports a factory named createTaskStore that hands back an object with a load and a save, so that name and that shape are already fixed for you.",
-        "The boundary is a value that will not parse — truncated, or written by an older version of your own app. Ask what the caller gets when the read fails, and answer it inside the module rather than letting the throw escape.",
-        "A complete answer has one module owning one key, a save that writes the current array as text after every change, and a load that returns the stored array at start — and an empty list when the key is absent or unreadable. In App.jsx the direction is one way: read once, save on change. Then run the checks and read which name still fails; if `node` is command not found, run the environment check first."
+        "The boundary is a value that will not parse, truncated, or written by an older version of your own app. Ask what the caller gets when the read fails, and answer it inside the module rather than letting the throw escape.",
+        "A complete answer has one module owning one key, a save that writes the current array as text after every change, and a load that returns the stored array at start, and an empty list when the key is absent or unreadable. In App.jsx the direction is one way: read once, save on change. Then run the checks and read which name still fails; if the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Writing to storage on a timer instead of on change — a timer rewrites the same value repeatedly and still loses the last change when the process exits first.",
-        "Trusting what comes back — a stored value is input from outside your code: it can be missing, truncated, or written by an older version of the app.",
-        "Storing the array and a count of open tasks both — the count is derived, and a derived value you also store is a second truth waiting to disagree."
+        "Writing to storage on a timer instead of on change, a timer rewrites the same value repeatedly and still loses the last change when the process exits first.",
+        "Trusting what comes back, a stored value is input from outside your code: it can be missing, truncated, or written by an older version of the app.",
+        "Storing the array and a count of open tasks both, the count is derived, and a derived value you also store is a second truth waiting to disagree."
       ]
     },
     "data-review-transfer": {
@@ -2580,7 +2618,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the summary counts the open tasks"
           ],
-          "feedback": "The count does not come from the tasks that were passed in. Filter what is not done and read the length — a number kept beside the array is a number that can go stale. If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "The count does not come from the tasks that were passed in. Filter what is not done and read the length, a number kept beside the array is a number that can go stale. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "edge-empty",
@@ -2594,8 +2632,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Storing a count beside the list and keeping both updated — two truths again: the count can disagree with the array it describes, and nothing will tell you.",
-        "Treating an empty list as a special case — zero is the natural result of counting nothing, and a guard around it hides a bug instead of fixing it."
+        "Storing a count beside the list and keeping both updated, two truths again: the count can disagree with the array it describes, and nothing will tell you.",
+        "Treating an empty list as a special case, zero is the natural result of counting nothing, and a guard around it hides a bug instead of fixing it."
       ]
     },
     "ui-learn-components": {
@@ -2655,7 +2693,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open src/App.jsx and src/components/TaskItem.jsx. Say which file owns the list and which owns one row, and what each function receives — then check your answer against what each one actually takes."
+          "body": "Open src/App.jsx and src/components/TaskItem.jsx. Say which file owns the list and which owns one row, and what each function receives, then check your answer against what each one actually takes."
         }
       ],
       "visualization": {
@@ -2675,12 +2713,12 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Start from the leaves: what does one task row need to show and do? If node is command not found, run the environment check first."
+        "Start from the leaves: what does one task row need to show and do? If the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "A component per visual box regardless of reuse — boxes that appear once are not components, they are markup.",
-        "Passing everything through every level — data should enter where it is used, not travel as luggage.",
-        "A component needs a framework to be a component — here one is a plain function that takes props and returns a string, which is why a test can call it with no browser."
+        "A component per visual box regardless of reuse, boxes that appear once are not components, they are markup.",
+        "Passing everything through every level, data should enter where it is used, not travel as luggage.",
+        "A component needs a framework to be a component, here one is a plain function that takes props and returns a string, which is why a test can call it with no browser."
       ]
     },
     "ui-learn-dom": {
@@ -2706,7 +2744,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "A component is not the page. The function returns markup as text, and a page turns that text into elements — the ul, li and button nodes a user clicks. The two shapes agree on a good day and differ whenever it matters: one row function called per task makes as many elements as there are tasks, and a function can return nothing and render none."
+          "body": "A component is not the page. The function returns markup as text, and a page turns that text into elements, the ul, li and button nodes a user clicks. The two shapes agree on a good day and differ whenever it matters: one row function called per task makes as many elements as there are tasks, and a function can return nothing and render none."
         },
         {
           "kind": "keypoints",
@@ -2751,11 +2789,11 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "A function name is the thing you wrote; element names are what its string becomes — read each side for its own kind of name."
+        "A function name is the thing you wrote; element names are what its string becomes, read each side for its own kind of name."
       ],
       "misconceptions": [
-        "The string a component returns is the page — it is markup text; a page turns it into elements, and this project never takes that step.",
-        "One call means one element — a row function called per task makes one element per task, and sometimes none at all."
+        "The string a component returns is the page; it is markup text; a page turns it into elements, and this project never takes that step.",
+        "One call means one element, a row function called per task makes one element per task, and sometimes none at all."
       ]
     },
     "ui-ask-design": {
@@ -2785,8 +2823,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Count how many places a checkbox fix would need to reach in each design."
       ],
       "misconceptions": [
-        "Copy-paste is simpler than a component — it is simpler once, then twenty times harder forever.",
-        "One component per page is reuse — reuse means the same piece serving many cases, not one piece per case."
+        "Copy-paste is simpler than a component; it is simpler once, then twenty times harder forever.",
+        "One component per page is reuse, reuse means the same piece serving many cases, not one piece per case."
       ]
     },
     "ui-do-taskitem": {
@@ -2809,7 +2847,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "task list renders a TaskItem per task"
           ],
-          "feedback": "The list still renders tasks without your component. Import TaskItem in the list and render one per task. If the suite cannot start because `node` is command not found, run the environment check or finish the setup phase first."
+          "feedback": "The list still renders tasks without your component. Import TaskItem in the list and render one per task. If the suite cannot start because the terminal says `node` is not found, run the environment check or finish the setup phase first."
         },
         {
           "id": "props",
@@ -2830,15 +2868,15 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Two files own this: src/components/TaskItem.jsx owns one row and src/App.jsx owns the list. The row already takes task and onDelete and returns an empty li — what it shows is the unwritten half. Run node --test --test-reporter=tap test/taskitem.test.mjs and read the name of the check that failed.",
+        "Two files own this: src/components/TaskItem.jsx owns one row and src/App.jsx owns the list. The row already takes task and onDelete and returns an empty li, what it shows is the unwritten half. Run node --test --test-reporter=tap test/taskitem.test.mjs and read the name of the check that failed.",
         "The suite names what it wants: the list renders one TaskItem per task, a single row shows the title of the task it was handed rather than a fixed one, and twenty tasks still render twenty rows. Read the failing names before the file.",
         "The title reaches the row on the task it was handed, so it is read from props and nothing is looked up. Then check the list itself: one of the checks is about a row per task, not about the row.",
         "Twenty tasks is the boundary: the count has to come from the array the list was handed, not from anything a row remembers between calls. A row that repeats one title twenty times is the failure this check catches.",
-        "A complete answer puts the task's own title inside the row's li, keeps the row reading only what it is handed, and leaves the list mapping one row per task. Then run the checks and read which name still fails; if `node` is command not found, run the environment check first."
+        "A complete answer puts the task's own title inside the row's li, keeps the row reading only what it is handed, and leaves the list mapping one row per task. Then run the checks and read which name still fails; if the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Hardcoding one title to pass the first test — the suite checks the prop, not the pixels.",
-        "Editing the test to match the code — the tests are the acceptance criteria, not a suggestion."
+        "Hardcoding one title to pass the first test, the suite checks the prop, not the pixels.",
+        "Editing the test to match the code, the tests are the acceptance criteria, not a suggestion."
       ]
     },
     "ui-review-transfer": {
@@ -2861,7 +2899,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "TaskCard shows the heading from props"
           ],
-          "feedback": "The heading on screen does not come from props. Same motion as TaskItem, different names — read what this file actually receives. If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "The heading on screen does not come from props. Same motion as TaskItem, different names, read what this file actually receives. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "edge-priority",
@@ -2869,13 +2907,13 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "priority flag renders beside the heading"
           ],
-          "feedback": "The flag works but the heading broke, or vice versa. Both come from the same props object — render both.",
+          "feedback": "The flag works but the heading broke, or vice versa. Both come from the same props object, render both.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Assuming prop names travel between files — every component declares its own inputs; read this one."
+        "Assuming prop names travel between files, every component declares its own inputs; read this one."
       ]
     },
     "independent-learn-brief": {
@@ -2895,7 +2933,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Everything so far handed you a file with something in it. Open `src/merge.js` and the conflict is already there; open `src/reducer.js` and the shape of the state is already there. You were reading code before you wrote any, and that is why the phases could teach — the file answered questions you had not thought to ask."
+          "body": "Everything so far handed you a file with something in it. Open `src/merge.js` and the conflict is already there; open `src/reducer.js` and the shape of the state is already there. You were reading code before you wrote any, and that is why the phases could teach, the file answered questions you had not thought to ask."
         },
         {
           "kind": "prose",
@@ -2923,7 +2961,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "src/takehome-subject.js is where this phase works.",
-          "code": "/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\n/* The take-home.\n *\n * The brief is in the panel. That is the whole of the specification.\n *\n * This file exists and contains nothing. That is deliberate and it is the point:\n * every previous phase handed you a file with something in it, so you could read\n * the shape before you wrote it. Here the shape has to come from the sentence.\n * The only clue in the repository is this file's name, and the brief names the\n * export — which is exactly as much as a real hiring task gives you."
+          "code": "/*---------------------------------------------------------------------------------------------\n *  Copyright (c) Microsoft Corporation. All rights reserved.\n *  Licensed under the MIT License. See License.txt in the project root for license information.\n *--------------------------------------------------------------------------------------------*/\n\n/* The take-home.\n *\n * The brief is in the panel. That is the whole of the specification.\n *\n * This file exists and contains nothing. That is deliberate and it is the point:\n * every previous phase handed you a file with something in it, so you could read\n * the shape before you wrote it. Here the shape has to come from the sentence.\n * The only clue in the repository is this file's name, and the brief names the\n * export, which is exactly as much as a real hiring task gives you."
         },
         {
           "kind": "example",
@@ -2932,16 +2970,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Without opening any other file, write down four questions the brief leaves unanswered. For each, say what you would *assume* if you had to assume. Do not resolve them yet — naming them is the work, and you will check them against your own code before you submit."
+          "body": "Without opening any other file, write down four questions the brief leaves unanswered. For each, say what you would *assume* if you had to assume. Do not resolve them yet, naming them is the work, and you will check them against your own code before you submit."
         }
       ],
       "hints": [
-        "Read the brief once for what it says, then a second time for what it skipped. If node is command not found, run the environment check first.",
+        "Read the brief once for what it says, then a second time for what it skipped. If the terminal says node is not found, run the environment check first.",
         "Every brief has an implicit contract. Ask what happens when the input is empty, incomplete, or much larger than the example you imagined."
       ],
       "misconceptions": [
-        "Waiting until the task is unambiguous before starting — real briefs are never unambiguous, and the ambiguity is the work",
-        "Reading a brief once and treating the first pass as the contract — the second pass is where the untested edges appear"
+        "Waiting until the task is unambiguous before starting, real briefs are never unambiguous, and the ambiguity is the work",
+        "Reading a brief once and treating the first pass as the contract, the second pass is where the untested edges appear"
       ]
     },
     "independent-ask-ambiguity": {
@@ -2960,19 +2998,19 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "[{ id: 'b', done: true }] — a task with no done field counts as done, so it goes last.",
-        "It does not matter — the caller always passes complete tasks.",
-        "[{ id: 'a' }] — a task with no done field is unfinished, so it is kept.",
-        "[{ id: 'b', done: true }] — a task with no done field cannot be ranked, so it is dropped."
+        "[{ id: 'b', done: true }]: a task with no done field counts as done, so it goes last.",
+        "It does not matter, the caller always passes complete tasks.",
+        "[{ id: 'a' }]: a task with no done field is unfinished, so it is kept.",
+        "[{ id: 'b', done: true }]: a task with no done field cannot be ranked, so it is dropped."
       ],
       "answer": 2,
-      "explanation": "The brief never says what a missing flag means, so the decision is yours — and it is a decision, not a lookup. The reasoning that settles it: dropping the task loses data the caller can see and cannot get back, while placing it first is a claim the caller can correct by setting the flag. A field that is absent is not evidence that the task is finished; absent is absence of information, and the safe reading is the one that does not destroy anything. Note that the dismissive 'it does not matter' answer is the one that gets the task marked wrong — the caller is not guaranteed complete input, and 'it will never happen' is a claim about other people's code that nobody has checked.",
+      "explanation": "The brief never says what a missing flag means: the decision is yours. Dropping the task loses data the caller cannot get back, while placing it first is a claim the caller can correct with the flag. An absent field is no evidence the task is finished; the safe reading destroys nothing. 'It does not matter' gets the task marked wrong: the caller is not guaranteed complete input.",
       "hints": [
         "Ask which choice loses information irreversibly. The other answers are recoverable."
       ],
       "misconceptions": [
-        "Assuming missing input means the case cannot occur — the caller's code is not part of the brief, so its behaviour is unverified",
-        "Treating a field you were not given as a field that means false — absence of a value is not a value"
+        "Assuming missing input means the case cannot occur, the caller's code is not part of the brief, so its behaviour is unverified",
+        "Treating a field you were not given as a field that means false, absence of a value is not a value"
       ]
     },
     "independent-do-brief": {
@@ -2996,7 +3034,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the module exports a function the brief describes"
           ],
-          "feedback": "The brief names rankTasks and nothing else. The suite imports that name from src/takehome-subject.js and cannot find it — check the export is the name the brief used, and that it is exported rather than only defined."
+          "feedback": "The brief names rankTasks and nothing else. The suite imports that name from src/takehome-subject.js and cannot find it, check the export is the name the brief used, and that it is exported rather than only defined."
         },
         {
           "id": "empty",
@@ -3004,7 +3042,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "an empty task list ranks to nothing"
           ],
-          "feedback": "An empty list has no first element to compare, so a ranker that reaches for tasks[0] throws instead of returning. Handle the empty case before the sort — it is the first thing a caller hits."
+          "feedback": "An empty list has no first element to compare, so a ranker that reaches for tasks[0] throws instead of returning. Handle the empty case before the sort; it is the first thing a caller hits."
         },
         {
           "id": "order",
@@ -3020,7 +3058,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a task missing done is treated as not done, not skipped"
           ],
-          "feedback": "A task arrived without the flag. Dropping it loses something the caller can see and cannot get back. Treat a missing flag as unfinished — absence of information is not information."
+          "feedback": "A task arrived without the flag. Dropping it loses something the caller can see and cannot get back. Treat a missing flag as unfinished, absence of information is not information."
         },
         {
           "id": "no-mutate",
@@ -3028,7 +3066,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the ranked list is a new array, not the one it was given"
           ],
-          "feedback": "Sorting in place rewrites the caller's array — the brief forbids it, and it fails in ways that look unrelated later. Return a new array rather than rearranging the one you were given."
+          "feedback": "Sorting in place rewrites the caller's array, the brief forbids it, and it fails in ways that look unrelated later. Return a new array rather than rearranging the one you were given."
         },
         {
           "id": "edge-many",
@@ -3036,7 +3074,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a list with twenty tasks ranks all twenty"
           ],
-          "feedback": "Twenty items is not a special case, so a solution that handles the first two and gives up has stopped working. The edge case here is the size, not the value — check your approach is not quietly only inspecting the first match.",
+          "feedback": "Twenty items is not a special case, so a solution that handles the first two and gives up has stopped working. The edge case here is the size, not the value, check your approach is not quietly only inspecting the first match.",
           "edge": true
         }
       ],
@@ -3044,8 +3082,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Re-read the brief and list what it says. Then list what it does not say, and decide each one deliberately rather than by accident."
       ],
       "misconceptions": [
-        "Writing the sort first and treating the brief's unstated cases as an afterthought — the unstated cases are where the suite is looking",
-        "Sorting the caller's array in place because it is faster and simpler — a small optimisation that silently breaks the caller"
+        "Writing the sort first and treating the brief's unstated cases as an afterthought, the unstated cases are where the suite is looking",
+        "Sorting the caller's array in place because it is faster and simpler, a small optimisation that silently breaks the caller"
       ]
     },
     "independent-review-alone": {
@@ -3060,7 +3098,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "files": [
         "src/takehome-subject.js"
       ],
-      "brief": "rankTasks takes a list of tasks and returns a new list with the unfinished ones first. Keep the original order within each group. Do not modify the list you were given.\n\nA task is finished when its done field is true. A task with no done field is unfinished. An empty list ranks to an empty list.\n\nThe brief again, in full, because the brief is the only statement of what to build — no hints, no second look at the file you wrote. This is the check a take-home actually is.\n\nOnce it passes, the JavaScript track is over. Next is the backend track: a new language, a new project on disk, the same Learn → Solve → Review method.",
+      "brief": "rankTasks takes a list of tasks and returns a new list with the unfinished ones first. Keep the original order within each group. Do not modify the list you were given.\n\nA task is finished when its done field is true. A task with no done field is unfinished. An empty list ranks to an empty list.\n\nThe brief again, in full, because the brief is the only statement of what to build, no hints, no second look at the file you wrote. This is the check a take-home actually is.\n\nOnce it passes, the JavaScript track is over. Next is the backend track: a new language, a new project on disk, the same Learn → Solve → Review method.",
       "acceptanceCommand": "node --test --test-reporter=tap acceptance/takehome.acceptance.test.mjs",
       "checks": [
         {
@@ -3069,7 +3107,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "open tasks come before done tasks"
           ],
-          "feedback": "The core behaviour did not survive. Go back to the brief, not to the file — the file is what you are trying to verify."
+          "feedback": "The core behaviour did not survive. Go back to the brief, not to the file, the file is what you are trying to verify."
         },
         {
           "id": "still-missing-flag",
@@ -3093,13 +3131,13 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "an empty task list ranks to nothing"
           ],
-          "feedback": "An empty input is the case nobody tests and everybody ships. Handle it explicitly. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "An empty input is the case nobody tests and everybody ships. Handle it explicitly. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Believing a passing submission proves the work is finished — a submission proves the suite passed, which is a narrower claim than being able to rebuild it"
+        "Believing a passing submission proves the work is finished, a submission proves the suite passed, which is a narrower claim than being able to rebuild it"
       ]
     },
     "testing-learn-fail": {
@@ -3133,7 +3171,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "example",
-          "body": "The same function, three ways — the third is the one that proves anything:",
+          "body": "The same function, three ways, the third is the one that proves anything:",
           "code": "// never fails. Proves nothing.\nassert.ok(cartTotal(items) > 0);\n\n// fails when the discount disappears. Good.\nassert.equal(cartTotal(items, { threshold: 10 }), 22.5);\n\n// the boundary the spec names, so an inverted comparison cannot hide\nassert.equal(cartTotal([{ price: 100, qty: 1 }], { threshold: 100 }), 90);"
         },
         {
@@ -3142,7 +3180,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The same broken cart under two suites — the picture this phase is about. Nothing about the code changed between the panels; only what the suite is capable of noticing did."
+          "body": "The same broken cart under two suites, the picture this phase is about. Nothing about the code changed between the panels; only what the suite is capable of noticing did."
         },
         {
           "kind": "keypoints",
@@ -3150,7 +3188,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "items": [
             "The goal is the ability to fail, not coverage.",
             "Test the boundary the spec names, not the value you happened to see.",
-            "Assert on behaviour, not on the implementation's shape — a rewrite still passes.",
+            "Assert on behaviour, not on the implementation's shape, a rewrite still passes.",
             "A suite that passes a broken implementation is a claim, not a check."
           ]
         },
@@ -3166,7 +3204,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open src/cart.js. Write down three inputs where a broken implementation would give a different answer from the correct one — and say which line each one protects. If you cannot name a broken version for a test, that test is not earning its place."
+          "body": "Open src/cart.js. Write down three inputs where a broken implementation would give a different answer from the correct one, and say which line each one protects. If you cannot name a broken version for a test, that test is not earning its place."
         }
       ],
       "visualization": {
@@ -3191,12 +3229,12 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "The spec says a discount applies above a threshold. Ask what happens exactly at the threshold. If node is command not found, run the environment check first.",
-        "Rounding is part of the contract — a total that comes back as 99.999999 is wrong even if it is nearly right."
+        "The spec says a discount applies above a threshold. Ask what happens exactly at the threshold. If the terminal says node is not found, run the environment check first.",
+        "Rounding is part of the contract, a total that comes back as 99.999999 is wrong even if it is nearly right."
       ],
       "misconceptions": [
-        "More assertions means more testing — ten assertions of the same value test one thing ten times.",
-        "A test that has never failed has never been tested — until you have seen it fail, you do not know what it is watching."
+        "More assertions means more testing, ten assertions of the same value test one thing ten times.",
+        "A test that has never failed has never been tested, until you have seen it fail, you do not know what it is watching."
       ]
     },
     "testing-ask-vacuous": {
@@ -3215,18 +3253,18 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "assert.ok(cartTotal(items) > 0) — it still returns a number, so it passes.",
-        "assert.equal(cartCount(items), 2) — it counts the items, so it passes too.",
-        "assert.equal(cartTotal(items, { threshold: 10 }), 22.5) — it expects the discount.",
+        "assert.ok(cartTotal(items) > 0); it still returns a number, so it passes.",
+        "assert.equal(cartCount(items), 2); it counts the items, so it passes too.",
+        "assert.equal(cartTotal(items, { threshold: 10 }), 22.5); it expects the discount.",
         "All three of them would still pass against that bug, so the suite is fine as it stands."
       ],
       "answer": 2,
-      "explanation": "Only the assertion that expects the discounted total states what the discount is *for*, so deleting the discount turns that one red. The others read a positive number or an item count — values the broken version still returns — which is precisely the point: a suite is only as strong as the specific claim it makes.",
+      "explanation": "Only the assertion that expects the discounted total states what the discount is *for*, so deleting the discount turns that one red. The others read a positive number or an item count, values the broken version still returns, which is precisely the point: a suite is only as strong as the specific claim it makes.",
       "hints": [
         "Ask which assertion would have a different answer if the discount were gone."
       ],
       "misconceptions": [
-        "Assuming every assertion is doing work — an assertion that passes either way was written for the reader, not the code."
+        "Assuming every assertion is doing work, an assertion that passes either way was written for the reader, not the code."
       ]
     },
     "testing-do-cart": {
@@ -3308,12 +3346,12 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "The file here is test/cart.test.mjs, and you write it yourself against the cart module the project already ships. Run your suite against the broken versions before you run it against the real one: a test you have never seen fail is a guess. Run node --test --test-reporter=tap test/cart.test.mjs and read the name of the check that failed.",
         "Write one assertion per behaviour the spec names. The spec names three: the threshold, the discount, the rounding.",
         "Pick numbers that sit on the boundary, not numbers you happened to see pass.",
-        "Run the checks and read which breakage you did not notice — the message names it for you. If the suite cannot start because `node` is command not found, run the environment check first.",
+        "Run the checks and read which breakage you did not notice, the message names it for you. If the suite cannot start because the terminal says `node` is not found, run the environment check first.",
         "The suite is finished when it fails on every broken version and passes the real one: each behaviour the spec names has its own assertion, at least one sits on the exact boundary, and none would survive a cart that ignores the discount."
       ],
       "misconceptions": [
-        "Testing only the happy path — a suite that never exercises the boundary cannot see an inverted comparison.",
-        "Asserting against the implementation's internals — then a correct rewrite fails your tests, which teaches the wrong lesson."
+        "Testing only the happy path, a suite that never exercises the boundary cannot see an inverted comparison.",
+        "Asserting against the implementation's internals, then a correct rewrite fails your tests, which teaches the wrong lesson."
       ]
     },
     "testing-review-transfer": {
@@ -3338,7 +3376,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "the threshold decides which total is returned",
             "a fractional total is rounded, not truncated"
           ],
-          "feedback": "A seeded breakage survived. A suite that passes a broken implementation has verified nothing — add the assertion that states the behaviour that breakage removed."
+          "feedback": "A seeded breakage survived. A suite that passes a broken implementation has verified nothing, add the assertion that states the behaviour that breakage removed."
         },
         {
           "id": "transfer-edge",
@@ -3346,13 +3384,13 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the boundary is decided, not guessed"
           ],
-          "feedback": "You dropped the boundary assertion between attempts. It is the case an off-by-one comparison gets wrong. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "You dropped the boundary assertion between attempts. It is the case an off-by-one comparison gets wrong. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Assuming a suite that passed once keeps passing — a test you deleted for being slow is a test you no longer have."
+        "Assuming a suite that passed once keeps passing, a test you deleted for being slow is a test you no longer have."
       ]
     },
     "navigate-learn-search": {
@@ -3379,7 +3417,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Every task so far gave you a project you built. Real work does not: you open a repository you have never seen, with foreign names and a foreign structure, and a question. Scrolling does not solve that — you search, and the tool you reach for decides how long the answer takes."
+          "body": "Every task so far gave you a project you built. Real work does not: you open a repository you have never seen, with foreign names and a foreign structure, and a question. Scrolling does not solve that, you search, and the tool you reach for decides how long the answer takes."
         },
         {
           "kind": "prose",
@@ -3387,16 +3425,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The four moves: Ctrl+Shift+F searches text across every file, and F12 jumps from a use to the definition. Shift+F12 lists every use of the thing under the cursor, and Ctrl+P opens a file by name. Typing @ inside Ctrl+P narrows to symbols. That last one matters most — if you know the name but not the file, the symbol index beats guessing paths."
+          "body": "The four moves: Ctrl+Shift+F searches text across every file, and F12 jumps from a use to the definition. Shift+F12 lists every use of the thing under the cursor, and Ctrl+P opens a file by name. Typing @ inside Ctrl+P narrows to symbols. That last one matters most, if you know the name but not the file, the symbol index beats guessing paths."
         },
         {
           "kind": "example",
-          "body": "The same question, asked three ways — note that only the last one is precise:",
+          "body": "The same question, asked three ways, note that only the last one is precise:",
           "code": "# 'where is tax handled?' - matches comments too, and tells you nothing\n$ grep -rn \"tax\" .\n\n# 'where is urlAlphabet DEFINED?' - it is imported by three files and\n# written by one, so a plain grep answers the wrong question:\n$ grep -rn \"urlAlphabet\" .\n$ grep -rnE \"export (let|const|function) urlAlphabet\" .\n\n# 'who USES it?' - the callers, without the definition:\n$ grep -rl \"urlAlphabet\" . | xargs grep -L \"export let urlAlphabet\""
         },
         {
           "kind": "prose",
-          "body": "That last distinction is the whole phase. A definition is where a symbol was written. A call site is where it was used. They are different files, they answer different questions, and conflating them produces an answer that reads plausible and is wrong — the most expensive kind, because it stops the search."
+          "body": "That last distinction is the whole phase. A definition is where a symbol was written. A call site is where it was used. They are different files, they answer different questions, and conflating them produces an answer that reads plausible and is wrong, the most expensive kind, because it stops the search."
         },
         {
           "kind": "keypoints",
@@ -3405,7 +3443,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "Search text when you know the name; symbols when you know the thing.",
             "A definition and a call site are different files answering different questions.",
             "A search that stops at the first hit looks like one that worked.",
-            "Read the imports before the body — they summarize what a module does."
+            "Read the imports before the body; they summarize what a module does."
           ]
         },
         {
@@ -3420,16 +3458,20 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open vendor/nanoid. This is nanoid, a real published library, vendored here at a fixed commit - you can read vendor/PROVENANCE.md for where it came from. Grep it for `urlAlphabet` and write down which file DEFINES it and which files merely import it. Then grep for `customAlphabet` and say why there is more than one answer. Do not open anything else until you have written both down."
+          "body": "Open vendor/nanoid. This is nanoid, a real published library, vendored here at a fixed commit - you can read vendor/PROVENANCE.md for where it came from. Grep it for `urlAlphabet` and write down which file DEFINES it and which files merely import it."
+        },
+        {
+          "kind": "task",
+          "body": "Then grep for `customAlphabet` and say why there is more than one answer. Do not open anything else until you have written both down."
         }
       ],
       "hints": [
-        "Ctrl+Shift+F searches every file at once — that is the difference between the editor and scrolling. If node is command not found, run the environment check first.",
+        "Ctrl+Shift+F searches every file at once; that is the difference between the editor and scrolling. If the terminal says node is not found, run the environment check first.",
         "F12 goes to where a symbol was written; Shift+F12 lists everywhere it is used."
       ],
       "misconceptions": [
-        "Scrolling from the top finds code eventually — it finds it after you have read four files that had nothing to do with the question.",
-        "The first match is the answer — a search that stops early returns something that looks like a result."
+        "Scrolling from the top finds code eventually; it finds it after you have read four files that had nothing to do with the question.",
+        "The first match is the answer, a search that stops early returns something that looks like a result."
       ]
     },
     "navigate-ask-callsite": {
@@ -3448,19 +3490,19 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "None — changing an alphabet means editing package.json, since the ids are configured there.",
-        "All four — the search returned them, so all four must carry the name and need the very same edit made in all of them.",
-        "One — urlAlphabet is defined in url-alphabet/index.js and merely imported by the other three files.",
-        "Two — the main entry point and the browser variant, which each keep their own copy of it."
+        "None, changing an alphabet means editing package.json, since the ids are configured there.",
+        "All four, the search returned them, so all four must carry the name and need the very same edit made in all of them.",
+        "One, urlAlphabet is defined in url-alphabet/index.js and merely imported by the other three files.",
+        "Two, the main entry point and the browser variant, which each keep their own copy of it."
       ],
       "answer": 2,
-      "explanation": "A search returns every file whose text contains the name, and most of those are callers. urlAlphabet is defined once, in url-alphabet/index.js; the other three import it and re-export it. This is why 'grep the whole thing' is not the same as 'find the answer' — and it is the difference that stops a four-file edit that should have been one.",
+      "explanation": "A search returns every file whose text contains the name, and most of those are callers. urlAlphabet is defined once, in url-alphabet/index.js; the other three import it and re-export it. This is why 'grep the whole thing' is not the same as 'find the answer', and it is the difference that stops a four-file edit that should have been one.",
       "hints": [
         "Ask which file the name is written in, as opposed to imported."
       ],
       "misconceptions": [
-        "Assuming every file a search returns needs the same edit — most callers use a value without knowing where it came from.",
-        "Assuming one definition per name, because that is what your own files look like — real libraries define the same symbol several times over for different platforms."
+        "Assuming every file a search returns needs the same edit, most callers use a value without knowing where it came from.",
+        "Assuming one definition per name, because that is what your own files look like, real libraries define the same symbol several times over for different platforms."
       ]
     },
     "navigate-do-find": {
@@ -3491,7 +3533,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a search finds every file, not just the first"
           ],
-          "feedback": "The search stopped at the first hit. A second file imports the same name and was never reached — a partial search returns a plausible wrong answer."
+          "feedback": "The search stopped at the first hit. A second file imports the same name and was never reached, a partial search returns a plausible wrong answer."
         },
         {
           "id": "calls",
@@ -3507,20 +3549,20 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a search that matches nothing says so instead of guessing"
           ],
-          "feedback": "Nothing matched and the search raised an error. An empty result is an answer — 'this name is not here' is the finding that sends you to the next name.",
+          "feedback": "Nothing matched and the search raised an error. An empty result is an answer, 'this name is not here' is the finding that sends you to the next name.",
           "edge": true
         }
       ],
       "hints": [
-        "One file: search.mjs at the root of this workspace, which owns the search itself — walking vendor/nanoid and reporting what it finds. Its helpers answer through one another, so a single wrong answer surfaces under three names. Run node --test --test-reporter=tap test/navigation.test.mjs and read the name of the check that failed.",
+        "One file: search.mjs at the root of this workspace, which owns the search itself, walking vendor/nanoid and reporting what it finds. Its helpers answer through one another, so a single wrong answer surfaces under three names. Run node --test --test-reporter=tap test/navigation.test.mjs and read the name of the check that failed.",
         "Four failing names from test/navigation.test.mjs: a search finds the file that defines a symbol, a search finds every file rather than the first, call sites are not definitions, and a search that matches nothing says so instead of guessing.",
         "Two habits have to go: stopping at the first hit, and reading only the top level. The source sits in subdirectories, so the walk has to reach every file before anything is decided; then a definition is the file where the symbol is written, while a call site is a file that mentions it without writing it.",
         "The empty case is the boundary: nothing matched is a real answer, and the caller needs an empty list rather than an error, because a throw stops the next search. Ask what each function returns when no file matches.",
-        "A complete answer returns every matching file across the whole tree, separates files that write the symbol from files that only use it, and answers an unmatched search with nothing at all. Then run the checks and read which name still fails; if `node` is command not found, run the environment check or finish the setup phase first."
+        "A complete answer returns every matching file across the whole tree, separates files that write the symbol from files that only use it, and answers an unmatched search with nothing at all. Then run the checks and read which name still fails; if the terminal says `node` is not found, run the environment check or finish the setup phase first."
       ],
       "misconceptions": [
-        "Returning the first match because it felt right — completeness is the property being judged here, not cleverness.",
-        "Throwing when nothing matches so the caller knows — the caller needs an empty list, and an error stops the next search."
+        "Returning the first match because it felt right, completeness is the property being judged here, not cleverness.",
+        "Throwing when nothing matches so the caller knows, the caller needs an empty list, and an error stops the next search."
       ]
     },
     "navigate-review-transfer": {
@@ -3551,13 +3593,13 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a search that matches nothing says so instead of guessing"
           ],
-          "feedback": "The search reported something for a name that is not there. On unfamiliar code, a wrong answer is worse than no answer. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "The search reported something for a name that is not there. On unfamiliar code, a wrong answer is worse than no answer. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Assuming a search that worked on a small project will work on a real one — the failure mode is silent and confident."
+        "Assuming a search that worked on a small project will work on a real one, the failure mode is silent and confident."
       ]
     },
     "debug-learn-read": {
@@ -3584,7 +3626,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "Until now a failing test meant something was missing. From here it means something is wrong, and that changes how you work. A failing test tells you two things in order: the behaviour it expects, and what it observed instead. Read both before the code — the name bounds the problem, the message is the evidence, and the file is where you hunt the cause."
+          "body": "Until now a failing test meant something was missing. From here it means something is wrong, and that changes how you work. A failing test tells you two things in order: the behaviour it expects, and what it observed instead. Read both before the code, the name bounds the problem, the message is the evidence, and the file is where you hunt the cause."
         },
         {
           "kind": "prose",
@@ -3596,20 +3638,20 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "example",
-          "body": "The project as you will find it — the run is the first thing you read, not the last:",
+          "body": "The project as you will find it, the run is the first thing you read, not the last:",
           "code": "$ node --test test/reducer.test.mjs\nnot ok 1 - toggling a task hands back a new list\nnot ok 2 - the list that was passed in is not modified\nok 3 - adding a task appends it without touching the list\nnot ok 4 - toggling an id that is not in the list changes nothing\n# pass 1\n# fail 3"
         },
         {
           "kind": "prose",
-          "body": "Three failures in one file, with a passing test among them. The names are not three unrelated problems: two describe a value arriving changed, and the third mentions an id that is not in the list at all. Grouping failures by what they are about turns a red run into a plan — one cause for the first pair, a separate decision for the third."
+          "body": "Three failures in one file, with a passing test among them. The names are not three unrelated problems: two describe a value arriving changed, and the third mentions an id that is not in the list at all. Grouping failures by what they are about turns a red run into a plan, one cause for the first pair, a separate decision for the third."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
             "A failing test states the expectation and the observation; read both first.",
-            "Reproduce it, then read the failed names — the passes bound the search.",
-            "One hypothesis, one change, one run — attribute every result to one thing.",
+            "Reproduce it, then read the failed names, the passes bound the search.",
+            "One hypothesis, one change, one run, attribute every result to one thing.",
             "Failures that mention the same value are usually one cause wearing three names."
           ]
         },
@@ -3635,19 +3677,19 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "the assertion fails",
             "test: toggling hands back a new list",
             "toggleTask(tasks, 1)",
-            "return tasks — the same object"
+            "return tasks, the same object"
           ]
         }
       },
       "hints": [
-        "Run the suite before you form an opinion about it; a failure you have watched happen is one you can reason about. If node is command not found, run the environment check first.",
+        "Run the suite before you form an opinion about it; a failure you have watched happen is one you can reason about. If the terminal says node is not found, run the environment check first.",
         "The names that failed are a smaller set than the file. Two of them are about the same value, and the third is about a value that is not there.",
         "Pair each failing name with the assertion inside it: the assertion is the expectation, written down where you can check your reading of it."
       ],
       "misconceptions": [
-        "The failing test is in the way — a failing test is the most specific description of the problem you will get, and reading it is faster than guessing at the file.",
-        "Reading the code first is the same as debugging — without the failing names you do not know which behaviour is wrong, so every line looks equally suspicious.",
-        "Changing several things at once saves time — it removes the ability to say which change fixed it, and leaves the next failure unexplained."
+        "The failing test is in the way, a failing test is the most specific description of the problem you will get, and reading it is faster than guessing at the file.",
+        "Reading the code first is the same as debugging, without the failing names you do not know which behaviour is wrong, so every line looks equally suspicious.",
+        "Changing several things at once saves time; it removes the ability to say which change fixed it, and leaves the next failure unexplained."
       ]
     },
     "debug-ask-first": {
@@ -3672,14 +3714,14 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Add a log line to every function in the file and read the output until something looks off to you."
       ],
       "answer": 1,
-      "explanation": "Reproducing first makes the failure your own observation, and reading the failing names tells you which behaviour is in question before you read any implementation — that is what lets you recognise the cause when you finally see it. Adjusting the assertions deletes the evidence: the test is the claim you are trying to satisfy, and a suite bent to match current behaviour can never fail again, which means it can never tell you anything. A rewrite discards the parts of the file that were right and leaves you with a change too large to attribute to any single cause. Logging everywhere produces volume rather than a hypothesis, and volume is what you already have. The smallest correct change is found by looking for one cause that explains every failure at once.",
+      "explanation": "Reproducing first makes the failure your own observation, and the failing names tell you which behaviour is at issue. Adjusting the assertions deletes the evidence: a suite bent to match current behaviour can never fail again, so it says nothing. A rewrite discards what was right, and logging everywhere gives volume, not a hypothesis. The smallest correct change comes from one cause that explains every failure.",
       "hints": [
         "Ask which option leaves you able to say what you are looking for before you start looking."
       ],
       "misconceptions": [
-        "The test must be wrong — a failing test is a claim about behaviour, and rewriting the claim to match the code removes the evidence along with the bug.",
-        "A rewrite is faster than a read — rewriting throws away the half that worked and leaves a change too large to attribute to a cause.",
-        "More logging is more information — logs give you volume; a hypothesis is what tells you which line is worth looking at."
+        "The test must be wrong, a failing test is a claim about behaviour, and rewriting the claim to match the code removes the evidence along with the bug.",
+        "A rewrite is faster than a read, rewriting throws away the half that worked and leaves a change too large to attribute to a cause.",
+        "More logging is more information, logs give you volume; a hypothesis is what tells you which line is worth looking at."
       ]
     },
     "debug-do-fix": {
@@ -3702,7 +3744,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "toggling a task hands back a new list"
           ],
-          "feedback": "The value that came back is the same list that went in, so whatever holds it has nothing to compare and no reason to redraw. Build the next list instead of editing that one — the caller updates because it saw a different value, not because it noticed this one change."
+          "feedback": "The value that came back is the same list that went in, so whatever holds it has nothing to compare and no reason to redraw. Build the next list instead of editing that one, the caller updates because it saw a different value, not because it noticed this one change."
         },
         {
           "id": "untouched",
@@ -3718,21 +3760,21 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "toggling an id that is not in the list changes nothing"
           ],
-          "feedback": "When no task matches, the search answers -1 and the next line uses it as if it were a real position. Decide what the function does when nothing matches — for a list of tasks, usually nothing — and say so explicitly instead of leaving it to chance.",
+          "feedback": "When no task matches, the search answers -1 and the next line uses it as if it were a real position. Decide what the function does when nothing matches, for a list of tasks, usually nothing, and say so explicitly instead of leaving it to chance.",
           "edge": true
         }
       ],
       "hints": [
         "The cause is in src/reducer.js, which owns the list's state transitions; the failing names come from test/reducer.test.mjs. One function there disagrees with its names while the rest of the file passes, so the search is narrow. Run node --test --test-reporter=tap test/reducer.test.mjs and read the name of the check that failed.",
         "Read the failing names as a group before the file: toggling a task hands back a new list, the list that was passed in is not modified, and toggling an id that is not in the list changes nothing. Two of them are about the same value; the third is about a value that is not there at all.",
-        "The caller keeps the list it handed over, so the function has to build the next list rather than edit the one it was given — and the task that changed needs a copy of its own, because a fresh array holding the same old objects still changes what the caller sees.",
+        "The caller keeps the list it handed over, so the function has to build the next list rather than edit the one it was given, and the task that changed needs a copy of its own, because a fresh array holding the same old objects still changes what the caller sees.",
         "The unknown id is a separate decision with its own answer: a position lookup hands back a sentinel rather than a position when nothing matches, so decide what the function does then and say it explicitly instead of letting it fall through.",
-        "A complete answer leaves every passing behaviour as it was, returns a list the caller can compare with the one it kept, replaces the single task that changed with a copy of itself, and does nothing at all when the id is not in the list. Run the checks and read which name still fails; if `node` is command not found, run the environment check first."
+        "A complete answer leaves every passing behaviour as it was, returns a list the caller can compare with the one it kept, replaces the single task that changed with a copy of itself, and does nothing at all when the id is not in the list. Run the checks and read which name still fails; if the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "A new array is the same as a new value — the array can be new while the task inside it is the object the caller already holds, and then the change reaches both.",
-        "An id that is missing is an impossible case — ids arrive from stored data and from the screen, so a stale one is ordinary, and -1 used as a position is a crash waiting for the first stale click.",
-        "Fixing the crash fixes the bug — answering the unknown id while the list is still edited in place leaves two of the three failures standing."
+        "A new array is the same as a new value, the array can be new while the task inside it is the object the caller already holds, and then the change reaches both.",
+        "An id that is missing is an impossible case, ids arrive from stored data and from the screen, so a stale one is ordinary, and -1 used as a position is a crash waiting for the first stale click.",
+        "Fixing the crash fixes the bug, answering the unknown id while the list is still edited in place leaves two of the three failures standing."
       ]
     },
     "debug-review-transfer": {
@@ -3755,7 +3797,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the open view shows the tasks that are not done"
           ],
-          "feedback": "The open view is showing the wrong half of the list. Read the comment above the line, then the line: one of them states the intention and the other is what actually runs, and the suite is the evidence for which one wins. If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "The open view is showing the wrong half of the list. Read the comment above the line, then the line: one of them states the intention and the other is what actually runs, and the suite is the evidence for which one wins. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "edge-empty-view",
@@ -3763,15 +3805,15 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the open view shows nothing when every task is done"
           ],
-          "feedback": "With every task done, the open view still had rows in it — the same wrong half, seen from its boundary. An empty result is the honest answer when nothing matches the view, and a view that can never be empty is not filtering.",
+          "feedback": "With every task done, the open view still had rows in it, the same wrong half, seen from its boundary. An empty result is the honest answer when nothing matches the view, and a view that can never be empty is not filtering.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "The comment is the specification — a comment is a claim about the code and nothing enforces it; the failing test is the claim that is enforced.",
-        "Red means rewrite — two of the three tests pass, so the module is mostly right and the change being asked for is smaller than a rewrite.",
-        "An empty view is a broken view — nothing matching is a real result, and a view that never returns empty is not filtering at all."
+        "The comment is the specification, a comment is a claim about the code and nothing enforces it; the failing test is the claim that is enforced.",
+        "Red means rewrite, two of the three tests pass, so the module is mostly right and the change being asked for is smaller than a rewrite.",
+        "An empty view is a broken view, nothing matching is a real result, and a view that never returns empty is not filtering at all."
       ]
     },
     "git-learn-history": {
@@ -3806,20 +3848,20 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "A conflict is not Git failing. Git merges anything that does not collide, and stops only where two lines of work changed the same text — picking there would be guessing at intent."
+          "body": "A conflict is not Git failing. Git merges anything that does not collide, and stops only where two lines of work changed the same text, picking there would be guessing at intent."
         },
         {
           "kind": "prose",
-          "body": "When it stops it writes both versions into the file between markers — three angle brackets, an equals line, three more — and waits for a person. The markers are the question: sometimes both sides are wanted, sometimes one, and only a reader can say which."
+          "body": "When it stops it writes both versions into the file between markers, three angle brackets, an equals line, three more, and waits for a person. The markers are the question: sometimes both sides are wanted, sometimes one, and only a reader can say which."
         },
         {
           "kind": "example",
-          "body": "The graph after a merge, exactly as the command draws it — one commit at the top with two lines coming into it:",
+          "body": "The graph after a merge, exactly as the command draws it, one commit at the top with two lines coming into it:",
           "code": "$ git log --graph --oneline --all\n*   5e6f7a8 (HEAD -> main) merge feature/initials\n\\\n| * 9d7e4b1 (feature/initials) uppercase the title\n| * 4c0a8e2 add an initial helper\n* | 3f1c2aa add the open label\n|/\n* 1a2b3c4 first commit"
         },
         {
           "kind": "prose",
-          "body": "Two things matter in that picture. The top commit has two parents — where two lines became one history, so nothing is thrown away to reconcile them. And every commit below is still there: a merge adds to the graph, it never rewrites it. That is what makes the rest of the phase safe."
+          "body": "Two things matter in that picture. The top commit has two parents, where two lines became one history, so nothing is thrown away to reconcile them. And every commit below is still there: a merge adds to the graph, it never rewrites it. That is what makes the rest of the phase safe."
         },
         {
           "kind": "keypoints",
@@ -3827,13 +3869,13 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "items": [
             "A commit names its parent; a branch just moves.",
             "Recovery is two moves: return to a snapshot, or undo with a commit.",
-            "A conflict is Git asking, not failing — read both sides and choose.",
+            "A conflict is Git asking, not failing, read both sides and choose.",
             "A merge adds a commit with two parents; it rewrites nothing underneath."
           ]
         },
         {
           "kind": "example",
-          "body": "Build the graph yourself. Make an empty scratch folder OUTSIDE this project — never here — open a terminal in it, and run these one line at a time:",
+          "body": "Build the graph yourself. Make an empty scratch folder OUTSIDE this project, never here, open a terminal in it, and run these one line at a time:",
           "code": "git init -b main\necho one > f.txt\ngit add -A\ngit commit -m first\ngit switch -c feature\necho two > f.txt\ngit commit -am feature\ngit switch -\necho three > f.txt\ngit commit -am main\ngit merge feature"
         },
         {
@@ -3848,7 +3890,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Stop when Git stops. Then run `git log --graph --oneline --all` and find the commit where the two lanes meet — that is the question this whole phase is about. Leave the scratch folder where it is."
+          "body": "Stop when Git stops. Then run `git log --graph --oneline --all` and find the commit where the two lanes meet; that is the question this whole phase is about. Leave the scratch folder where it is."
         }
       ],
       "visualization": {
@@ -3893,14 +3935,14 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Run the commands in a folder of their own — a scratch directory, never this project. If `git` is command not found, run the environment check or finish the setup phase first.",
+        "Run the commands in a folder of their own, a scratch directory, never this project. If the terminal says `git` is not found, run the environment check or finish the setup phase first.",
         "When Git stops and asks, do not resolve it yet: the next activity is about reading the markers, and you have just made a real one.",
         "git log --graph --oneline --all draws the branches you just made; the commit with two lines coming into it is the merge."
       ],
       "misconceptions": [
-        "A conflict means the work is lost — nothing is gone: the file holds both versions between the markers, and every commit is still in the history underneath.",
-        "Deleting the markers and saving is resolving it — deleting markers keeps whichever side happened to sit above them, and the other side is dropped without ever being read.",
-        "A branch is a copy of the project — it is a movable label on one commit, so making one costs nothing and nothing can be broken by having it."
+        "A conflict means the work is lost, nothing is gone: the file holds both versions between the markers, and every commit is still in the history underneath.",
+        "Deleting the markers and saving is resolving it, deleting markers keeps whichever side happened to sit above them, and the other side is dropped without ever being read.",
+        "A branch is a copy of the project; it is a movable label on one commit, so making one costs nothing and nothing can be broken by having it."
       ]
     },
     "git-ask-recover": {
@@ -3919,20 +3961,20 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "git commit --amend — rewrite the pushed commit so it no longer contains the change.",
-        "git checkout -- . — restore the files in the working copy to the last commit and carry on.",
-        "git reset --hard HEAD~1 — move the branch back to the commit before it, so the last commit is no longer on the branch at all.",
-        "git revert <sha> — write a new commit whose change is the exact opposite of that one, on top of where the branch is now."
+        "git commit --amend, rewrite the pushed commit so it no longer contains the change.",
+        "git checkout -- .: restore the files in the working copy to the last commit and carry on.",
+        "git reset --hard HEAD~1, move the branch back to the commit before it, so the last commit is no longer on the branch at all.",
+        "git revert <sha>, write a new commit whose change is the exact opposite of that one, on top of where the branch is now."
       ],
       "answer": 3,
-      "explanation": "Once other people hold a commit, the branch is shared history, and shared history can only be added to. Every later commit names the one before it as its parent, so moving that commit — with reset or amend — leaves their clone holding a chain that points at a hash that no longer exists on your side: their work cannot be pushed back without repairing the history by hand. Revert is the recovery that is safe on shared history precisely because it does not rewrite anything: it records the undoing as a commit, so the mistake stays visible and the repair is itself part of the history anyone can read. Reset and amend are exactly right on a private branch you have not pushed, and destructive on one you have. Restoring the file changes the working copy only; the next commit would still carry the change.",
+      "explanation": "A commit others hold makes the branch shared history, and it can only be added to. Moving it with reset or amend strands their clone on a hash that is gone, so they cannot push. Revert is safe there because it rewrites nothing: it commits the undoing, so the mistake stays visible. Restoring the file changes only the working copy, so the next commit still carries the change.",
       "hints": [
         "Ask which of the four leaves a teammate able to pull and push without repairing their clone."
       ],
       "misconceptions": [
-        "reset is the universal undo — it moves a branch label, which is harmless in private and strands everyone else's clone in public.",
-        "Amending a pushed commit is tidying — it changes the commit's identity, so every commit after it in their clone becomes unreachable from yours.",
-        "Taking the change out of the file is the same as reverting the commit — the commit is still in the history, and the next commit records only what you did afterwards."
+        "reset is the universal undo; it moves a branch label, which is harmless in private and strands everyone else's clone in public.",
+        "Amending a pushed commit is tidying; it changes the commit's identity, so every commit after it in their clone becomes unreachable from yours.",
+        "Taking the change out of the file is the same as reverting the commit, the commit is still in the history, and the next commit records only what you did afterwards."
       ]
     },
     "git-do-resolve": {
@@ -3963,7 +4005,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the label upper-cases the title"
           ],
-          "feedback": "The label still reads the old way. Deleting the markers is not resolving the conflict — it keeps whichever side sat above them, and the branch's work is dropped without ever being read."
+          "feedback": "The label still reads the old way. Deleting the markers is not resolving the conflict; it keeps whichever side sat above them, and the branch's work is dropped without ever being read."
         },
         {
           "id": "edge-new-helper",
@@ -3984,16 +4026,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "src/merge.js is the file the merge stopped on, and it owns both sides of the question: the markers in it are Git asking what the function was meant to do, not two versions of the answer. If the suite cannot run because `node` is command not found, run the environment check first. Run node --test --test-reporter=tap test/merge.test.mjs and read the name of the check that failed.",
-        "Read the two sides as two intents, not two blocks of text — one says what the status is, the other says how the title should read. Both are still wanted.",
+        "src/merge.js is the file the merge stopped on, and it owns both sides of the question: the markers in it are Git asking what the function was meant to do, not two versions of the answer. If the suite cannot run because the terminal says `node` is not found, run the environment check first. Run node --test --test-reporter=tap test/merge.test.mjs and read the name of the check that failed.",
+        "Read the two sides as two intents, not two blocks of text, one says what the status is, the other says how the title should read. Both are still wanted.",
         "A branch can add a declaration as well as change one. Look for something that appears on only one side: deleting a whole side can quietly drop it.",
         "The check that catches a lazy resolution is not about the label at all: it calls a name only the feature branch introduced. Read both sides once more and ask which declarations your merged file must contain for every failing name to pass.",
-        "A finished file has no marker lines, one label that reports status and the branch’s casing together, and every declaration both sides introduced — the suite is the judge, and it fails one name per intent you dropped."
+        "A finished file has no marker lines, one label that reports status and the branch’s casing together, and every declaration both sides introduced, the suite is the judge, and it fails one name per intent you dropped."
       ],
       "misconceptions": [
-        "A conflict is Git failing — it is Git refusing to guess: both sides changed the same lines, and deciding between them takes knowing what the app now needs.",
-        "Resolving means keeping both texts verbatim — for one changed line there is nothing to stack, and both function bodies is not an answer anyone can run.",
-        "The suite will tell me later — the suite is the only judge here, and every failure it reports points at a side of the conflict you chose not to read."
+        "A conflict is Git failing; it is Git refusing to guess: both sides changed the same lines, and deciding between them takes knowing what the app now needs.",
+        "Resolving means keeping both texts verbatim, for one changed line there is nothing to stack, and both function bodies is not an answer anyone can run.",
+        "The suite will tell me later, the suite is the only judge here, and every failure it reports points at a side of the conflict you chose not to read."
       ]
     },
     "git-review-transfer": {
@@ -4024,15 +4066,15 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "done tasks sink below the open ones"
           ],
-          "feedback": "A finished task is still at the top. Ordering by the words of the titles alone ignores which half of the list a task belongs in — the two opinions become one comparison, not one of them. If the suite cannot run because `node` is command not found, open a new terminal or run the environment check.",
+          "feedback": "A finished task is still at the top. Ordering by the words of the titles alone ignores which half of the list a task belongs in, the two opinions become one comparison, not one of them. If the suite cannot run because the terminal says `node` is not found, open a new terminal or run the environment check.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "A conflict between two versions of one function can be kept on both sides — there is one body to write, so the resolution is a decision that satisfies both intents.",
-        "The markers say which side is right — Git takes no side at all: the first block is simply where you were standing when you merged.",
-        "One name passing means the merge is done — each name states one intent, and only a body that satisfies both is finished."
+        "A conflict between two versions of one function can be kept on both sides; there is one body to write, so the resolution is a decision that satisfies both intents.",
+        "The markers say which side is right. Git takes no side at all: the first block is simply where you were standing when you merged.",
+        "One name passing means the merge is done, each name states one intent, and only a body that satisfies both is finished."
       ]
     },
     "api-learn-promise": {
@@ -4090,7 +4132,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "Pending, then fulfilled or rejected — and settled is final.",
+            "Pending, then fulfilled or rejected, and settled is final.",
             "await pauses one function and resumes it in a later turn.",
             "A rejected promise makes await throw, so the await goes in a try.",
             "Code after an await runs as a microtask, once the stack is clear."
@@ -4106,10 +4148,10 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Once settled, settled: every later await on the same promise gets the same answer or the same reason."
       ],
       "misconceptions": [
-        "A promise holds the value it will produce — while it is pending it holds nothing; it is a placeholder that settles exactly once.",
-        "await blocks the whole program — it pauses only the function it is written in, and the engine keeps running everything else meanwhile.",
-        "A rejected promise means a network failure — rejection only says \"no value, here is a reason\"; an HTTP error status is a fulfilled promise carrying a bad answer.",
-        "Code after an await runs immediately after it — it runs in a later turn, once the current work and the queued microtasks are done."
+        "A promise holds the value it will produce, while it is pending it holds nothing; it is a placeholder that settles exactly once.",
+        "await blocks the whole program; it pauses only the function it is written in, and the engine keeps running everything else meanwhile.",
+        "A rejected promise means a network failure, rejection only says \"no value, here is a reason\"; an HTTP error status is a fulfilled promise carrying a bad answer.",
+        "Code after an await runs immediately after it; it runs in a later turn, once the current work and the queued microtasks are done."
       ]
     },
     "api-learn-connect": {
@@ -4132,7 +4174,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "api-integration"
       ],
       "hints": [
-        "Name the state you are looking at before you render: nothing asked yet, asked and waiting, arrived, failed. An empty list while the request is still in flight is the waiting state, not a bug. If node is command not found, run the environment check first."
+        "Name the state you are looking at before you render: nothing asked yet, asked and waiting, arrived, failed. An empty list while the request is still in flight is the waiting state, not a bug. If the terminal says node is not found, run the environment check first."
       ],
       "objectives": [
         "Explain why fetch resolves for an HTTP error status and rejects only when no answer arrives.",
@@ -4192,7 +4234,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "task",
-          "body": "Before writing any code: write four lines in the Notes — the four states the module can be in, and what shows in each. The suite hands you a fetch you settle by hand, so “in flight” is a moment you control, not watch. The challenge checks whether your code tells the four apart."
+          "body": "Before writing any code: write four lines in the Notes, the four states the module can be in, and what shows in each. The suite hands you a fetch you settle by hand, so “in flight” is a moment you control, not watch. The challenge checks whether your code tells the four apart."
         }
       ],
       "visualization": {
@@ -4213,14 +4255,14 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             },
             {
               "side": "server",
-              "label": "503 — and the promise still resolves"
+              "label": "503, and the promise still resolves"
             }
           ]
         }
       },
       "misconceptions": [
-        "fetch rejects when the server returns an error status — it rejects only when no response arrives at all, so a 500 resolves exactly like a success.",
-        "Clearing the loading flag on the success path is enough — the failure path then leaves a spinner running forever on the one request worth telling the learner about."
+        "fetch rejects when the server returns an error status; it rejects only when no response arrives at all, so a 500 resolves exactly like a success.",
+        "Clearing the loading flag on the success path is enough, the failure path then leaves a spinner running forever on the one request worth telling you about."
       ]
     },
     "api-ask-outcome": {
@@ -4239,20 +4281,20 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "options": [
-        "The success path runs and shows whatever the error body parses to — fetch resolved.",
+        "The success path runs and shows whatever the error body parses to, fetch resolved.",
         "Nothing continues, because awaiting a response that is not ok leaves the promise pending.",
         "The await itself throws a TypeError, because reading a bad status is not allowed.",
         "The catch runs and the app shows the error, because a 500 is a failed request."
       ],
       "answer": 0,
-      "explanation": "fetch resolves whenever an answer arrives; the status code is data inside that answer, not a property of the promise. Only a request that never got any response at all — no server, no route, the network dead — rejects. So for every 4xx and 5xx the catch stays silent and the code walks into res.json() carrying an error document it is about to treat as a list. The check that separates those two outcomes is res.ok, and it has to be written down: nothing infers it on your behalf. Awaiting is not a verdict, it is only a handover.",
+      "explanation": "fetch resolves when an answer arrives; the status is data inside it, not a property of the promise. Only a request that never got a response rejects, so for every 4xx and 5xx the catch stays silent and res.json() hands the code an error document it treats as a list. res.ok separates the two, and you must write it down. Awaiting is not a verdict, only a handover.",
       "hints": [
         "Ask of each option what it claims fetch does with a status of 500, and whether that is the same thing as doing nothing with a dead address."
       ],
       "misconceptions": [
-        "A non-ok status is a rejected promise — the rejection is reserved for requests that never received an answer, and a 500 is an answer.",
-        "A pending promise and a failed request are the same waiting state — one has not settled yet and the other has settled badly, and only one of them clears.",
-        "Reading res.status is what makes a response illegal — status is an ordinary number on an ordinary object, and reading it cannot throw."
+        "A non-ok status is a rejected promise, the rejection is reserved for requests that never received an answer, and a 500 is an answer.",
+        "A pending promise and a failed request are the same waiting state, one has not settled yet and the other has settled badly, and only one of them clears.",
+        "Reading res.status is what makes a response illegal, status is an ordinary number on an ordinary object, and reading it cannot throw."
       ]
     },
     "api-do-load": {
@@ -4277,7 +4319,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "the request is marked loading while it is in flight",
             "the tasks land when the response is ready"
           ],
-          "feedback": "Either the flag was never raised, or it outlived the request. Set the status to loading before the first await — a line after an await runs in a later turn, so a flag raised there is one no render ever sees — and move it to ready only when the data actually arrived. If the suite cannot start because `node` is command not found, run the environment check first."
+          "feedback": "Either the flag was never raised, or it outlived the request. Set the status to loading before the first await, a line after an await runs in a later turn, so a flag raised there is one no render sees, and move it to ready only when the data arrived. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "failure",
@@ -4293,21 +4335,21 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "an http error status is treated as a failure"
           ],
-          "feedback": "An answer arrived, so the success path took it. fetch resolves for any status code — the promise saying resolved is not the server saying yes. Check res.ok before reading the body, and put the status number into what you record, because 'it failed' tells the next person nothing.",
+          "feedback": "An answer arrived, so the success path took it. fetch resolves for any status code, the promise saying resolved is not the server saying yes. Check res.ok before reading the body, and put the status number into what you record, because 'it failed' tells the next person nothing.",
           "edge": true
         }
       ],
       "hints": [
-        "Open src/api.js. Say the states out loud first: nothing asked yet, asked and waiting, arrived, failed. Anything the code cannot state that it is in, it cannot show — and a screen with no word for failure will display an empty list instead of one. Run node --test --test-reporter=tap test/api.test.mjs and read the name of the check that failed.",
+        "Open src/api.js. Say the states out loud first: nothing asked yet, asked and waiting, arrived, failed. Anything the code cannot state that it is in, it cannot show, and a screen with no word for failure will display an empty list instead of one. Run node --test --test-reporter=tap test/api.test.mjs and read the name of the check that failed.",
         "The suite hands your module a stand-in for fetch: a function that takes a URL and returns a promise, answering with an object that has ok, status and an async json(). Nothing here needs a browser, a port, or a real server.",
-        "src/api.js should export createTaskApi(fetchImpl) returning one object holding status, tasks and error plus an async load(): raise the status before you await anything, and set it again on every way out of the function — including the way that throws.",
+        "src/api.js should export createTaskApi(fetchImpl) returning one object holding status, tasks and error plus an async load(): raise the status before you await anything, and set it again on every way out of the function, including the way that throws.",
         "Treat one response as two separate questions: did anything answer at all, which is the promise, and was that answer good, which is res.ok. A 503 passes the first and fails the second, so the ok check has to come before json() and its failure has to land in the same error state as a dead network.",
-        "Before you submit, name what a caller can show in each state, and walk the two ways load can leave: the one that returns data and the one that throws. Both must end in a named status, and the failure text has to let a person tell a dead network from a refused request — with the list left empty rather than undefined."
+        "Before you submit, name what a caller can show in each state, and walk the two ways load can leave: the one that returns data and the one that throws. Both must end in a named status, and the failure text has to let a person tell a dead network from a refused request, with the list left empty rather than undefined."
       ],
       "misconceptions": [
-        "Awaiting makes the lines below it wait — the turn ends at the await, so anything held only in a local variable is gone by the time the answer comes back.",
-        "A catch around the fetch is the same as having handled the failure — that catch is reached only when no response arrived at all, and every server error walks straight past it.",
-        "An empty list and a failed load look the same, so either is fine to show — they are two different sentences to the person staring at the screen, and only one of them is something they can act on."
+        "Awaiting makes the lines below it wait, the turn ends at the await, so anything held only in a local variable is gone by the time the answer comes back.",
+        "A catch around the fetch is the same as having handled the failure; that catch is reached only when no response arrived at all, and every server error walks straight past it.",
+        "An empty list and a failed load look the same, so either is fine to show; they are two different sentences to the person staring at the screen, and only one of them is something they can act on."
       ]
     },
     "api-review-transfer": {
@@ -4330,7 +4372,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a new task is sent as JSON text"
           ],
-          "feedback": "The request went out without the task in it, or with an object where text belongs. A body is bytes on a wire: serialize it with JSON.stringify, say what format it is in the content-type, and use the method that states you are creating something rather than asking for it. If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "The request went out without the task in it, or with an object where text belongs. A body is bytes on a wire: serialize it with JSON.stringify, say what format it is in the content-type, and use the method that states you are creating something rather than asking for it. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "edge-refused",
@@ -4344,9 +4386,9 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Checking res.ok was a requirement of the read path only — any request that can be answered badly has to check, whoever sent it and in whichever direction.",
-        "A promise that resolved means the task was saved — resolution says an answer came back; in this test the answer was no.",
-        "Handing the response object back to the caller is enough, they can inspect it — a caller that has to remember res.ok will forget, in the next screen, exactly as this module just did."
+        "Checking res.ok was a requirement of the read path only, any request that can be answered badly has to check, whoever sent it and in whichever direction.",
+        "A promise that resolved means the task was saved, resolution says an answer came back; in this test the answer was no.",
+        "Handing the response object back to the caller is enough, they can inspect it, a caller that has to remember res.ok will forget, in the next screen, exactly as this module just did."
       ]
     },
     "api-server-learn-serve": {
@@ -4377,7 +4419,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "example",
-          "body": "The command that runs the suite for this phase. If node is command not found, run the environment check first.",
+          "body": "The command that runs the suite for this phase. If the terminal says node is not found, run the environment check first.",
           "code": "node --test --test-reporter=tap test/api-server.test.mjs"
         },
         {
@@ -4403,7 +4445,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The second decision has an ordering that is easy to get wrong: a refusal must arrive before anything changes. Check the body, then touch the store. Code that writes first and validates after fails having already damaged what the user cared about. The safe moment to stop is before you have done anything."
+          "body": "The second decision has an ordering: a refusal must arrive before anything changes. Check the body, then touch the store. Code that writes first and validates after fails having already damaged what the user cared about. The safe moment to stop is before you have done anything."
         },
         {
           "kind": "keypoints",
@@ -4452,12 +4494,12 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "For each of the four decisions, ask what the caller would have to do differently if this answer were the wrong one. If the answer is 'nothing, they would read the body anyway', then the status is doing no work — which is how 200-for-everything gets written."
+        "For each of the four decisions, ask what the caller would have to do differently if this answer were the wrong one. If the answer is 'nothing, they would read the body anyway', then the status is doing no work, which is how 200-for-everything gets written."
       ],
       "misconceptions": [
-        "The status is decoration because the body carries the real information — a caller branches on the number first, and a 200 sends it down the success path before it has read a word.",
-        "An unmatched path will 404 on its own — nothing answers unless a line in your code returns that answer, and a route that falls through leaves the caller waiting.",
-        "Validating after the write is the same as validating before it, since the request fails either way — one of them fails with the data already changed."
+        "The status is decoration because the body carries the real information, a caller branches on the number first, and a 200 sends it down the success path before it has read a word.",
+        "An unmatched path will 404 on its own, nothing answers unless a line in your code returns that answer, and a route that falls through leaves the caller waiting.",
+        "Validating after the write is the same as validating before it, since the request fails either way, one of them fails with the data already changed."
       ]
     },
     "api-server-ask-status": {
@@ -4476,7 +4518,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         },
         {
           "kind": "example",
-          "body": "It refuses, and it stores nothing — so far so good. Judge the number it refuses with:",
+          "body": "It refuses, and it stores nothing, so far so good. Judge the number it refuses with:",
           "code": "let body;\ntry { body = JSON.parse(raw); } catch { body = null; }\nif (!body || !body.title) return { status: 500, body: { error: 'internal' } };"
         }
       ],
@@ -4487,14 +4529,14 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "It is right: the server did not expect this, so it is the server's problem to report."
       ],
       "answer": 1,
-      "explanation": "The dividing line is who can fix it, not who is surprised by it. A 4xx says the request was the problem and the sender can correct it and resend; a 5xx says the server failed on a request that was fine. Malformed input sits squarely in the first group, however unexpected it is from your side of the wire — the caller can repair it by sending different bytes, and you cannot repair it by trying again. Getting this backwards has a real cost: monitoring alerts on 5xx and not on 4xx, so a code that cries 500 about bad input both hides the genuine outages and makes the error rate look like your fault. And 404 is about the address not existing, never about the contents being unusable — a route that exists and rejects its input is a found route that declined.",
+      "explanation": "Who can fix it decides: 4xx is a request the sender can correct, 5xx is a server that failed on a fine request. Malformed input is 4xx: the caller can send different bytes, and no retry fixes it. Getting it backwards costs you: monitoring alerts on 5xx, not 4xx, so 500 about bad input hides real outages. And 404 is about the address, not unusable contents.",
       "hints": [
         "Ask who can fix it and what they would do next. Then ask who gets paged when this number repeats all night, and whether they are the right person."
       ],
       "misconceptions": [
-        "A 500 is honest because the server really did fail to make a task — it failed to make a task for a reason the caller owns, which is the definition of a 4xx.",
-        "Status codes sort by severity — they sort by ownership: 4xx is yours to fix, 5xx is mine, and nothing about how bad it feels changes that.",
-        "404 works for unusable input, since either way nothing happens — 404 answers a question about the address, and sending the caller away to check their URL is a wrong diagnosis delivered politely."
+        "A 500 is honest because the server really did fail to make a task; it failed to make a task for a reason the caller owns, which is the definition of a 4xx.",
+        "Status codes sort by severity; they sort by ownership: 4xx is yours to fix, 5xx is mine, and nothing about how bad it feels changes that.",
+        "404 works for unusable input, since either way nothing happens, 404 answers a question about the address, and sending the caller away to check their URL is a wrong diagnosis delivered politely."
       ]
     },
     "api-server-do-handle": {
@@ -4517,7 +4559,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a get on the collection answers the tasks with a 200"
           ],
-          "feedback": "The list did not come back the way a reader of the API would expect. GET /tasks answers 200 and hands over the tasks the server was constructed with — returning them is not the hard part; returning them under a status that means something else, or wrapped in an object instead of as the array itself, is how this one usually fails."
+          "feedback": "The list did not come back the way a reader of the API would expect. GET /tasks answers 200 and hands over the tasks the server was constructed with, returning them is not the hard part; returning them under a status that means something else, or wrapped in an object instead of as the array itself, is how this one usually fails."
         },
         {
           "id": "create",
@@ -4541,21 +4583,21 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a path nothing registered answers 404 as json, and never a crash"
           ],
-          "feedback": "A path that matched nothing ran off the end of the function without returning. Falling through is not a 404 — it is no answer, and the caller waits for one. Close handle() with an explicit return that answers 404 and carries a body saying which method and path you could not serve.",
+          "feedback": "A path that matched nothing ran off the end of the function without returning. Falling through is not a 404; it is no answer, and the caller waits for one. Close handle() with an explicit return that answers 404 and carries a body saying which method and path you could not serve.",
           "edge": true
         }
       ],
       "hints": [
-        "src/task-server.js is the whole server: it holds the tasks it was constructed with and decides the status and the body of every answer the suite gets. Before writing any of it, say the three decisions out loud for each request — is there a route for this method and path, is the body usable, and which number the situation earned. Run node --test --test-reporter=tap test/api-server.test.mjs and read the name of the check that failed.",
-        "The suite calls createTaskServer(tasks) and then handle({ method, path, body }) synchronously — no port, no await, no response object, nothing to close. Return { status, body } and no other shape is expected of you.",
+        "src/task-server.js is the whole server: it holds the tasks it was constructed with and decides the status and the body of every answer the suite gets. Before writing any of it, say the three decisions out loud for each request, is there a route for this method and path, is the body usable, and which number the situation earned. Run node --test --test-reporter=tap test/api-server.test.mjs and read the name of the check that failed.",
+        "The suite calls createTaskServer(tasks) and then handle({ method, path, body }) synchronously, no port, no await, no response object, nothing to close. Return { status, body } and no other shape is expected of you.",
         "Match the collection path first and keep the two arms separate: '/tasks' with GET is the read, '/tasks' with POST is the create. Testing the path alone would make a method you never registered look like a route you did, which is the same mistake the fourth check is about.",
         "Validate before you store. If the body carries no usable title, return 400 with a message naming that field and return early without pushing anything; otherwise create the task, give it an id the server chose, and answer 201 with the task itself in the body.",
-        "Last, the fall-through. End the function with a return rather than with the end of the function: anything that reaches the bottom of handle() without hitting one has hung the caller instead of refusing them, and a 404 with no body is a second way to do the same thing. If the suite cannot start because `node` is command not found, run the environment check first."
+        "Last, the fall-through. End the function with a return rather than with the end of the function: anything that reaches the bottom of handle() without hitting one has hung the caller instead of refusing them, and a 404 with no body is a second way to do the same thing. If the suite cannot start because the terminal says `node` is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Any 2xx will do as long as the body is right — the caller branches on the number before it reads anything, and 200 on a create erases the difference between 'nothing happened' and 'something now exists'.",
-        "A request for a route that does not exist is the server's bug, so 500 is honest about it — the caller can fix it by asking for something that is there, which is exactly what 400 and 404 are for.",
-        "Checking the body inside the create branch is enough — 'enough' is judged by what the store looks like afterwards, not by whether an error message was produced somewhere along the way."
+        "Any 2xx will do as long as the body is right, the caller branches on the number before it reads anything, and 200 on a create erases the difference between 'nothing happened' and 'something now exists'.",
+        "A request for a route that does not exist is the server's bug, so 500 is honest about it, the caller can fix it by asking for something that is there, which is exactly what 400 and 404 are for.",
+        "Checking the body inside the create branch is enough, 'enough' is judged by what the store looks like afterwards, not by whether an error message was produced somewhere along the way."
       ]
     },
     "api-server-review-patch": {
@@ -4578,7 +4620,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a patch on a known id changes it and answers 200"
           ],
-          "feedback": "The change either did not happen or was not reported as happening. A patch on a task that exists answers 200, edits that one task, and leaves the count of tasks alone — if the list grew, the patch created rather than changed, and that is the other check speaking."
+          "feedback": "The change either did not happen or was not reported as happening. A patch on a task that exists answers 200, edits that one task, and leaves the count of tasks alone, if the list grew, the patch created rather than changed, and that is the other check speaking."
         },
         {
           "id": "edge-ghost",
@@ -4592,9 +4634,9 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "A 404 is enough on its own — the status reports what happened to the request, and the store has to agree with it; a refusal that also wrote is a 404 sitting on top of a change.",
-        "PATCH and POST are the same because both take a body — POST creates at a collection address, PATCH alters one thing at an id, and the second is required to establish that the thing is there.",
-        "An id in the URL can be trusted because the caller sent it — the caller sent it, which is precisely why it gets looked up rather than used."
+        "A 404 is enough on its own, the status reports what happened to the request, and the store has to agree with it; a refusal that also wrote is a 404 sitting on top of a change.",
+        "PATCH and POST are the same because both take a body. POST creates at a collection address, PATCH alters one thing at an id, and the second is required to establish that the thing is there.",
+        "An id in the URL can be trusted because the caller sent it, the caller sent it, which is precisely why it gets looked up rather than used."
       ]
     },
     "review-learn-gate": {
@@ -4633,7 +4675,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "This line has run on a laptop for a year without complaint:",
-          "code": "const databaseUrl = process.env.DATABASE_URL || 'postgres://localhost:5432/tasks';\n\n// In production, DATABASE_URL was never set. Nothing throws. The app boots,\n// answers its health check, reports itself healthy, and writes every task to a\n// database that does not exist. The failure is not a crash — it is silence."
+          "code": "const databaseUrl = process.env.DATABASE_URL || 'postgres://localhost:5432/tasks';\n\n// In production, DATABASE_URL was never set. Nothing throws. The app boots,\n// answers its health check, reports itself healthy, and writes every task to a\n// database that does not exist. The failure is not a crash; it is silence."
         },
         {
           "kind": "prose",
@@ -4683,12 +4725,12 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       },
       "hints": [
-        "Read the diagram left to right and notice where the boxes sit: nothing reaches the app until it has been through validate, and ship comes after the app boots rather than instead of it. If node is command not found, run the environment check first."
+        "Read the diagram left to right and notice where the boxes sit: nothing reaches the app until it has been through validate, and ship comes after the app boots rather than instead of it. If the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "A review is a matter of taste and seniority — it is a list of assumptions and what breaks when each one is wrong, which anyone can write down and argue with.",
-        "Code that has run for a year without complaint has been tested for a year — it has been run against one environment, and the claim it works is only ever about the machine it was checked on.",
-        "A useful error message includes the value it is complaining about — including it is how a secret reaches a log, and the variable name alone already told the operator what to fix."
+        "A review is a matter of taste and seniority; it is a list of assumptions and what breaks when each one is wrong, which anyone can write down and argue with.",
+        "Code that has run for a year without complaint has been tested for a year; it has been run against one environment, and the claim it works is only ever about the machine it was checked on.",
+        "A useful error message includes the value it is complaining about, including it is how a secret reaches a log, and the variable name alone already told the operator what to fix."
       ]
     },
     "review-ask-verdict": {
@@ -4719,17 +4761,17 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "The default belongs in a named constant at the top of the file, so it can be reused and changed in one place instead of two.",
         "It should throw rather than fall back, because any default hides a mistake from whoever configured that environment for you.",
         "It has worked for a year, so the risk is theoretical, and raising it now is bikeshedding a line that nobody has ever touched.",
-        "An env var is a string, so this hands a server text where a number belongs — and one laptop is not production."
+        "An env var is a string, so this hands a server text where a number belongs, and one laptop is not production."
       ],
       "answer": 3,
-      "explanation": "Mistaking familiarity for evidence is the weakest objection: a year on one laptop is a year of the same environment, and the first deploy is the first time this line meets a value nobody set by hand. Moving the default to a constant is style, which is the cheapest thing a review spends. \"It should throw rather than fall back\" is close, and worth saying out loud because it is the tempting answer — but the defect is not the fallback mechanism, it is what the fallback supplies. Throwing on a missing PORT and defaulting a required DATABASE_URL are the same decision in different syntax: both are a policy about a value that is absent, and only one of them keeps the app from running somewhere it should not. The strongest objection is the one about types, because it names an assumption and the exact moment it stops holding. PORT arrives as the string 8080, a server asked to bind a string is a deploy that fails somewhere you are not standing, and nothing about a year of laptop use would ever have surfaced it.",
+      "explanation": "A strong objection names an assumption and where it breaks, and the types one wins: PORT arrives as text 8080, and binding a string fails off your machine. Familiarity is weakest: a year on one laptop is one environment. Moving a default to a constant is style. \"It should throw rather than fall back\" is close, but the defect is what the fallback supplies, not the mechanism.",
       "hints": [
         "Sort the options before choosing between them: which are claims about what the code does in an environment nobody has run it in, and which are preferences about how the code reads?"
       ],
       "misconceptions": [
-        "Time in use is the same as testing — a year on one laptop exercised one environment, and it works is only ever a claim about the machine it was checked on.",
-        "A default is harmless because it only applies when the variable is missing — when the variable is required, the default is the moment the app decides to run without it.",
-        "Throwing is automatically safer than defaulting — both are policies about an absent value, and a throw that names one variable at a time still costs an operator a restart per problem."
+        "Time in use is the same as testing, a year on one laptop exercised one environment, and it works is only ever a claim about the machine it was checked on.",
+        "A default is harmless because it only applies when the variable is missing, when the variable is required, the default is the moment the app decides to run without it.",
+        "Throwing is automatically safer than defaulting, both are policies about an absent value, and a throw that names one variable at a time still costs an operator a restart per problem."
       ]
     },
     "review-do-gate": {
@@ -4752,7 +4794,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a complete environment comes back ready to run"
           ],
-          "feedback": "The happy path is still handing over what the environment said instead of what the app needs. Every environment variable arrives as a string, so PORT comes back as the text 8080 and a server asked to bind text is a deploy that fails somewhere you are not standing: parse it at the edge and keep the number. And when nothing is wrong the report has to say so positively — ok true with an empty list of problems, not an absent one, because a caller cannot tell a missing field from a clean bill of health."
+          "feedback": "The happy path hands over the environment's words, not the app's values. Every environment variable arrives as a string, so PORT comes back as text: parse at the edge, keep the number, because binding text fails off your machine. When nothing is wrong, say so positively: ok true with an empty problems list, not an absent one, because a caller cannot read a missing field as clean."
         },
         {
           "id": "refuses",
@@ -4760,7 +4802,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a required variable nobody set is a refusal, not a default"
           ],
-          "feedback": "Something is still being defaulted that should not be. Decide explicitly which variables have an honest fallback: a port can default, because a wrong one is an inconvenience, and a database address cannot, because a wrong one is a silent write to somewhere that does not exist. When one is missing, return ok false with config null and a sentence naming the variable — then keep going through the rest of them, because a report that stops at the first problem turns one restart into four."
+          "feedback": "Something is being defaulted that should not be: decide which may have an honest fallback. A port can default, since a wrong one is an inconvenience, but a database address cannot, because a wrong one writes nowhere. When one is missing, return ok false with config null and one naming the variable, then keep going: a report that stops at the first problem turns one restart into four."
         },
         {
           "id": "edge-leak",
@@ -4768,21 +4810,21 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a bad secret is reported by name and never by value"
           ],
-          "feedback": "The report quoted the secret it was complaining about. This is the check that separates a useful error from an incident: name the variable, state the rule, and leave the value inside the module. Anything you write into that sentence gets copied into a log aggregator, an error tracker, a ticket and somebody's screenshot, and the only way to un-leak a secret is to rotate it. Say what is wrong and what to do about it, never what the value was.",
+          "feedback": "The report quoted the secret it complained about. This check separates a useful error from an incident: name the variable, state the rule, leave the value inside the module. It gets copied into a log aggregator, an error tracker, a ticket, a screenshot, and the only way to un-leak a secret is to rotate it. Say what is wrong and what to do, never what the value was.",
           "edge": true
         }
       ],
       "hints": [
         "Start by reading rather than writing. List what src/deploy.js assumes about the machine it runs on, and for each assumption ask what happens when it is false somewhere you cannot see. That list is the review; the code change is only what the review concluded. Run node --test --test-reporter=tap test/deploy.test.mjs and read the name of the check that failed.",
-        "The app needs a report, not a value: loadConfig(env) returns { ok, problems, config }, where ok is false when anything required is missing or wrong, problems holds one sentence per problem naming the variable, and config is the typed configuration or null. Return it rather than throwing — the caller decides whether to exit, and it can only exit once if it is told everything at once.",
+        "The app needs a report, not a value: loadConfig(env) returns { ok, problems, config }, where ok is false when anything required is missing or wrong, problems holds one sentence per problem naming the variable, and config is the typed configuration or null. Return it rather than throwing, the caller decides whether to exit, and it can only exit once if it is told everything at once.",
         "Required and optional are two lists you write deliberately, and the test is what a wrong value costs. A wrong port costs a restart, so PORT may default. A wrong database address costs a silent write to nowhere, so DATABASE_URL may not, and neither may a session secret that everybody can read in the repository.",
-        "Build the types at the edge instead of trusting them: turn the port text into a number and refuse anything that is not a positive whole number, read the words true and 1 explicitly rather than trusting truthiness, and give the secret a length rule. Then read your own bad-secret sentence back — the variable name belongs in it and the value does not.",
-        "Finished means the module reports rather than throws, names every problem in one pass instead of stopping at the first, keeps a bad secret’s value out of the message that names the variable, and hands the port over as a number — so a machine it cannot run on is refused at boot rather than at the first request."
+        "Build the types at the edge instead of trusting them: turn the port text into a number and refuse anything that is not a positive whole number, read the words true and 1 explicitly rather than trusting truthiness, and give the secret a length rule. Then read your own bad-secret sentence back, the variable name belongs in it and the value does not.",
+        "Finished means the module reports rather than throws, names every problem in one pass instead of stopping at the first, keeps a bad secret’s value out of the message that names the variable, and hands the port over as a number, so a machine it cannot run on is refused at boot rather than at the first request."
       ],
       "misconceptions": [
-        "A default is a convenience with no cost attached — for a value production cannot run without, the default is the moment the app chooses to run without it, and nothing logs the choice.",
-        "Returning a report is weaker than throwing — a throw names the first problem and stops, so the operator discovers the rest one restart at a time, in production.",
-        "An error that shows the offending value is more helpful — it is also a copy of a secret in every log and ticket downstream, and the variable name was already enough to act on."
+        "A default is a convenience with no cost attached, for a value production cannot run without, the default is the moment the app chooses to run without it, and nothing logs the choice.",
+        "Returning a report is weaker than throwing, a throw names the first problem and stops, so the operator discovers the rest one restart at a time, in production.",
+        "An error that shows the offending value is more helpful; it is also a copy of a secret in every log and ticket downstream, and the variable name was already enough to act on."
       ]
     },
     "review-review-transfer": {
@@ -4805,7 +4847,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "a flag nobody set is off"
           ],
-          "feedback": "An unset flag came back as something the caller has to interpret. This is the same decision the configuration module had to make, on a smaller stage: when the environment says nothing, the code still has to say something, and undefined is not an answer — it is the absence of one, handed to every caller to guess at. Pick the safe side, and return the type you promised so nobody downstream has to guard it."
+          "feedback": "An unset flag came back as something the caller has to interpret. This is the same decision the configuration module had to make, on a smaller stage: when the environment says nothing, the code still has to say something, and undefined is not an answer, it is the absence of one. Pick the safe side, and return the type you promised so nobody downstream has to guard it."
         },
         {
           "id": "edge-word-false",
@@ -4813,15 +4855,15 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "the word false in an environment variable means off"
           ],
-          "feedback": "A flag set to the word false turned the feature on. Truthiness cannot read: every non-empty string is true, including the one that spells the opposite of what it means, so an operator who wrote BETA_SEARCH=false to switch a feature off switched it on. Parse the words instead — true, 1 and yes are on, everything else is off — which is the same discipline the port needed, and the reason this file exists. If the suite cannot run because `node` is command not found, run the environment check first.",
+          "feedback": "A flag set to the word false turned the feature on. Truthiness cannot read: every non-empty string is true, even the one spelling the opposite of what it means, so BETA_SEARCH=false switched the feature on. Parse the words instead: true, 1 and yes are on, everything else is off. If the suite cannot run because the terminal says `node` is not found, run the environment check first.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Reading an environment variable is copying it — it is parsing it, because everything in there is text and the type is something you build rather than find.",
-        "An absent variable and the word false are both falsy, so they can be handled the same way — one is silence and the other is an instruction, and only a parser tells them apart.",
-        "A default is what you fall back to when you have not decided — it is the decision, made once, on behalf of every environment that never states a preference."
+        "Reading an environment variable is copying it; it is parsing it, because everything in there is text and the type is something you build rather than find.",
+        "An absent variable and the word false are both falsy, so they can be handled the same way, one is silence and the other is an instruction, and only a parser tells them apart.",
+        "A default is what you fall back to when you have not decided; it is the decision, made once, on behalf of every environment that never states a preference."
       ]
     },
     "pr-review-learn-loop": {
@@ -4864,7 +4906,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "src/task-batch.js is where this phase works.",
-          "code": "/* Pull request under review: batch task import (C6 — Work with others).\n *\n * A teammate opened this PR to import tasks in bulk. Three review comments are\n * attached below from the team lead:\n *\n *   [Review Comment 1 — Contract]: \"Existing v1 callers destructure\n *     `{ imported, rejected, count }` from `importBatch(existing, incoming)`."
+          "code": "/* Pull request under review: batch task import (C6. Work with others).\n *\n * A teammate opened this PR to import tasks in bulk. Three review comments are\n * attached below from the team lead:\n *\n *   [Review Comment 1. Contract]: \"Existing v1 callers destructure\n *     `{ imported, rejected, count }` from `importBatch(existing, incoming)`."
         },
         {
           "kind": "example",
@@ -4896,12 +4938,12 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Follow the event-flow diagram from left to right: every review comment maps to a concrete invariant the caller relies on. If node is command not found, run the environment check first."
+        "Follow the event-flow diagram from left to right: every review comment maps to a concrete invariant the caller relies on. If the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "Addressing a review comment means editing only the single line the reviewer highlighted — a contract comment requires checking every return path and caller assumption.",
-        "Defaulting an empty title to Untitled is safer than rejecting it — inventing data hides broken upstream records from the user who uploaded the batch.",
-        "Mutating an input array in place is fine if the caller immediately reassigns the variable — callers in stateful UI frameworks rely on reference inequality to detect changes."
+        "Addressing a review comment means editing only the single line the reviewer highlighted, a contract comment requires checking every return path and caller assumption.",
+        "Defaulting an empty title to Untitled is safer than rejecting it, inventing data hides broken upstream records from the user who uploaded the batch.",
+        "Mutating an input array in place is fine if the caller immediately reassigns the variable, callers in stateful UI frameworks rely on reference inequality to detect changes."
       ]
     },
     "pr-review-ask-thread": {
@@ -4935,8 +4977,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Ask what `{ imported } = [1, 2, 3]` evaluates to in plain JavaScript."
       ],
       "misconceptions": [
-        "Object destructuring on an array throws immediately — an Array is an object in JavaScript, so reading unknown property names quietly produces undefined.",
-        "Updating the unit test for the changed function proves the change is safe — a unit test only checks what it calls, not the callers you broke."
+        "Object destructuring on an array throws immediately, an Array is an object in JavaScript, so reading unknown property names quietly produces undefined.",
+        "Updating the unit test for the changed function proves the change is safe, a unit test only checks what it calls, not the callers you broke."
       ]
     },
     "pr-review-do-batch": {
@@ -4980,16 +5022,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Read the three review comments at the top of src/task-batch.js: each names one invariant the exported importBatch must keep, and the suite stays red until all three hold. If the suite cannot run because `node` is command not found, run the environment check first. Run node --test --test-reporter=tap test/pr-review.test.mjs and read the name of the check that failed.",
+        "Read the three review comments at the top of src/task-batch.js: each names one invariant the exported importBatch must keep, and the suite stays red until all three hold. If the suite cannot run because the terminal says `node` is not found, run the environment check first. Run node --test --test-reporter=tap test/pr-review.test.mjs and read the name of the check that failed.",
         "The failing names are the contract: one object carrying the imported tasks, the refused incoming positions and a count; blank titles turned away; and nothing the caller handed you altered.",
         "Build the answer as new data rather than as edits: two fresh lists, one for what you accept and one for what you refuse, and a single walk over the incoming items by position.",
         "The edge check asks what the caller still holds afterwards. Which step of yours grows a list it was handed, or writes a trimmed value back onto an object it was given? Neither may happen.",
-        "A complete answer: the returned object holds the caller's own tasks followed by the accepted incoming ones, the 0-based positions of the refused titles, and a count of the newly accepted items — with not one argument of the caller's changed along the way."
+        "A complete answer: the returned object holds the caller's own tasks followed by the accepted incoming ones, the 0-based positions of the refused titles, and a count of the newly accepted items, with not one argument of the caller's changed along the way."
       ],
       "misconceptions": [
-        "Copying an array with `const copy = existing` prevents mutation — assignment copies the reference, so `copy.push(...)` still mutates the caller's array.",
-        "`count` is `imported.length` — `count` reports how many incoming items were newly imported in this batch, while `imported` holds existing plus accepted items.",
-        "Mutating `item.title = item.title.trim()` is harmless — the caller still holds the `incoming` objects and may inspect what they originally submitted."
+        "Copying an array with `const copy = existing` prevents mutation, assignment copies the reference, so `copy.push(...)` still mutates the caller's array.",
+        "`count` is `imported.length`, `count` reports how many incoming items were newly imported in this batch, while `imported` holds existing plus accepted items.",
+        "Mutating `item.title = item.title.trim()` is harmless, the caller still holds the `incoming` objects and may inspect what they originally submitted."
       ]
     },
     "pr-review-transfer-gate": {
@@ -5012,7 +5054,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "merges only when every blocking review comment is resolved"
           ],
-          "feedback": "Export `canMergePullRequest(comments)` from `src/review-thread.js`. Return `{ mergeable, unresolvedIds }` where `unresolvedIds` lists the `id` of every comment with `blocking: true` that is not resolved. If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "Export `canMergePullRequest(comments)` from `src/review-thread.js`. Return `{ mergeable, unresolvedIds }` where `unresolvedIds` lists the `id` of every comment with `blocking: true` that is not resolved. If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "edge-empty-or-silent",
@@ -5026,8 +5068,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "Non-blocking nitpicks should block the merge — only comments marked `blocking: true` gate mergeability.",
-        "Clicking Resolve with an empty reply satisfies a blocking thread — a blocking review thread requires an actual response when `reply` is provided."
+        "Non-blocking nitpicks should block the merge, only comments marked `blocking: true` gate mergeability.",
+        "Clicking Resolve with an empty reply satisfies a blocking thread, a blocking review thread requires an actual response when `reply` is provided."
       ]
     },
     "ai-audit-learn-verify": {
@@ -5070,7 +5112,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         {
           "kind": "example",
           "body": "src/ai-sync.js is where this phase works.",
-          "code": "/* AI-generated sync client under audit (C7 — Work with AI output).\n *\n * Notice: This code and its confident summary below were authored by NEXORA to\n * simulate an AI coding assistant's pull request.\n *\n * === AI Assistant PR Summary (UNVERIFIED) ===\n * \"Implemented `syncTasksWithRemote(remoteFn, filter, fallbackCache)`:\n *  1. Strictly surfaces remote HTTP/network failures as `ok: false`.\n *  2. Returns a defensive copy of `fallbackCache` so callers cannot mutate\n *     shared cache state.\n *  3. Safely encodes the `filter.tag` parameter into the query string.\"\n * ============================================\n */\n\nexport async function syncTasksWithRemote(remoteFn, filter = {}, fallbackCache = []) {\n\tconst query = filter.tag ? `?tag=${filter.tag}` : '';\n\ttry {\n\t\tconst res = await remoteFn(`/tasks${query}`);\n\t\tif (!res || res.status >= 500) {\n\t\t\treturn { ok: true, fromCache: true, tasks: fallbackCache };\n\t\t}\n\t\treturn { ok: true, fromCache: false, tasks: res.tasks ?? [] };"
+          "code": "/* AI-generated sync client under audit (C7. Work with AI output).\n *\n * Notice: This code and its confident summary below were authored by NEXORA to\n * simulate an AI coding assistant's pull request.\n *\n * === AI Assistant PR Summary (UNVERIFIED) ===\n * \"Implemented `syncTasksWithRemote(remoteFn, filter, fallbackCache)`:\n *  1. Strictly surfaces remote HTTP/network failures as `ok: false`.\n *  2. Returns a defensive copy of `fallbackCache` so callers cannot mutate\n *     shared cache state.\n *  3. Safely encodes the `filter.tag` parameter into the query string.\"\n * ============================================\n */\n\nexport async function syncTasksWithRemote(remoteFn, filter = {}, fallbackCache = []) {\n\tconst query = filter.tag ? `?tag=${filter.tag}` : '';\n\ttry {\n\t\tconst res = await remoteFn(`/tasks${query}`);\n\t\tif (!res || res.status >= 500) {\n\t\t\treturn { ok: true, fromCache: true, tasks: fallbackCache };\n\t\t}\n\t\treturn { ok: true, fromCache: false, tasks: res.tasks ?? [] };"
         },
         {
           "kind": "example",
@@ -5110,12 +5152,12 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Compare each line in the \"What the AI summary claimed\" box with the actual return statements in src/ai-sync.js. If node is command not found, run the environment check first."
+        "Compare each line in the \"What the AI summary claimed\" box with the actual return statements in src/ai-sync.js. If the terminal says node is not found, run the environment check first."
       ],
       "misconceptions": [
-        "If the generated code is clean, well-commented, and passes a happy-path test, the summary accurately describes its edge cases — prose and code are generated token-by-token without executing the edge cases.",
-        "Returning `{ ok: true, fromCache: true }` on a 503 is helpful resilience — `ok: true` tells the caller the remote sync succeeded, hiding the outage.",
-        "Returning `fallbackCache.slice()` is enough to protect cached task objects — a shallow array copy still shares the inner task object references."
+        "If the generated code is clean, well-commented, and passes a happy-path test, the summary accurately describes its edge cases, prose and code are generated token-by-token without executing the edge cases.",
+        "Returning `{ ok: true, fromCache: true }` on a 503 is helpful resilience, `ok: true` tells the caller the remote sync succeeded, hiding the outage.",
+        "Returning `fallbackCache.slice()` is enough to protect cached task objects, a shallow array copy still shares the inner task object references."
       ]
     },
     "ai-audit-ask-claim": {
@@ -5141,7 +5183,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "`Array.prototype.slice()` mutates `fallbackCache` in place when called with no arguments, so the cache is already changed.",
         "`slice()` makes a new outer array, but the elements are the same objects, so editing one mutates the cache.",
         "`ok: false` prevents the caller from reading the `tasks` property on the returned object, so the copy is never reachable.",
-        "It is not false — `slice()` clones both the array and all nested objects inside it, so edits stay local to the caller."
+        "It is not false, `slice()` clones both the array and all nested objects inside it, so edits stay local to the caller."
       ],
       "answer": 1,
       "explanation": "`Array.prototype.slice()` performs a shallow copy: the outer Array container is new, so `.push()` on the returned list will not grow `fallbackCache`, but each element `result.tasks[i]` is the exact same object reference as `fallbackCache[i]`. When a caller mutates `result.tasks[0].title`, the shared cache is corrupted for every subsequent caller. Cloning each object (`fallbackCache.map(t => ({ ...t }))`) is required.",
@@ -5149,8 +5191,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         "Distinguish between mutating the array container (`.push`) and mutating a property on an object inside the array (`tasks[0].title = ...`)."
       ],
       "misconceptions": [
-        "`slice()` or `[...arr]` deep-clones objects inside the array — both only copy the outer array of references.",
-        "A confident explanation in a PR description means the author verified object reference isolation — models routinely confuse shallow copy with deep copy in prose."
+        "`slice()` or `[...arr]` deep-clones objects inside the array, both only copy the outer array of references.",
+        "A confident explanation in a PR description means the author verified object reference isolation, models routinely confuse shallow copy with deep copy in prose."
       ]
     },
     "ai-audit-do-sync": {
@@ -5194,16 +5236,16 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
         }
       ],
       "hints": [
-        "Read the three numbered claims at the top of src/ai-sync.js: every one of them is currently a lie in the implementation below it. If the suite cannot run because `node` is command not found, run the environment check first. Run node --test --test-reporter=tap test/ai-audit.test.mjs and read the name of the check that failed.",
+        "Read the three numbered claims at the top of src/ai-sync.js: every one of them is currently a lie in the implementation below it. If the suite cannot run because the terminal says `node` is not found, run the environment check first. Run node --test --test-reporter=tap test/ai-audit.test.mjs and read the name of the check that failed.",
         "Take the three claims in the order they are numbered: the first is about the string a tag becomes, the second about what a failed call reports, and the third about who ends up owning the objects you hand back.",
         "For the tag, send the value through the encoding function rather than gluing it into the path yourself. For the cache, make one copying step and route every fallback answer through it.",
         "A refused call must not read as success. Decide what a caller should see when no reply arrives at all, and when the reply comes back carrying a failure status, and make both of those roads reach the same answer.",
         "A complete answer: a dead network or a failure status reports the sync as failed while still handing back the cached tasks; a tag holding separators cannot become extra query parameters; and every task you return is a copy, so one caller's edit never reaches the shared cache."
       ],
       "misconceptions": [
-        "A fallback response should return `ok: true` because the caller received data — `ok` reports whether the synchronization succeeded, and `fromCache: true` tells the caller stale data is available.",
-        "`encodeURI` encodes `&` and `=` inside a query value — `encodeURI` leaves URI delimiter characters untouched; only `encodeURIComponent` encodes a parameter value safely.",
-        "`fallbackCache.slice()` isolates cached objects from mutation — it only clones the outer array, leaving every task object shared."
+        "A fallback response should return `ok: true` because the caller received data, `ok` reports whether the synchronization succeeded, and `fromCache: true` tells the caller stale data is available.",
+        "`encodeURI` encodes `&` and `=` inside a query value, `encodeURI` leaves URI delimiter characters untouched; only `encodeURIComponent` encodes a parameter value safely.",
+        "`fallbackCache.slice()` isolates cached objects from mutation; it only clones the outer array, leaving every task object shared."
       ]
     },
     "ai-audit-transfer-page": {
@@ -5226,7 +5268,7 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
           "tests": [
             "slices the requested 1-based page without mutating the source array"
           ],
-          "feedback": "Export `paginateTasks(items, page, limit)` from `src/ai-paginator.js`. Return `{ items: slice, hasMore }` for the 1-based `page` using `.slice(start, start + limit)` (never `.splice`, which mutates the caller's array). If the suite cannot run because `node` is command not found, run the environment check first."
+          "feedback": "Export `paginateTasks(items, page, limit)` from `src/ai-paginator.js`. Return `{ items: slice, hasMore }` for the 1-based `page` using `.slice(start, start + limit)` (never `.splice`, which mutates the caller's array). If the suite cannot run because the terminal says `node` is not found, run the environment check first."
         },
         {
           "id": "edge-clamp",
@@ -5240,8 +5282,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
       ],
       "hints": [],
       "misconceptions": [
-        "`Array.prototype.splice(start, limit)` is a read-only slice — `splice` removes elements from the caller's array in place.",
-        "Page 0 with `start = (page - 1) * limit` safely returns the first page — `(-1) * limit` passes a negative start index to `slice`, returning the tail of the array instead of page 1."
+        "`Array.prototype.splice(start, limit)` is a read-only slice, `splice` removes elements from the caller's array in place.",
+        "Page 0 with `start = (page - 1) * limit` safely returns the first page, `(-1) * limit` passes a negative start index to `slice`, returning the tail of the array instead of page 1."
       ]
     }
   }

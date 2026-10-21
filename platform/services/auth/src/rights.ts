@@ -12,6 +12,7 @@ import {
   type RightsRequestRecord,
 } from "@nexora/contracts";
 import { ApiError, newId, parseOr400, requireUserId, sha256 } from "@nexora/service-kit";
+import { readProgress } from "./progress.js";
 
 /* Lawful basis and data-subject rights, in one place.
  *
@@ -316,6 +317,11 @@ const AUTH_EXPORT_NOT_INCLUDED = [
  *
  * Adding a key is a version bump. Removing or renaming one is a new version
  * of the format, and the old files stay readable.
+ *
+ * Version 2 added `progress`: the phases the learner finished, the drafts they
+ * wrote and the attempts they made. This service holds those records, and a
+ * file that left them out would be a file that silently dropped the work; a
+ * reader of a version 1 file still reads it, because nothing before it moved.
  */
 export const ACCOUNT_EXPORT_KEYS = [
   "format",
@@ -327,6 +333,7 @@ export const ACCOUNT_EXPORT_KEYS = [
   "consents",
   "rightsRequests",
   "proofs",
+  "progress",
   "sessions",
   "notIncluded",
 ] as const;
@@ -410,7 +417,7 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
     const user = who.rows[0];
     if (!user) throw new ApiError(404, "not_found", "Account not found.");
 
-    const [consents, rights, proofs, sessions] = await Promise.all([
+    const [consents, rights, proofs, sessions, progress] = await Promise.all([
       pool.query(
         "SELECT document, version, purpose, basis, accepted_at, withdrawn_at FROM consents WHERE user_id = $1 ORDER BY accepted_at",
         [userId]
@@ -430,6 +437,14 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
           "(SELECT count(*) FROM device_codes WHERE approved_user_id = $1) AS device_codes",
         [userId]
       ),
+      /* The learner's own work, read through the same projection the progress
+         route uses. It is in the file because it is this service's record of
+         what the learner did: an access file that left it out would be a file
+         that silently dropped the phases they finished and the drafts they
+         wrote, while the note below says only the local copy is missing. The
+         ids it carries are the ids the work was earned under, so a file written
+         after a content update still names the phase the learner actually did. */
+      readProgress(pool, userId),
     ]);
 
     /* A learner with nothing still gets a file.
@@ -441,7 +456,7 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
      * used the product. */
     return {
       format: "nexora-account-export" as const,
-      version: 1 as const,
+      version: 2 as const,
       generatedAt: new Date().toISOString(),
       controller: process.env.OPERATOR_LEGAL_NAME ?? "[[ operator legal name — set before publishing ]]",
       service: "auth" as const,
@@ -462,6 +477,7 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
           issuedAt: new Date(r.issued_at).toISOString(),
         })
       ),
+      progress,
       sessions: {
         active: Number(sessions.rows[0]?.active ?? 0),
         revoked: Number(sessions.rows[0]?.revoked ?? 0),

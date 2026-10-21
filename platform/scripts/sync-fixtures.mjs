@@ -46,9 +46,19 @@ const PROJECT_ROOTS = {
      that it reads the catalogue, they come with it. */
   "api-basics": "fixtures/api-basics",
   "rust-ledger": "fixtures/rust-ledger",
+  /* The two Rust courses run in the Rust workspace, and their phases name it
+     explicitly, so these two entries are the workspace and not a fallback. */
+  "rust-fundamentals": "fixtures/rust-ledger",
+  "rust-in-production": "fixtures/rust-ledger",
   /* The SQL course has a workspace of its own, and its phases name it
      explicitly, so the entry is the workspace and not a fallback. */
   "sql-ledger": "fixtures/sql-ledger",
+  /* The Zig and OCaml courses have workspaces of their own, and their phases
+     name them explicitly, the same way the SQL course's do. */
+  "zig-sheet": "fixtures/zig-sheet",
+  "zig-fundamentals": "fixtures/zig-sheet",
+  "ocaml-calc": "fixtures/ocaml-calc",
+  "ocaml-fundamentals": "fixtures/ocaml-calc",
 };
 
 /* Every course the IDE carries, and the suites its activities name.

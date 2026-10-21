@@ -10,7 +10,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
     {
       "id": "rust-checker",
       "title": "A checker reads code and reports what it finds",
-      "goal": "Learn what a tool can establish about code, and how to report a finding a reader can judge.",
+      "goal": "Learn what a tool can establish about code, and how to report a finding a reader can judge. The judge reads the report module as well as the findings, so the report check stays red until the next phase writes it.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
@@ -29,7 +29,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
     {
       "id": "rust-checker-report",
       "title": "Your turn: the rules and the report",
-      "goal": "Choose what the checker looks for, how badly it rates what it finds, and how the report says it.",
+      "goal": "Choose what the checker looks for, how badly it rates what it finds, and how the report says it. One judge runs both checker phases, so the suite is red until the phase before it and this one are done.",
       "level": 3,
       "authored": true,
       "project": "rust-ledger",
@@ -463,7 +463,11 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "prose",
-          "body": "Some questions have answers a machine can establish. Nothing in this file calls this function. That is a fact about the text, and it is checkable. Some questions have no such answer. This function does the wrong thing is a matter of meaning, and no amount of reading settles it."
+          "body": "Some questions have answers a machine can establish. Nothing in this file calls this function. That is a fact about the text, and it is checkable."
+        },
+        {
+          "kind": "prose",
+          "body": "Some questions have no answer a machine can establish. This function does the wrong thing is a matter of meaning, and no amount of reading settles it."
         },
         {
           "kind": "example",
@@ -506,6 +510,14 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
           "code": "cargo test -p ledger-check --test checker"
         },
         {
+          "kind": "prose",
+          "body": "That command is cargo, so this phase needs the Rust toolchain on the machine. It comes from https://rustup.rs, and rustup installs cargo and rustc together, so one step gives you both. If the terminal says cargo is not found, install the toolchain from that page and run the environment check before you open a file."
+        },
+        {
+          "kind": "prose",
+          "body": "This course works in the Rust Ledger project, at NEXORA/Rust-Ledger in your home folder, and the module this phase names, crates/ledger-check/src/findings.rs, is inside it."
+        },
+        {
           "kind": "task",
           "body": "Open findings.rs. Find the functions, find the ones nothing calls, and turn the facts into findings. Run the suite and read the finding the check expected."
         },
@@ -515,7 +527,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what the tool read and what it did not read. If cargo is command not found, run the environment check first.",
+        "Ask what the tool read and what it did not read. If the terminal says cargo is not found, run the environment check first.",
         "A tool that reads one file can say what that file does, and nothing about the crate around it."
       ],
       "misconceptions": [
@@ -576,7 +588,15 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-checker"
       ],
       "files": [
-        "crates/ledger-check/src/findings.rs"
+        "crates/ledger-check/src/findings.rs",
+        "crates/ledger-check/src/lib.rs",
+        "crates/ledger-check/tests/checker.rs",
+        "crates/ledger-check/src/report.rs",
+        "crates/ledger-check/src/main.rs",
+        "test/ledger_check.test.mjs",
+        "crates/ledger-check/Cargo.toml",
+        "Cargo.toml",
+        "Cargo.lock"
       ],
       "testCommand": "node --test --test-reporter=tap test/ledger_check.test.mjs",
       "timeoutMs": 300000,
@@ -630,7 +650,15 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-checker"
       ],
       "files": [
-        "crates/ledger-check/src/findings.rs"
+        "crates/ledger-check/src/findings.rs",
+        "crates/ledger-check/src/lib.rs",
+        "crates/ledger-check/tests/checker_review.rs",
+        "crates/ledger-check/src/report.rs",
+        "crates/ledger-check/src/main.rs",
+        "test/ledger_check_review.test.mjs",
+        "crates/ledger-check/Cargo.toml",
+        "Cargo.toml",
+        "Cargo.lock"
       ],
       "testCommand": "node --test --test-reporter=tap test/ledger_check_review.test.mjs",
       "timeoutMs": 300000,
@@ -745,7 +773,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask which question about the code has an answer a machine can settle. If cargo is command not found, run the environment check first.",
+        "Ask which question about the code has an answer a machine can settle. If the terminal says cargo is not found, run the environment check first.",
         "A rule that cannot be settled by reading is a rule that will produce a guess."
       ],
       "misconceptions": [
@@ -806,7 +834,12 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-checker-report"
       ],
       "files": [
-        "crates/ledger-check/src/report.rs"
+        "crates/ledger-check/src/report.rs",
+        "crates/ledger-check/src/lib.rs",
+        "crates/ledger-check/tests/checker.rs",
+        "crates/ledger-check/src/findings.rs",
+        "crates/ledger-check/src/main.rs",
+        "test/ledger_check.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ledger_check.test.mjs",
       "timeoutMs": 300000,
@@ -860,7 +893,12 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-checker-report"
       ],
       "files": [
-        "crates/ledger-check/src/report.rs"
+        "crates/ledger-check/src/report.rs",
+        "crates/ledger-check/src/lib.rs",
+        "crates/ledger-check/tests/checker_review.rs",
+        "crates/ledger-check/src/findings.rs",
+        "crates/ledger-check/src/main.rs",
+        "test/ledger_check_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ledger_check_review.test.mjs",
       "timeoutMs": 300000,
@@ -905,7 +943,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Trace a task from the spawn call to the handle that carries its result."
       ],
       "hints": [
-        "Ask what is running the future between the call and the await. If cargo is command not found, run the environment check first.",
+        "Ask what is running the future between the call and the await. If the terminal says cargo is not found, run the environment check first.",
         "A spawned task may outlive the function that made it, so everything it names has to be owned by it."
       ],
       "misconceptions": [
@@ -1044,7 +1082,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Because a spawned task is scheduled by the runtime and may run later."
       ],
       "answer": 0,
-      "explanation": "The task belongs to the runtime, not to the stack frame that created it. Nothing forces it to finish before that frame ends, so every value it names has to be able to live on its own. That is what the static bound asks for. Send is the other half, because the runtime may move the task to another worker thread. The other options describe a guarantee the runtime does not give."
+      "explanation": "The task belongs to the runtime, not the stack frame that created it. Nothing forces it to finish before that frame ends, so every value it names has to live on its own, which is what the static bound asks for. Send is the other half, because the runtime may move the task to another worker thread. The other options describe guarantees the runtime does not give."
     },
     "rust-tokio-runtime-do": {
       "id": "rust-tokio-runtime-do",
@@ -1068,7 +1106,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Believing a join error is a normal answer, when it means the task panicked or was cancelled."
       ],
       "files": [
-        "crates/ledger-api/src/runtime.rs"
+        "crates/ledger-api/src/runtime.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/runtime.rs",
+        "test/runtime.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/runtime.test.mjs",
       "timeoutMs": 300000,
@@ -1116,7 +1157,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Believing spawning nothing is an error, when it is a request for no work at all."
       ],
       "files": [
-        "crates/ledger-api/src/runtime.rs"
+        "crates/ledger-api/src/runtime.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/runtime_review.rs",
+        "test/runtime_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/runtime_review.test.mjs",
       "timeoutMs": 300000,
@@ -1156,7 +1200,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Predict what a receiver sees when the last sender is dropped."
       ],
       "hints": [
-        "Ask how many senders there are and how many values each one sends. If cargo is command not found, run the environment check first.",
+        "Ask how many senders there are and how many values each one sends. If the terminal says cargo is not found, run the environment check first.",
         "A queue that nobody bounds grows until the process runs out of memory."
       ],
       "misconceptions": [
@@ -1315,7 +1359,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Believing a subscriber that joins late still sees the earlier values, when a fan-out only carries what was published after it joined."
       ],
       "files": [
-        "crates/ledger-api/src/channels.rs"
+        "crates/ledger-api/src/channels.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/channels.rs",
+        "test/channels.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/channels.test.mjs",
       "timeoutMs": 300000,
@@ -1363,7 +1410,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Believing a dropped answer is a value of zero, when it is the absence of an answer."
       ],
       "files": [
-        "crates/ledger-api/src/channels.rs"
+        "crates/ledger-api/src/channels.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/channels_review.rs",
+        "test/channels_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/channels_review.test.mjs",
       "timeoutMs": 300000,
@@ -1403,7 +1453,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Design a wait that ends at a deadline rather than when the work does."
       ],
       "hints": [
-        "Ask what happens to a future that is still waiting when the macro returns. If cargo is command not found, run the environment check first.",
+        "Ask what happens to a future that is still waiting when the macro returns. If the terminal says cargo is not found, run the environment check first.",
         "A timeout is a branch, and the branch that wins is the one that ends the wait."
       ],
       "misconceptions": [
@@ -1546,7 +1596,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Believing a deadline has to be a separate timer, when a sleep in a branch of the select is the deadline."
       ],
       "files": [
-        "crates/ledger-api/src/select.rs"
+        "crates/ledger-api/src/select.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/select.rs",
+        "test/select.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/select.test.mjs",
       "timeoutMs": 300000,
@@ -1594,7 +1647,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Believing the channel that answered is decided by the order the channels were made in."
       ],
       "files": [
-        "crates/ledger-api/src/select.rs"
+        "crates/ledger-api/src/select.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/select_review.rs",
+        "test/select_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/select_review.test.mjs",
       "timeoutMs": 300000,
@@ -1703,7 +1759,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what the caller knows about a value it has not pulled yet. If cargo is command not found, run the environment check first.",
+        "Ask what the caller knows about a value it has not pulled yet. If the terminal says cargo is not found, run the environment check first.",
         "A stream that ends returns nothing, and that is different from a value of zero."
       ],
       "misconceptions": [
@@ -1764,7 +1820,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-tokio-streams"
       ],
       "files": [
-        "crates/ledger-api/src/streams.rs"
+        "crates/ledger-api/src/streams.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/streams.rs",
+        "test/streams.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/streams.test.mjs",
       "timeoutMs": 300000,
@@ -1810,7 +1869,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-tokio-streams"
       ],
       "files": [
-        "crates/ledger-api/src/streams.rs"
+        "crates/ledger-api/src/streams.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/streams_review.rs",
+        "test/streams_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/streams_review.test.mjs",
       "timeoutMs": 300000,
@@ -1881,7 +1943,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         },
         {
           "kind": "prose",
-          "body": "The guard cannot be held across an await. The guard is not a value the runtime may move between threads, so a task that holds one across an await cannot be sent, and the runtime refuses to spawn it. The rule is simple: take the lock, do the work, let the guard go."
+          "body": "The guard cannot be held across an await. The guard is not a value the runtime may move between threads, so a task that holds one across an await cannot be sent, and the runtime refuses to spawn it. The rule is one line: take the lock, do the work, let the guard go."
         },
         {
           "kind": "prose",
@@ -1934,7 +1996,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what the tasks are sharing and what they are allowed to change at the same time. If cargo is command not found, run the environment check first.",
+        "Ask what the tasks are sharing and what they are allowed to change at the same time. If the terminal says cargo is not found, run the environment check first.",
         "A blocking call parks the whole thread, so every task on that thread waits."
       ],
       "misconceptions": [
@@ -1995,7 +2057,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-tokio-state"
       ],
       "files": [
-        "crates/ledger-api/src/shared.rs"
+        "crates/ledger-api/src/shared.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/shared.rs",
+        "test/shared.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/shared.test.mjs",
       "timeoutMs": 300000,
@@ -2049,7 +2114,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-tokio-state"
       ],
       "files": [
-        "crates/ledger-api/src/shared.rs"
+        "crates/ledger-api/src/shared.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/shared_review.rs",
+        "test/shared_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/shared_review.test.mjs",
       "timeoutMs": 300000,
@@ -2163,7 +2231,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what a dropped future leaves behind, and whether the half it did is the whole of the answer. If cargo is command not found, run the environment check first.",
+        "Ask what a dropped future leaves behind, and whether the half it did is the whole of the answer. If the terminal says cargo is not found, run the environment check first.",
         "A timeout reports its own error, and the future inside it is dropped rather than failed."
       ],
       "misconceptions": [
@@ -2224,7 +2292,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-tokio"
       ],
       "files": [
-        "crates/ledger-api/src/tokio_ops.rs"
+        "crates/ledger-api/src/tokio_ops.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/tokio_ops.rs",
+        "test/tokio_ops.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/tokio_ops.test.mjs",
       "timeoutMs": 300000,
@@ -2278,7 +2349,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-tokio"
       ],
       "files": [
-        "crates/ledger-api/src/tokio_ops.rs"
+        "crates/ledger-api/src/tokio_ops.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/tokio_ops_review.rs",
+        "test/tokio_ops_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/tokio_ops_review.test.mjs",
       "timeoutMs": 300000,
@@ -2392,7 +2466,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what two requests with the same path but different methods do. If cargo is command not found, run the environment check first.",
+        "Ask what two requests with the same path but different methods do. If the terminal says cargo is not found, run the environment check first.",
         "A path that no route serves and a path served with the wrong method are two different answers."
       ],
       "misconceptions": [
@@ -2453,7 +2527,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-routing"
       ],
       "files": [
-        "crates/ledger-api/src/routing.rs"
+        "crates/ledger-api/src/routing.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/routing.rs",
+        "test/routing.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/routing.test.mjs",
       "timeoutMs": 300000,
@@ -2507,7 +2584,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-routing"
       ],
       "files": [
-        "crates/ledger-api/src/routing.rs"
+        "crates/ledger-api/src/routing.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/routing_review.rs",
+        "test/routing_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/routing_review.test.mjs",
       "timeoutMs": 300000,
@@ -2621,7 +2701,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask where in the request each part lives: the path, the query after the question mark, or the body. If cargo is command not found, run the environment check first.",
+        "Ask where in the request each part lives: the path, the query after the question mark, or the body. If the terminal says cargo is not found, run the environment check first.",
         "The extractor runs before the handler, so a failure is the answer and the handler is not called."
       ],
       "misconceptions": [
@@ -2662,7 +2742,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "It deserializes the segment the route pattern captured."
       ],
       "answer": 3,
-      "explanation": "The path extractor builds the captures the route pattern declares, in order, and deserializes each into the type the handler asked for. The query extractor reads only the part after the question mark, the body extractor reads the payload, and the state extractor holds the values the service shares. Choosing the path extractor is not a shortcut: it is the one whose type matches the part of the request the owner was written in.",
+      "explanation": "The path extractor builds the captures the route pattern declares, in order, and deserializes each into the type the handler asked for. The query extractor reads the part after the question mark, the body extractor reads the payload, and the state extractor holds the shared values. Choosing the path extractor is not a shortcut: its type matches the part of the request the owner was written in.",
       "hints": [
         "Ask which part of the request the owner was written in, and which extractor reads that part."
       ],
@@ -2682,7 +2762,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-extractors"
       ],
       "files": [
-        "crates/ledger-api/src/extractors.rs"
+        "crates/ledger-api/src/extractors.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/extractors.rs",
+        "test/extractors.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/extractors.test.mjs",
       "timeoutMs": 300000,
@@ -2736,7 +2819,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-extractors"
       ],
       "files": [
-        "crates/ledger-api/src/extractors.rs"
+        "crates/ledger-api/src/extractors.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/extractors_review.rs",
+        "test/extractors_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/extractors_review.test.mjs",
       "timeoutMs": 300000,
@@ -2850,7 +2936,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what the service would have to open to reach the balances. If cargo is command not found, run the environment check first.",
+        "Ask what the service would have to open to reach the balances. If the terminal says cargo is not found, run the environment check first.",
         "The state is cloned for every request, so a value behind a handle is cheap to clone."
       ],
       "misconceptions": [
@@ -2911,7 +2997,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-state"
       ],
       "files": [
-        "crates/ledger-api/src/state.rs"
+        "crates/ledger-api/src/state.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/state.rs",
+        "test/state.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/state.test.mjs",
       "timeoutMs": 300000,
@@ -2957,7 +3046,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-state"
       ],
       "files": [
-        "crates/ledger-api/src/state.rs"
+        "crates/ledger-api/src/state.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/state_review.rs",
+        "test/state_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/state_review.test.mjs",
       "timeoutMs": 300000,
@@ -3071,7 +3163,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what the layer can do that the handler cannot, since the handler only sees its own request. If cargo is command not found, run the environment check first.",
+        "Ask what the layer can do that the handler cannot, since the handler only sees its own request. If the terminal says cargo is not found, run the environment check first.",
         "A layer runs the inner service and gets the response back, so it can change the answer on the way out."
       ],
       "misconceptions": [
@@ -3132,7 +3224,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-middleware"
       ],
       "files": [
-        "crates/ledger-api/src/middleware.rs"
+        "crates/ledger-api/src/middleware.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/middleware.rs",
+        "test/middleware.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/middleware.test.mjs",
       "timeoutMs": 300000,
@@ -3186,7 +3281,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-middleware"
       ],
       "files": [
-        "crates/ledger-api/src/middleware.rs"
+        "crates/ledger-api/src/middleware.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/middleware_review.rs",
+        "test/middleware_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/middleware_review.test.mjs",
       "timeoutMs": 300000,
@@ -3300,7 +3398,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what happens to a request that is half answered when the process stops. If cargo is command not found, run the environment check first.",
+        "Ask what happens to a request that is half answered when the process stops. If the terminal says cargo is not found, run the environment check first.",
         "The accept loop waits on two things at once: the next connection and the stop signal."
       ],
       "misconceptions": [
@@ -3361,7 +3459,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-shutdown"
       ],
       "files": [
-        "crates/ledger-api/src/shutdown.rs"
+        "crates/ledger-api/src/shutdown.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/shutdown.rs",
+        "test/shutdown.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/shutdown.test.mjs",
       "timeoutMs": 300000,
@@ -3407,7 +3508,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-axum-shutdown"
       ],
       "files": [
-        "crates/ledger-api/src/shutdown.rs"
+        "crates/ledger-api/src/shutdown.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/shutdown_review.rs",
+        "test/shutdown_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/shutdown_review.test.mjs",
       "timeoutMs": 300000,
@@ -3452,7 +3556,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Predict the status a create, a successful read and a rejected body each answer with."
       ],
       "hints": [
-        "Say what a request must carry before the owner route can run at all. If cargo is command not found, run the environment check first.",
+        "Say what a request must carry before the owner route can run at all. If the terminal says cargo is not found, run the environment check first.",
         "An extractor is an argument type. If the type cannot be built from the request, the handler never runs."
       ],
       "misconceptions": [
@@ -3597,7 +3701,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "It deserializes the segment the route pattern captured."
       ],
       "answer": 3,
-      "explanation": "Path<T> builds the captures the route pattern declares, in order, and deserializes each into the type the handler asked for. Query<T> reads only the query string, so it never sees the path. Json<T> reads the body, which a GET does not carry. State<T> is the application state installed with with_state, the same for every request, so it cannot hold one request owner. Choosing Path is not a shortcut: it is the extractor whose type matches the part of the request the owner was written in."
+      "explanation": "Path<T> builds the captures the route pattern declares and deserializes each into the type the handler asked for. Query<T> reads only the query string, never the path, and Json<T> reads the body, which a GET does not carry. State<T> is the state with_state installs, the same for every request, so it cannot hold one request owner. Path is the extractor whose type matches where the owner was written."
     },
     "rust-axum-do": {
       "id": "rust-axum-do",
@@ -3621,7 +3725,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking a create may answer 200, when 201 says the resource now exists."
       ],
       "files": [
-        "crates/ledger-api/src/api.rs"
+        "crates/ledger-api/src/api.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/api.rs",
+        "test/api.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/api.test.mjs",
       "timeoutMs": 300000,
@@ -3669,7 +3776,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking a deposit creates a second account, when it changes the balance the account already holds."
       ],
       "files": [
-        "crates/ledger-api/src/api.rs"
+        "crates/ledger-api/src/api.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/api_review.rs",
+        "test/api_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/api_review.test.mjs",
       "timeoutMs": 300000,
@@ -3778,7 +3888,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask who can do something about the failure: the client, or the service. If cargo is command not found, run the environment check first.",
+        "Ask who can do something about the failure: the client, or the service. If the terminal says cargo is not found, run the environment check first.",
         "The rules are fixed. The words and the shape of the body are your choice, and the checks read the shape."
       ],
       "misconceptions": [
@@ -3819,7 +3929,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "The full error chain, so the client can file a good bug report."
       ],
       "answer": 1,
-      "explanation": "The status already tells the client that the server failed. The body is for the caller, and a store message names a host, a query and sometimes a user, which is information a stranger should not read. The detail belongs in the log, where the person who can fix it will look. An empty body leaves the client guessing, and sending the whole error chain turns one outage into a disclosure.",
+      "explanation": "The status already tells the client the server failed. The body is for the caller, and a store message names a host, a query and sometimes a user, which a stranger should not read. The detail belongs in the log, where whoever can fix it will look. An empty body leaves the client guessing, and the whole error chain turns one outage into a disclosure.",
       "hints": [
         "Ask who is allowed to read a store error message, and who is not."
       ],
@@ -3839,7 +3949,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-http-errors"
       ],
       "files": [
-        "crates/ledger-api/src/http_errors.rs"
+        "crates/ledger-api/src/http_errors.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/http_errors.rs",
+        "test/http_errors.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/http_errors.test.mjs",
       "timeoutMs": 300000,
@@ -3893,7 +4006,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-http-errors"
       ],
       "files": [
-        "crates/ledger-api/src/http_errors.rs"
+        "crates/ledger-api/src/http_errors.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/http_errors_review.rs",
+        "test/http_errors_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/http_errors_review.test.mjs",
       "timeoutMs": 300000,
@@ -3938,7 +4054,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Read a migration and say what would break if it never ran against the test database."
       ],
       "hints": [
-        "Say what has to exist before the first INSERT can succeed. If cargo is command not found, run the environment check first.",
+        "Say what has to exist before the first INSERT can succeed. If the terminal says cargo is not found, run the environment check first.",
         "A pool is built once and cloned into the handlers; each query borrows a connection briefly."
       ],
       "misconceptions": [
@@ -4085,7 +4201,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "They remove the need for a transaction around every insert."
       ],
       "answer": 2,
-      "explanation": "A bound value travels beside the statement, so the database never parses it as SQL. That is what makes an owner called ada; drop table safe. A formatted query pastes the value into the text the parser reads, and any quote in the value closes the string early. Binding does not make a query faster or replace a transaction; it decides where the value stops being code and starts being data."
+      "explanation": "A bound value travels beside the statement, so the database never parses it as SQL. That is why an owner called ada; drop table safe. A formatted query pastes the value into the text the parser reads, and a quote in it closes the string early. Binding does not speed a query up or replace a transaction; it decides where a value stops being code and becomes data."
     },
     "rust-sqlx-do": {
       "id": "rust-sqlx-do",
@@ -4109,7 +4225,11 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking an owner with no row is a zero balance, when a missing row and a row of zero are different answers."
       ],
       "files": [
-        "crates/ledger-api/src/db.rs"
+        "crates/ledger-api/src/db.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/db.rs",
+        "crates/ledger-api/migrations/0001_init.sql",
+        "test/db.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/db.test.mjs",
       "timeoutMs": 300000,
@@ -4157,7 +4277,11 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking an owner with no rows counts one, when nothing was recorded at all."
       ],
       "files": [
-        "crates/ledger-api/src/db.rs"
+        "crates/ledger-api/src/db.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/db_review.rs",
+        "crates/ledger-api/migrations/0001_init.sql",
+        "test/db_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/db_review.test.mjs",
       "timeoutMs": 300000,
@@ -4266,7 +4390,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what the service should do when the port in the environment is not a number. If cargo is command not found, run the environment check first.",
+        "Ask what the service should do when the port in the environment is not a number. If the terminal says cargo is not found, run the environment check first.",
         "The environment is read as a list of pairs, so a test can decide what the process sees."
       ],
       "misconceptions": [
@@ -4307,7 +4431,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Once at startup, from the environment, into a typed value."
       ],
       "answer": 3,
-      "explanation": "One binary should run everywhere and only the values differ. Reading the environment at startup and parsing it into a typed value keeps string lookups out of the rest of the program, and a bad value is reported before the server accepts a request. A constant forces a rebuild, a global hides the source of a value, and a file edited inside an image is a change that exists in no version control.",
+      "explanation": "One binary should run everywhere and only the values differ. Reading the environment at startup into a typed value keeps string lookups out of the program, and a bad value is reported before the server accepts a request. A constant forces a rebuild, a global hides the source of a value, and a file edited inside an image is a change in no version control.",
       "hints": [
         "Ask which of these a deployment can change without rebuilding the binary."
       ],
@@ -4327,7 +4451,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-config"
       ],
       "files": [
-        "crates/ledger-api/src/config.rs"
+        "crates/ledger-api/src/config.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/config.rs",
+        "test/config.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/config.test.mjs",
       "timeoutMs": 300000,
@@ -4381,7 +4508,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-config"
       ],
       "files": [
-        "crates/ledger-api/src/config.rs"
+        "crates/ledger-api/src/config.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/config_review.rs",
+        "test/config_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/config_review.test.mjs",
       "timeoutMs": 300000,
@@ -4495,7 +4625,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         }
       ],
       "hints": [
-        "Ask what the person on call needs to see at three in the morning. If cargo is command not found, run the environment check first.",
+        "Ask what the person on call needs to see at three in the morning. If the terminal says cargo is not found, run the environment check first.",
         "The mask belongs in the value, so every writer of the line gets it for free."
       ],
       "misconceptions": [
@@ -4556,7 +4686,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-observability"
       ],
       "files": [
-        "crates/ledger-api/src/observability.rs"
+        "crates/ledger-api/src/observability.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/observability.rs",
+        "test/observability.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/observability.test.mjs",
       "timeoutMs": 300000,
@@ -4610,7 +4743,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "rust-observability"
       ],
       "files": [
-        "crates/ledger-api/src/observability.rs"
+        "crates/ledger-api/src/observability.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/observability_review.rs",
+        "test/observability_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/observability_review.test.mjs",
       "timeoutMs": 300000,
@@ -4655,7 +4791,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Design a factory that gives every test its own fresh state and its own seeded balance."
       ],
       "hints": [
-        "Ask what a test would have to do to exercise routing, extraction and the handler together. If cargo is command not found, run the environment check first.",
+        "Ask what a test would have to do to exercise routing, extraction and the handler together. If the terminal says cargo is not found, run the environment check first.",
         "Build the app inside a function, so a test can call it and get a fresh one every time."
       ],
       "misconceptions": [
@@ -4803,7 +4939,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Because the balances inside the router are held behind a lock."
       ],
       "answer": 0,
-      "explanation": "The state lives with the app, so a new app is a new ledger. That makes each test start from the same place and lets the runner choose any order it likes. A shared app would let one test deposit money and make another one fail, which is a bug in the tests rather than in the service. Reading the state map directly would also skip the route and the extractors, which is exactly what a service test exists to cover."
+      "explanation": "The state lives with the app, so a new app is a new ledger. Each test starts from the same place, and the runner can choose any order. A shared app lets one test deposit money and make another fail, a bug in the tests, not the service. Reading the state map directly skips the route and the extractors, which a service test exists to cover."
     },
     "rust-service-tests-do": {
       "id": "rust-service-tests-do",
@@ -4827,7 +4963,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking a deposit of zero is an error, when a deposit of nothing is a request the service can accept."
       ],
       "files": [
-        "crates/ledger-api/src/service.rs"
+        "crates/ledger-api/src/service.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/service.rs",
+        "test/service.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/service.test.mjs",
       "timeoutMs": 300000,
@@ -4875,7 +5014,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking the seed belongs in the router, when it belongs in the state the router is given."
       ],
       "files": [
-        "crates/ledger-api/src/service.rs"
+        "crates/ledger-api/src/service.rs",
+        "crates/ledger-api/src/lib.rs",
+        "crates/ledger-api/tests/service_review.rs",
+        "test/service_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/service_review.test.mjs",
       "timeoutMs": 300000,
@@ -4915,7 +5057,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Design a workflow that runs the same commands a developer runs on the same machine."
       ],
       "hints": [
-        "Say which of these checks would have caught the last bug you fixed, then read the phase. If cargo is command not found, run the environment check first.",
+        "Say which of these checks would have caught the last bug you fixed, then read the phase. If the terminal says cargo is not found, run the environment check first.",
         "Formatting is a diff problem, linting is a correctness problem, and the tests are a behaviour problem."
       ],
       "misconceptions": [
@@ -5063,7 +5205,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "The release profile, which refuses to build unformatted code."
       ],
       "answer": 1,
-      "explanation": "Tests execute behaviour, so a needless clone is invisible to them: the program still returns the right value. clippy reads the code itself, and denying its warnings in CI turns advice into a gate that cannot be forgotten. A review comment depends on a person noticing and on the reviewer remembering the rule. The release profile controls optimisation, not style. The rule has to live in a command that fails."
+      "explanation": "Tests execute behaviour, so a needless clone is invisible to them: the program still returns the right value. clippy reads the code itself, and denying its warnings in CI turns advice into a gate nobody can forget. A review comment depends on a person noticing and remembering the rule. The release profile controls optimisation, not style, and the rule has to live in a command that fails."
     },
     "rust-ship-do": {
       "id": "rust-ship-do",
@@ -5088,7 +5230,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       ],
       "files": [
         "Cargo.toml",
-        ".github/workflows/rust.yml"
+        ".github/workflows/rust.yml",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/ship.rs",
+        "test/ship.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ship.test.mjs",
       "timeoutMs": 300000,
@@ -5129,7 +5274,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
       ],
       "files": [
         "Cargo.toml",
-        ".github/workflows/rust.yml"
+        ".github/workflows/rust.yml",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/ship_review.rs",
+        "test/ship_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/ship_review.test.mjs",
       "timeoutMs": 300000,
@@ -5169,7 +5317,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Read a signature that returns a plain value and say what its body must answer for every input."
       ],
       "hints": [
-        "Read the file once for what it promises, then again for every place it can panic. If cargo is command not found, run the environment check first.",
+        "Read the file once for what it promises, then again for every place it can panic. If the terminal says cargo is not found, run the environment check first.",
         "An unwrap in a library turns the caller input into a crash, while a named label turns it into a value."
       ],
       "misconceptions": [
@@ -5308,7 +5456,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Make the second copy private so only this module uses it."
       ],
       "answer": 2,
-      "explanation": "One rule belongs in one place. The crate already has a formatter, so the second copy is a second rule: change how the formatter rounds and the copy keeps the old behaviour, which is how a ledger starts disagreeing with itself. A test over both copies records the duplication instead of removing it, a private copy is still a copy, and deleting one without naming the other leaves the caller to guess which one is right."
+      "explanation": "One rule belongs in one place. The crate already has a formatter, so the second copy is a second rule: change how the formatter rounds and the copy keeps the old behaviour, and the ledger starts disagreeing with itself. A test over both copies only records the duplication, a private copy is still a copy, and deleting one without naming the other leaves the caller guessing."
     },
     "rust-review-do": {
       "id": "rust-review-do",
@@ -5332,7 +5480,11 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Believing a private copy of the formatter is harmless, when the two copies drift apart on the first change."
       ],
       "files": [
-        "crates/ledger-core/src/review.rs"
+        "crates/ledger-core/src/review.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/review.rs",
+        "crates/ledger-core/src/tx.rs",
+        "test/review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/review.test.mjs",
       "timeoutMs": 300000,
@@ -5380,7 +5532,10 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking a negative amount has no sign, when the sign belongs to the whole amount."
       ],
       "files": [
-        "crates/ledger-core/src/review.rs"
+        "crates/ledger-core/src/review.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/review_review.rs",
+        "test/review_review.test.mjs"
       ],
       "testCommand": "node --test --test-reporter=tap test/review_review.test.mjs",
       "timeoutMs": 300000,
@@ -5420,7 +5575,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Diagnose why an acceptance suite rewards the specification rather than the tests you wrote."
       ],
       "hints": [
-        "List the behaviours the brief names before you write a line. The list is your plan. If cargo is command not found, run the environment check first.",
+        "List the behaviours the brief names before you write a line. The list is your plan. If the terminal says cargo is not found, run the environment check first.",
         "The acceptance suite belongs to the course, so the brief has to be read closely."
       ],
       "misconceptions": [
@@ -5532,7 +5687,7 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "The tests you wrote yourself, so you can improve them before handover."
       ],
       "answer": 0,
-      "explanation": "The suite calls your functions and checks what they answer, so the behaviour is what counts and the shape of the source is not. What the hidden suite removes is the list of named checks that told you which edge cases mattered. The brief still holds them in words like every, missing and refuse, so those words are what you work from. Your own tests are worth writing, but they confirm what you already decided rather than telling you what was missing."
+      "explanation": "The suite calls your functions and checks what they answer, so the behaviour counts and the source shape does not. The hidden suite removes the named checks that told you which edge cases mattered. The brief still holds them in words like every, missing and refuse, so you work from those. Your own tests are worth writing, but they confirm what you decided, not what was missing."
     },
     "rust-takehome-do": {
       "id": "rust-takehome-do",
@@ -5552,7 +5707,9 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking an owner with no rows has a balance of zero, when no row naming them is a different fact."
       ],
       "files": [
-        "crates/ledger-core/src/review.rs"
+        "crates/ledger-core/src/review.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/takehome.rs"
       ],
       "acceptanceCommand": "node --test --test-reporter=tap acceptance/rust-ledger.acceptance.test.mjs",
       "brief": "Build three functions in crates/ledger-core/src/review.rs. statement_total(lines: &[i64]) -> i64 adds every line and answers 0 for an empty slice. refuses_overdraft(balance: i64, cents: i64) -> Result<i64, String> returns what is left after the spend, or an error naming both amounts when the spend would go below zero. balance_for(rows: &[(String, i64)], owner: &str) -> Option<i64> returns the net balance of the rows naming one owner, and None when no row names them.",
@@ -5594,7 +5751,9 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
         "Thinking an owner with no rows has a balance of zero, when no row naming them is a different fact."
       ],
       "files": [
-        "crates/ledger-core/src/review.rs"
+        "crates/ledger-core/src/review.rs",
+        "crates/ledger-core/src/lib.rs",
+        "crates/ledger-core/tests/takehome.rs"
       ],
       "acceptanceCommand": "node --test --test-reporter=tap acceptance/rust-ledger.acceptance.test.mjs",
       "brief": "Build three functions in crates/ledger-core/src/review.rs. statement_total(lines: &[i64]) -> i64 adds every line and answers 0 for an empty slice. refuses_overdraft(balance: i64, cents: i64) -> Result<i64, String> returns what is left after the spend, or an error naming both amounts when the spend would go below zero. balance_for(rows: &[(String, i64)], owner: &str) -> Option<i64> returns the net balance of the rows naming one owner, and None when no row names them.",

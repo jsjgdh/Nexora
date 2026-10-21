@@ -362,7 +362,7 @@ try {
     ok("the file is well formed JSON", typeof body === "object" && body !== null);
     ok(
       "and it names its format and version",
-      body.format === "nexora-account-export" && body.version === 1
+      body.format === "nexora-account-export" && body.version === 2
     );
     ok(
       "the top-level keys are exactly the shape, in the order the shape names",

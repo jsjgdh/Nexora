@@ -10,7 +10,7 @@ export const IDE_MANIFEST_RUST_IN_PRODUCTION: unknown = {
     {
       "id": "rust-checker",
       "title": "A checker reads code and reports what it finds",
-      "goal": "Learn what a tool can establish about code, and how to report a finding a reader can judge.",
+      "goal": "Learn what a tool can establish about code, and how to report a finding a reader can judge. The judge reads the report module as well as the findings, so the report check stays red until the next phase writes it.",
       "level": 3,
       "tier": "free",
       "authored": true,
@@ -19,7 +19,7 @@ export const IDE_MANIFEST_RUST_IN_PRODUCTION: unknown = {
     {
       "id": "rust-checker-report",
       "title": "Your turn: the rules and the report",
-      "goal": "Choose what the checker looks for, how badly it rates what it finds, and how the report says it.",
+      "goal": "Choose what the checker looks for, how badly it rates what it finds, and how the report says it. One judge runs both checker phases, so the suite is red until the phase before it and this one are done.",
       "level": 3,
       "tier": "pro",
       "authored": true,
