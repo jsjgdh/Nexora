@@ -101,7 +101,29 @@ export interface ExecutionDeps {
    * left to make — the service always runs the code itself.
    */
   runner: "subprocess" | "docker";
+  /**
+   * Whether this deployment hosts learner code at all.
+   *
+   * The product's answer is no: the course runs in the desktop IDE, on the
+   * learner's own machine, and the platform never runs a learner's program.
+   * The service still exists for the verdicts that need no execution — the
+   * structural design and debugging-lab attestations, and the public receipt
+   * check — so the switch has to live here rather than by deleting the
+   * service.
+   *
+   * Optional, and it defaults to ON, because every in-process suite in this
+   * repository is a development posture and most of them exercise the runner.
+   * The production posture is decided once, in `index.ts`, where a deployment
+   * that did not say anything gets "off".
+   */
+  hostedRuns?: boolean;
 }
+
+/** The answer a disabled deployment gives, in one place, so every surface says
+ *  the same thing and none of them reads like a failure. */
+export const HOSTED_RUNS_DISABLED =
+  "This deployment runs no learner code: the course runs in the desktop IDE, on your own machine, " +
+  "and nothing you write is sent here. There is nothing to execute.";
 
 /** How to probe each language's availability under the subprocess runner. */
 const HOST_PROBES: Record<string, [string, string[]]> = {
@@ -290,6 +312,7 @@ export function registerExecutionRoutes(app: FastifyInstance, deps: ExecutionDep
    * `localTap` is accepted and ignored: it is the learner's own report about
    * their machine, and evidence here is only what this service observed. */
   app.post("/attest", async (req, reply) => {
+    if (deps.hostedRuns === false) throw new ApiError(503, "hosted_runs_disabled", HOSTED_RUNS_DISABLED);
     const userId = requireUserId(req);
     const denied = deps.quotas.check(userId);
     if (denied) throw new ApiError(429, "quota_reached", denied);
@@ -553,6 +576,23 @@ export function registerExecutionRoutes(app: FastifyInstance, deps: ExecutionDep
 
   app.get("/capabilities", async (req) => {
     const userId = requireUserId(req);
+    // A deployment with no hosted runs reports none, and does not probe this
+    // host for toolchains it will never use — a list of languages here would
+    // read as a promise, and the whole point is that there is none.
+    if (deps.hostedRuns === false) {
+      return {
+        hostedRuns: false,
+        dailyQuota: deps.quotas.dailyQuota,
+        dailyRemaining: deps.quotas.remaining(userId),
+        runner: null,
+        languages: [] as string[],
+        concurrency: deps.queue.concurrency,
+        defaultTimeoutMs: 8000,
+        defaultTimeoutByLanguage: DEFAULT_TIMEOUT_BY_LANGUAGE,
+        queueDepth: deps.queue.depth,
+        reachable: true,
+      };
+    }
     const quota = {
       dailyQuota: deps.quotas.dailyQuota,
       dailyRemaining: deps.quotas.remaining(userId),
@@ -572,6 +612,7 @@ export function registerExecutionRoutes(app: FastifyInstance, deps: ExecutionDep
 
     return {
       ...quota,
+      hostedRuns: true,
       runner: deps.runner,
       languages,
       concurrency: deps.queue.concurrency,
@@ -583,6 +624,7 @@ export function registerExecutionRoutes(app: FastifyInstance, deps: ExecutionDep
   });
 
   app.post("/execute", async (req, reply) => {
+    if (deps.hostedRuns === false) throw new ApiError(503, "hosted_runs_disabled", HOSTED_RUNS_DISABLED);
     const userId = requireUserId(req);
     const denied = deps.quotas.check(userId);
     reply.header("X-Execution-Daily-Remaining", String(deps.quotas.remaining(userId)));

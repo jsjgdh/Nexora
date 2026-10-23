@@ -424,6 +424,34 @@ console.log("== the front door describes the real product ==");
       !/self-serve delete button does not exist/i.test(privacySrc)
     );
 
+    // 8b. Hosted runs are off (the decision of 2026-10-23), and the documents
+    //     have to say so in both directions: the claims that are now false are
+    //     gone, and the true one is present. A privacy notice listing "the code
+    //     and output of a run" as data we hold describes a flow that no longer
+    //     exists; a security page describing "one container per job" promises a
+    //     runner there is not. This is the gate that stops the promise drifting
+    //     back in with a copy edit.
+    const securitySrc = readFileSync(new URL("../src/routes/security/+page.svelte", import.meta.url), "utf8");
+    const termsSrc = readFileSync(new URL("../src/routes/terms/+page.svelte", import.meta.url), "utf8");
+    ok(
+      "no document promises a hosted runner the platform does not run",
+      !/one container per job/i.test(securitySrc) &&
+        !/code you submit for a hosted run/i.test(securitySrc) &&
+        !/the hosted runner exists to run coursework/i.test(termsSrc) &&
+        !/code and output of a run you ask the platform to execute/i.test(privacySrc) &&
+        !LEGAL.LEGAL_BASES.some((b) => /hosted run/i.test(b.text))
+    );
+    ok(
+      "the notice says source code and output are not collected, because none is",
+      /no source code and no\s+program output/i.test(privacySrc) &&
+        /no hosted runner and no upload path/i.test(privacySrc)
+    );
+    ok(
+      "the security page says the service refuses to execute learner code",
+      /503 hosted_runs_disabled/i.test(securitySrc) &&
+        /does not execute learner code/i.test(securitySrc)
+    );
+
     // 9. The regime dates are stated, because a claim about a duty is only
     //    checkable with the date beside it: India's DPDP duties are not in force
     //    until May 2027, the AI Act's transparency duty has been in force since

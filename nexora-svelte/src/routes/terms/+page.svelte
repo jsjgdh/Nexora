@@ -29,7 +29,7 @@
 
 <PageHead
   title={pageTitle("Terms of service")}
-  description="The agreement for using the NEXORA web app, the desktop IDE and the hosted runner, including renewal, cancellation and acceptable use."
+  description="The agreement for using the NEXORA web app and the desktop IDE, including renewal, cancellation and acceptable use."
   path="/terms"
 />
 
@@ -113,13 +113,13 @@
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Acceptable use</h2>
           <p class="mt-3">
-            The service is for learning to program, and the hosted runner exists to run coursework. You
-            agree not to:
+            The service is for learning to program. Your programs run in the desktop IDE, on your own
+            machine; the platform does not execute them. You agree not to:
           </p>
           <ul class="mt-3 grid gap-3">
             <li>
               <span class="text-ink">Attack the service or its mesh.</span> No probing, scanning,
-              flooding, credential stuffing, exploitation of the runner to reach other accounts or
+              flooding, credential stuffing, exploitation of the service to reach other accounts or
               infrastructure, or interference with any other learner's use.
             </li>
             <li>

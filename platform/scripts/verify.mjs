@@ -2650,6 +2650,51 @@ describe("execution docker args + queue + quotas", () => {
       await app.close();
     }
   });
+
+  it("a deployment with hosted runs off refuses to execute, and says why", async () => {
+    // The decision of 2026-10-23: the platform hosts no learner code. The
+    // service stays — the design and debugging-lab attestations and the public
+    // receipt check run no code — so the switch must refuse the two routes that
+    // do, with one answer, and report the posture honestly to a monitor.
+    const routes = await import("../services/execution/dist/routes.js");
+    const app = await kit.createService("test-execution-local-only");
+    routes.registerExecutionRoutes(app, {
+      queue: new execQueue.JobQueue(1),
+      quotas: new execQuotas.Quotas(5, 2),
+      runner: "subprocess",
+      hostedRuns: false,
+    });
+    await app.ready();
+    try {
+      const rund = await app.inject({
+        method: "POST",
+        url: "/execute",
+        headers: { "x-user-id": "u-local", "content-type": "application/json" },
+        payload: { language: "node", files: [{ path: "main.js", content: 'console.log(1)' }] },
+      });
+      assert.equal(rund.statusCode, 503, rund.body);
+      assert.equal(rund.json().error.code, "hosted_runs_disabled");
+      assert.match(rund.json().error.message, /runs in the desktop IDE/);
+
+      const attested = await app.inject({
+        method: "POST",
+        url: "/attest",
+        headers: { "x-user-id": "u-local", "content-type": "application/json" },
+        payload: { command: ["node", "--test", "test/x.test.mjs"], files: [] },
+      });
+      assert.equal(attested.statusCode, 503, attested.body);
+      assert.equal(attested.json().error.code, "hosted_runs_disabled");
+
+      const caps = await app.inject({ method: "GET", url: "/capabilities", headers: { "x-user-id": "u-local" } });
+      assert.equal(caps.statusCode, 200, caps.body);
+      const body = caps.json();
+      assert.equal(body.hostedRuns, false);
+      assert.equal(body.runner, null);
+      assert.deepEqual(body.languages, [], "a deployment that runs no code promises no languages");
+    } finally {
+      await app.close();
+    }
+  });
 });
 
 
@@ -5461,16 +5506,23 @@ describe("run receipts: the execution service signs what it ran", () => {
 });
 
 describe("boot fail-fast + migrations + sync + compose", () => {
-  it("execution refuses the non-isolated subprocess runner in production", () => {
+  it("execution refuses the non-isolated subprocess runner in production, when hosted runs are on", () => {
     // Learner code in this tier is a child of the service that holds
     // INTERNAL_API_KEY and DATABASE_URL, sharing its filesystem and network, so
     // production must not start it by default. Requests are made to proof the
     // refusal happens at boot and names the variable rather than at first run.
+    //
+    // Hosted runs are explicitly ON here, because that is the only posture in
+    // which the runner exists: with them off (the production default since
+    // 2026-10-23) the service boots and refuses to execute instead, which the
+    // route suite pins and the compose rehearsal exercised live. Making the
+    // refusal unconditional would forbid the posture the product now ships.
     const r = spawnSync("node", ["services/execution/dist/index.js"], {
       cwd: root,
       env: {
         ...process.env,
         NODE_ENV: "production",
+        EXECUTION_HOSTED_RUNS: "on",
         EXECUTION_RUNNER: "subprocess",
         EXECUTION_ALLOW_SUBPROCESS: "",
         INTERNAL_API_KEY: MESH,
@@ -7621,15 +7673,16 @@ describe("the synthetic login→mission→run check (B-12)", () => {
   const EMAIL = "canary@example.com";
   const PASSWORD = "canary-passphrase-1"; // ≥ 10 chars: the register schema's floor
   const MARKER = "nexora-synthetic-ok";
-  const REST = { login: "ok", register: "exists", identity: "ok", manifest: "ok", phase: "served", run: "ok" };
+  const REST = { login: "ok", register: "exists", identity: "ok", manifest: "ok", phase: "served", capabilities: "on", run: "ok" };
   const behavior = { ...REST };
-  const seen = { registerBody: null };
+  const seen = { registerBody: null, runCalls: 0 };
   let canned = null;
   let port = 0;
 
   beforeEach(() => {
     Object.assign(behavior, REST);
     seen.registerBody = null;
+    seen.runCalls = 0;
   });
 
   before(async () => {
@@ -7682,7 +7735,23 @@ describe("the synthetic login→mission→run check (B-12)", () => {
           if (behavior.phase === "paywall") return envelope(402, "entitlement_required", "This content is part of the paid curriculum.");
           return send(200, { phase: { id }, bodies: [] });
         }
+        if (req.method === "GET" && url === "/api/execute/capabilities") {
+          // The posture the deployment declares. "off" is not a fault here:
+          // it is a product that runs code only on the learner's machine.
+          return send(200, {
+            hostedRuns: behavior.capabilities !== "off",
+            runner: behavior.capabilities === "off" ? null : "subprocess",
+            languages: behavior.capabilities === "off" ? [] : ["node"],
+            dailyQuota: 200,
+            dailyRemaining: 199,
+            concurrency: 2,
+            defaultTimeoutMs: 8000,
+            queueDepth: 0,
+            reachable: true,
+          });
+        }
         if (req.method === "POST" && url === "/api/execute/execute") {
+          seen.runCalls += 1;
           if (behavior.run === "quota") return envelope(429, "quota_reached", "Daily execution quota reached (200). Try again tomorrow.");
           if (behavior.run === "missing-language") return envelope(503, "language_unavailable", "node is not installed on this runner (missing node).");
           if (behavior.run === "wrong-output") {
@@ -7750,6 +7819,33 @@ describe("the synthetic login→mission→run check (B-12)", () => {
     const quiet = await run(["--quiet"]);
     assert.equal(quiet.code, 0);
     assert.equal(quiet.stdout, "", "--quiet prints nothing when everything passes");
+  });
+
+  it("a deployment that hosts no code records the skip, and submits nothing", async () => {
+    // The decision of 2026-10-23: the platform runs no learner code. A
+    // deployment that says so must not page an operator — the run step is
+    // recorded with its reason, and the steps before it still have to pass.
+    behavior.capabilities = "off";
+    const prose = await run();
+    assert.equal(prose.code, 0, prose.stderr);
+    assert.match(prose.stdout, /^journey ok: sign-in/);
+    assert.match(prose.stdout, /run \(skipped — this deployment hosts no learner code/);
+    assert.equal(seen.runCalls, 0, "no program was submitted to a deployment that hosts no code");
+
+    const json = await run(["--json"]);
+    assert.equal(json.code, 0, json.stderr);
+    const summary = JSON.parse(json.stdout);
+    const step = summary.steps.find((s) => s.step === "run");
+    assert.match(step.detail, /skipped/);
+    assert.equal(seen.runCalls, 0);
+  });
+
+  it("a deployment that hosts runs still runs, so the skip cannot hide a broken runner", async () => {
+    behavior.run = "crashed";
+    const r = await run();
+    assert.equal(r.code, 1, "the runner failing is still a failure when the deployment hosts runs");
+    assert.match(r.stderr, /the program ran and failed/);
+    assert.equal(seen.runCalls, 1);
   });
 
   it("the paywall's own answer passes, and is recorded rather than swallowed", async () => {

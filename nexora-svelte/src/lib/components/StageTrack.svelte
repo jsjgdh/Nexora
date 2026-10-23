@@ -15,7 +15,12 @@
    */
 </script>
 
-<ol class="track" use:inViewStagger={{ step: 70 }}>
+<ol
+  class="track"
+  tabindex="0"
+  aria-label="The capstone project, as stages. The track scrolls horizontally."
+  use:inViewStagger={{ step: 70 }}
+>
   {#each BUILD_JOURNEY.beats as beat (beat.n)}
     <li class="stage" data-stagger-item>
       <div class="flex items-baseline justify-between gap-4">
@@ -49,6 +54,9 @@
 
 <style>
   .track {
+    /* A scroll container has to be reachable by keyboard: without this the
+       stages past the right edge exist only for a pointer. axe flags it as
+       scrollable-region-focusable, and it is right to. */
     display: flex;
     gap: var(--space-4);
     margin: 0;
@@ -57,6 +65,11 @@
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: thin;
+  }
+
+  .track:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
   }
 
   .stage {

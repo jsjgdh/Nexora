@@ -74,15 +74,26 @@ Pro do not exist.
   Record: `platform/docs/DEPLOY-RUNBOOK.md` §3.1–3.3. Still unexercised: TLS
   and DNS through Caddy, the docker execution tier, and a bad migration's
   rollback).
-- [!] Hosted execution tier decision (blocked on the owner, 2026-10-23): the
-  runbook names `EXECUTION_RUNNER=docker`, and the compose file deliberately
-  does not mount `/var/run/docker.sock` nor build `images/go-runner`. Rehearsed,
-  that means every hosted run answers 503 on the documented stack, while
-  `subprocess` is refused in production for a reason the docs spell out (it runs
-  learner code beside `INTERNAL_API_KEY` and `DATABASE_URL`). Three options:
-  socket on a dedicated worker host, execution on its own host behind
-  `EXECUTION_URL`, or no hosted runs in the first release. The synthetic check
-  fails loudly either way, but only after a deploy.
+- [x] Hosted execution tier, decided 2026-10-23: **there is none.** The
+  course runs in the desktop IDE, on the learner's own machine, and the
+  platform never executes learner code. `EXECUTION_HOSTED_RUNS=off` is the
+  production default: `/execute` and `/attest` answer 503
+  `hosted_runs_disabled` with one plain sentence, `/capabilities` reports
+  `hostedRuns:false`, `runner:null`, no languages and probes no toolchain, and
+  the design and debugging-lab attestations and the public receipt check stay
+  live because none of them runs code. Proven on the compose stack
+  (`NODE_ENV=production`, nothing set) and in-process; the synthetic check now
+  records the skip and still exits 0, so a local-only deployment does not page
+  an operator for doing what it says.
+- [ ] The consequence, stated and priced (P0, new 2026-10-23): with no hosted
+  runs the server can no longer re-derive a code verdict by running the suite
+  itself, so a completion that rests on a program is the learner's report. The
+  rubric already has the class for it (`client-reported`, via
+  `verify-assessment.mjs`); what is undecided is what the product *calls* those
+  completions on the proof surfaces, what the IDE sends when it cannot get a
+  server verdict, and whether a paid tier can promise verification for code
+  phases at all. Until that is decided, no code phase may be described as
+  verified by us.
 - [ ] Backups: automated Postgres dumps for all databases + a restore
   drill, not just a job. (2026-10-23: the dumps and the drill now run against
   the real Postgres container — 27 tables read, restored and compared. What is

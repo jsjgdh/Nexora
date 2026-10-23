@@ -292,6 +292,7 @@
         "PORT": "8080",
         "NODE_ENV": "production",
         "LOG_LEVEL": "info",
+        "EXECUTION_HOSTED_RUNS": "off",
         "EXECUTION_RUNNER": "docker",
         "EXECUTION_CONCURRENCY": "2",
         "EXECUTION_DAILY_QUOTA": "200",
@@ -316,7 +317,7 @@
       "cpuThreshold": 70,
       "concurrency": 40,
       "scaleToZero": false,
-      "why": "The queue and the daily quota counters live in this process, so it must never scale to zero: a cold start would lose the jobs that were queued and reset the count of the day. Its concurrency is lower because each job is a container, not a request."
+      "why": "Hosted runs are off (EXECUTION_HOSTED_RUNS=off), so this service executes no learner code on this plan: it serves the structural design and debugging-lab attestations and the public receipt check, none of which runs code, and answers /execute and /attest with 503 hosted_runs_disabled. The runner settings below are the posture if someone turns hosted runs on. The queue and the daily quota counters live in this process, so it must never scale to zero: a cold start would lose the jobs that were queued and reset the count of the day."
     },
     {
       "name": "nexora-gateway",

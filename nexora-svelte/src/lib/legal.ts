@@ -253,7 +253,7 @@ export const REGIME_DATES = [
 export const LEGAL_BASES = [
   {
     name: "Performance of a contract",
-    text: "Most of what we hold, we hold to perform the service you asked for: an account needs an identity, a subscription needs a payment record, a hosted run needs the code it is asked to run.",
+    text: "Most of what we hold, we hold to perform the service you asked for: an account needs an identity, a subscription needs a payment record, a learning record needs the account it belongs to.",
   },
   {
     name: "Legitimate interests",

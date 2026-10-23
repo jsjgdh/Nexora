@@ -14,10 +14,12 @@ rehearsed on 2026-10-23 on a machine with a Docker daemon: six images built,
 seven containers rolled healthy, the synthetic journey passed, the backup and
 the restore drill ran against the real Postgres container, a second release was
 rolled and then rolled back with `--no-build`, and the Caddyfile validated
-under Caddy 2.10. Six defects were found and fixed doing it — the image did not
-build at all before the first of them. What is still unexercised is TLS, DNS
-and Caddy itself in front of the stack, the `docker` execution tier, and the
-rollback of a bad migration. Section 3 has the record, item by item.
+under Caddy 2.10. Six defects were found and fixed doing it; the image did not
+build at all before the first of them. The same day, the owner decided the
+platform hosts no learner code, so the runner tier is no longer a deployment
+question (`EXECUTION_HOSTED_RUNS=off`, finding 6). What is still unexercised is
+TLS, DNS and Caddy itself in front of the stack, and the rollback of a bad
+migration. Section 3 has the record, item by item.
 
 ---
 
@@ -73,7 +75,8 @@ Then edit it. The values that must be changed before anything starts:
 | `TRUST_PROXY` | `1`. Exactly one proxy (Caddy) is in front of the gateway. With `0` every request is keyed on the docker bridge address and the whole platform shares one rate-limit bucket. |
 | `PUBLIC_SITE_URL` | the site's exact origin. The auth service builds the links in its mail against it, and compose passes it to the site image as a build argument, because `/sitemap.xml` and `/robots.txt` are prerendered and bake it. |
 | `PUBLIC_API_URL` | the browser's route to the gateway: `https://api.<domain>`, the API host. Compose passes it into the site container as a runtime value. It is **not** the same as `GATEWAY_URL` (the container's own route over the compose network), and setting it to a loopback address makes every visitor's browser call its own machine. |
-| `EXECUTION_RUNNER` | `docker`. `subprocess` is refused at boot in production unless `EXECUTION_ALLOW_SUBPROCESS=1` is also set, which is only for a host that does not also serve the public API. |
+| `EXECUTION_HOSTED_RUNS` | `off`. This deployment runs no learner code: the course runs in the IDE, on the learner's machine. The execution service answers `/execute` and `/attest` with 503 `hosted_runs_disabled` and keeps serving the design/debugging-lab attestations and the receipt check, which execute nothing. |
+| `EXECUTION_RUNNER` | inert while hosted runs are off. If they are ever switched on, `docker` is the only tier fit for a host that serves the public API; `subprocess` is refused at boot in production unless `EXECUTION_ALLOW_SUBPROCESS=1` is also set, which is only for a single-tenant host that does not answer the public. |
 
 Generate the two secrets with:
 
@@ -386,8 +389,14 @@ SYNTHETIC_EMAIL=canary@example.com SYNTHETIC_PASSWORD='<the password>' npm run s
 ```
 
 It signs in, reads the identity back, fetches the curriculum manifest, fetches
-one phase body and runs one program. The exit statuses are 0, 1 and 2, the
-same as the health check's.
+one phase body, and then asks the execution service what its posture is. A
+deployment that hosts runs (`EXECUTION_HOSTED_RUNS=on`) gets a program run and
+checked against its marker; the production default (`off`) records
+`run (skipped — this deployment hosts no learner code)` and still exits 0,
+because a platform that runs no code is the product, not a fault. The exit
+statuses are 0, 1 and 2, the same as the health check's — and the skip is 0
+by construction, while a deployment that *claims* hosted runs and cannot run
+them is still 1.
 
 The canary account is created once:
 
@@ -579,7 +588,7 @@ project name made auth fail with `28P01` for exactly that reason.
 | 4 | `up -d` | seven containers, health-ordered, every one `healthy` |
 | 5b | `/health/live`, `/health/deep` | `ready`, 6/6 mesh checks ok; `revocations` `unknown` at boot, `reachable` after a token |
 | 5c | `npm run healthcheck` | exit 0, "reports ready (6/6 mesh checks ok)" |
-| 5d | `synthetic --provision`, then `synthetic` | exit 0: sign-in, identity, manifest (`task-manager`, 18 phases), phase (402 entitlement), run (exit 0 in 27ms) |
+| 5d | `synthetic --provision`, then `synthetic` | exit 0: sign-in, identity, manifest (`task-manager`, 18 phases), phase (402 entitlement), run (exit 0 in 27ms). After the local-only decision the same stack records the skip instead and still exits 0 |
 | — | Go through `/api/execute/execute` | **failed first** (finding 5), then `hello from go`, exit 0 in 189ms — the prewarmed `/opt/gocache` volume works |
 | 2 | `compose run --rm backup` | **failed first** (finding 2), then 27 tables / 22 rows (auth), 4 tables / 1 row (billing) |
 | 2 | `compose run --rm drill` | passed: 27 tables read, restored into a scratch schema and compared |
@@ -622,17 +631,25 @@ loosen it to make a loopback test pass.
    passed, which is why the synthetic check was green before this was found.
    Fixed: `exec` on the execution service's `/tmp` (the docker runner already
    passes it for Go; the compose file did not).
-6. **Hosted runs have no tier on this stack.** Recorded, not fixed — it is a
-   decision, not a defect. `DEPLOYMENT.md` says `EXECUTION_RUNNER=docker`; the
-   compose file deliberately does not mount `/var/run/docker.sock`, and the
-   `go-runner` image is not built by compose either. So on the documented
-   single-host deployment: with `docker`, every run answers 503
-   `runner_unavailable`; with `subprocess`, production refuses to boot unless
-   `EXECUTION_ALLOW_SUBPROCESS=1` is set, which the docs forbid on a host that
-   also serves the public API. `synthetic` (step 5d) catches this, but only
-   after the deploy. Three honest options: mount the socket on a dedicated
-   worker host (not the public one), run execution on its own host and point
-   `EXECUTION_URL` at it, or do not ship hosted runs in the first release.
+6. **Hosted runs had no tier on this stack — resolved the same day: there is
+   none.** `DEPLOYMENT.md` said `EXECUTION_RUNNER=docker`; the compose file
+   deliberately does not mount `/var/run/docker.sock`, and the `go-runner`
+   image is not built by compose either, so every timed run answered 503 while
+   `subprocess` was refused at boot in production for a documented reason. The
+   owner's decision is that the platform hosts no learner code at all: the
+   course runs in the IDE, on the learner's machine.
+
+   `EXECUTION_HOSTED_RUNS` now carries that posture. It is `off` by default in
+   production and `on` in development (so the runner suites keep proving the
+   runner), `/execute` and `/attest` answer 503 `hosted_runs_disabled` with one
+   sentence, `/capabilities` reports `hostedRuns:false` and probes no
+   toolchain, and the routes that run no code — the design and debugging-lab
+   attestations, and the public receipt check — are untouched. Verified on this
+   stack by redeploying the execution image with `NODE_ENV=production` and
+   nothing set: the service logged `hosted runs are off`, `/execute` answered
+   503, `/attest/design` still answered (400 for an empty body, which is it
+   parsing rather than refusing), and `npm run synthetic` printed
+   `run (skipped — this deployment hosts no learner code)` and exited 0.
 
 Also carried over from the 2026-10-20 record and now fixed: `npm run backup --
 --list` printed `undefined` for the time and both counts (it read
@@ -757,10 +774,11 @@ operator's job.
 # saying something is wrong; exit 2 is the check not being able to ask.
 * * * * * cd /srv/nexora/branchcraft/platform && node scripts/healthcheck.mjs --quiet
 
-# The synthetic check, on the hour and never on the minute. Every run spends
-# one of the canary account's daily executions, and the default quota is 200
-# a day, so hourly costs 24 of them. A per-minute cadence would exhaust the
-# quota by morning and page for a problem the check caused itself.
+# The synthetic check, on the hour and never on the minute. With hosted runs
+# off it spends no execution quota at all; if someone sets
+# EXECUTION_HOSTED_RUNS=on, every run spends one of the canary's 200 a day, so
+# hourly costs 24 of them and a per-minute cadence would exhaust the quota by
+# morning and page for a problem the check caused itself.
 0 * * * * cd /srv/nexora/branchcraft/platform && SYNTHETIC_EMAIL=canary@example.com SYNTHETIC_PASSWORD='<the password>' node scripts/synthetic.mjs --quiet
 
 # The monitor, which runs both of the above and speaks when the state

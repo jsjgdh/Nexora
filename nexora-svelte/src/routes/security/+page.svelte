@@ -106,11 +106,13 @@
             How a verdict is protected
           </h2>
           <p class="mt-3">
-            A finished run produces a receipt that is signed twice over: an HMAC for checks internal to
+            Every verdict the platform computes is signed twice over: an HMAC for checks internal to
             the platform, and an <span class="text-ink">Ed25519 signature</span> from a key the
             operator holds, verifiable by anyone who has the published public key. That second
             signature is what makes a verdict portable: a stranger re-derives it without an account,
-            without asking us, and without learning anything that would let them mint one.
+            without asking us, and without learning anything that would let them mint one. Receipts
+            exist for the things we judged ourselves: a design verdict today, and a run receipt from
+            any deployment that hosts runs.
           </p>
           <p class="mt-3">
             The <a class="text-accent underline" href="/verify">verify page</a> does exactly that, in
@@ -130,20 +132,22 @@
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">The code runner</h2>
           <p class="mt-3">
-            Code you submit for a hosted run executes in an isolated tier: one container per job,
-            with the network cut off and the filesystem read-only where the language allows it. The
-            platform's other, single-process tier would run your program as a child of the very
-            service that holds the platform's own credentials, so it is
-            <span class="text-ink">refused in production</span>: the service will not start with it
-            unless an explicit, deliberately-awkward override is set, and it refuses that override when
-            it is running in production mode.
+            There is no hosted one. Your programs compile and run in the desktop IDE, on your own
+            machine, and the platform does not execute learner code: the execution service answers a
+            submission request with <span class="text-ink">503 hosted_runs_disabled</span> rather than
+            running it, and reports that posture to the health check so an operator can see it. What
+            the service still does is judge what needs no execution: the structural design and
+            debugging-lab checks, and the public receipt check. A verdict only a rule engine can
+            reach is still reached by one.
           </p>
           <p class="mt-3">
-            <span class="text-ink">Stated plainly:</span> hardening the isolation boundary itself is
-            in progress. The platform's own security audit names this as its residual critical risk:
-            the isolated tier exists and the unsafe tier is refused, but the isolation has not been
-            proven against a determined attacker on a live host. We would rather write that sentence
-            than imply the work is finished.
+            <span class="text-ink">Stated plainly:</span> this is a deliberate trade, not an omission.
+            A hosted runner would let the platform re-run your tests itself, which is stronger evidence
+            than trusting a report from your machine. It would also mean holding and executing
+            arbitrary code on the same host that holds your account, and it is the one place where a
+            sandbox escape becomes everyone's problem. We chose not to run it. Where a completion
+            rests on a program that ran in your IDE, the record says so; it never implies we watched a
+            run we did not perform.
           </p>
         </section>
 

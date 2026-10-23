@@ -40,10 +40,6 @@
       why: "To run the subscription and let you manage or cancel it. Card numbers never reach this platform; they go to the payment provider.",
     },
     {
-      what: "The code and output of a run you ask the platform to execute",
-      why: "To run your program on the hosted runner and hand back stdout, stderr, and a signed receipt of what it observed.",
-    },
-    {
       what: "Your learning record — which competency you demonstrated, at what level, and a hash of the evidence",
       why: "To show your progress and to let a third party re-check a receipt you choose to share. The record is what makes a verdict provable later.",
     },
@@ -122,8 +118,10 @@
           <p class="mt-3">
             No analytics, no advertising or marketing trackers, no third-party pixels, no
             behavioural profiling, no fingerprinting, no precise location, no address book or contact
-            access. There is no newsletter and no marketing email, which is why there is no
-            unsubscribe link: there is nothing to unsubscribe from. The learning app is local-first,
+            access. No newsletter and no marketing email, which is why there is no unsubscribe link:
+            there is nothing to unsubscribe from. And <span class="text-ink">no source code and no
+            program output</span>: your programs run in the desktop IDE, on your own machine, and
+            there is no hosted runner and no upload path for them. The learning app is local-first,
             and with no account and no network it keeps everything on your own machine.
           </p>
         </section>
@@ -132,7 +130,7 @@
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Why we hold it</h2>
           <p class="mt-3">
             Most of it we hold to perform the contract you asked for: an account needs an identity, a
-            subscription needs a payment record, a hosted run needs the code it is asked to run. A
+            subscription needs a payment record, a learning record needs the account it belongs to. A
             smaller part we hold on our legitimate interest in keeping the service secure and working:
             refusing a forged receipt, detecting a replayed sign-in. We do not use any of it to
             train a model, and no model decides whether you passed; assessment is deterministic, and
@@ -145,14 +143,15 @@
             When your code leaves your machine
           </h2>
           <p class="mt-3">
-            Only when you ask it to, and there are exactly three ways. A <span class="text-ink">hosted
-            run</span> sends the files you submit to the platform's runner and returns the output and a
-            signed receipt. <span class="text-ink">Attestation</span> sends the files of a phase you
-            submit for re-judging. <span class="text-ink">Sign-in and sync</span> send your evidence
-            ledger, and only the records a platform verdict already signed.
+            It does not. Your programs compile and run in the desktop IDE, with the toolchain on your
+            own machine, and the platform has no runner to send them to and no endpoint that accepts
+            source. What <span class="text-ink">signing in and syncing</span> send is your learning
+            record: what you completed, when, and the evidence attached to it. Never the code that
+            produced it.
           </p>
           <p class="mt-3">
-            A fourth path exists that we do not control and you must opt into: if you enable the
+            One path can still carry code off your machine, it is not ours, and you must opt into it:
+            if you enable the
             <span class="text-ink">AI assistant</span> inside the IDE, the code and prompts you send
             to it leave your machine and go to that assistant's provider. That assistant explains
             failures; it never grades one. Leaving it off means no code is sent to it.

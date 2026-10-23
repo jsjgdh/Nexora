@@ -301,6 +301,27 @@ async function journey({ url, email, password, phase, provision, timeoutMs }) {
     return fail("phase", 1, `phase answered HTTP ${body.status} (${said(body.json)})`);
   }
 
+  /* Hosted runs are a posture, not a promise. A deployment that hosts no
+     learner code answers 503 to /execute by design (EXECUTION_HOSTED_RUNS),
+     and that is the product working, not the product broken — so ask the
+     service what it is before submitting anything. A deployment that does
+     host runs still gets the whole journey, including the run; a local-only
+     one records the skip and its reason, and the steps before it still have
+     to pass. Anything else would page an operator for a decision. */
+  const caps = await ask(`${url}/api/execute/capabilities`, { token, timeoutMs });
+  if (caps.network) return fail("capabilities", 2, `capabilities: ${caps.network}`);
+  if (caps.status !== 200) {
+    return fail("capabilities", 1, `capabilities answered HTTP ${caps.status} (${said(caps.json)})`);
+  }
+  if (caps.json?.hostedRuns === false) {
+    accept(
+      "run",
+      200,
+      "skipped — this deployment hosts no learner code; the course runs in the IDE, on the learner's machine"
+    );
+    return { code: 0, url, steps, reasons: [] };
+  }
+
   const run = await ask(`${url}/api/execute/execute`, {
     method: "POST",
     token,

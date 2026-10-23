@@ -104,16 +104,26 @@ the bullets below describe.
 
 - The `platform/docker-compose.yml` stack, unchanged in shape: postgres,
   auth, curriculum, execution, billing, gateway, frontend.
-  Learner code runs in the `execution` service's own sandboxed runner —
-  one container per job (`EXECUTION_RUNNER=docker`) — on the learner's
-  machine when the course runs in the IDE, and here only when a run is hosted.
-  The single-process tier (`subprocess`) is refused at boot in production:
-  it runs the learner's program as a child of the very service that holds
-  `INTERNAL_API_KEY` and `DATABASE_URL`, sharing its filesystem, network and
-  process namespace, so a submitted program can read both (and that key also
-  seeds the run-receipt signing key). Accept it with
-  `EXECUTION_ALLOW_SUBPROCESS=1` only on a single-tenant host you control,
-  and never on a host that also serves the public API.
+
+  **This deployment hosts no learner code** (decision of 2026-10-23). The
+  course runs in the desktop IDE, on the learner's own machine, and nothing
+  the learner writes is sent to the platform. `EXECUTION_HOSTED_RUNS=off` is
+  the production default: the execution service answers `/execute` and
+  `/attest` with 503 `hosted_runs_disabled`, reports `hostedRuns:false` from
+  `/capabilities`, and probes no toolchain. The service is still deployed,
+  because it is also the judge that runs no code — the structural design and
+  debugging-lab attestations and the public receipt check — and those keep
+  working.
+
+  That makes the old `EXECUTION_RUNNER` question inert on this host. It comes
+  back the moment someone sets `EXECUTION_HOSTED_RUNS=on`: then one container
+  per job (`EXECUTION_RUNNER=docker`) is the only tier fit for a host that
+  serves the public API, because the single-process tier runs the learner's
+  program as a child of the very service that holds `INTERNAL_API_KEY` and
+  `DATABASE_URL` — sharing its filesystem, network and process namespace, so
+  a submitted program can read both, and that key also seeds the run-receipt
+  signing key. Accept `EXECUTION_ALLOW_SUBPROCESS=1` only on a single-tenant
+  host you control, and never on the one the API answers from.
 - One reverse proxy in front, terminating TLS. Caddy is the default
   recommendation (automatic TLS, ~5 lines of config); anything that
   terminates TLS and forwards headers works. Only ports 80/443 are

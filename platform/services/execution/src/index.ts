@@ -39,7 +39,30 @@ if (runner !== "subprocess" && runner !== "docker") {
  * tier must be a named decision, not a default: fail closed here rather than
  * serve RCE-on-the-host to anyone who can create an account. */
 const isProd = (process.env.NODE_ENV ?? "development") === "production";
-if (isProd && runner === "subprocess" && process.env.EXECUTION_ALLOW_SUBPROCESS !== "1") {
+
+/* Hosted runs: whether this deployment hosts learner code at all.
+ *
+ * The decision (2026-10-23) is that it does not. The course runs in the
+ * learner's own IDE against their own toolchain, and a deployment that hosts
+ * no code has nothing for a sandbox escape to reach, no code retention to
+ * describe, and no execution quota to sell. What is left in this service is
+ * the part that never runs learner code: the structural design and
+ * debugging-lab attestations, and the public receipt check.
+ *
+ * Off by default in production, and ON in development, so the suites that
+ * prove the runner keep proving it. A deployment that wants hosted runs back
+ * sets EXECUTION_HOSTED_RUNS=on and then faces the runner rules below; that
+ * is a decision with a name, not a default. */
+const hostedRunsRaw = (process.env.EXECUTION_HOSTED_RUNS ?? (isProd ? "off" : "on")).toLowerCase();
+if (hostedRunsRaw !== "on" && hostedRunsRaw !== "off") {
+  throw new Error(`EXECUTION_HOSTED_RUNS must be "on" or "off", got ${hostedRunsRaw}`);
+}
+const hostedRuns = hostedRunsRaw === "on";
+
+// With hosted runs off, no learner code runs here, so the isolation tier is
+// inert and its production refusal has nothing to refuse. Keeping it on would
+// force a deployment to set an execution tier it never uses.
+if (isProd && hostedRuns && runner === "subprocess" && process.env.EXECUTION_ALLOW_SUBPROCESS !== "1") {
   throw new Error(
     "EXECUTION_RUNNER=subprocess is refused in production: it runs learner code on this host with the " +
       "service's own filesystem, network and process namespace, so a submitted program can read " +
@@ -56,13 +79,21 @@ const app = await createService("execution");
 const queue = new JobQueue(concurrency);
 const quotas = new Quotas(dailyQuota, 2);
 
-if (runner === "docker" && !(await dockerAvailable())) {
+if (!hostedRuns) {
+  app.log.info(
+    { hostedRuns: false },
+    "hosted runs are off: this deployment executes no learner code. The design and debugging-lab " +
+      "attestations and the receipt check stay available, because none of them runs code."
+  );
+}
+
+if (hostedRuns && runner === "docker" && !(await dockerAvailable())) {
   app.log.warn(
     "EXECUTION_RUNNER=docker but no Docker daemon reachable — executions will fail with 503 until it appears"
   );
 }
 
-if (runner === "subprocess") {
+if (hostedRuns && runner === "subprocess") {
   // Non-production only: production refused this tier above unless the operator
   // set EXECUTION_ALLOW_SUBPROCESS=1. Either way it is worth saying out loud,
   // because the consequence is that submitted programs share this host.
@@ -73,7 +104,10 @@ if (runner === "subprocess") {
   );
 }
 
-app.log.info({ runner, concurrency, dailyQuota, cpus: cpus().length }, "execution service ready");
+app.log.info(
+  { runner, hostedRuns, concurrency, dailyQuota, cpus: cpus().length },
+  "execution service ready"
+);
 
 /* The design challenges the platform may attest: the synced structural floor
  * (id, authored revision, checks) from `npm run sync:design`. An entry that
@@ -164,6 +198,14 @@ app.log.info(
   "debugging-lab attestation registry ready"
 );
 
-registerExecutionRoutes(app, { queue, quotas, runner, attestChallenges, attestIncidents, attestFixtures });
+registerExecutionRoutes(app, {
+  queue,
+  quotas,
+  runner,
+  hostedRuns,
+  attestChallenges,
+  attestIncidents,
+  attestFixtures,
+});
 
 await start(app, port);
