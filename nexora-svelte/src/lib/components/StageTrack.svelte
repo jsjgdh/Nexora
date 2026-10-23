@@ -15,6 +15,13 @@
    */
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex
+     A scroll container has to be keyboard reachable, and axe's
+     scrollable-region-focusable is the rule that says so; Svelte's check warns
+     about tabindex on any non-interactive element and cannot express the
+     exception. The two requirements really do conflict here, so the warning is
+     silenced at the one element where axe demands the attribute, and the focus
+     ring below is what makes the exception visible. -->
 <ol
   class="track"
   tabindex="0"
