@@ -178,7 +178,13 @@ services:
       - ALL
     read_only: true
     tmpfs:
-      - /tmp:rw,nosuid,nodev,size=512m,mode=1777
+      # `exec` is not decoration. Docker mounts a tmpfs `noexec` by default,
+      # and `go run` compiles the program to a binary under TMPDIR and then
+      # executes it — so on a noexec /tmp every Go submission fails with
+      # `fork/exec /tmp/go-build.../main: permission denied` while the build
+      # itself succeeds. Rehearsed: without this flag the synthetic check's
+      # Node program passes and every Go program in the product fails.
+      - /tmp:rw,exec,nosuid,nodev,size=512m,mode=1777
     volumes:
       # The Go build cache. The image prewarms it at build time, and Docker
       # copies the image's contents into a fresh named volume on first use,

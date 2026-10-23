@@ -15,7 +15,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { Pool } from "pg";
 
-import { doBackup, doRestore, listDumps, rotate } from "./backup.mjs";
+import { doBackup, doRestore, formatDumpLine, listDumps, rotate } from "./backup.mjs";
 
 const PORT = 18192;
 
@@ -55,6 +55,27 @@ describe("the backup (real database)", () => {
 		assert.equal(dumps[0].manifest.tables.people, 1, "the manifest says how many rows each table had");
 		assert.equal(dumps[0].manifest.tables.notes, 1);
 		assert.ok(dumps[0].manifest.takenAt, "the manifest says when it was taken");
+	});
+
+	it("the listing an operator reads says the time and the counts, never undefined", async () => {
+		// The rehearsal's finding: the line read `undefined — undefined table(s),
+		// undefined row(s)` because it took the counts from the entry instead of
+		// from the manifest. The listing is how an operator answers "what have I
+		// got, and how old is it?" before a restore, so a line of undefined is a
+		// listing that cannot be used for its only job.
+		const line = formatDumpLine(listDumps(dir)[0]);
+		assert.ok(!line.includes("undefined"), `the line has no undefined in it: ${line}`);
+		assert.match(line, /\d{4}-\d{2}-\d{2}T/, "the line carries the manifest's time");
+		assert.match(line, /2 table\(s\), 2 row\(s\)/, `the line carries the real counts: ${line}`);
+
+		// A dump whose manifest cannot be read still lists, and says what it is.
+		const broken = formatDumpLine({
+			file: "/tmp/broken.json.gz",
+			mtime: "2026-01-01T00:00:00.000Z",
+			manifest: null,
+		});
+		assert.match(broken, /manifest unreadable/);
+		assert.ok(!broken.includes("undefined"), "and it does not print undefined either");
 	});
 
 	it("a restore puts the rows back", async () => {

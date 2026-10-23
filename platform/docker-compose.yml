@@ -240,19 +240,33 @@ services:
     image: ${FRONTEND_IMAGE:-nexora/frontend:local}
     build:
       context: ../nexora-svelte
+      args:
+        # Public by definition, and read at BUILD time by the two prerendered
+        # documents (/sitemap.xml, /robots.txt). They come from the platform's
+        # .env, which compose reads for interpolation; without them the build
+        # has no origin and the shipped sitemap advertises localhost.
+        PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-}
+        PUBLIC_API_URL: ${PUBLIC_API_URL:-}
+        PUBLIC_IDE_DOWNLOAD_URL: ${PUBLIC_IDE_DOWNLOAD_URL:-}
+        PUBLIC_CLERK_PUBLISHABLE_KEY: ${PUBLIC_CLERK_PUBLISHABLE_KEY:-}
     env_file:
       - path: .env
         required: false
     environment:
       NODE_ENV: production
       PORT: 3000
-      # The browser's route to the gateway (the published host port).
-      PUBLIC_API_URL: http://127.0.0.1:8080
+      # The browser's route to the gateway. It is NOT this container's route:
+      # the browser resolves it, so in a deployment it is the public API origin
+      # (https://api.example). The default is the local compose stack's
+      # published port; a deployment sets PUBLIC_API_URL in .env. Hardcoding
+      # the loopback value would make every visitor's browser call its own
+      # machine, which looks like a site that cannot reach its own API.
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://127.0.0.1:8080}
       # This container's route to the same gateway, used by the app's own
       # /auth/session endpoints — the ones that keep the refresh token in an
       # HttpOnly cookie. PUBLIC_API_URL cannot serve there: inside this container
       # 127.0.0.1 is the container itself, not the host's published port.
-      GATEWAY_URL: http://gateway:8080
+      GATEWAY_URL: ${GATEWAY_URL:-http://gateway:8080}
     ports:
       - "3000:3000"
     depends_on:

@@ -100,7 +100,7 @@ if (!isTheCommand) {
 				console.log(`no dumps in ${dir}`);
 			} else {
 				for (const entry of listed) {
-					console.log(`  ${entry.file} — ${entry.takenAt} — ${entry.tables} table(s), ${entry.rows} row(s)`);
+					console.log(formatDumpLine(entry));
 				}
 			}
 			process.exitCode = 0;
@@ -197,6 +197,29 @@ export async function doRestore(file, url) {
 	} finally {
 		await client.end().catch(() => {});
 	}
+}
+
+/**
+ * One line for one dump, as `--list` prints it.
+ *
+ * The counts live in the manifest, which is one level down from the entry and
+ * holds per-table numbers rather than totals — so the line is built from
+ * `manifest.tables`, not from `entry.tables`. Reading the entry's own fields
+ * printed `undefined` for the time and both counts, and a listing that says
+ * "undefined" is a listing an operator cannot use to answer "what have I got
+ * and how old is it?" — which is the only question it is for.
+ *
+ * A dump whose manifest cannot be read is named as such: it may still be
+ * restorable, but it is not evidence of anything until someone looks.
+ */
+export function formatDumpLine(entry) {
+	const manifest = entry?.manifest ?? null;
+	const when = manifest?.takenAt ?? entry?.mtime ?? "unknown time";
+	const counts = manifest?.tables ?? null;
+	if (!counts) return `  ${entry?.file ?? "?"} — ${when} — manifest unreadable`;
+	const tables = Object.keys(counts).length;
+	const rows = Object.values(counts).reduce((sum, n) => sum + (Number(n) || 0), 0);
+	return `  ${entry.file} — ${when} — ${tables} table(s), ${rows} row(s)`;
 }
 
 /** The dumps in a directory, newest first, with their manifests. */

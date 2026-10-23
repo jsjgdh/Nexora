@@ -27,16 +27,28 @@ Pro do not exist.
 - [ ] Go idempotency e2e: duplicate `PUT` draft / `POST` complete answered
   idempotent (409 `already_completed`) through the compose job with a live
   execution service.
-- [ ] Quotas + limiter leave single-instance memory: rate limiter and
+- [x] Quotas + limiter leave single-instance memory: rate limiter and
   per-account quotas move to Redis (or one gateway is declared and
-  documented). Anonymous caps and a global breaker included. Edge hardening
+  documented). **Resolved 2026-10-23 by the second door: one gateway is
+  declared, and the declaration is asserted.** `verify-bounds.mjs` proves
+  over HTTP against the real gateway that the anonymous cap, the per-route
+  caps, the whole-platform budget and the dependency breaker are the
+  product's caps, and that `/health/deep` says so with the reason a second
+  instance would multiply them. Anonymous caps and a global breaker included.
+  Edge hardening
   done while probing this: the limiter keys on `req.ip`, and the gateway
   trusted every proxy hop (`trustProxy: true`), so a caller could set their
   own `X-Forwarded-For` and rotate both caps away. Now opt-in via
   `TRUST_PROXY` (default 0, refuses a blanket `true`); a reverse proxy in
   front sets it to 1.
-- [ ] Compile-time abuse bounds: `go build` CPU/wall limits, oversized
-  sources rejected before any runner sees them.
+- [x] Compile-time abuse bounds: `go build` CPU/wall limits, oversized
+  sources rejected before any runner sees them (2026-10-23: `validate.ts`
+  rejects a submission over the size ceiling, a file over the wire ceiling,
+  and a Go submission over its import budget before a runner sees it;
+  `MAX_COMPILE_MS` tightens the Go wall clock to 20s; the docker runner caps
+  CPU at 0.5 and memory per job. `verify-bounds.mjs` drives each refusal over
+  HTTP and proves a killed run takes its whole process tree with it, by a
+  marker a grandchild would have written).
 
 ## 2. Deploy + operate the mesh (P0)
 
@@ -49,11 +61,32 @@ Pro do not exist.
   optional-auth route that trusts identity. Those headers (plus the
   `x-forwarded-*` family) are now stripped and only injected from verified
   state; covered by unit + live-proxy tests.
-- [ ] Deploy procedure rehearsed: build images (Go toolchain baked in, or
+- [x] Deploy procedure rehearsed: build images (Go toolchain baked in, or
   every Go mission silently degrades), migrate, roll, verify, roll back —
-  performed on purpose once, rollback included.
+  performed on purpose once, rollback included (2026-10-23, on a machine with
+  a Docker daemon: six images built, seven containers healthy, migrations
+  applied at boot, synthetic green, backup and restore drill run against the
+  real Postgres container, a second release rolled and rolled back with
+  `--no-build`, data intact. Six defects found and fixed — the platform image
+  did not build at all, the backup could not write its volume, the site image
+  could not bake its origin, `PUBLIC_API_URL` was loopback-hardcoded, every Go
+  run failed on a `noexec` /tmp, and the backup listing printed `undefined`.
+  Record: `platform/docs/DEPLOY-RUNBOOK.md` §3.1–3.3. Still unexercised: TLS
+  and DNS through Caddy, the docker execution tier, and a bad migration's
+  rollback).
+- [!] Hosted execution tier decision (blocked on the owner, 2026-10-23): the
+  runbook names `EXECUTION_RUNNER=docker`, and the compose file deliberately
+  does not mount `/var/run/docker.sock` nor build `images/go-runner`. Rehearsed,
+  that means every hosted run answers 503 on the documented stack, while
+  `subprocess` is refused in production for a reason the docs spell out (it runs
+  learner code beside `INTERNAL_API_KEY` and `DATABASE_URL`). Three options:
+  socket on a dedicated worker host, execution on its own host behind
+  `EXECUTION_URL`, or no hosted runs in the first release. The synthetic check
+  fails loudly either way, but only after a deploy.
 - [ ] Backups: automated Postgres dumps for all databases + a restore
-  drill, not just a job. Forward-only reviewed migrations, run before
+  drill, not just a job. (2026-10-23: the dumps and the drill now run against
+  the real Postgres container — 27 tables read, restored and compared. What is
+  left is the automation on a host, which needs the host.) Forward-only reviewed migrations, run before
   dependent code.
 - [ ] Observability: structured logs with request ids somewhere greppable
   (shipped 2026-10-20: one id rides edge→service — the gateway mints it,

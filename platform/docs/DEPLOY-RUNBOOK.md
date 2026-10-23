@@ -9,13 +9,15 @@ The deployment is one host with `docker compose`. The shape is decided in
 in [caddy/Caddyfile](../caddy/Caddyfile); the variables are in
 [ENVIRONMENT.md](ENVIRONMENT.md).
 
-**What this runbook has and has not been through.** The verify commands, the
-backup, the restore drill and the synthetic check were walked on 2026-10-20
-against the local development stack on the machine this was written on. The
-compose steps, the Caddy steps and the rollback were not: that machine has the
-Docker CLI and no Docker daemon, no VPS, and no DNS. The rehearsal record at
-the end says exactly which is which. The first deploy on the real host is a
-rehearsal, and the people doing it should expect to fix things.
+**What this runbook has and has not been through.** The compose path was
+rehearsed on 2026-10-23 on a machine with a Docker daemon: six images built,
+seven containers rolled healthy, the synthetic journey passed, the backup and
+the restore drill ran against the real Postgres container, a second release was
+rolled and then rolled back with `--no-build`, and the Caddyfile validated
+under Caddy 2.10. Six defects were found and fixed doing it — the image did not
+build at all before the first of them. What is still unexercised is TLS, DNS
+and Caddy itself in front of the stack, the `docker` execution tier, and the
+rollback of a bad migration. Section 3 has the record, item by item.
 
 ---
 
@@ -69,7 +71,8 @@ Then edit it. The values that must be changed before anything starts:
 | `BILLING_DATABASE_URL` | the same, with `billingdb`. |
 | `FRONTEND_URL` | the site's exact origin, for example `https://nexora.dev`. Not the API host. |
 | `TRUST_PROXY` | `1`. Exactly one proxy (Caddy) is in front of the gateway. With `0` every request is keyed on the docker bridge address and the whole platform shares one rate-limit bucket. |
-| `PUBLIC_SITE_URL` | the site's exact origin. The auth service builds the links in its mail against it, and the site bakes it into its prerendered pages. |
+| `PUBLIC_SITE_URL` | the site's exact origin. The auth service builds the links in its mail against it, and compose passes it to the site image as a build argument, because `/sitemap.xml` and `/robots.txt` are prerendered and bake it. |
+| `PUBLIC_API_URL` | the browser's route to the gateway: `https://api.<domain>`, the API host. Compose passes it into the site container as a runtime value. It is **not** the same as `GATEWAY_URL` (the container's own route over the compose network), and setting it to a loopback address makes every visitor's browser call its own machine. |
 | `EXECUTION_RUNNER` | `docker`. `subprocess` is refused at boot in production unless `EXECUTION_ALLOW_SUBPROCESS=1` is also set, which is only for a host that does not also serve the public API. |
 
 Generate the two secrets with:
@@ -83,8 +86,13 @@ procedure for a `.env` that has travelled between machines.
 
 ### 0.4 The site's environment file
 
-`nexora-svelte/.env` is the site's, and it is a separate file from the
-platform's:
+`nexora-svelte/.env` is the site's own file, and it is only read when the site
+is built or run **outside** compose (`npm run dev`, `npm run build` on the
+host). The compose build takes `PUBLIC_SITE_URL` and the other `PUBLIC_*`
+values from `platform/.env` as build arguments, and the container takes
+`PUBLIC_API_URL` and `GATEWAY_URL` from its service environment —
+`.dockerignore` keeps this file out of the image on purpose, because it can
+hold the site's server-side keys. Write it anyway, for the host-side builds:
 
 ```bash
 cd /srv/nexora/branchcraft/nexora-svelte
@@ -551,11 +559,108 @@ docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --no
 
 ## 3. The rehearsal record
 
+### 3.1 Rehearsal of 2026-10-23: the compose path, for real
+
+Windows 11, Docker Desktop 29.8.2 (overlayfs), Compose v5.5.1, Node 22.19.
+The tree was a `git archive` export of `5563e22` into a scratch directory, so
+the working tree and its `.env` were not touched, and `.env` files were written
+fresh: generated `AUTH_JWT_SECRET` / `INTERNAL_API_KEY` / `POSTGRES_PASSWORD`,
+`AUTH_MODE=local`, `TRUST_PROXY=0` (no Caddy in this loop), and
+`EXECUTION_RUNNER=subprocess` with `EXECUTION_ALLOW_SUBPROCESS=1` — the
+`docker` tier needs the socket this file deliberately does not mount (see
+§3.2, finding 6). The stack ran under its own compose project
+(`nexa-rehearsal`) so it created its own volumes; an existing `platform_pgdata`
+volume from earlier work carries a different password, and reusing the default
+project name made auth fail with `28P01` for exactly that reason.
+
+| Step | Command | Result |
+|---|---|---|
+| 1 | `compose build` | **failed first** (finding 1), then six images tagged `5563e22` |
+| 4 | `up -d` | seven containers, health-ordered, every one `healthy` |
+| 5b | `/health/live`, `/health/deep` | `ready`, 6/6 mesh checks ok; `revocations` `unknown` at boot, `reachable` after a token |
+| 5c | `npm run healthcheck` | exit 0, "reports ready (6/6 mesh checks ok)" |
+| 5d | `synthetic --provision`, then `synthetic` | exit 0: sign-in, identity, manifest (`task-manager`, 18 phases), phase (402 entitlement), run (exit 0 in 27ms) |
+| — | Go through `/api/execute/execute` | **failed first** (finding 5), then `hello from go`, exit 0 in 189ms — the prewarmed `/opt/gocache` volume works |
+| 2 | `compose run --rm backup` | **failed first** (finding 2), then 27 tables / 22 rows (auth), 4 tables / 1 row (billing) |
+| 2 | `compose run --rm drill` | passed: 27 tables read, restored into a scratch schema and compared |
+| 4 | second release `deadbee1` built and rolled | 7/7 healthy on the new tag |
+| 2.1 | rollback: `NEXORA_RELEASE=5563e22 up -d --no-build` | 7/7 healthy on the old tag; synthetic passed again; the canary account and the dumps survived |
+| 6 | `caddy validate` (caddy:2.10, documented env) | `Valid configuration` (this Docker image was not the host install, and no request went through it) |
+| 5e | CORS at the gateway | exact origin echoed, foreign origin gets no `Access-Control-Allow-Origin`, `X-Request-Id` + `X-Execution-Daily-Remaining` exposed |
+| — | broker sign-in on the site | same-origin 200 with an HttpOnly refresh cookie, foreign Origin 403 |
+
+**On the plain-http 403.** The site's session broker compares `Origin` against
+`url.origin`, and adapter-node assumes `https` unless `PROTOCOL_HEADER` is set.
+So over loopback http a *correct* Origin still gets 403, and the value that
+passes is `https://<host>`. Behind the TLS proxy the browser's Origin is
+`https://<host>` and the guard matches. This is the guard working; do not
+loosen it to make a loopback test pass.
+
+### 3.2 The six findings
+
+1. **The platform image did not build.** `RUN npm run build` used the root
+   script, which also builds `@nexora/gcp-plan` under `infra/` — a workspace the
+   Dockerfile does not copy. `No workspaces found`, no image at all. Fixed: the
+   Dockerfile builds the seven workspaces it ships, by name.
+2. **The backup could not write its own volume.** `EACCES` on
+   `/backups/backup-…json.gz`: the job runs as `app`, and a fresh named volume
+   is root-owned. Fixed in the image (`/backups` created and owned by `app`, so
+   Docker's first-use copy gives the volume that ownership).
+3. **The site image could not bake its public origin.** `.dockerignore`
+   excludes `.env`, and the Dockerfile took no build arguments, so
+   `/sitemap.xml` and `/robots.txt` (both prerendered) could only ever embed the
+   local-mode fallback. A production image would advertise `localhost:5173`.
+   Fixed: four `PUBLIC_*` build args, passed by compose from the platform's
+   `.env` (they are public by definition).
+4. **`PUBLIC_API_URL` was hardcoded to `http://127.0.0.1:8080`** in the
+   frontend service. In a deployment every visitor's browser would call its own
+   machine. Fixed: read from `.env` with the loopback value as the default;
+   same for `GATEWAY_URL`.
+5. **Every Go run failed** with `fork/exec /tmp/go-build…/main: permission
+   denied` while the build itself succeeded. Docker mounts a tmpfs `noexec` by
+   default, and `go run` compiles to a binary and executes it. Node programs
+   passed, which is why the synthetic check was green before this was found.
+   Fixed: `exec` on the execution service's `/tmp` (the docker runner already
+   passes it for Go; the compose file did not).
+6. **Hosted runs have no tier on this stack.** Recorded, not fixed — it is a
+   decision, not a defect. `DEPLOYMENT.md` says `EXECUTION_RUNNER=docker`; the
+   compose file deliberately does not mount `/var/run/docker.sock`, and the
+   `go-runner` image is not built by compose either. So on the documented
+   single-host deployment: with `docker`, every run answers 503
+   `runner_unavailable`; with `subprocess`, production refuses to boot unless
+   `EXECUTION_ALLOW_SUBPROCESS=1` is set, which the docs forbid on a host that
+   also serves the public API. `synthetic` (step 5d) catches this, but only
+   after the deploy. Three honest options: mount the socket on a dedicated
+   worker host (not the public one), run execution on its own host and point
+   `EXECUTION_URL` at it, or do not ship hosted runs in the first release.
+
+Also carried over from the 2026-10-20 record and now fixed: `npm run backup --
+--list` printed `undefined` for the time and both counts (it read
+`entry.takenAt`/`entry.tables`/`entry.rows`, while the manifest is one level
+down and holds per-table counts). `formatDumpLine` now builds the line from the
+manifest, a dump with an unreadable manifest says so, and `verify-backup.mjs`
+asserts the line contains no `undefined`.
+
+### 3.3 What this rehearsal still did not cover
+
+- **TLS, ACME, DNS, Caddy running.** The Caddyfile validated; no request went
+  through it and no certificate was issued. Host networking, the systemd unit
+  and the firewall were not exercised on this machine.
+- **The `docker` execution tier** — finding 6.
+- **A bad migration's rollback.** No migration was applied to a database that
+  already held the previous release's rows, and no restore-from-dump into a
+  live database was performed (the drill uses a scratch schema).
+- **Capacity, key rotation, erasure, sign-out.** All four remain open, as §4
+  says.
+- **The host, not the containers.** Read-only roots, dropped capabilities,
+  tmpfs and the health-ordered roll were exercised; the target OS, disk layout,
+  cron and Caddy install were not.
+
 **Rehearsal of 2026-10-20, on the machine this runbook was written on.**
 Windows, Node 22.19. The Docker CLI was present and there was no Docker
 daemon, no VPS, no DNS and no Caddy.
 
-### 3.1 What was walked, and what it showed
+### 3.4 What the 2026-10-20 rehearsal walked, and what it showed
 
 | Step | Command | Result |
 |---|---|---|
@@ -574,7 +679,7 @@ check, the backup command and the drill are the same code that the compose
 stack runs. The database is not the same database, and no container was
 involved.
 
-### 3.2 Two findings from the rehearsal
+### 3.5 Two findings from the 2026-10-20 rehearsal
 
 **The synthetic check's inline environment assignment did not reach the
 process.** The first attempt, with `SYNTHETIC_EMAIL` and `SYNTHETIC_PASSWORD`
@@ -599,7 +704,7 @@ listing:
 node -e "const fs=require('fs'),z=require('zlib');const f=fs.readdirSync('DIR').filter(x=>x.endsWith('.json.gz')).sort().pop();console.log(JSON.stringify(JSON.parse(z.gunzipSync(fs.readFileSync('DIR/'+f))).manifest),null,2))"
 ```
 
-### 3.3 What could not be rehearsed, and why
+### 3.6 What could not be rehearsed then, and why
 
 These are gaps. They are not passes.
 
@@ -615,7 +720,7 @@ These are gaps. They are not passes.
 | The rollback paths | Nothing was rolled back, because nothing was deployed. The image rollback, the restore-from-backup path and the forward-fix path are all unexercised. |
 | The compose files | The override was checked by parsing it and comparing it with the base file, not by running `docker compose config` on it. |
 
-### 3.4 What the first real deploy should do
+### 3.7 What the first real deploy should do
 
 The first deploy on the real host is the rehearsal of the parts that could
 not be rehearsed here. Do it with the people who will be on call, with the

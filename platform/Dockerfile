@@ -19,7 +19,17 @@ COPY packages/contracts ./packages/contracts
 COPY packages/service-kit ./packages/service-kit
 COPY services ./services
 COPY scripts/sync-curriculum.mjs ./scripts/sync-curriculum.mjs
-RUN npm run build
+# The workspaces this image ships, built by name. The root `npm run build` also
+# builds `@nexora/gcp-plan`, which lives under `infra/` and is a deployment plan
+# rather than a service: it is not in this image, so asking for the root script
+# fails with "No workspaces found" and no image is produced at all.
+RUN npm run build --workspace=@nexora/contracts \
+ && npm run build --workspace=@nexora/service-kit \
+ && npm run build --workspace=@nexora/gateway \
+ && npm run build --workspace=@nexora/auth \
+ && npm run build --workspace=@nexora/curriculum \
+ && npm run build --workspace=@nexora/execution \
+ && npm run build --workspace=@nexora/billing
 
 FROM node:22-alpine AS runtime
 ENV NODE_ENV=production
@@ -65,6 +75,13 @@ RUN if [ "$SERVICE" = "execution" ]; then \
       rm -rf /opt/warm && \
       chown -R app:app /opt/gocache ; \
     fi
+
+# The backup and drill jobs write into a named volume. Docker initialises a
+# fresh volume with the contents and ownership of the image's directory at the
+# mount point, so this directory has to exist and belong to the user the job
+# runs as — otherwise the volume is root-owned, `app` cannot open a dump in it,
+# and the first backup of a fresh deployment fails with EACCES.
+RUN mkdir -p /backups && chown app:app /backups
 
 ENV SERVICE=${SERVICE}
 USER app
