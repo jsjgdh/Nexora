@@ -6,6 +6,73 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
   "description": "Go itself, from the first value to a module. Zero values and integers, control flow, functions, structs, methods, interfaces, packages, collections, pointers, embedding, errors, defer and panic, generics, and modules. The phases build one small ledger service, and each is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review.",
   "version": 1,
   "freePhases": 1,
+  "glossary": [
+    {
+      "term": "package",
+      "phase": "go-program",
+      "definition": "The name a Go file belongs to. `package main` is the one the go tool treats as a program rather than a library."
+    },
+    {
+      "term": "function",
+      "phase": "go-program",
+      "definition": "A named piece of code you call. Its signature says what it takes and what it gives back."
+    },
+    {
+      "term": "module",
+      "phase": "go-program",
+      "definition": "A directory with a go.mod in it. The go.mod names the module and pins the versions it needs."
+    },
+    {
+      "term": "zero value",
+      "phase": "go-values",
+      "definition": "The value a variable has before anyone assigns to it: 0 for an int, the empty string for a string. It is a value, not a blank."
+    },
+    {
+      "term": "panic",
+      "phase": "go-control-flow",
+      "definition": "A crash the programmer caused: an index that cannot exist, a contract the caller broke. Expected failures travel as error values."
+    },
+    {
+      "term": "struct",
+      "phase": "go-structs",
+      "definition": "A type with named fields. A function that takes a struct can only see what the struct allows."
+    },
+    {
+      "term": "method",
+      "phase": "go-values",
+      "definition": "A function that belongs to a type and receives the value it works on. Whether it receives a copy or the address decides what it can change."
+    },
+    {
+      "term": "interface",
+      "phase": "go-interfaces",
+      "definition": "A set of methods a value can have. A type satisfies an interface by having the methods, and the compiler checks it at the call."
+    },
+    {
+      "term": "slice",
+      "phase": "go-structs",
+      "definition": "A value that holds elements in order, with a length and a capacity. The spare capacity is room the slice may use later."
+    },
+    {
+      "term": "map",
+      "phase": "go-collections",
+      "definition": "A value that holds values under keys. A key that is not there reads as the zero value, and the comma-ok form tells the two apart."
+    },
+    {
+      "term": "error",
+      "phase": "go-functions",
+      "definition": "A value a function returns to say it could not do the job. The caller reads it, and the value can be compared with errors.Is."
+    },
+    {
+      "term": "defer",
+      "phase": "go-lifecycle",
+      "definition": "A call that runs when the function returns, however it returns: normally, on an early return, or through a panic."
+    },
+    {
+      "term": "pointer",
+      "phase": "go-methods",
+      "definition": "A value that holds the address of another value. Everything copies unless the code asks for it to be shared."
+    }
+  ],
   "phases": [
     {
       "id": "go-program",
@@ -624,7 +691,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
               "the 0 was a value"
             ]
           }
-        }
+        },
+        "caption": "The zero was a value all along. A variable starts at 0 and then holds 199, and nothing was ever unset."
       },
       "resources": [
         {
@@ -844,7 +912,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
             "case 201: yes",
             "default: other"
           ]
-        }
+        },
+        "caption": "The cases do not fall through. The 201 matches its own case, and the default is where every code you did not name lands."
       },
       "resources": [
         {
@@ -1268,7 +1337,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "label": "Go Spec: struct types and field selectors",
           "url": "https://go.dev/ref/spec#Struct_types"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript an object holds named fields and you find one by its key. A Go struct holds the same fields with their types written down, so a function that takes the struct can only see what the struct allows."
+      }
     },
     "go-structs-ask": {
       "id": "go-structs-ask",
@@ -1494,14 +1567,19 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
               "now holds 600"
             ]
           }
-        }
+        },
+        "caption": "A value receiver works on a copy, so the caller keeps 500. A pointer receiver writes through, and the same Account holds 600."
       },
       "resources": [
         {
           "label": "Effective Go: pointees vs. value receivers",
           "url": "https://go.dev/doc/effective_go#pointers_vs_values"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript a function is a value you pass around, and it belongs to nothing. A Go method belongs to a type and receives the value it works on, and whether it receives a copy or the address decides what it can change."
+      }
     },
     "go-methods-ask": {
       "id": "go-methods-ask",
@@ -2143,14 +2221,19 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           ],
           "len": 2,
           "cap": 4
-        }
+        },
+        "caption": "The dashed slots are the room the slice grew to and has not used. A slice keeps the order append gave it, which a map would lose."
       },
       "resources": [
         {
           "label": "Go blog: the slice type",
           "url": "https://go.dev/blog/slices-intro"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript an array keeps its order and an object is found by a key. In Go those are two types: a slice keeps the order, and a map is found by a key, and assigning to a key again replaces what was there."
+      }
     },
     "go-collections-ask": {
       "id": "go-collections-ask",
@@ -2597,7 +2680,8 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
               "children": []
             }
           ]
-        }
+        },
+        "caption": "The Kernel is embedded, so its methods promote to s. Bonus is a named field, so it is reached as s.Bonus and nothing is promoted."
       },
       "resources": [
         {
@@ -2824,7 +2908,11 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "label": "Go blog: working with errors in Go 1.13",
           "url": "https://go.dev/blog/go1.13-errors"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript a function that cannot do its job throws, and the caller catches it. In Go a function that cannot do its job returns an error as a second value, and the caller reads it."
+      }
     },
     "go-errors-ask": {
       "id": "go-errors-ask",

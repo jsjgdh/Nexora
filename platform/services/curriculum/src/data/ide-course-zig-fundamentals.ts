@@ -6,6 +6,83 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
   "description": "Zig itself, from the first program to the test runner. What build.zig decides, values and types, control flow, functions, structs and methods, pointers, error unions, the allocator, defer and errdefer, comptime and generics, the standard library, and the test runner. The phases build one small sheet program, and each is judged by the project's own Zig tests read by the Zig test runner. Every phase is Learn, then Solve, then Review.",
   "version": 1,
   "freePhases": 1,
+  "glossary": [
+    {
+      "term": "module",
+      "phase": "zig-program",
+      "definition": "A named part of the project the build script hands to the program. The import resolves against it."
+    },
+    {
+      "term": "build script",
+      "phase": "zig-program",
+      "definition": "build.zig, which says what to build and in what order. It is a Zig program, so the compiler builds it too."
+    },
+    {
+      "term": "optional",
+      "phase": "zig-values",
+      "definition": "The type for a value that may not be there: it holds a value or null."
+    },
+    {
+      "term": "slice",
+      "phase": "zig-control-flow",
+      "definition": "A pointer and a length, over bytes that cannot be changed."
+    },
+    {
+      "term": "pointer",
+      "phase": "zig-functions",
+      "definition": "A value that holds the address of another value. A pointer always names a value, so there is no null to check."
+    },
+    {
+      "term": "struct",
+      "phase": "zig-structs",
+      "definition": "A type with named fields. The braces with a dot in front are how a value is built."
+    },
+    {
+      "term": "tagged union",
+      "phase": "zig-structs",
+      "definition": "A value that is one of several shapes, with a tag that says which one is there now."
+    },
+    {
+      "term": "sentinel",
+      "phase": "zig-values",
+      "definition": "A byte that ends an array, usually 0. The length is not carried with it, so the end is found by scanning."
+    },
+    {
+      "term": "error union",
+      "phase": "zig-errors",
+      "definition": "The type that holds a value or one of a set of errors. The bang in the return type is it."
+    },
+    {
+      "term": "error set",
+      "phase": "zig-errors",
+      "definition": "A closed list of named failures a function can have."
+    },
+    {
+      "term": "allocator",
+      "phase": "zig-allocator",
+      "definition": "The thing that hands out memory and takes it back. A function that allocates takes one as an argument."
+    },
+    {
+      "term": "defer",
+      "phase": "zig-defer",
+      "definition": "A statement that runs when the scope it was written in ends, however it ends."
+    },
+    {
+      "term": "errdefer",
+      "phase": "zig-defer",
+      "definition": "A statement that runs only when the scope ends because of an error, so it undoes work that did not finish."
+    },
+    {
+      "term": "comptime",
+      "phase": "zig-comptime",
+      "definition": "Work the compiler does while it reads the code, before the program runs. A value known at comptime is folded into the program."
+    },
+    {
+      "term": "test block",
+      "phase": "zig-tests",
+      "definition": "A block of code with a name in front of it. The name is what a failure reports."
+    }
+  ],
   "phases": [
     {
       "id": "zig-program",
@@ -1558,7 +1635,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "label": "Zig language reference: pointers",
           "url": "https://ziglang.org/documentation/master/#Pointers"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "go-fundamentals",
+        "text": "In Go a function that takes a value works on a copy, and to change what the caller holds you take the address with &. In Zig the same rule holds, and the address is written into the type as *Amount."
+      }
     },
     "zig-pointers-ask": {
       "id": "zig-pointers-ask",
@@ -1779,7 +1860,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "label": "Zig language reference: error sets",
           "url": "https://ziglang.org/documentation/master/#Error-Sets"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "go-fundamentals",
+        "text": "In Go a function that cannot do its job returns an error as a second value, and the failure is a value you compare with errors.Is. In Zig the two are one value, an error union, and the type names every failure it can have, so the caller is told which one it was."
+      }
     },
     "zig-errors-ask": {
       "id": "zig-errors-ask",
@@ -2010,7 +2095,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           "label": "Zig language reference: the testing namespace",
           "url": "https://ziglang.org/documentation/master/#Zig-Test"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "go-fundamentals",
+        "text": "In Go, defer is how you make sure a file is closed however the function leaves. In Zig the memory has to be given back as well, and because there is no collector, a function that allocates takes an allocator and the caller frees what it gets."
+      }
     },
     "zig-allocator-ask": {
       "id": "zig-allocator-ask",

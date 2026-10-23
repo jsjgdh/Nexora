@@ -3,9 +3,121 @@
 export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
   "id": "sql-fundamentals",
   "title": "SQL fundamentals",
-  "description": "SQL as SQLite really accepts it, on the ledger the Go and Rust courses already build: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. It teaches the SQL of SQLite 3.54.1, the version that was current on 2026-10-21, and says so where SQLite and the SQL standard differ. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
+  "description": "SQL as SQLite really accepts it, on a ledger of its own: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. The money is whole cents, the way the Go and Rust courses keep it, but the tables here are accounts and transactions, and they belong to this course. It teaches the SQL of SQLite 3.54.1, the version that was current on 2026-10-21, and says so where SQLite and the SQL standard differ. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
   "version": 1,
   "freePhases": 1,
+  "glossary": [
+    {
+      "term": "table",
+      "phase": "sql-first-database",
+      "definition": "A shape and a set of rows. The shape is the list of columns with their types, and it is in the file as text."
+    },
+    {
+      "term": "row",
+      "phase": "sql-first-database",
+      "definition": "One line of values that fits the table's shape."
+    },
+    {
+      "term": "column",
+      "phase": "sql-first-database",
+      "definition": "One field of the shape, with the type its values have."
+    },
+    {
+      "term": "schema",
+      "phase": "sql-first-database",
+      "definition": "The shape of the whole database, kept by SQLite as the text of the statements that made it."
+    },
+    {
+      "term": "transaction",
+      "phase": "sql-first-database",
+      "definition": "A set of writes that all happen or none of them happen. A script that writes three rows and fails on the second leaves the first behind without one."
+    },
+    {
+      "term": "SELECT",
+      "phase": "sql-first-database",
+      "definition": "The clause that names the columns the answer has."
+    },
+    {
+      "term": "WHERE",
+      "phase": "sql-first-database",
+      "definition": "The clause that keeps the rows the answer is made of."
+    },
+    {
+      "term": "ORDER BY",
+      "phase": "sql-select-where",
+      "definition": "The clause that promises an order. The order of the rows is not promised until you promise it."
+    },
+    {
+      "term": "LIMIT",
+      "phase": "sql-select-where",
+      "definition": "The clause that keeps the first rows of that order and drops the rest."
+    },
+    {
+      "term": "aggregate",
+      "phase": "sql-group-by",
+      "definition": "A function that reads many rows and gives back one number, such as count or sum."
+    },
+    {
+      "term": "GROUP BY",
+      "phase": "sql-order-limit",
+      "definition": "The clause that says which column makes the groups, so the aggregate is computed for each group."
+    },
+    {
+      "term": "HAVING",
+      "phase": "sql-group-by",
+      "definition": "The clause that keeps the groups, when the condition is about a number the aggregate computed."
+    },
+    {
+      "term": "join",
+      "phase": "sql-joins",
+      "definition": "Reading two tables as one by matching the rows of one against the rows of the other."
+    },
+    {
+      "term": "alias",
+      "phase": "sql-joins",
+      "definition": "A short name for a table in a query, so the columns of the two can be told apart."
+    },
+    {
+      "term": "subquery",
+      "phase": "sql-subqueries",
+      "definition": "A query written inside another query, so the condition's value is worked out by the ledger."
+    },
+    {
+      "term": "view",
+      "phase": "sql-subqueries",
+      "definition": "A query with a name in the schema. It holds no rows, so it cannot go out of date."
+    },
+    {
+      "term": "index",
+      "phase": "sql-indexes",
+      "definition": "A sorted copy of a table's rows, so a lookup can read the index instead of every row."
+    },
+    {
+      "term": "query plan",
+      "phase": "sql-indexes",
+      "definition": "The steps the engine takes, printed by EXPLAIN QUERY PLAN. SCAN means every row is read; SEARCH means only some of them are."
+    },
+    {
+      "term": "COMMIT",
+      "phase": "sql-transactions",
+      "definition": "The word that keeps the writes of a transaction."
+    },
+    {
+      "term": "ROLLBACK",
+      "phase": "sql-transactions",
+      "definition": "The word that throws the writes of a transaction away."
+    },
+    {
+      "term": "isolation",
+      "phase": "sql-transactions",
+      "definition": "What a reader sees while a write is open. A reader sees what has been committed, and not what is still open."
+    },
+    {
+      "term": "ALTER TABLE",
+      "phase": "sql-schema",
+      "definition": "The statement that changes a table. It can rename the table, rename a column, add a column and drop a column, and nothing else."
+    }
+  ],
   "phases": [
     {
       "id": "sql-first-database",
@@ -307,6 +419,10 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           ]
         },
         "caption": "The file is built by statements, not by the program. The schema and the seed are read into ledger.db before anything asks it a question."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript your records live in an array in memory, and they are gone when the program stops. A table is the same records in a file: a shape you write down once, and rows that survive the program."
       }
     },
     "sql-first-database-do": {
@@ -532,6 +648,10 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           ]
         },
         "caption": "WHERE decides the rows and SELECT decides the columns. The filter runs first, so the answer is the rows that are left."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript you keep the rows you want with filter. In SQL the same choice is written as a WHERE clause, and it names the rows the answer is made of."
       }
     },
     "sql-select-where-do": {
@@ -978,6 +1098,10 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           ]
         },
         "caption": "Twelve rows go in and four rows come out. The group is the unit, and the aggregate gives one number for each group."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript you fold a list into one number with reduce. In SQL the fold is GROUP BY, and it names the column that makes the groups, so the aggregate is computed for each group and not for the whole list."
       }
     },
     "sql-group-by-do": {
@@ -1202,6 +1326,10 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
           }
         },
         "caption": "The join adds the owner from the other table and adds no rows. A transaction belongs to one account, so each one gains a name and keeps its own row."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript a record names the thing it belongs to by its id. In SQL that id is a column, and a join is the query matching the rows of one table against the rows of the other, so you do not look the other one up by hand."
       }
     },
     "sql-joins-do": {

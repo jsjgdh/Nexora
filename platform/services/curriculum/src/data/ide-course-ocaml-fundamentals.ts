@@ -6,6 +6,63 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
   "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report you write yourself.",
   "version": 1,
   "freePhases": 1,
+  "glossary": [
+    {
+      "term": "module",
+      "phase": "ocaml-project",
+      "definition": "A file. Its name is how other code reaches it, and the build fails when the file is not there."
+    },
+    {
+      "term": "list",
+      "phase": "ocaml-project",
+      "definition": "A value that is either empty or a head joined to a tail, so the tail is a list of its own."
+    },
+    {
+      "term": "signature",
+      "phase": "ocaml-values",
+      "definition": "The second file beside a module, with the extension mli. It says what the module promises and hides the rest."
+    },
+    {
+      "term": "result",
+      "phase": "ocaml-values",
+      "definition": "The type for a value that may fail: Ok holds the answer, Error holds the reason."
+    },
+    {
+      "term": "pattern",
+      "phase": "ocaml-control-flow",
+      "definition": "A shape a value can have, written so a match can take it apart. The underscore fits anything."
+    },
+    {
+      "term": "record",
+      "phase": "ocaml-records",
+      "definition": "A type with named fields, whose types are written down. A value never changes, so changing a field builds a new record."
+    },
+    {
+      "term": "variant",
+      "phase": "ocaml-variants",
+      "definition": "A type whose value is one of several shapes. Each constructor names a shape and says what it holds."
+    },
+    {
+      "term": "exception",
+      "phase": "ocaml-errors",
+      "definition": "A failure that travels up the stack until a caller catches it with try and with."
+    },
+    {
+      "term": "option",
+      "phase": "ocaml-stdlib",
+      "definition": "The type for a value that may not be there: Some holds it, None holds nothing."
+    },
+    {
+      "term": "module type",
+      "phase": "ocaml-modules",
+      "definition": "What the module a functor is given has to provide."
+    },
+    {
+      "term": "functor",
+      "phase": "ocaml-modules",
+      "definition": "A module built from another module. It is written as a module type and a body, and applied to a module to make a module of its own."
+    }
+  ],
   "phases": [
     {
       "id": "ocaml-project",
@@ -1190,6 +1247,10 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "fired": 1
         },
         "caption": "A list is taken apart by matching on its shape. The empty case ends the walk, and the other case does one piece of work and calls the function on the tail."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript an array keeps its elements in order and you count from zero. In OCaml a list is either empty or a head joined to a tail, so taking one apart is a match on its shape."
       }
     },
     "ocaml-lists-do": {
@@ -1399,6 +1460,10 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           }
         },
         "caption": "A value never changes. The update builds a new record with one field replaced and the rest carried over, and the old record is still there for anyone holding it."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript an object holds named fields and you find one by its key. In OCaml a record has its fields and their types written down, and a value never changes, so a changed field means a new record."
       }
     },
     "ocaml-records-do": {
@@ -2069,6 +2134,10 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
           "fired": 0
         },
         "caption": "A result is a value, so the caller receives it like any other value and has to look at which one it got. An exception is the other way: it travels up the stack until a caller catches it."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "text": "In JavaScript a function that cannot do its job throws, and the caller catches it. In OCaml there are two ways to say it went wrong: a result is a value the caller has to look at, and an exception travels up the stack until somebody catches it."
       }
     },
     "ocaml-errors-do": {

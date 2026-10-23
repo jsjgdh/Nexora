@@ -6,6 +6,83 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
   "description": "The Rust language, in the order the book teaches it: the tools, then values and control flow, then ownership and borrowing, then structs, enums, errors and modules, then collections, traits and lifetimes, then testing, then the threads and the futures the language gives you, and a money type of your own design at the end.",
   "version": 1,
   "freePhases": 1,
+  "glossary": [
+    {
+      "term": "ownership",
+      "phase": "rust-ownership",
+      "definition": "The rule that every value has one owner, and the owner decides when it is dropped. A move hands the ownership over."
+    },
+    {
+      "term": "borrow",
+      "phase": "rust-borrowing",
+      "definition": "A reference to a value somebody else owns. Borrowing reads it; the owner keeps the right to change it."
+    },
+    {
+      "term": "lifetime",
+      "phase": "rust-borrowing",
+      "definition": "How long a borrow stays valid. The compiler writes the relationship into the type, so the rule is checked."
+    },
+    {
+      "term": "struct",
+      "phase": "rust-structs",
+      "definition": "A type with named fields. The fields can be private, so the constructor is the only way in."
+    },
+    {
+      "term": "enum",
+      "phase": "rust-structs",
+      "definition": "A type whose value is exactly one of several shapes. Each shape can carry its own fields."
+    },
+    {
+      "term": "trait",
+      "phase": "rust-structs",
+      "definition": "A set of methods a type can promise. The impl block is where a type signs the promise."
+    },
+    {
+      "term": "Result",
+      "phase": "rust-values",
+      "definition": "The type for a value that may fail: Ok holds the answer, Err holds the reason. The ? operator returns the failure early."
+    },
+    {
+      "term": "crate",
+      "phase": "rust-values",
+      "definition": "A compiled package. A library is a crate other code depends on, and a binary is a crate you run."
+    },
+    {
+      "term": "Option",
+      "phase": "rust-enums",
+      "definition": "The type for a value that may not be there: Some holds it, None holds nothing."
+    },
+    {
+      "term": "thread",
+      "phase": "rust-pointers",
+      "definition": "A second execution of the program. It needs owned data to work on."
+    },
+    {
+      "term": "Arc",
+      "phase": "rust-pointers",
+      "definition": "A shared handle that lets two threads point at the same value, and counts the owners."
+    },
+    {
+      "term": "Mutex",
+      "phase": "rust-pointers",
+      "definition": "The lock that lets one thread at a time into a piece of shared data, so a read, a change and a write are one step."
+    },
+    {
+      "term": "async",
+      "phase": "rust-async",
+      "definition": "The way a program waits without holding a thread up."
+    },
+    {
+      "term": "future",
+      "phase": "rust-async",
+      "definition": "A plan for a value that is not here yet. It does nothing until something polls it."
+    },
+    {
+      "term": "await",
+      "phase": "rust-async",
+      "definition": "The word that waits for a future. The thread is handed back while the future is not ready."
+    }
+  ],
   "phases": [
     {
       "id": "rust-values",
@@ -440,7 +517,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
               "cents itself is unchanged"
             ]
           }
-        }
+        },
+        "caption": "The number stays 0. The two digits after the dot are a view of it, made by format_cents, and the cents themselves never change."
       },
       "resources": [
         {
@@ -731,7 +809,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           ],
           "borrows": [],
           "note": "one allocation, one owner: owner is uninitialized after the move"
-        }
+        },
+        "caption": "One allocation and one owner. After the move, owner is struck through and renamed is the only name that points at the bytes."
       },
       "resources": [
         {
@@ -1009,7 +1088,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
             }
           ],
           "note": "word may read the bytes; it may not free or grow them"
-        }
+        },
+        "caption": "The dashed arrow is a borrow, not an owner. word may read the bytes, and it may not free them or grow them."
       },
       "resources": [
         {
@@ -1284,7 +1364,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           ],
           "borrows": [],
           "note": "the integer lives inline; the name bytes live on the heap"
-        }
+        },
+        "caption": "The integer lives inline in the binding on the stack. Only the name bytes are on the heap, because a String owns them."
       },
       "resources": [
         {
@@ -1541,7 +1622,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
               "a new variant breaks the match"
             ]
           }
-        }
+        },
+        "caption": "A value is exactly one variant, so the match has one arm per variant. Add a variant and the compiler stops the build until every arm covers it."
       },
       "resources": [
         {
@@ -1802,7 +1884,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
               "the error type is still in the signature"
             ]
           }
-        }
+        },
+        "caption": "Both calls return a Result and both are ordinary returns. The error is in the signature, so the caller has to match it and nothing panics."
       },
       "resources": [
         {
@@ -1813,7 +1896,11 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           "label": "The Rust Programming Language: chapter 9.3 To panic or Not to panic (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch09-03-to-panic-or-not-to-panic.html"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "go-fundamentals",
+        "text": "In Go a function that cannot do its job returns an error as a second value, and the caller writes if err != nil. In Rust the two are one value, a Result, and the ? operator writes the check for you."
+      }
     },
     "rust-errors-ask": {
       "id": "rust-errors-ask",
@@ -2049,7 +2136,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
             "pub fn format_cents",
             "tests/ (separate crate)"
           ]
-        }
+        },
+        "caption": "The crate is the public edge. Only what is marked pub can be reached from outside, and the tests in tests/ reach it the way a caller does."
       },
       "resources": [
         {
@@ -2060,7 +2148,11 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           "label": "The Rust Programming Language: chapter 7.4 Bringing Paths into Scope with the use Keyword (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch07-04-bringing-paths-into-scope-with-the-use-keyword.html"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "go-fundamentals",
+        "text": "In Go the import path starts at the module path, which go.mod names. In Rust a module is a file inside a crate, and it stays private until you write pub in front of it."
+      }
     },
     "rust-modules-ask": {
       "id": "rust-modules-ask",
@@ -2311,7 +2403,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
               "same methods, one indirection"
             ]
           }
-        }
+        },
+        "caption": "A generic call is checked at compile time and costs no indirection. A dyn call is one table behind a pointer, and the type is chosen at run time."
       },
       "resources": [
         {
@@ -2598,7 +2691,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
             }
           ],
           "note": "the borrow cannot outlive account: the compiler writes that rule into the type"
-        }
+        },
+        "caption": "The borrow points at the owner bytes and cannot outlive them. The compiler writes that relationship into the type, so the rule is checked."
       },
       "resources": [
         {
@@ -2848,7 +2942,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           ],
           "len": 3,
           "cap": 4
-        }
+        },
+        "caption": "The vector keeps the order the rows arrived in, and the dashed slot is the room it grew to and has not used."
       },
       "resources": [
         {
@@ -2859,7 +2954,11 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           "label": "The Rust Programming Language: chapter 8.1 Vectors (MIT OR Apache-2.0)",
           "url": "https://doc.rust-lang.org/book/ch08-01-vectors.html"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "go-fundamentals",
+        "text": "In Go a slice keeps values in order and a map is found by a key. In Rust those are Vec and HashMap, and a missing key is None, not the zero value a Go map hands back."
+      }
     },
     "rust-collections-ask": {
       "id": "rust-collections-ask",
@@ -3125,7 +3224,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
               "a second counter starts at 1"
             ]
           }
-        }
+        },
+        "caption": "The count lives in the closure, so it survives between the calls and a second counter starts at 1. What the closure captures decides the trait it gets."
       },
       "resources": [
         {
@@ -3404,7 +3504,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
               "a suite that still passes verified nothing"
             ]
           }
-        }
+        },
+        "caption": "A green suite against a correct implementation proves nothing on its own. Break one behaviour and the test that names it is the one that goes red."
       },
       "resources": [
         {
@@ -3673,7 +3774,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           ],
           "borrows": [],
           "note": "dropping a leaves the value alive: b still owns it"
-        }
+        },
+        "caption": "Both names point at the same value and the count says how many owners there are. A clone of Rc shares the value, it does not copy it."
       },
       "resources": [
         {
@@ -3952,7 +4054,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
           ],
           "borrows": [],
           "note": "the lock is what makes the read-modify-write atomic"
-        }
+        },
+        "caption": "The Arc shares the handle across the threads and the Mutex makes the read, the change and the write one step. Without the lock both threads can read 3."
       },
       "resources": [
         {
@@ -4210,7 +4313,8 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
               "the executor could run another task first"
             ]
           }
-        }
+        },
+        "caption": "Building a future runs nothing. The body runs the first time something polls it, and an await hands the thread back rather than holding it."
       },
       "resources": [
         {

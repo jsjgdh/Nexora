@@ -6,6 +6,68 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
   "description": "The ledger as a service. It opens with a program that reads code and reports what it finds, and then it builds the service: the runtime and its tasks, the channels between them, the router and its extractors, the state it shares, the layers around it, the stop at the end of it, the failures that become answers, the database, the configuration, the log, the tests, and a release you can defend.",
   "version": 1,
   "freePhases": 1,
+  "glossary": [
+    {
+      "term": "module",
+      "phase": "rust-checker",
+      "definition": "A namespace. `pub` opens it, and what is not open cannot be reached from outside."
+    },
+    {
+      "term": "runtime",
+      "phase": "rust-tokio-runtime",
+      "definition": "The thing that drives the tasks. A future sits still until the runtime asks it for a step."
+    },
+    {
+      "term": "task",
+      "phase": "rust-tokio-runtime",
+      "definition": "A future the runtime owns and drives, so it can run on its own."
+    },
+    {
+      "term": "handle",
+      "phase": "rust-tokio-runtime",
+      "definition": "What a task gives back so another can join it and get the result."
+    },
+    {
+      "term": "channel",
+      "phase": "rust-tokio-channels",
+      "definition": "The way tasks pass values. A dropped sender closes the channel, and the receiver is released."
+    },
+    {
+      "term": "select",
+      "phase": "rust-tokio-select",
+      "definition": "Waiting on several things at once, and taking whichever is ready first."
+    },
+    {
+      "term": "extractor",
+      "phase": "rust-axum-routing",
+      "definition": "The part of a handler that turns a request into typed values. A request it cannot decode never reaches the handler body."
+    },
+    {
+      "term": "router",
+      "phase": "rust-axum-routing",
+      "definition": "The table that maps a path pattern to a handler."
+    },
+    {
+      "term": "middleware",
+      "phase": "rust-axum-middleware",
+      "definition": "A layer that wraps every handler, so one concern runs around all of them."
+    },
+    {
+      "term": "pool",
+      "phase": "rust-tokio-state",
+      "definition": "The set of connections the service shares, capped so it cannot open more than it should."
+    },
+    {
+      "term": "migration",
+      "phase": "rust-sqlx",
+      "definition": "A change to the shape of the tables, run before any query that needs it."
+    },
+    {
+      "term": "CI",
+      "phase": "rust-ship",
+      "definition": "The place a pull request is checked by the same commands you run locally. A workflow that runs them makes the rules legible."
+    }
+  ],
   "phases": [
     {
       "id": "rust-checker",
@@ -1039,7 +1101,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
             "the waker says it is ready",
             "the handle carries the result"
           ]
-        }
+        },
+        "caption": "Nothing happens until the runtime polls. The task waits on the await, the waker says when it is ready, and the result comes back through the handle."
       },
       "resources": [
         {
@@ -1292,7 +1355,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
             "the last sender drops",
             "the receiver resolves"
           ]
-        }
+        },
+        "caption": "The queue holds the value until the receiver takes it, and the receiver is released when the last sender drops, not when the queue empties."
       },
       "resources": [
         {
@@ -3658,7 +3722,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
               "label": "404 when nobody owns it"
             }
           ]
-        }
+        },
+        "caption": "The extractor turns the request into typed arguments, and a request it cannot decode never reaches the handler. A create answers 201, a missing one answers 404."
       },
       "resources": [
         {
@@ -4154,7 +4219,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
               "the row is on disk, not in memory"
             ]
           }
-        }
+        },
+        "caption": "The pool opens nothing until a query asks for a connection, and the migration has to have run before the row can be on disk at all."
       },
       "resources": [
         {
@@ -4892,7 +4958,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
               "label": "status and body"
             }
           ]
-        }
+        },
+        "caption": "The test drives the router with a request and reads the answer a client would get, with no port and no network between them."
       },
       "resources": [
         {
@@ -5158,7 +5225,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
             "cargo test --locked",
             "a release build"
           ]
-        }
+        },
+        "caption": "Every step is a command a developer can run by hand, and the merge waits for all of them. The release build is a profile you chose, not a default."
       },
       "resources": [
         {
@@ -5413,7 +5481,8 @@ export const IDE_COURSE_RUST_IN_PRODUCTION: unknown = {
               "one call to the formatter"
             ]
           }
-        }
+        },
+        "caption": "Each comment names a real defect and each fix is a decision you can defend: a named fallback instead of unwrap, a borrow the signature allows, one call to the formatter."
       },
       "resources": [
         {

@@ -6,6 +6,73 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
   "description": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, pipelines, JSON in and out, an HTTP server with its deadlines, routes, middleware, authentication, tests, performance, storage, a database, caching, resilience, operations, logging, dependencies, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
   "version": 2,
   "freePhases": 1,
+  "glossary": [
+    {
+      "term": "goroutine",
+      "phase": "go-goroutines",
+      "definition": "A function running on its own. Starting one is `go f()`, and the caller carries on."
+    },
+    {
+      "term": "channel",
+      "phase": "go-goroutines",
+      "definition": "The way goroutines pass values. An unbuffered one blocks the sender until a receiver is ready."
+    },
+    {
+      "term": "WaitGroup",
+      "phase": "go-goroutines",
+      "definition": "A counter for work in flight. Add before you start, Done when it finishes, Wait before you read the result."
+    },
+    {
+      "term": "mutex",
+      "phase": "go-sync",
+      "definition": "The lock that lets one goroutine at a time into a piece of code, so the code between Lock and Unlock cannot overlap."
+    },
+    {
+      "term": "race",
+      "phase": "go-sync",
+      "definition": "Two goroutines touching the same memory at once, with no order between them. The result is a number nobody can predict."
+    },
+    {
+      "term": "context",
+      "phase": "go-context",
+      "definition": "The way a call learns it should stop. A cancelled context reaches every stage that took one."
+    },
+    {
+      "term": "timeout",
+      "phase": "go-context",
+      "definition": "The time a call is allowed to take before it is cancelled."
+    },
+    {
+      "term": "handler",
+      "phase": "go-server",
+      "definition": "A function the server calls for one request. It takes the request and writes the answer."
+    },
+    {
+      "term": "middleware",
+      "phase": "go-http",
+      "definition": "A function that wraps the handler, so one concern runs around every route instead of inside each one."
+    },
+    {
+      "term": "benchmark",
+      "phase": "go-perf",
+      "definition": "A test that measures how long something takes, so a claim about speed is a number."
+    },
+    {
+      "term": "migration",
+      "phase": "go-store",
+      "definition": "A change to the shape of the tables, written so the code that reads them can move with it."
+    },
+    {
+      "term": "backoff",
+      "phase": "go-resilience",
+      "definition": "Waiting longer after each failed attempt, so a service that is down is not hammered."
+    },
+    {
+      "term": "container",
+      "phase": "go-ship",
+      "definition": "A packaged program with the runtime it needs, so the same build runs the same way everywhere."
+    }
+  ],
   "phases": [
     {
       "id": "go-goroutines",
@@ -571,8 +638,23 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
               "to": 2,
               "label": "42"
             }
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "main starts the worker and keeps running. Nothing has crossed the channel yet."
+            },
+            {
+              "step": 1,
+              "note": "The send and the receive meet in the same column. Neither side moves on until the other is ready."
+            },
+            {
+              "step": 2,
+              "note": "The handoff is done. main holds the value and the worker is finished."
+            }
           ]
-        }
+        },
+        "caption": "The send and the receive sit in the same column on different lanes. That is the handoff: neither side moves on until the other is ready."
       },
       "resources": [
         {
@@ -812,7 +894,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
               "count is always 3"
             ]
           }
-        }
+        },
+        "caption": "Without the Wait, the count read is a race and can be any of four numbers. After the Wait, every Done has run, so the count is always 3."
       },
       "resources": [
         {
@@ -1073,8 +1156,31 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
               "to": 3,
               "label": ""
             }
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "main sends the first job and carries on. The send does not wait for a reader."
+            },
+            {
+              "step": 1,
+              "note": "One worker takes the job. The other is still waiting, because a send reaches a single reader."
+            },
+            {
+              "step": 2,
+              "note": "The second job goes to the second worker. Two sends, two readers, one each."
+            },
+            {
+              "step": 3,
+              "note": "main closes the channel. The workers stop when it is empty, because the close is what ends them."
+            },
+            {
+              "step": 4,
+              "note": "main waits for every worker to finish. The counts have to match: one send for every receive."
+            }
           ]
-        }
+        },
+        "caption": "Each send reaches a single reader, so two workers take two jobs. The close is on the sending side: the receiver ranges until the channel closes."
       },
       "resources": [
         {
@@ -1532,8 +1638,27 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
               "to": 2,
               "label": "10"
             }
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "main has a value to send. Nothing has moved yet."
+            },
+            {
+              "step": 1,
+              "note": "stage 1 is waiting on its channel and main sends. The two meet in the same column."
+            },
+            {
+              "step": 2,
+              "note": "stage 1 doubles the value and hands it on. The next stage cannot read it until this one writes it."
+            },
+            {
+              "step": 3,
+              "note": "stage 2 reads what stage 1 wrote. A slow stage holds up the one behind it, because the chain is a channel between each pair."
+            }
           ]
-        }
+        },
+        "caption": "The value crosses from one stage to the next through a channel, and stage 2 cannot read it until stage 1 has written it. A slow stage holds up the one behind it."
       }
     },
     "go-pipeline-ask": {
@@ -2199,7 +2324,8 @@ export const IDE_COURSE_GO_IN_PRODUCTION: unknown = {
               "label": "read the list"
             }
           ]
-        }
+        },
+        "caption": "The request goes out, the handler answers, and the body is read on the way back. Nothing is kept between two requests."
       },
       "resources": [
         {

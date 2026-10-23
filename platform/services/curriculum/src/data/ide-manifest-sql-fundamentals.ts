@@ -3,7 +3,7 @@
 export const IDE_MANIFEST_SQL_FUNDAMENTALS: unknown = {
   "id": "sql-fundamentals",
   "title": "SQL fundamentals",
-  "description": "SQL as SQLite really accepts it, on the ledger the Go and Rust courses already build: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. It teaches the SQL of SQLite 3.54.1, the version that was current on 2026-10-21, and says so where SQLite and the SQL standard differ. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
+  "description": "SQL as SQLite really accepts it, on a ledger of its own: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. The money is whole cents, the way the Go and Rust courses keep it, but the tables here are accounts and transactions, and they belong to this course. It teaches the SQL of SQLite 3.54.1, the version that was current on 2026-10-21, and says so where SQLite and the SQL standard differ. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
   "version": 1,
   "role": "main",
   "phases": [

@@ -6,6 +6,108 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
   "description": "One JavaScript app, built phase by phase. You set up the tools, learn the words every later phase uses, build the interface, add the behavior, manage the data, debug what breaks, use Git, connect an API, serve one yourself, test the work, review it, and finish with a feature of your own. One phase leaves the app to read a codebase you did not write. Every phase is Learn, then Solve, then Review.",
   "version": 47,
   "freePhases": 1,
+  "glossary": [
+    {
+      "term": "component",
+      "phase": "setup",
+      "definition": "A function that takes values and returns what to show. One piece of the interface, one function, so a change to it lands in one place."
+    },
+    {
+      "term": "package",
+      "phase": "setup",
+      "definition": "The file that says what the project is and what can be run in it. The scripts block is the list of what can be run."
+    },
+    {
+      "term": "promise",
+      "phase": "setup",
+      "definition": "A value that stands for an answer that has not arrived yet."
+    },
+    {
+      "term": "state",
+      "phase": "behavior",
+      "definition": "What the app remembers. The handlers change it, and the UI is drawn from it."
+    },
+    {
+      "term": "event",
+      "phase": "behavior",
+      "definition": "Something that happened, which a handler is called for."
+    },
+    {
+      "term": "handler",
+      "phase": "behavior",
+      "definition": "The function an event calls. It changes the state, and the change is what redraws the page."
+    },
+    {
+      "term": "props",
+      "phase": "ui",
+      "definition": "The values a component hands down. The child reads them and does not change them."
+    },
+    {
+      "term": "DOM",
+      "phase": "web-basics",
+      "definition": "The page as a tree of elements. A call returns markup text, and the browser turns it into the tree."
+    },
+    {
+      "term": "endpoint",
+      "phase": "web-basics",
+      "definition": "A path on a server that does one thing."
+    },
+    {
+      "term": "status",
+      "phase": "web-basics",
+      "definition": "The three digit number the server answers with. The first digit is the family: 2xx, 3xx, 4xx, 5xx."
+    },
+    {
+      "term": "JSON",
+      "phase": "setup",
+      "definition": "Text that stands for data. It is text on the wire until something parses it."
+    },
+    {
+      "term": "CRUD",
+      "phase": "crud-data",
+      "definition": "The four things every stored list goes through: create, read, update, delete."
+    },
+    {
+      "term": "async",
+      "phase": "api",
+      "definition": "The work that does not block the turn you are in."
+    },
+    {
+      "term": "await",
+      "phase": "api",
+      "definition": "The word that waits for a promise, and hands the turn back while it waits."
+    },
+    {
+      "term": "fetch",
+      "phase": "api",
+      "definition": "The call that makes a request and gives back a promise for the answer."
+    },
+    {
+      "term": "regex",
+      "phase": "regex-validation",
+      "definition": "A pattern for the shape of text a string fits."
+    },
+    {
+      "term": "commit",
+      "phase": "navigate",
+      "definition": "One saved state of the work, with the parent it came from."
+    },
+    {
+      "term": "branch",
+      "phase": "git",
+      "definition": "A name that moves as commits land on it."
+    },
+    {
+      "term": "merge",
+      "phase": "git",
+      "definition": "One commit with two parents, which joins two lines of work. It rewrites nothing underneath."
+    },
+    {
+      "term": "conflict",
+      "phase": "git",
+      "definition": "Git asking which of two versions of a line to keep. It is a question, not a failure."
+    }
+  ],
   "phases": [
     {
       "id": "setup",
@@ -1055,7 +1157,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "nums = [1, 2, 3]: unchanged"
             ]
           }
-        }
+        },
+        "caption": "The array is unchanged by the loop, and the index ends one past the last element, which is why the loop condition is i < nums.length."
       },
       "hints": [
         "Read a call as its result: wherever you see greet(\"Ada\"), picture \"Hello, Ada!\" replacing it. If the terminal says node is not found, run the environment check first.",
@@ -1423,7 +1526,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "label": "404, understood but not found"
             }
           ]
-        }
+        },
+        "caption": "A 404 is an answer too. The status is what tells the two apart, and the first digit says whose mistake it was."
       },
       "hints": [
         "Say a status out loud as its band, not its number: \"a 4xx\" already means the trouble is in what was sent. If the terminal says node is not found, run the environment check first.",
@@ -1733,7 +1837,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "Call the bank"
             ]
           }
-        }
+        },
+        "caption": "Create returns a new list and leaves the old one alone, so the row that is added is the only change you can see."
       },
       "hints": [
         "Read each operation as a before and an after: the list it starts with, and the one list it hands back changed. If the terminal says node is not found, run the environment check first.",
@@ -1992,7 +2097,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "result: false, it does not fit"
             ]
           }
-        }
+        },
+        "caption": "The same pattern, read one symbol at a time. The a in 12a is not a digit, so the end anchor has nothing left to match and the pattern fails."
       },
       "hints": [
         "Read a pattern as a sentence from its anchor: what must come first, what repeats, what must come last. If the terminal says node is not found, run the environment check first.",
@@ -2261,7 +2367,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "Re-render",
             "UI updates"
           ]
-        }
+        },
+        "caption": "The event does not touch the page. It updates the state, the state change renders, and only then does the page change."
       },
       "hints": [
         "Follow one keystroke: input event, state variable, submit handler, parent list. If the terminal says node is not found, run the environment check first."
@@ -2499,7 +2606,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "Reload",
             "Load reads it back into state"
           ]
-        }
+        },
+        "caption": "State is the truth and storage is a copy of it. The copy is written after every change and read back once at the start."
       },
       "hints": [
         "The array in state is the truth; anything else is a copy of it. If the terminal says node is not found, run the environment check first.",
@@ -2710,7 +2818,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "children": []
             }
           ]
-        }
+        },
+        "caption": "TaskItem is a function that takes props and returns a string. The list is rendered by the parent, and each child only reads what it was handed."
       },
       "hints": [
         "Start from the leaves: what does one task row need to show and do? If the terminal says node is not found, run the environment check first."
@@ -2786,7 +2895,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "children": []
             }
           ]
-        }
+        },
+        "caption": "The markup is one string, and the page turns it into elements. One call can produce zero, one or many of them."
       },
       "hints": [
         "A function name is the thing you wrote; element names are what its string becomes, read each side for its own kind of name."
@@ -3226,7 +3336,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "proves: the discount is missing"
             ]
           }
-        }
+        },
+        "caption": "The cart is broken in both. The weak suite cannot see it, so it proves nothing. The strong one goes red on the discount line, which is the proof."
       },
       "hints": [
         "The spec says a discount applies above a threshold. Ask what happens exactly at the threshold. If the terminal says node is not found, run the environment check first.",
@@ -3679,7 +3790,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "toggleTask(tasks, 1)",
             "return tasks, the same object"
           ]
-        }
+        },
+        "caption": "The top frame is the assertion that failed and the frame under it is the function that returned the same object. That is where to look."
       },
       "hints": [
         "Run the suite before you form an opinion about it; a failure you have watched happen is one you can reason about. If the terminal says node is not found, run the environment check first.",
@@ -3932,7 +4044,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               ]
             }
           ]
-        }
+        },
+        "caption": "The merge commit has two parents, and it rewrites nothing underneath. A branch is just a name that moves as commits land on it."
       },
       "hints": [
         "Run the commands in a folder of their own, a scratch directory, never this project. If the terminal says `git` is not found, run the environment check or finish the setup phase first.",
@@ -4258,7 +4371,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "label": "503, and the promise still resolves"
             }
           ]
-        }
+        },
+        "caption": "A 503 resolves the promise exactly like a 200 does, so the promise is not the verdict. res.ok is, and it has to be read before the body."
       },
       "misconceptions": [
         "fetch rejects when the server returns an error status; it rejects only when no response arrives at all, so a 500 resolves exactly like a success.",
@@ -4491,7 +4605,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "label": "receives 200 + list, or 404 + reason"
             }
           ]
-        }
+        },
+        "caption": "Every request gets an answer, and the answer is the status the request earned. A path nobody registered still answers 404, it never hangs."
       },
       "hints": [
         "For each of the four decisions, ask what the caller would have to do differently if this answer were the wrong one. If the answer is 'nothing, they would read the body anyway', then the status is doing no work, which is how 200-for-everything gets written."
@@ -4722,7 +4837,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "the app boots",
             "ship"
           ]
-        }
+        },
+        "caption": "The environment variables are strings, so the types are built at the edge. A missing required value refuses the boot instead of reaching the app."
       },
       "hints": [
         "Read the diagram left to right and notice where the boxes sit: nothing reaches the app until it has been through validate, and ship comes after the app boots rather than instead of it. If the terminal says node is not found, run the environment check first."
@@ -4929,7 +5045,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
             "preserve inputs",
             "merge ready"
           ]
-        }
+        },
+        "caption": "The contract is checked before the merge, and the inputs a caller owns are copied rather than changed. A bad item is rejected by name, not masked."
       },
       "resources": [
         {
@@ -5143,7 +5260,8 @@ export const IDE_COURSE_TASK_MANAGER: unknown = {
               "?tag=${filter.tag} unescaped"
             ]
           }
-        }
+        },
+        "caption": "Each claim is turned into an input that would break it. The summary said the 5xx was handled, and the code returned ok true and said nothing."
       },
       "resources": [
         {

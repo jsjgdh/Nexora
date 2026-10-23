@@ -10,6 +10,53 @@ export const IDE_COURSE_API_BASICS: unknown = {
     "web-http-json",
     "api-integration"
   ],
+  "glossary": [
+    {
+      "term": "endpoint",
+      "phase": "api-contract",
+      "definition": "A path on a server that does one thing. The method says which thing you want, and the path names it."
+    },
+    {
+      "term": "method",
+      "phase": "api-contract",
+      "definition": "The verb of a request. GET reads, POST creates, PUT and PATCH change, DELETE removes."
+    },
+    {
+      "term": "body",
+      "phase": "api-contract",
+      "definition": "The text a request carries. A read carries none, and a create carries the new thing."
+    },
+    {
+      "term": "status",
+      "phase": "api-contract",
+      "definition": "The three digit number the server answers with. The first digit is the family: 2xx worked, 4xx your request was wrong, 5xx the server broke."
+    },
+    {
+      "term": "JSON",
+      "phase": "api-contract",
+      "definition": "Text that stands for data. It is text on the wire until something parses it."
+    },
+    {
+      "term": "promise",
+      "phase": "api-contract",
+      "definition": "A value that stands for an answer that has not arrived yet. Awaiting it ends the turn until the answer is there."
+    },
+    {
+      "term": "parse",
+      "phase": "api-contract",
+      "definition": "Turning text into a value the program can use. Parsing proves the text is JSON, not that it is the shape you need."
+    },
+    {
+      "term": "res.ok",
+      "phase": "api-response",
+      "definition": "The verdict on a response: true for 2xx, false for everything else. Read it before the body, because an error page is not the payload."
+    },
+    {
+      "term": "204",
+      "phase": "api-response",
+      "definition": "The status for a success with nothing to send back. Parsing it fails, so a 204 has to be checked before the body is read."
+    }
+  ],
   "phases": [
     {
       "id": "api-contract",
