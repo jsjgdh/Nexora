@@ -3,29 +3,20 @@
 
   /* The launch list.
    *
-   * The desktop build is not published, so the visitor who has been convinced
-   * has nowhere to go. This is the somewhere: one field, one message, when
-   * the build is published.
+   * The desktop build is not published, so the reader who is convinced has
+   * nowhere to go. This is the somewhere: one field, one message, when the
+   * build is published. One address, no list to be added to, and a reply
+   * removes you, because that is what the privacy notice promises.
    *
-   * It is deliberately the smallest thing that can be true. One address, one
-   * message, and a way out. No list to be added to, no preferences to manage
-   * and nothing to read afterwards, because the privacy notice promises
-   * exactly that: a promise the site breaks on its own front page is worth
-   * nothing.
-   *
-   * The address goes to the studio's mailbox, where a person keeps it. The
-   * privacy notice says so in the sentence that would otherwise claim a
-   * process, because this is the one thing here that a person holds rather
-   * than the platform. */
+   * It appears inside the closing band on petrol as well as on paper, so it
+   * takes a tone rather than assuming the page ground. */
 
   type Props = {
-    /** Which headline the reader saw, when the page knows. The operator
-        counts sign-ups per headline, so the test is a test and not a
-        rotation. It identifies nobody: it is a word, not a person. */
     variant?: string;
+    tone?: "default" | "inverse";
   };
 
-  let { variant }: Props = $props();
+  let { variant, tone = "default" }: Props = $props();
 
   let email = $state("");
   let status = $state<"idle" | "sending" | "sent" | "error">("idle");
@@ -58,9 +49,9 @@
   }
 </script>
 
-<form onsubmit={join} class="max-w-[46ch]" data-launch-list>
-  <label for="launch-email" class="stamp block text-faint">your email</label>
-  <div class="mt-3 flex flex-wrap items-center gap-3">
+<form onsubmit={join} class="launch" data-launch-list data-tone={tone}>
+  <label for="launch-email" class="field-label launch-label">your email</label>
+  <div class="launch-row">
     <input
       id="launch-email"
       type="email"
@@ -69,22 +60,87 @@
       placeholder="you@example.com"
       required
       aria-describedby="launch-note"
-      class="num min-h-[44px] w-full min-w-[16rem] flex-1 border border-control bg-raised px-3 py-2 text-[14px] text-ink placeholder:text-faint"
+      class="field-input launch-input"
     />
-    <Button type="submit" busy={status === "sending"} disabled={status === "sent"}>
+    <Button
+      type="submit"
+      variant={tone === "inverse" ? "inverse" : "primary"}
+      busy={status === "sending"}
+      disabled={status === "sent"}
+    >
       {status === "sent" ? "On the list" : "Tell me when it ships"}
     </Button>
   </div>
 
-  <p id="launch-note" class="mt-3 text-[12.5px] leading-relaxed text-faint" aria-live="polite">
+  <p id="launch-note" class="launch-note" aria-live="polite">
     {#if status === "sent"}
       One message, when the desktop build is published. Nothing else, and a reply to that
       message removes you.
     {:else if status === "error"}
-      <span class="text-removed">{error}</span>
+      <span class="error">{error}</span>
     {:else}
       One message, when the desktop build is published. Nothing else, and a reply to that
       message removes you.
     {/if}
   </p>
 </form>
+
+<style>
+  .launch {
+    max-width: 46ch;
+  }
+
+  .launch-label {
+    color: var(--color-faint);
+  }
+
+  .launch-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+
+  .launch-input {
+    width: auto;
+    min-width: 14rem;
+    flex: 1 1 14rem;
+  }
+
+  .launch-note {
+    margin-top: var(--space-3);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--color-faint);
+  }
+
+  .error {
+    color: var(--color-fail);
+  }
+
+  [data-tone="inverse"] .launch-label {
+    color: color-mix(in srgb, var(--color-on-accent) 70%, transparent);
+  }
+
+  [data-tone="inverse"] .launch-input {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--color-on-accent) 45%, transparent);
+    color: var(--color-on-accent);
+  }
+
+  [data-tone="inverse"] .launch-input::placeholder {
+    color: color-mix(in srgb, var(--color-on-accent) 60%, transparent);
+  }
+
+  [data-tone="inverse"] .launch-note {
+    color: color-mix(in srgb, var(--color-on-accent) 75%, transparent);
+  }
+
+  /* On the petrol band the failure ink would be the plate's own contrast
+     problem; the message carries the news and the label colour stays legible. */
+  [data-tone="inverse"] .error {
+    color: var(--color-on-accent);
+    font-weight: 600;
+  }
+</style>

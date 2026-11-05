@@ -1,8 +1,9 @@
 /* What the navigation actually shows, at each width.
  *
- * The strip is meant to scroll, so the number that matters is not how many
- * links are off-screen. It is how many are visible, and whether the edge
- * shows that there is more.
+ * Above 1024px the masthead is two rows: the name and the action on the
+ * first, the five destinations beneath the rule. Below it those destinations
+ * move into the native dialog, so the number that matters there is whether
+ * the dialog trigger is present and nothing is cut off at the edge.
  */
 import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
@@ -27,32 +28,71 @@ for (let i = 0; i < 80; i++) {
 }
 
 const browser = await chromium.launch();
-for (const width of [320, 390, 768, 1024, 1440]) {
+let problems = 0;
+for (const width of [320, 375, 414, 768, 1024, 1440]) {
   const page = await browser.newPage({ viewport: { width, height: 800 } });
   await page.goto(ORIGIN + "/", { waitUntil: "networkidle" });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(400);
   const read = (await page.evaluate(`(() => {
-    const nav = document.querySelector("nav.folio");
-    const ul = nav ? nav.querySelector("ul") : null;
-    const links = [...(nav ? nav.querySelectorAll("a.folio-link") : [])];
-    const visible = links.filter((a) => {
+    const header = document.querySelector("header.site-nav");
+    if (!header) return null;
+    const inner = header.querySelector(".nav-inner");
+    const desk = header.querySelector("nav.desk-nav");
+    const links = [...(desk ? desk.querySelectorAll("a.nav-link, button.nav-link") : [])];
+    const shown = links.filter((a) => {
       const r = a.getBoundingClientRect();
-      return r.left >= 0 && r.right <= window.innerWidth;
+      return r.width > 0 && getComputedStyle(a).display !== "none";
     });
-    const cut = links.filter((a) => a.getBoundingClientRect().right > window.innerWidth);
+    const cut = shown.filter((a) => {
+      const r = a.getBoundingClientRect();
+      return r.right > window.innerWidth + 0.5 || r.left < -0.5;
+    });
+    const trigger = header.querySelector(".menu-button");
+    const triggerShown = trigger ? getComputedStyle(trigger).display !== "none" : false;
+    const cta = header.querySelector(".nav-cta");
+    const ctaRect = cta ? cta.getBoundingClientRect() : null;
+    const innerRect = inner ? inner.getBoundingClientRect() : null;
     return {
-      strip: ul ? Math.round(ul.getBoundingClientRect().width) : 0,
+      height: Math.round(header.getBoundingClientRect().height),
       links: links.length,
-      visible: visible.length,
-      cut: cut.length
+      shown: shown.length,
+      cut: cut.length,
+      trigger: triggerShown,
+      ctaWrapped: ctaRect ? ctaRect.height > 52 : false,
+      innerOverflow: innerRect ? Math.round(inner.scrollWidth - inner.clientWidth) : 0,
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
     };
-  })()`)) as Record<string, number>;
+  })()`)) as null | {
+    height: number;
+    links: number;
+    shown: number;
+    cut: number;
+    trigger: boolean;
+    ctaWrapped: boolean;
+    innerOverflow: number;
+    pageOverflow: number;
+  };
+  if (!read) {
+    console.log(`${String(width).padStart(5)}px  no site nav found`);
+    problems += 1;
+    await page.close();
+    continue;
+  }
+  const desktop = width >= 1024;
+  const wrongMode = desktop ? read.trigger === true || read.shown === 0 : read.trigger !== true || read.shown !== 0;
+  if (wrongMode || read.cut! > 0 || read.innerOverflow! > 0 || read.pageOverflow! > 1 || read.ctaWrapped) {
+    problems += 1;
+  }
   console.log(
-    `${String(width).padStart(5)}px  the folio strip is ${String(read.strip).padStart(4)}px wide  |  ` +
-      `${read.visible} of ${read.links} links fully visible, ${read.cut} cut by the edge`
+    `${String(width).padStart(5)}px  ${String(read.height).padStart(2)}px tall  |  ` +
+      `${read.shown}/${read.links} destinations in the bar  |  ` +
+      `dialog trigger ${read.trigger ? "shown" : "hidden"}  |  ` +
+      `${read.cut} cut, inner overflow ${read.innerOverflow}px, page overflow ${read.pageOverflow}px` +
+      (read.ctaWrapped ? ", action wraps" : "")
   );
   await page.close();
 }
 await browser.close();
 server.kill();
+if (problems) console.log(`${problems} width(s) need a look.`);
 process.exit(0);

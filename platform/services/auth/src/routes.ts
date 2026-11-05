@@ -185,6 +185,17 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
   registerIdentityRoutes(app, pool);
 
   app.post("/register", async (req, reply) => {
+    // In a Kinde deployment the account is created on Kinde's page and the
+    // gateway links it on first sight. Refusing here is what makes the mode a
+    // boundary rather than a preference: no local password can be minted into
+    // a token the gateway will accept.
+    if (process.env.AUTH_MODE === "kinde") {
+      throw new ApiError(
+        403,
+        "auth_mode",
+        "This deployment uses Kinde for sign-in. Create an account from the site's sign-in page."
+      );
+    }
     // Before parseOr400 and long before hashPassword: the point of the budget is
     // that the expensive part does not run once it is spent.
     if (bumpWindow(registerHits, clientIp(req), REGISTER_WINDOW_MS, Date.now()) > REGISTER_MAX) {
@@ -233,6 +244,13 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
   });
 
   app.post("/login", async (req, reply) => {
+    // The web signs in through Kinde in a Kinde deployment. Password login is
+    // refused rather than left to fail later: a local token would be minted by
+    // this service and then rejected by the gateway, which reads as a broken
+    // product instead of a mode that does not offer this door.
+    if (process.env.AUTH_MODE === "kinde") {
+      throw new ApiError(403, "auth_mode", "This deployment uses Kinde for sign-in.");
+    }
     if (!addressAllowed(clientIp(req))) {
       throw new ApiError(429, "rate_limited", "Too many login attempts. Wait a minute.");
     }
@@ -249,11 +267,11 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
     }
     const { rows } = await pool.query("SELECT * FROM users WHERE lower(email) = $1", [email]);
     const user = rows[0];
-    // Same response for unknown email, passwordless (Clerk-managed) account, vs
+    // Same response for unknown email, passwordless (Kinde-managed) account, vs
     // wrong password — and, since B-28, the same *work* too. Short-circuiting the
     // compare for the first two made those answers arrive in a fraction of the
     // time, which is an oracle for precisely what the identical body is hiding:
-    // whether the account exists, and whether it is Clerk-managed. An absent hash
+    // whether the account exists, and whether it is Kinde-managed. An absent hash
     // is answered with a real hash of a secret nobody holds, so the compare runs
     // either way and the only thing that differs is the answer.
     const hash = user?.password_hash ?? dummyPasswordHash();
@@ -559,13 +577,12 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
   });
 
   app.post("/link", async (req, reply) => {
-    // Clerk-mode provisioning (see contracts linkSchema): the gateway
-    // verified the Clerk session token, so x-user-id is the authenticated
-    // Clerk subject. First sight creates the profile row (passwordless,
-    // provider 'clerk'); later calls are idempotent and change nothing, so
-    // a replayed link can never rewrite someone's email. A taken email 409s
-    // instead of merging two identities — the learner signs in with their
-    // password and keeps the older account.
+    // Kinde-mode provisioning (see contracts linkSchema): the gateway verified
+    // the Kinde access token, so x-user-id is the authenticated Kinde subject.
+    // First sight creates the profile row (passwordless, provider 'kinde');
+    // later calls are idempotent and change nothing, so a replayed link can
+    // never rewrite someone's email. A taken email 409s instead of merging two
+    // identities — the learner keeps the account they already have.
     const userId = requireUserId(req);
     const body = parseOr400(linkSchema, req.body);
     const email = body.email.trim().toLowerCase();
@@ -576,11 +593,11 @@ export function registerAuthRoutes(app: FastifyInstance, pool: Pool) {
       throw new ApiError(
         409,
         "conflict",
-        "An account with this email already exists. Sign in with your password instead — nothing is lost either way."
+        "An account with this email already exists under a different sign-in method. Nothing was merged."
       );
     }
     const { rows } = await pool.query(
-      "INSERT INTO users (id, email, name, password_hash, provider) VALUES ($1, $2, $3, NULL, 'clerk') RETURNING id, email, name, created_at",
+      "INSERT INTO users (id, email, name, password_hash, provider) VALUES ($1, $2, $3, NULL, 'kinde') RETURNING id, email, name, created_at",
       [userId, email, body.name?.trim() || null]
     );
     return reply.code(201).send({ user: toPublic(rows[0]), linked: true });

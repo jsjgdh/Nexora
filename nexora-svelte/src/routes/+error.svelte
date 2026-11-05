@@ -32,26 +32,86 @@
   <title>{status}: {title}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
-  <div class="flex items-baseline gap-4">
-    <span aria-hidden="true" class="num text-[24px] leading-none text-review">{mark}</span>
-    <p class="stamp text-review">{headword}</p>
+<div class="container-page section-pad error-page">
+  <div class="error-mark">
+    <span aria-hidden="true" class="num">{mark}</span>
+    <p class="stamp">{headword}</p>
   </div>
 
-  <p class="num mt-3 text-[12px] text-faint">status {status}</p>
+  <p class="num error-status">status {status}</p>
 
-  <h1 class="display mt-6 text-[clamp(1.9rem,4.6vw,3.2rem)] text-ink">
-    <span class="line-mask" data-shown="true"><span>{title}</span></span>
-  </h1>
-  <p class="mt-6 max-w-[56ch] text-[15px] leading-relaxed text-muted">{body}</p>
+  <h1 class="display error-title">{title}</h1>
+  <p class="error-body">{body}</p>
 
   {#if detail}
-    <pre
-      class="mt-8 max-w-[80ch] border border-rule bg-panel p-4 font-mono text-[12px] leading-relaxed text-faint [overflow-wrap:anywhere] whitespace-pre-wrap">{detail}</pre>
+    <pre class="error-detail num">{detail}</pre>
   {/if}
 
-  <div class="mt-10 flex flex-wrap items-center gap-3">
-    <ActionLink href="/download" island>Download the IDE</ActionLink>
+  <div class="error-actions">
+    <ActionLink href="/download" island>The download page</ActionLink>
     <ActionLink href="/" variant="ghost">Back to the front</ActionLink>
   </div>
 </div>
+
+<style>
+  .error-page {
+    background:
+      radial-gradient(60% 50% at 12% 0%, color-mix(in srgb, var(--color-fail) 10%, transparent), transparent 65%);
+  }
+
+  .error-mark {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    color: var(--color-fail);
+  }
+
+  .error-mark .num {
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  .error-status {
+    margin-top: var(--space-3);
+    font-size: 12px;
+    color: var(--color-faint);
+  }
+
+  .error-title {
+    margin-top: var(--space-6);
+    max-width: 20ch;
+    font-size: clamp(2rem, 4.6vw, 3.4rem);
+    color: var(--color-ink);
+  }
+
+  .error-body {
+    margin-top: var(--space-5);
+    max-width: 56ch;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .error-detail {
+    margin-top: var(--space-6);
+    max-width: 80ch;
+    padding: var(--space-4);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-sm);
+    background: var(--color-raised);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--color-faint);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .error-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+</style>

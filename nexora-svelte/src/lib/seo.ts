@@ -10,6 +10,8 @@
    to learn — the desktop IDE — so no sitemap entry, title, or description
    names a browser mission, classroom route, or curriculum page. */
 
+import { COURSE_PAGES } from "./content/courses";
+
 /** Where generated URLs point when PUBLIC_SITE_URL is not configured. */
 export const SITE_URL_FALLBACK = "http://localhost:5173";
 
@@ -75,6 +77,7 @@ const PUBLIC_PATHS = [
   "/",
   "/pricing",
   "/courses",
+  ...COURSE_PAGES.map((course) => `/courses/${course.slug}`),
   "/employers",
   "/universities",
   "/teach",
@@ -168,7 +171,7 @@ export function clampDescription(text: string, limit = META_DESCRIPTION_LIMIT): 
 
 /** A page's document title: the page, then the product. */
 export function pageTitle(name: string): string {
-  return `${name} — ${SITE_NAME}`;
+  return `${name} · ${SITE_NAME}`;
 }
 
 /**

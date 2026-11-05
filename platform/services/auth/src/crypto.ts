@@ -23,7 +23,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 /* A real bcrypt hash of a secret nobody holds, for the sign-in path to compare
  * against when there is nothing to compare with.
  *
- * `/login` answers unknown emails, Clerk-managed accounts and wrong passwords
+ * `/login` answers unknown emails, Kinde-managed accounts and wrong passwords
  * with one identical body, and that was only half the job: skipping the compare
  * for the first two made those answers arrive in a fraction of the time, which is
  * an oracle for exactly what the identical body was hiding — whether an account

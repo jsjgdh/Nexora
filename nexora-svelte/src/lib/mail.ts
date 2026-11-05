@@ -140,12 +140,12 @@ We will respond within 30 days, as required by applicable privacy law. If you ha
 
   ${link}
 
-— NEXORA Privacy Team`,
+NEXORA Privacy Team`,
     html: `<p>Thank you for contacting NEXORA.</p>
 <p>We received your <strong>${params.kind}</strong> request (reference: ${params.requestId}).</p>
 <p>We will respond within 30 days, as required by applicable privacy law. If you have any questions in the meantime, you can review your privacy choices at:</p>
 <p><a href="${link}">${link}</a></p>
-<p>— NEXORA Privacy Team</p>`,
+<p>NEXORA Privacy Team</p>`,
   });
 }
 
@@ -163,6 +163,6 @@ export async function acknowledgeSecurityReport(params: {
 
 We received your report (reference: ${params.reportId}) and will follow up within 5 business days if we need anything from you.
 
-— NEXORA Security`,
+NEXORA Security`,
   });
 }

@@ -1899,6 +1899,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
       ],
       "bridge": {
         "course": "go-fundamentals",
+        "phase": "go-errors",
         "text": "In Go a function that cannot do its job returns an error as a second value, and the caller writes if err != nil. In Rust the two are one value, a Result, and the ? operator writes the check for you."
       }
     },
@@ -2151,6 +2152,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
       ],
       "bridge": {
         "course": "go-fundamentals",
+        "phase": "go-modules",
         "text": "In Go the import path starts at the module path, which go.mod names. In Rust a module is a file inside a crate, and it stays private until you write pub in front of it."
       }
     },
@@ -2957,6 +2959,7 @@ export const IDE_COURSE_RUST_FUNDAMENTALS: unknown = {
       ],
       "bridge": {
         "course": "go-fundamentals",
+        "phase": "go-collections",
         "text": "In Go a slice keeps values in order and a map is found by a key. In Rust those are Vec and HashMap, and a missing key is None, not the zero value a Go map hands back."
       }
     },

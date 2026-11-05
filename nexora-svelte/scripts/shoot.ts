@@ -26,6 +26,7 @@ const BUILDS = [
 const SETTLE =
   ".js .line-mask > span{transform:translateY(0)!important;transition:none!important}" +
   ".js .fade-up{opacity:1!important;transform:none!important;transition:none!important}" +
+  ".js .reveal-item{opacity:1!important;transform:none!important;transition:none!important}" +
   ".js .draw{transform:scaleX(1)!important}";
 
 mkdirSync(OUT, { recursive: true });
@@ -51,15 +52,22 @@ for (const build of BUILDS) {
 
   const shots: { route: string; width: number; name: string; at?: string }[] = [
     { route: "/", width: 1440, name: "home-top" },
-    { route: "/", width: 1440, name: "home-phase", at: "#hero-run" },
-    { route: "/", width: 1440, name: "home-loop", at: "#loop" },
-    { route: "/", width: 1440, name: "home-build", at: "#build" },
-    { route: "/", width: 1440, name: "home-proof", at: "#proof" },
+    { route: "/", width: 1440, name: "home-features", at: ".feature-band" },
     { route: "/", width: 1440, name: "home-courses", at: "#courses" },
+    { route: "/", width: 1440, name: "home-proof", at: "#proof" },
+    { route: "/", width: 1440, name: "home-why", at: "#why" },
+    { route: "/", width: 1440, name: "home-hiring", at: "#hiring" },
+    { route: "/", width: 1440, name: "home-questions", at: "#questions" },
     { route: "/", width: 390, name: "home-mobile" },
     { route: "/courses", width: 1440, name: "courses" },
+    { route: "/courses/task-manager", width: 1440, name: "course-task-manager" },
+    { route: "/courses/task-manager", width: 1440, name: "course-phases", at: "#phases" },
+    { route: "/courses/go", width: 1440, name: "course-go" },
+    { route: "/employers", width: 1440, name: "employers" },
     { route: "/pricing", width: 1440, name: "pricing" },
     { route: "/download", width: 1440, name: "download" },
+    { route: "/verify", width: 1440, name: "verify" },
+    { route: "/terms", width: 1440, name: "terms" },
   ];
 
   for (const shot of shots) {
@@ -71,6 +79,8 @@ for (const build of BUILDS) {
       await page.evaluate((selector) => {
         document.documentElement.style.scrollBehavior = "auto";
         document.querySelector(selector)?.scrollIntoView();
+        // Classes carry no scroll margin, so clear the sticky bar by hand.
+        if (!selector.startsWith("#")) window.scrollBy(0, -88);
       }, shot.at);
       await page.waitForTimeout(700);
     }

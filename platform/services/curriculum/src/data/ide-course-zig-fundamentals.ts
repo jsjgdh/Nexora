@@ -3,8 +3,8 @@
 export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
   "id": "zig-fundamentals",
   "title": "Zig fundamentals",
-  "description": "Zig itself, from the first program to the test runner. What build.zig decides, values and types, control flow, functions, structs and methods, pointers, error unions, the allocator, defer and errdefer, comptime and generics, the standard library, and the test runner. The phases build one small sheet program, and each is judged by the project's own Zig tests read by the Zig test runner. Every phase is Learn, then Solve, then Review.",
-  "version": 1,
+  "description": "Zig itself, from the first program to the test runner. What build.zig decides, values and types, control flow, functions, structs and methods, pointers, error unions, the allocator, defer and errdefer, comptime and generics, the standard library, and the test runner. The phases build the sheet program and a second audit program; each phase is judged by the Zig tests the project ships and, for the two programs, by what they print. Every phase is Learn, then Ask, then Solve, then Review.",
+  "version": 2,
   "freePhases": 1,
   "glossary": [
     {
@@ -93,8 +93,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-program-learn",
-        "zig-program-do",
         "zig-program-ask",
+        "zig-program-do",
         "zig-program-review"
       ],
       "interviewQuestions": [
@@ -113,8 +113,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-values-learn",
-        "zig-values-do",
         "zig-values-ask",
+        "zig-values-do",
         "zig-values-review"
       ],
       "interviewQuestions": [
@@ -133,8 +133,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-control-flow-learn",
-        "zig-control-flow-do",
         "zig-control-flow-ask",
+        "zig-control-flow-do",
         "zig-control-flow-review"
       ],
       "interviewQuestions": [
@@ -153,8 +153,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-functions-learn",
-        "zig-functions-do",
         "zig-functions-ask",
+        "zig-functions-do",
         "zig-functions-review"
       ],
       "interviewQuestions": [
@@ -173,8 +173,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-structs-learn",
-        "zig-structs-do",
         "zig-structs-ask",
+        "zig-structs-do",
         "zig-structs-review"
       ],
       "interviewQuestions": [
@@ -193,8 +193,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-pointers-learn",
-        "zig-pointers-do",
         "zig-pointers-ask",
+        "zig-pointers-do",
         "zig-pointers-review"
       ],
       "interviewQuestions": [
@@ -213,8 +213,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-errors-learn",
-        "zig-errors-do",
         "zig-errors-ask",
+        "zig-errors-do",
         "zig-errors-review"
       ],
       "interviewQuestions": [
@@ -233,8 +233,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-allocator-learn",
-        "zig-allocator-do",
         "zig-allocator-ask",
+        "zig-allocator-do",
         "zig-allocator-review"
       ],
       "interviewQuestions": [
@@ -253,8 +253,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-defer-learn",
-        "zig-defer-do",
         "zig-defer-ask",
+        "zig-defer-do",
         "zig-defer-review"
       ],
       "interviewQuestions": [
@@ -273,8 +273,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-comptime-learn",
-        "zig-comptime-do",
         "zig-comptime-ask",
+        "zig-comptime-do",
         "zig-comptime-review"
       ],
       "interviewQuestions": [
@@ -293,8 +293,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-stdlib-learn",
-        "zig-stdlib-do",
         "zig-stdlib-ask",
+        "zig-stdlib-do",
         "zig-stdlib-review"
       ],
       "interviewQuestions": [
@@ -313,8 +313,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-tests-learn",
-        "zig-tests-do",
         "zig-tests-ask",
+        "zig-tests-do",
         "zig-tests-review"
       ],
       "interviewQuestions": [
@@ -333,8 +333,8 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "project": "zig-sheet",
       "activities": [
         "zig-audit-learn",
-        "zig-audit-do",
         "zig-audit-ask",
+        "zig-audit-do",
         "zig-audit-review"
       ],
       "interviewQuestions": [
@@ -434,6 +434,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "The build script and the program, completed: the module, the run step, and the import that resolves against it.",
+          "code": "const mod = b.addModule(\"sheet\", .{\n    .root_source_file = b.path(\"src/root.zig\"),\n    .target = target,\n});\n\nconst exe = b.addExecutable(.{\n    .name = \"sheet\",\n    .root_module = b.createModule(.{\n        .root_source_file = b.path(\"src/main.zig\"),\n        .target = target,\n        .optimize = optimize,\n        .imports = &.{.{ .name = \"sheet\", .module = mod }},\n    }),\n});\nb.installArtifact(exe);\n\nconst run_cmd = b.addRunArtifact(exe);\nrun_cmd.step.dependOn(b.getInstallStep());\nrun_cmd.addPassthruArgs();\nconst run_step = b.step(\"run\", \"Run the sheet\");\nrun_step.dependOn(&run_cmd.step);\n\nconst sheet = @import(\"sheet\");\n\npub fn main(init: std.process.Init) !void {\n    const io = init.io;\n    var buffer: [4096]u8 = undefined;\n    var stdout: std.Io.File.Writer = .init(.stdout(), io, &buffer);\n    try stdout.interface.writeAll(sheet.program.banner);\n    try stdout.interface.writeAll(\"\\n\");\n    try stdout.interface.flush();\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What makes @import(\"sheet\") resolve in src/main.zig?",
+          "items": [
+            "A module the build script adds with that name.",
+            "The file src/sheet.zig sitting beside main.zig.",
+            "A package downloaded from the internet by name.",
+            "The compiler searching every file in the folder."
+          ],
+          "answer": 0,
+          "explain": "Imports are resolved against modules the build script creates, which is why compiling main.zig alone says no module named sheet is available."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build   # build and install the program\nzig build run   # build it and run it\nzig build test   # run the tests\nnode --test --test-reporter=tap test/program.test.mjs   # what the Run button calls"
         },
@@ -446,13 +463,46 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "type": "event-flow",
         "spec": {
           "steps": [
-            "the step is asked for",
-            "the runner reads the graph",
-            "its dependencies run first",
-            "the result is kept"
+            "zig build run",
+            "run_step",
+            "the compile step",
+            "module \"sheet\"",
+            "src/main.zig",
+            "@import(\"sheet\")",
+            "the banner"
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "You type zig build run. The runner starts at the step named run, not at a source file."
+            },
+            {
+              "step": 1,
+              "note": "run_step declares what it needs, so the program is compiled before it is run."
+            },
+            {
+              "step": 2,
+              "note": "The compile step declares the module it is given, so the module is built before the compile starts."
+            },
+            {
+              "step": 3,
+              "note": "The module named sheet is created by the build script. Nothing else can invent that name at compile time."
+            },
+            {
+              "step": 4,
+              "note": "main.zig is the root file of the program, and it is the file that contains the import."
+            },
+            {
+              "step": 5,
+              "note": "@import(\"sheet\") resolves against the module the build script created, which is why compiling main.zig alone fails."
+            },
+            {
+              "step": 6,
+              "note": "With the module resolved, the program builds and prints its banner. Only now does the run step execute anything."
+            }
           ]
         },
-        "caption": "The build script is a graph of steps. The runner works out the order from the dependencies and keeps each result, so the next build is fast."
+        "caption": "The build script is a graph of steps. The run step pulls in the compile step, the compile step pulls in the sheet module, and the module is what makes the import resolve."
       },
       "hints": [
         "Say what the line has to be before you open the file, and write it in a comment. A wrong guess costs a comment, not a run.",
@@ -472,7 +522,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "label": "Zig language reference: the build system",
-          "url": "https://ziglang.org/documentation/master/#Zig-Build-System"
+          "url": "https://ziglang.org/documentation/0.17.0/#Zig-Build-System"
+        },
+        {
+          "label": "Zig 0.17.0 release notes",
+          "url": "https://ziglang.org/download/0.17.0/release-notes.html"
         }
       ]
     },
@@ -657,6 +711,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "The two arithmetic functions, completed:",
+          "code": "pub fn add(a: Amount, b: Amount) Amount {\n    return a + b;\n}\n\npub fn scale(a: Amount, factor: Amount) Amount {\n    return a * factor;\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does add(199, -99) return?",
+          "items": [
+            "100, because signed amounts add.",
+            "298, because the minus sign is ignored.",
+            "0, because a negative amount is treated as zero.",
+            "An error, because one amount is negative."
+          ],
+          "answer": 0,
+          "explain": "add is plain addition on i64, so the sign of each amount is kept and 199 plus -99 is 100."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/values.test.mjs   # what the Run button calls"
         },
@@ -669,19 +740,19 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "type": "state-compare",
         "spec": {
           "before": {
-            "title": "a cell that says \"notes\"",
+            "title": "findAmount(\"notes\")",
             "lines": [
-              "no amount at all"
+              "null"
             ]
           },
           "after": {
-            "title": "a cell that says \"0\"",
+            "title": "findAmount(\"0\")",
             "lines": [
-              "an amount of zero"
+              "an Amount of 0"
             ]
           }
         },
-        "caption": "A missing amount is not a zero amount. The optional holds a value or null, and the compiler will not let you use it as a number until the missing case is handled."
+        "caption": "A missing amount is not a zero amount. findAmount returns null for \"notes\" and an Amount of 0 for \"0\", and the optional makes the two cases impossible to confuse."
       },
       "hints": [
         "Write down what add(199, 1) has to return before you open the file. The type is already there; only the arithmetic is missing.",
@@ -698,11 +769,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: values and primitive types",
-          "url": "https://ziglang.org/documentation/master/#Values"
+          "url": "https://ziglang.org/documentation/0.17.0/#Values"
         },
         {
           "label": "Zig language reference: optionals",
-          "url": "https://ziglang.org/documentation/master/#Optionals"
+          "url": "https://ziglang.org/documentation/0.17.0/#Optionals"
         }
       ]
     },
@@ -724,7 +795,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "It lets the caller use the value as a number, and zero is filled in for the missing one.",
-        "It makes the caller handle the missing case, by unwrapping the optional or by handling the error.",
+        "It makes the caller unwrap the optional or handle the missing case.",
         "It refuses the function entirely, because a function that can fail to produce a value is not allowed.",
         "It compiles only where the caller compares the result with null, and refuses it everywhere else."
       ],
@@ -768,6 +839,16 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
             "adding a negative amount moves the other way"
           ],
           "feedback": "An amount may be negative, and adding one has to move the other way round rather than being treated as an error. The test is the one with 199 and -99 in it, so read the sign off the numbers before you write the line.",
+          "edge": true
+        },
+        {
+          "id": "scale-keeps-the-sign",
+          "label": "A scaled amount keeps its sign",
+          "tests": [
+            "a scaled amount keeps its sign",
+            "a scaled amount of a negative factor is positive"
+          ],
+          "feedback": "scale has to multiply the amount by the factor, so a negative amount or a negative factor decides the sign of the answer. Both tests name the sign they expect; neither is a special case you can add around the multiplication.",
           "edge": true
         }
       ],
@@ -854,7 +935,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
-          "body": "The loop over the bytes of a text, out of src/control_flow.zig:",
+          "body": "A loop over the bytes of a text, the shape isBlank needs:",
           "code": "    for (text) |byte| {\n        if (byte != ' ' and byte != '\\t' and byte != '\\r' and byte != '\\n') return false;\n    }"
         },
         {
@@ -903,6 +984,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "The four functions, completed, with the blank test first:",
+          "code": "pub fn isDigit(byte: u8) bool {\n    return byte >= '0' and byte <= '9';\n}\n\npub fn isBlank(text: []const u8) bool {\n    for (text) |byte| {\n        if (byte != ' ') return false;\n    }\n    return true;\n}\n\npub fn isNumber(text: []const u8) bool {\n    if (text.len == 0) return false;\n    for (text) |byte| {\n        if (!isDigit(byte)) return false;\n    }\n    return true;\n}\n\npub fn kindName(text: []const u8) []const u8 {\n    if (isBlank(text)) return \"blank\";\n    if (isNumber(text)) return \"number\";\n    if (text.len > 0 and text[0] == '=') return \"expression\";\n    return \"text\";\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does kindName(\"   \") return?",
+          "items": [
+            "blank, because the blank test runs first.",
+            "number, because a loop over spaces finds no letters.",
+            "expression, because no cell is empty.",
+            "text, because spaces are not digits."
+          ],
+          "answer": 0,
+          "explain": "isBlank answers true for a text of spaces, so the first branch returns before the number test can read an empty digit run."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/control_flow.test.mjs   # what the Run button calls"
         },
@@ -912,16 +1010,34 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "event-flow",
+        "type": "pattern-match",
         "spec": {
-          "steps": [
-            "is it blank?",
-            "is it a number?",
-            "does it start with =?",
-            "otherwise it is text"
-          ]
+          "value": "kindName(\"   \")",
+          "cases": [
+            {
+              "pattern": "isBlank first",
+              "binds": "true",
+              "note": "every byte is a space, so this branch decides the cell"
+            },
+            {
+              "pattern": "isNumber next",
+              "binds": "not reached",
+              "note": "a space is not a digit, and the first branch already answered"
+            },
+            {
+              "pattern": "starts with =",
+              "binds": "not reached",
+              "note": "the first byte is a space, not an equals sign"
+            },
+            {
+              "pattern": "otherwise text",
+              "binds": "not reached",
+              "note": "the fallthrough is for none of the three, and this cell is blank"
+            }
+          ],
+          "fired": 0
         },
-        "caption": "The branches are read top to bottom and the first one that holds decides the cell, so the order of the tests is the meaning."
+        "caption": "The blank test comes first because a text of spaces has no digits in it. If the number test came first, a blank cell would be read as a number with no digits."
       },
       "hints": [
         "Write down the four kinds a cell can be before you open the file, in the order the reader has to test them.",
@@ -937,11 +1053,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: control flow",
-          "url": "https://ziglang.org/documentation/master/#Control-Flow"
+          "url": "https://ziglang.org/documentation/0.17.0/#Blocks"
         },
         {
           "label": "Zig language reference: enums",
-          "url": "https://ziglang.org/documentation/master/#Enums"
+          "url": "https://ziglang.org/documentation/0.17.0/#Enums"
         }
       ]
     },
@@ -1105,7 +1221,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
-          "body": "The cast the parser needs, and the one the tests use, out of src/functions.zig:",
+          "body": "The cast the parser needs, and the one the tests use:",
           "code": "        const digit: Amount = @intCast(byte - '0');"
         },
         {
@@ -1124,6 +1240,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "parseAmount, completed, with the cast that names the result:",
+          "code": "pub fn parseAmount(text: []const u8) Amount {\n    var amount: Amount = 0;\n    for (text) |byte| {\n        amount = amount * 10 + @as(Amount, byte - '0');\n    }\n    return amount;\n}\n\npub fn parseAmountOrZero(text: []const u8) Amount {\n    if (!control_flow.isNumber(text)) return 0;\n    return parseAmount(text);\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does parseAmount(\"199\") compute as it walks the bytes?",
+          "items": [
+            "1, then 19, then 199.",
+            "1, 9 and 9, added as 19.",
+            "199, read in one step from the length.",
+            "49, 57 and 57, added as 163."
+          ],
+          "answer": 0,
+          "explain": "Each step multiplies what is already read by ten before adding the next digit, so 1 becomes 19 and then 199."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/functions.test.mjs   # what the Run button calls"
         },
@@ -1133,35 +1266,39 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "memory-layout",
+        "type": "event-flow",
         "spec": {
-          "parts": [
+          "steps": [
+            "parseAmount(\"199\")",
+            "the bytes 1 9 9",
+            "byte - '0'",
+            "@intCast",
+            "Amount 199"
+          ],
+          "moments": [
             {
-              "label": "slice",
-              "fields": [
-                "pointer",
-                "length"
-              ],
-              "note": "two words, and the length travels with the pointer"
+              "step": 0,
+              "note": "The caller passes the text \"199\" as a slice. Nothing in the type says those bytes mean one hundred and ninety-nine."
             },
             {
-              "label": "sentinel array",
-              "fields": [
-                "pointer",
-                "0"
-              ],
-              "note": "one word, and the end is a byte in the data"
+              "step": 1,
+              "note": "The function sees the bytes 49, 57 and 57: the characters, not the digits they name."
             },
             {
-              "label": "raw pointer",
-              "fields": [
-                "pointer"
-              ],
-              "note": "one word, and no length at all"
+              "step": 2,
+              "note": "Subtracting the byte '0' turns each character into the value it names, so 49 becomes 1."
+            },
+            {
+              "step": 3,
+              "note": "The accumulated value is a wider integer; @intCast states the type the function returns and checks that it fits."
+            },
+            {
+              "step": 4,
+              "note": "The result is an Amount of 199. The type now carries the meaning the text did not."
             }
           ]
         },
-        "caption": "A slice carries its own length, so a text does not have to be null terminated. A sentinel array ends with a byte in the data, and a raw pointer says nothing about how long it is."
+        "caption": "A text is bytes and a number is not. The function walks the bytes, turns each digit character into its value, and the cast names the type the result has."
       },
       "hints": [
         "Write down what parseAmount(\"199\") has to return before you open the file. The signature already promises it.",
@@ -1177,11 +1314,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: functions",
-          "url": "https://ziglang.org/documentation/master/#Functions"
+          "url": "https://ziglang.org/documentation/0.17.0/#Functions"
         },
         {
           "label": "Zig language reference: slices",
-          "url": "https://ziglang.org/documentation/master/#Slices"
+          "url": "https://ziglang.org/documentation/0.17.0/#Slices"
         }
       ]
     },
@@ -1207,14 +1344,14 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "The compiler warns about it and lets the build continue, and the warning is the only warning there is.",
         "The caller is told at run time that the text could not be read."
       ],
-      "answer": 1,
-      "explanation": "The signature of parseAmount promises an Amount for every text it accepts, so a body that cannot keep that promise for \"12x\" is refused. A comment says what the function should do; a signature says what it will do. The other answers describe a promise that is not kept: a warning is not a refusal, and a run-time message comes after the caller has trusted the value.",
+      "answer": 0,
+      "explanation": "The compiler checks types, not the meaning of the bytes. parseAmount promises an Amount for every text it accepts, and the body returns one for \"12x\"; what the body does with the x is its own business. A warning would be a different kind of check, and nothing waits for run time: the value is already an Amount when the caller gets it.",
       "hints": [
-        "Ask what the signature promises about every text it accepts, and then ask whether the body keeps that promise for a text with a letter in it."
+        "Ask what the compiler can see: the types on the signature and the body, not what the bytes mean."
       ],
       "misconceptions": [
-        "Believing the compiler checks what a function does with its arguments. It checks what it returns, and the argument has to be handled by the body or refused by the body.",
-        "Reading a warning as a check. The compiler refuses code that breaks a promise it can see, and a warning is something else entirely."
+        "Believing the compiler checks what a function does with its arguments. It checks the types a function returns, and a body that returns the promised type compiles.",
+        "Reading a signature as a promise about meaning. A signature says what type comes back, not which inputs are sensible."
       ]
     },
     "zig-functions-do": {
@@ -1365,6 +1502,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "The cell and its tagged union, completed:",
+          "code": "pub const Cell = struct {\n    text: []const u8,\n    amount: Amount,\n\n    pub fn of(text: []const u8) Cell {\n        return .{ .text = text, .amount = functions.parseAmountOrZero(text) };\n    }\n\n    pub fn value(self: Cell) Amount {\n        return self.amount;\n    }\n};\n\npub fn valueOf(text: []const u8) Value {\n    if (control_flow.isBlank(text)) return .{ .empty = {} };\n    if (control_flow.isNumber(text)) return .{ .number = functions.parseAmount(text) };\n    return .{ .text = text };\n}\n\npub fn amountOf(value: Value) Amount {\n    return switch (value) {\n        .number => |amount| amount,\n        .text, .empty => 0,\n    };\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does valueOf(\"notes\") put in the union?",
+          "items": [
+            ".text, holding the words \"notes\".",
+            ".number, holding the amount 0.",
+            ".empty, because words hold no value.",
+            ".number, because every cell has a tag."
+          ],
+          "answer": 0,
+          "explain": "isBlank is false and isNumber is false, so the fallthrough keeps the words and tags the value as text."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/cells.test.mjs   # what the Run button calls"
         },
@@ -1374,24 +1528,29 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "state-compare",
+        "type": "pattern-match",
         "spec": {
-          "before": {
-            "title": "a cell holding a number",
-            "lines": [
-              "the tag says number",
-              "the amount is 42"
-            ]
-          },
-          "after": {
-            "title": "a cell holding words",
-            "lines": [
-              "the tag says text",
-              "the words are \"notes\""
-            ]
-          }
+          "value": ".{ .text = \"notes\" }",
+          "cases": [
+            {
+              "pattern": ".number => |n|",
+              "binds": "not this one",
+              "note": "the tag is text, so the number field is not there"
+            },
+            {
+              "pattern": ".text => |t|",
+              "binds": "t = \"notes\"",
+              "note": "the tag selects this branch, and t is the words"
+            },
+            {
+              "pattern": ".empty",
+              "binds": "not this one",
+              "note": "the cell holds words, not nothing"
+            }
+          ],
+          "fired": 1
         },
-        "caption": "A tagged union holds one of several shapes and carries the tag that says which one is there now."
+        "caption": "A tagged union holds one of several shapes and carries the tag that says which one is there now. The tag, not the field that happens to be first, chooses the branch."
       },
       "hints": [
         "Write down what Cell.of(\"199\").text and Cell.of(\"199\").amount have to be before you open the file.",
@@ -1407,11 +1566,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: structs",
-          "url": "https://ziglang.org/documentation/master/#Structs"
+          "url": "https://ziglang.org/documentation/0.17.0/#Structs"
         },
         {
           "label": "Zig language reference: unions",
-          "url": "https://ziglang.org/documentation/master/#Unions"
+          "url": "https://ziglang.org/documentation/0.17.0/#Unions"
         }
       ]
     },
@@ -1432,19 +1591,19 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "options": [
-        "Nothing. The union still has the fields it had, and the extra field belongs to the struct.",
+        "Nothing. The union still has its fields, and the extra field is on the struct.",
         "The build succeeds, and the switch runs the branch of the field it knows best.",
         "The build fails, and the compiler names the switch that did not handle the new field.",
         "The build succeeds, and the new field is read as an empty value."
       ],
-      "answer": 2,
-      "explanation": "A switch over a tagged union has to mention every field, so a new field makes the switch that forgot it a compile error, and the error names the place. The set of shapes is closed, and the code that reads it is checked against it. The other answers describe code that carries on without saying what it means, which is the failure the tag prevents.",
+      "answer": 0,
+      "explanation": "The struct and the union are different types. The third field belongs to the struct, so the union still has the fields the switch already handles, and the switch compiles as it did. A new field on the union would be the change that makes every switch over it a compile error.",
       "hints": [
-        "Ask what the compiler knows about the set of fields a tagged union holds, and what it can therefore check about every switch over it."
+        "Ask which type grew: the struct the cell lives in, or the union the switch reads."
       ],
       "misconceptions": [
-        "Believing a switch over a union can have a catch-all. It cannot: the fields are the whole set, and the compiler knows it.",
-        "Thinking the extra field on the struct changes the union. They are different shapes, and adding a field to one of them is what the compiler is watching for."
+        "Believing a field added to the struct changes the union beside it. The struct and the union are separate types.",
+        "Thinking a switch over the union only sees the fields the author remembered. The compiler knows the whole set and checks the switch against it."
       ]
     },
     "zig-structs-do": {
@@ -1591,6 +1750,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "The three functions, completed, each writing through the pointer:",
+          "code": "pub fn setAmount(cell: *Amount, amount: Amount) void {\n    cell.* = amount;\n}\n\npub fn doubleInPlace(cell: *Amount) void {\n    cell.* = cell.* * 2;\n}\n\npub fn keepTheLarger(cell: *Amount, other: Amount) void {\n    if (other > cell.*) cell.* = other;\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "After setAmount(&amount, 42), what does the caller hold?",
+          "items": [
+            "42, because the write went through the address.",
+            "1, because the function received a copy.",
+            "0, because the old value is replaced first.",
+            "A compile error, because the value is immutable."
+          ],
+          "answer": 0,
+          "explain": "The parameter is *Amount, so cell.* names the caller amount itself, and the assignment changes what the caller holds."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/pointers.test.mjs   # what the Run button calls"
         },
@@ -1603,21 +1779,20 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "type": "state-compare",
         "spec": {
           "before": {
-            "title": "setAmount(cell: Amount)",
+            "title": "var amount: Amount = 1",
             "lines": [
-              "the function gets a copy",
-              "the caller never hears"
+              "setAmount(&amount, 42)"
             ]
           },
           "after": {
-            "title": "setAmount(cell: *Amount)",
+            "title": "after the call",
             "lines": [
-              "the function gets the address",
-              "the caller sees the change"
+              "cell.* = 42",
+              "amount is 42"
             ]
           }
         },
-        "caption": "The whole difference between the two signatures is visible in the type, before the body is read."
+        "caption": "The caller passes the address with &amount, and the function writes 42 through it. Without the star in the signature the function would change a copy, and the caller would still hold 1."
       },
       "hints": [
         "Write down what the caller's amount has to be after setAmount(&amount, 42) before you open the file.",
@@ -1633,11 +1808,16 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: pointers",
-          "url": "https://ziglang.org/documentation/master/#Pointers"
+          "url": "https://ziglang.org/documentation/0.17.0/#Pointers"
+        },
+        {
+          "label": "Zig language reference: slices",
+          "url": "https://ziglang.org/documentation/0.17.0/#Slices"
         }
       ],
       "bridge": {
         "course": "go-fundamentals",
+        "phase": "go-pointers",
         "text": "In Go a function that takes a value works on a copy, and to change what the caller holds you take the address with &. In Zig the same rule holds, and the address is written into the type as *Amount."
       }
     },
@@ -1817,6 +1997,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "evaluate, completed, with every failure named in its return type:",
+          "code": "pub fn evaluate(text: []const u8) ParseError!Amount {\n    if (text.len == 0 or text[0] != '=') return error.MalformedExpression;\n    const body = std.mem.trim(u8, text[1..], \" \");\n    const at = std.mem.indexOfAny(u8, body, \"+-*/\") orelse return error.MalformedExpression;\n    const left = std.mem.trim(u8, body[0..at], \" \");\n    const right = std.mem.trim(u8, body[at + 1 ..], \" \");\n    if (!control_flow.isNumber(left) or !control_flow.isNumber(right)) return error.MalformedExpression;\n    const op = optionals.opFor(body[at]) orelse return error.UnknownOperator;\n    const a = functions.parseAmount(left);\n    const b = functions.parseAmount(right);\n    if (op == .divide and b == 0) return error.DivisionByZero;\n    return ops.apply(op, a, b);\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does evaluate(\"=12 + 30\") return?",
+          "items": [
+            "42, as an Amount inside the error union.",
+            "The text \"12 + 30\", unchanged.",
+            "An error, because a plus sign is unknown.",
+            "42, after printing the expression."
+          ],
+          "answer": 0,
+          "explain": "The text starts with =, both sides are numbers, and + is a known operator, so the function returns the sum 42."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/evaluate.test.mjs   # what the Run button calls"
         },
@@ -1828,7 +2025,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "visualization": {
         "type": "error-union",
         "spec": {
-          "call": "evaluate(\"12 + 30\")",
+          "call": "evaluate(text)",
           "type": "ParseError!Amount",
           "value": "the amount 42",
           "errors": [
@@ -1854,15 +2051,16 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: error unions",
-          "url": "https://ziglang.org/documentation/master/#Error-Union-Type"
+          "url": "https://ziglang.org/documentation/0.17.0/#Error-Union-Type"
         },
         {
           "label": "Zig language reference: error sets",
-          "url": "https://ziglang.org/documentation/master/#Error-Sets"
+          "url": "https://ziglang.org/documentation/0.17.0/#Error-Sets"
         }
       ],
       "bridge": {
         "course": "go-fundamentals",
+        "phase": "go-errors",
         "text": "In Go a function that cannot do its job returns an error as a second value, and the failure is a value you compare with errors.Is. In Zig the two are one value, an error union, and the type names every failure it can have, so the caller is told which one it was."
       }
     },
@@ -1884,18 +2082,18 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "Nothing. The amount is used, and if the function failed the value is whatever the error union held.",
-        "The compiler refuses it, because the error union cannot be used as an amount without being unwrapped.",
+        "The compiler refuses it, because the error union is not an amount until it is unwrapped.",
         "The compiler refuses the call, because the error has not been propagated or handled.",
         "The compiler allows it, and the program crashes at run time if the function failed."
       ],
-      "answer": 2,
-      "explanation": "The compiler refuses the call because the error was never dealt with: a caller must propagate it with try, handle it with catch, or name it in its own return type. The unwrapping answer is close but wrong: the error, not the value, is what was never dealt with. The crash answer describes a language that checks at run time what this one checks at compile time.",
+      "answer": 1,
+      "explanation": "Storing the result of evaluate is legal: an error union is a value. The error comes when the caller uses it as an Amount without saying which half it got. Propagate it with try, handle it with catch, or switch on it first. The call itself is not refused, and the check happens at compile time, not at run time.",
       "hints": [
-        "Ask what the compiler is complaining about: the value, or the error that was never handled."
+        "Ask where the error union is first treated as an amount, not where it is stored."
       ],
       "misconceptions": [
         "Believing the error union is a value with an error in it. It is one of two things, and the compiler makes you say which one you have.",
-        "Thinking the failure is only a warning. A refused call is a build that stops."
+        "Thinking the failure is only a warning. A refused use is a build that stops."
       ]
     },
     "zig-errors-do": {
@@ -2047,6 +2245,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "addRow and rowCount, completed, with the test that hands the sheet a testing allocator:",
+          "code": "pub fn addRow(self: *Sheet, row: []const u8) !void {\n    try self.rows.append(self.allocator, row);\n}\n\npub fn rowCount(self: *const Sheet) usize {\n    return self.rows.items.len;\n}\n\ntest \"a sheet holds the rows it was given\" {\n    var sheet = Sheet.init(std.testing.allocator);\n    defer sheet.deinit();\n    try sheet.addRow(\"1, 2\");\n    try sheet.addRow(\"3, 4\");\n    try std.testing.expectEqual(@as(usize, 2), sheet.rowCount());\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Who frees the memory the sheet asked its allocator for?",
+          "items": [
+            "deinit, through the allocator it was given.",
+            "the caller, after it stops reading the rows.",
+            "the allocator, when the program ends.",
+            "nobody, because a list owns itself."
+          ],
+          "answer": 0,
+          "explain": "The list asked the allocator for the room, so deinit hands the same room back; the caller only has to call deinit."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/memory.test.mjs   # what the Run button calls"
         },
@@ -2056,24 +2271,51 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "state-compare",
+        "type": "ownership-map",
         "spec": {
-          "before": {
-            "title": "the memory the sheet owns",
-            "lines": [
-              "the rows it asked for",
-              "freed by its deinit"
-            ]
-          },
-          "after": {
-            "title": "the memory it only points at",
-            "lines": [
-              "a row of text",
-              "nothing to free"
-            ]
-          }
+          "title": "The sheet and the memory it holds",
+          "stack": [
+            {
+              "frame": "Sheet",
+              "bindings": [
+                {
+                  "name": "allocator",
+                  "value": "std.mem.Allocator"
+                },
+                {
+                  "name": "rows",
+                  "value": ".empty",
+                  "owns": "#1"
+                },
+                {
+                  "name": "headers",
+                  "value": "[]const u8"
+                }
+              ]
+            }
+          ],
+          "heap": [
+            {
+              "id": "#1",
+              "label": "[]const u8 headers",
+              "note": "freed by deinit"
+            },
+            {
+              "id": "#2",
+              "label": "\"1, 42\"",
+              "note": "owned by the caller"
+            }
+          ],
+          "borrows": [
+            {
+              "from": "headers",
+              "to": "#2",
+              "kind": "shared"
+            }
+          ],
+          "note": "The list is what asked for the room, so the list is what gives it back."
         },
-        "caption": "Memory a struct owns is freed by its deinit, and memory it only points at is not freed at all, because nothing was copied."
+        "caption": "The sheet owns the storage it asked the allocator for, and deinit gives that storage back. The text the rows point at was never copied, so there is nothing to free."
       },
       "hints": [
         "Write down what a sheet with two rows has to report before you open the file, and who has to give the memory back.",
@@ -2089,15 +2331,16 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: memory and choosing an allocator",
-          "url": "https://ziglang.org/documentation/master/#Memory"
+          "url": "https://ziglang.org/documentation/0.17.0/#Memory"
         },
         {
-          "label": "Zig language reference: the testing namespace",
-          "url": "https://ziglang.org/documentation/master/#Zig-Test"
+          "label": "Zig language reference: tests",
+          "url": "https://ziglang.org/documentation/0.17.0/#Zig-Test"
         }
       ],
       "bridge": {
         "course": "go-fundamentals",
+        "phase": "go-lifecycle",
         "text": "In Go, defer is how you make sure a file is closed however the function leaves. In Zig the memory has to be given back as well, and because there is no collector, a function that allocates takes an allocator and the caller frees what it gets."
       }
     },
@@ -2276,6 +2519,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "Both functions, completed: the defer frees the copy, and the errdefer frees the first copy when the second allocation fails.",
+          "code": "pub fn trimmedLength(text: []const u8, allocator: std.mem.Allocator) !usize {\n    const copy = try allocator.dupe(u8, text);\n    defer allocator.free(copy);\n    return std.mem.trim(u8, copy, \" \").len;\n}\n\npub fn duplicateTwice(text: []const u8, allocator: std.mem.Allocator) !Pair {\n    const first = try allocator.dupe(u8, text);\n    errdefer allocator.free(first);\n    const second = try allocator.dupe(u8, text);\n    return .{ .first = first, .second = second };\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "When does the errdefer in duplicateTwice run?",
+          "items": [
+            "When the second allocation fails.",
+            "After every return, successful or not.",
+            "When the caller frees the pair.",
+            "Before the first copy is allocated."
+          ],
+          "answer": 0,
+          "explain": "errdefer runs only when the scope leaves with an error, so it frees the first copy once the second allocation fails."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/defer.test.mjs   # what the Run button calls"
         },
@@ -2285,16 +2545,53 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "event-flow",
+        "type": "cleanup-paths",
         "spec": {
-          "steps": [
-            "the scope opens",
-            "defer is written",
-            "the scope ends",
-            "the defer runs"
+          "normal": [
+            "alloc(copy)",
+            "defer free",
+            "read len",
+            "return 2",
+            "free(copy)"
+          ],
+          "error": [
+            "alloc(first)",
+            "alloc(second)",
+            "errdefer free",
+            "return error"
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "Both ways out start with a copy the function owns: the normal path copies the text, the error path copies the first half."
+            },
+            {
+              "step": 1,
+              "note": "The normal path writes its defer before anything else can fail, so the free is registered while the copy is still alive."
+            },
+            {
+              "step": 1,
+              "note": "The error path asks for its second copy at this same column, and the allocator refuses it."
+            },
+            {
+              "step": 2,
+              "note": "The normal path reads the copy; the error path gives the first copy back now, because errdefer only runs when the scope is failing."
+            },
+            {
+              "step": 3,
+              "note": "The normal path settles on its number, and the error path settles on its error. Neither lane has freed its copy on the normal way out yet."
+            },
+            {
+              "step": 4,
+              "note": "The deferred free runs last, after the answer is decided, so the returned number is not held in memory the function already gave back."
+            },
+            {
+              "step": 4,
+              "note": "Both lanes now hold nothing: one returns a number and a freed copy, the other returns an error with no allocation left behind."
+            }
           ]
         },
-        "caption": "A defer runs when the scope it was written in ends, however it ends: on the normal path, on an early return, and on a failure that leaves the scope with an error."
+        "caption": "A defer runs however the scope ends. An errdefer runs only when it ends in error, which is why it frees the first copy on the failing lane and leaves the normal lane to its defer."
       },
       "hints": [
         "Write down what trimmedLength(\"  42  \") has to return before you open the file, and what has to happen to the copy before the function returns.",
@@ -2310,11 +2607,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: defer",
-          "url": "https://ziglang.org/documentation/master/#defer"
+          "url": "https://ziglang.org/documentation/0.17.0/#defer"
         },
         {
           "label": "Zig language reference: errdefer",
-          "url": "https://ziglang.org/documentation/master/#errdefer"
+          "url": "https://ziglang.org/documentation/0.17.0/#errdefer"
         }
       ]
     },
@@ -2426,6 +2723,15 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
           ],
           "feedback": "A longer text has to be copied twice as well. A function that only handles the short case is a function that a long cell breaks.",
           "edge": true
+        },
+        {
+          "id": "first-copy-is-freed-on-failure",
+          "label": "The first copy is freed when the second allocation fails",
+          "tests": [
+            "the first copy is freed when the second one fails"
+          ],
+          "feedback": "The second copy can fail, and the first copy was already made. The errdefer has to give that first copy back before the error leaves the function, or the testing allocator reports the leak.",
+          "edge": true
         }
       ],
       "hints": [],
@@ -2498,6 +2804,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "The table and the two functions, completed:",
+          "code": "pub const bindings: []const Binding = &[_]Binding{\n    .{ .symbol = '+', .power = 1 },\n    .{ .symbol = '-', .power = 1 },\n    .{ .symbol = '*', .power = 2 },\n    .{ .symbol = '/', .power = 2 },\n};\n\npub fn bindingPower(symbol: u8) ?u8 {\n    for (bindings) |binding| {\n        if (binding.symbol == symbol) return binding.power;\n    }\n    return null;\n}\n\npub fn scaledPower(symbol: u8, comptime scale: u8) u8 {\n    const power = bindingPower(symbol) orelse 0;\n    return power * scale;\n}\n\npub fn sumOf(comptime T: type, values: []const T) T {\n    var total: T = 0;\n    for (values) |value| total += value;\n    return total;\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does comptime do to scaledPower's scale parameter?",
+          "items": [
+            "A copy is compiled for each value chosen.",
+            "The program reads it from memory on every call.",
+            "The caller chooses it once, and the value is shared.",
+            "The compiler ignores it at run time and at comptime."
+          ],
+          "answer": 0,
+          "explain": "A comptime parameter is known while the compiler reads the call, so it can make a function specialised for that value."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/comptime.test.mjs   # what the Run button calls"
         },
@@ -2510,21 +2833,20 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "type": "state-compare",
         "spec": {
           "before": {
-            "title": "at run time",
+            "title": "sumOf(f64, row)",
             "lines": [
-              "the table is read from memory",
-              "the cost is paid while it runs"
+              "one copy for f64"
             ]
           },
           "after": {
-            "title": "at comptime",
+            "title": "sumOf(Amount, row)",
             "lines": [
-              "the table is folded into the program",
-              "the cost is paid by the compiler"
+              "a second copy",
+              "one for Amount"
             ]
           }
         },
-        "caption": "A value known at comptime is not stored and not computed at run time: it is folded into the program before the program starts."
+        "caption": "A comptime parameter is chosen by the caller, and the compiler keeps one copy of the function for each choice. The f64 call and the Amount call do not share code."
       },
       "hints": [
         "Write down the four operators and how tightly each one binds before you open the file. The tests will tell you the order the table is in.",
@@ -2540,11 +2862,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: comptime",
-          "url": "https://ziglang.org/documentation/master/#comptime"
+          "url": "https://ziglang.org/documentation/0.17.0/#comptime"
         },
         {
           "label": "Zig language reference: generic data structures",
-          "url": "https://ziglang.org/documentation/master/#Generic-Data-Structures"
+          "url": "https://ziglang.org/documentation/0.17.0/#Generic-Data-Structures"
         }
       ]
     },
@@ -2728,6 +3050,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "writeRow, completed, with no branch for the writer it was given:",
+          "code": "pub fn writeRow(writer: *std.Io.Writer, cells: []const []const u8) !void {\n    for (cells, 0..) |cell, i| {\n        if (i > 0) try writer.writeAll(\"\\t\");\n        try writer.writeAll(cell);\n    }\n    try writer.writeAll(\"\\n\");\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Why can a test read back what writeRow wrote?",
+          "items": [
+            "The test gives it a writer over a buffer.",
+            "The function prints to the screen and the test copies it.",
+            "The writer remembers every call for the function.",
+            "The function returns the bytes it wrote."
+          ],
+          "answer": 0,
+          "explain": "A writer is an interface, so the test can pass one fixed to a buffer and then read the same bytes the screen would have shown."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/io.test.mjs   # what the Run button calls"
         },
@@ -2737,25 +3076,44 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "state-compare",
+        "type": "event-flow",
         "spec": {
-          "before": {
-            "title": "the function",
-            "lines": [
-              "takes a writer",
-              "writes the row"
-            ]
-          },
-          "after": {
-            "title": "the writer it is given",
-            "lines": [
-              "the screen",
-              "a file",
-              "a buffer the test reads back"
-            ]
-          }
+          "steps": [
+            "writeRow(w, cells)",
+            "write \"1\"",
+            "write a tab",
+            "write \"42\"",
+            "write a newline",
+            "buffer: 1\\t42\\n"
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "writeRow is handed a writer and the cells of one row. It does not know whether the writer is a screen, a file or a buffer."
+            },
+            {
+              "step": 1,
+              "note": "The first cell goes to the writer as its own bytes, with no separator before it."
+            },
+            {
+              "step": 2,
+              "note": "A tab separates the cells, so a reader can tell where one ends and the next begins."
+            },
+            {
+              "step": 3,
+              "note": "The second cell goes through the same writer, which is why the function needs no branch for the last cell."
+            },
+            {
+              "step": 4,
+              "note": "The newline ends the row, so the next row starts on a line of its own."
+            },
+            {
+              "step": 5,
+              "note": "In the test the writer is fixed to a buffer, and the buffer now holds exactly the bytes the function wrote."
+            }
+          ]
         },
-        "caption": "The function never knows which writer it was given, and that is why the same function can be tested by reading back what it wrote."
+        "caption": "The function never knows which writer it was given. The test hands it a writer over a fixed buffer and reads back the same bytes the screen would have shown."
       },
       "hints": [
         "Write down what the sheet prints for the row 1, 42 before you open the file, and what it prints for a row of one cell.",
@@ -2771,11 +3129,11 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: the standard library",
-          "url": "https://ziglang.org/documentation/master/#Zig-Standard-Library"
+          "url": "https://ziglang.org/documentation/0.17.0/#Zig-Standard-Library"
         },
         {
           "label": "Zig standard library documentation",
-          "url": "https://ziglang.org/documentation/master/std/"
+          "url": "https://ziglang.org/documentation/0.17.0/std/"
         }
       ]
     },
@@ -2927,7 +3285,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
-          "body": "The two assertions this project uses, out of src/selftest.zig:",
+          "body": "The two assertions a Zig test can use:",
           "code": "    try std.testing.expect(false);\n    try std.testing.expectEqual(@as(?i64, 199), roundTrip(\"199\"));"
         },
         {
@@ -2963,6 +3321,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "One complete test, with the function it checks and the assertion it needs:",
+          "code": "pub fn roundTrip(text: []const u8) ?i64 {\n    return optionals.findAmount(text);\n}\n\ntest \"testing: a whole number round trips through the parser\" {\n    try std.testing.expectEqual(@as(?i64, 199), roundTrip(\"199\"));\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "A test fails. What does the Zig runner print first?",
+          "items": [
+            "The test's name, then the two values.",
+            "The line number only, with no name.",
+            "The whole file, with the failing line marked.",
+            "Nothing, unless the test prints its own output."
+          ],
+          "answer": 0,
+          "explain": "The name in front of the block is what the runner reports, which is why it has to say what the check is about."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build test   # run the whole project's tests\nnode --test --test-reporter=tap test/selftest.test.mjs   # what the Run button calls"
         },
@@ -2976,12 +3351,40 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "spec": {
           "steps": [
             "the test block",
-            "the name in front",
-            "the body runs",
-            "the runner reads it"
+            "\"199 round trips\"",
+            "try expectEqual",
+            "@as(?i64, 199)",
+            "roundTrip(\"199\")",
+            "the failure is named"
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "A test block is code the runner runs. Nothing in it has happened before the block is entered."
+            },
+            {
+              "step": 1,
+              "note": "The name in front of the block is what a failure reports, so it says what the check is about rather than where it lives."
+            },
+            {
+              "step": 2,
+              "note": "expectEqual compares the value the test believes with the value the code produced, and prints both when they differ."
+            },
+            {
+              "step": 3,
+              "note": "The cast says the belief is an optional integer, matching the return type of roundTrip."
+            },
+            {
+              "step": 4,
+              "note": "roundTrip receives the text \"199\" and produces the value the comparison is made against."
+            },
+            {
+              "step": 5,
+              "note": "When the two values differ, the runner names the test, so the failure reads as a sentence about the check, not a line number."
+            }
           ]
         },
-        "caption": "The name is not decoration: it is what a failure reports, so it has to say what the check is about."
+        "caption": "The name is not decoration: it is what a failure reports, so it has to say what the check is about. The runner names the test, not the line, and the two values it compared."
       },
       "hints": [
         "Read the name of the test before you write anything in it. The name is the sentence the assertion has to make true.",
@@ -2997,7 +3400,7 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: tests",
-          "url": "https://ziglang.org/documentation/master/#Zig-Test"
+          "url": "https://ziglang.org/documentation/0.17.0/#Zig-Test"
         },
         {
           "label": "Zig build system guide: testing",
@@ -3188,6 +3591,23 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "The audit, completed: it reads the grid, counts the numbers, and refuses to invent a largest.",
+          "code": "const std = @import(\"std\");\nconst sheet = @import(\"sheet\");\n\npub fn main(init: std.process.Init) !void {\n    const arena = init.arena.allocator();\n    const args = try init.minimal.args.toSlice(arena);\n    const io = init.io;\n\n    var stdout_buffer: [4096]u8 = undefined;\n    var stdout_file_writer: std.Io.File.Writer = .init(.stdout(), io, &stdout_buffer);\n    const out = &stdout_file_writer.interface;\n\n    const grid = try std.Io.Dir.cwd().readFileAlloc(io, args[1], arena, .limited(1 << 20));\n\n    var cells: [64][]const u8 = undefined;\n    var count: usize = 0;\n    var largest: ?sheet.values.Amount = null;\n\n    var rows = std.mem.tokenizeScalar(u8, grid, '\\n');\n    while (rows.next()) |row| {\n        const written = sheet.memory.splitRow(row, &cells);\n        for (cells[0..written]) |cell| {\n            const amount = sheet.optionals.findAmount(cell);\n            if (amount) |number| {\n                count += 1;\n                if (largest == null or number > largest.?) largest = number;\n            }\n        }\n    }\n\n    try out.print(\"cells {d}\\n\", .{count});\n    if (largest) |number| {\n        try out.print(\"largest {d}\\n\", .{number});\n    } else {\n        try out.writeAll(\"largest none\\n\");\n    }\n    try out.flush();\n}"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "The audit reads a grid of two words and prints a count of 0. What may it print as the largest?",
+          "items": [
+            "Nothing; there is no largest amount.",
+            "0, because zero is the smallest amount.",
+            "The count again, because the grid is empty.",
+            "An error, because the grid has no numbers."
+          ],
+          "answer": 0,
+          "explain": "Count zero and a largest of zero are different facts; the grid holds no amounts, so the honest report has no largest."
+        },
+        {
+          "kind": "example",
           "body": "The commands you run, and the one the Run button calls for you:",
           "code": "zig build audit -- sheet.txt   # run the audit over a grid\nnode --test --test-reporter=tap test/audit.test.mjs   # what the Run button calls"
         },
@@ -3200,21 +3620,21 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
         "type": "state-compare",
         "spec": {
           "before": {
-            "title": "a grid with numbers",
+            "title": "sheet.txt",
             "lines": [
-              "the count is 3",
+              "6 cells, 3 with a number",
               "the largest is 42"
             ]
           },
           "after": {
-            "title": "a grid with none",
+            "title": "a grid of words",
             "lines": [
-              "the count is 0",
+              "2 cells, 0 with a number",
               "there is no largest"
             ]
           }
         },
-        "caption": "A count of zero is not a largest amount of zero. A tool that prints a number where there is none has claimed something it did not establish."
+        "caption": "A count of zero is not a largest amount of zero. sheet.txt has three numbers and a largest of 42; a grid of words has a count of zero and no largest amount."
       },
       "hints": [
         "Write down what the report has to say for the grid 1, 42, =1 + 2, =3 * 4, 7, notes before you open the file.",
@@ -3230,10 +3650,10 @@ export const IDE_COURSE_ZIG_FUNDAMENTALS: unknown = {
       "resources": [
         {
           "label": "Zig language reference: the standard library",
-          "url": "https://ziglang.org/documentation/master/#Zig-Standard-Library"
+          "url": "https://ziglang.org/documentation/0.17.0/#Zig-Standard-Library"
         },
         {
-          "label": "Zig build system guide: running a program",
+          "label": "Zig build system guide",
           "url": "https://ziglang.org/learn/build-system/"
         }
       ]

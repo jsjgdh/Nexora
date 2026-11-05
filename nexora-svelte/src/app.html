@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- The one class the whole reveal system hangs on. It is set here, before
-         the first paint, so the stylesheet can hide a heading only when the
-         script that brings it back is running. Without JavaScript the class
-         stays `no-js` and every heading is simply there. -->
+    <!-- The one class the reveal system hangs on. It is set before the first
+         paint, so the stylesheet can hide a line only when the script that
+         brings it back is running. Without JavaScript the class stays `no-js`
+         and every line is simply there. -->
     <script nonce="%sveltekit.nonce%">
       document.documentElement.classList.replace("no-js", "js");
     </script>
@@ -14,29 +14,32 @@
          Font License. There is no third-party request to render a page here,
          and the content security policy does not have to make room for one.
 
-         The three faces below are the ones every page is set in, and they
-         are the heavy ones: the grotesque for the headings and the serif for
-         the body. Preloading them starts the download at the same moment as
-         the stylesheet, instead of after the browser has parsed the CSS and
-         worked out which face a word needs.
+         The text face is preloaded because it sets the first screen and every
+         heading. The mono face is not: it is used for readings, and a reading
+         below the fold should not compete with the statement. -->
+    <link
+      rel="preload"
+      href="/fonts/instrument-sans-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <!-- The mark, carried as the wordmark draws it: the ink plate and the
+         N. Every slot is served from this site with the rest of the chrome, and
+         all three come from one drawing (`scripts/generate-icons.mjs` renders
+         the rasters from the same mark), so they cannot drift apart.
 
-         The italic is NOT here. One poster line is set in it and nothing else
-         is, so a page that has no poster should not pay a hundred and forty
-         kilobytes for it. The page that does have one preloads it itself. -->
-    <link
-      rel="preload"
-      href="/fonts/archivo-normal-1.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="/fonts/newsreader-normal-1.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
+         The SVG is first because a browser that understands it gets the crisp
+         vector at any density. The `.ico` follows for the older browsers that
+         ask for it directly, and it is also what answers a bare `/favicon.ico`
+         request. The home-screen icon is the opaque square iOS masks itself.
+
+         The plate colour is a literal for `--color-ink`: a favicon is painted
+         in the browser's own chrome, outside the page's cascade, so it cannot
+         read a custom property. That is the one value these files repeat. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

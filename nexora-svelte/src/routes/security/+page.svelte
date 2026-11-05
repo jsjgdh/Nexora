@@ -20,7 +20,7 @@
    * is false, <DocStatus> prints the draft caveat instead of an in-force date. */
 
   const glance = [
-    "Access tokens live five minutes, carry a per-token id, and are revoked the moment you sign out — not when they expire.",
+    "Access tokens live five minutes, carry a per-token id, and are revoked the moment you sign out, not when they expire.",
     "Your refresh credential sits in an HttpOnly, SameSite cookie set by this site's own server. No token is written to page-accessible storage.",
     "A finished run is signed. Anyone can re-derive the signature in their own browser at /verify, against a published key, without an account.",
     "The runner tier that would expose the platform's own credentials to your program is refused in production rather than merely discouraged.",
@@ -34,26 +34,26 @@
   path="/security"
 />
 
-<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+<div class="mx-auto max-w-[1100px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
   <Headline
     as="h1"
     lines={["What protects it,", "and what does not yet."]}
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
-  <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
+  <p class="document-lede">
     This page describes the mechanisms the platform actually implements, and then names the ones it
     does not. The second list is longer, and pretending otherwise would be the one thing a security
     page must never do.
   </p>
 </div>
 
-<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+<div class="mx-auto max-w-[1100px] px-5 pb-20 sm:px-8 sm:pb-28">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,38rem)_minmax(0,1fr)]">
     <Plate crosshair>
       <p class="stamp text-[11px] text-faint">security</p>
       <DocStatus />
 
-      <div class="mt-6 grid gap-8 text-[13.5px] leading-relaxed text-muted">
+      <div class="mt-6 grid gap-8 text-[14.5px] leading-relaxed text-muted">
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Access and identity</h2>
           <p class="mt-3">
@@ -219,7 +219,7 @@
         <p class="stamp text-[11px] text-faint">at a glance</p>
         <ul class="mt-4 grid gap-4">
           {#each glance as line (line)}
-            <li class="text-[13.5px] leading-relaxed text-muted">{line}</li>
+            <li class="text-[14.5px] leading-relaxed text-muted">{line}</li>
           {/each}
         </ul>
       </Plate>

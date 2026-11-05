@@ -41,7 +41,7 @@ function base64UrlToText(part: string): string | null {
 
 /**
  * The `exp` claim of a JWT as epoch milliseconds, or null when it is not a JWT
- * we can read (an opaque Clerk token, a truncated value, a legacy entry).
+ * we can read (an opaque token, a truncated value, a legacy entry).
  *
  * Read rather than trusted from local storage: the stored expiry is a copy some
  * other tab wrote, while the token carries its own. When they disagree the

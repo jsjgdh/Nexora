@@ -59,7 +59,7 @@
     <DocStatus />
   </div>
 
-  <p class="mt-8 max-w-[68ch] text-[14.5px] leading-relaxed text-muted">
+  <p class="document-lede">
     The IDE can put a third-party AI assistant in front of you. It is off until you turn it on, and
     what it does when it is on is worth stating exactly rather than describing as "AI features".
   </p>
@@ -70,7 +70,7 @@
     {#each myTraining as row (row.heading)}
       <Plate>
         <h2 class="text-[16.5px] text-ink">{row.heading}</h2>
-        <p class="mt-3 text-[13.5px] leading-relaxed text-muted">{row.body}</p>
+        <p class="mt-3 text-[14.5px] leading-relaxed text-muted">{row.body}</p>
       </Plate>
     {/each}
   </div>
@@ -84,7 +84,7 @@
             <p class="text-[15px] text-ink">
               {sys.name} <span class="text-faint">· {sys.provider}</span>
             </p>
-            <p class="mt-1 text-[13.5px] leading-relaxed text-muted">{sys.role}</p>
+            <p class="mt-1 text-[14.5px] leading-relaxed text-muted">{sys.role}</p>
             <p class="mt-1 text-[13px] leading-relaxed text-faint">Receives: {sys.sends}</p>
           </li>
         {/each}
@@ -93,16 +93,16 @@
       <div class="mt-10 border-t border-rule pt-6">
         <!-- The Art. 50 disclosure itself, verbatim from the shared facts so the
              privacy notice and this page cannot say it two different ways. -->
-        <p class="text-[13.5px] leading-relaxed text-muted">{AI_DISCLOSURE.interaction}</p>
-        <p class="mt-4 text-[13.5px] leading-relaxed text-muted">{AI_DISCLOSURE.decides}</p>
-        <p class="mt-4 text-[13.5px] leading-relaxed text-muted">{AI_DISCLOSURE.transfer}</p>
+        <p class="text-[14.5px] leading-relaxed text-muted">{AI_DISCLOSURE.interaction}</p>
+        <p class="mt-4 text-[14.5px] leading-relaxed text-muted">{AI_DISCLOSURE.decides}</p>
+        <p class="mt-4 text-[14.5px] leading-relaxed text-muted">{AI_DISCLOSURE.transfer}</p>
       </div>
     </div>
 
     <div>
       <Plate crosshair>
         <p class="stamp text-[11px] text-faint">turn it off</p>
-        <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+        <p class="mt-3 text-[14.5px] leading-relaxed text-muted">
           Chat and inline suggestions are separate switches in the IDE's settings, and both are off by
           default in a fresh install. Nothing in the course or the checks requires either. If an
           assistant is enabled in a managed deployment, the policy that enabled it is the operator's,
@@ -125,7 +125,7 @@
   </div>
 
   <div class="mt-14 border-t border-rule pt-8">
-    <p class="max-w-[74ch] text-[13.5px] leading-relaxed text-muted">
+    <p class="max-w-[74ch] text-[14.5px] leading-relaxed text-muted">
       {AI_DISCLOSURE.literacy} If you are an organisation deploying this IDE to staff, the same
       description applies to them; a summary you can circulate is in the AI usage policy that ships
       with the product's internal documents.

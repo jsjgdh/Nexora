@@ -529,8 +529,16 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "goal": "A value with named fields, and the one thing a record cannot do: change itself.",
       "activities": 4
     },
+    "ocaml-mutable": {
+      "goal": "A reference and a mutable field: the two places OCaml keeps a value that changes.",
+      "activities": 4
+    },
     "ocaml-variants": {
       "goal": "A value that is one of several shapes, and the match that takes it apart.",
+      "activities": 4
+    },
+    "ocaml-polymorphic-variants": {
+      "goal": "A tag with no type declaration, and the open row that lets a function accept one.",
       "activities": 4
     },
     "ocaml-modules": {
@@ -545,8 +553,16 @@ export const PHASE_DETAIL: Record<string, Record<string, PhaseDetail>> = {
       "goal": "The code that is already written for you: lists, folds, options, and the functions that turn a value into text.",
       "activities": 4
     },
+    "ocaml-testing": {
+      "goal": "Write the suite yourself, and find out whether it would catch a broken implementation.",
+      "activities": 4
+    },
+    "ocaml-effects": {
+      "goal": "OCaml 5: a computation that asks its handler for something, and work that runs on a domain of its own.",
+      "activities": 4
+    },
     "ocaml-your-turn": {
-      "goal": "The report you write: the shape is yours, the contract is not.",
+      "goal": "The evaluator you write: recursive, environment-aware, and honest about failure.",
       "activities": 4
     }
   },
@@ -574,7 +590,7 @@ export const COURSE_ACTIVITY_COUNTS: Record<string, number> = {
   "rust-in-production": 88,
   "sql-fundamentals": 40,
   "zig-fundamentals": 52,
-  "ocaml-fundamentals": 44,
+  "ocaml-fundamentals": 60,
   "api-basics": 9
 };
 
@@ -584,8 +600,8 @@ export const COURSE_DESCRIPTIONS: Record<string, string> = {
   "go-in-production": "The service, once the language is known. Goroutines and synchronization, context and cancellation, concurrency patterns, pipelines, JSON in and out, an HTTP server with its deadlines, routes, middleware, authentication, tests, performance, storage, a database, caching, resilience, operations, logging, dependencies, and shipping. It closes with the debugging labs, where you read a symptom and find the cause, and the design labs, where you design a thing and defend it. Every phase is Learn, then Solve, then Review.",
   "rust-fundamentals": "The Rust language, in the order the book teaches it: the tools, then values and control flow, then ownership and borrowing, then structs, enums, errors and modules, then collections, traits and lifetimes, then testing, then the threads and the futures the language gives you, and a money type of your own design at the end.",
   "rust-in-production": "The ledger as a service. It opens with a program that reads code and reports what it finds, and then it builds the service: the runtime and its tasks, the channels between them, the router and its extractors, the state it shares, the layers around it, the stop at the end of it, the failures that become answers, the database, the configuration, the log, the tests, and a release you can defend.",
-  "sql-fundamentals": "SQL as SQLite really accepts it, on the ledger the Go and Rust courses already build: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. It teaches the SQL of SQLite 3.54.1, the version that was current on 2026-10-21, and says so where SQLite and the SQL standard differ. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
-  "zig-fundamentals": "Zig itself, from the first program to the test runner. What build.zig decides, values and types, control flow, functions, structs and methods, pointers, error unions, the allocator, defer and errdefer, comptime and generics, the standard library, and the test runner. The phases build one small sheet program, and each is judged by the project's own Zig tests read by the Zig test runner. Every phase is Learn, then Solve, then Review.",
-  "ocaml-fundamentals": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report you write yourself.",
+  "sql-fundamentals": "SQL as SQLite really accepts it, on a ledger of its own: the first database, then SELECT and WHERE, ORDER BY and LIMIT, the aggregates and GROUP BY, the joins, the subqueries and the views, the indexes and the query plan, the transactions and the isolation SQLite gives, and a change to the schema made safely. The money is whole cents, the way the Go and Rust courses keep it, but the tables here are accounts and transactions, and they belong to this course. It teaches the SQL of SQLite 3.54.1, the version that was current on 2026-10-21, and says so where SQLite and the SQL standard differ. The course is offline by design: the data ships with it, the database is one file in your own folder, and there is no server to start. Every phase is Learn, then Solve, then Review, and the last one is a query you write yourself.",
+  "zig-fundamentals": "Zig itself, from the first program to the test runner. What build.zig decides, values and types, control flow, functions, structs and methods, pointers, error unions, the allocator, defer and errdefer, comptime and generics, the standard library, and the test runner. The phases build the sheet program and a second audit program; each phase is judged by the Zig tests the project ships and, for the two programs, by what they print. Every phase is Learn, then Ask, then Solve, then Review.",
+  "ocaml-fundamentals": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, mutable state, variants, polymorphic variants, modules and functors, errors with exceptions and with result, the standard library, tests you write yourself, and the effects and domains of OCaml 5. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is an evaluator you write yourself.",
   "api-basics": "A short course for the knowledge the main line assumes the first time it calls a server: what a request is, why an answer is not a yes, and why valid JSON is not valid data. Three phases, one small client, no server to run. Optional by design. It gates nothing, and you can leave it at any point."
 };

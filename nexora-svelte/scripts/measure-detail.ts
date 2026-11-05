@@ -32,6 +32,9 @@ const browser = await chromium.launch();
 const MEASURES: [string, number][] = [
   ["/", 320],
   ["/", 1440],
+  ["/courses", 390],
+  ["/courses/task-manager", 390],
+  ["/courses/go", 1440],
   ["/employers", 390],
 ];
 
@@ -46,10 +49,18 @@ for (const [route, width] of MEASURES) {
       const r = el.getBoundingClientRect();
       if (r.width === 0 && r.height === 0) continue;
       const s = getComputedStyle(el);
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      const rects = [...range.getClientRects()].filter((x) => x.width > 4 && x.height > 4);
-      const lines = new Set(rects.map((x) => Math.round(x.top))).size;
+      let lines = 0;
+      for (const node of el.childNodes) {
+        if (node.nodeType !== 3 || !node.textContent || !node.textContent.trim()) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const rects = [...range.getClientRects()].filter((x) => x.width > 4 && x.height > 4);
+        const tops = [];
+        for (const t of rects.map((x) => Math.round(x.top)).sort((a, b) => a - b)) {
+          if (!tops.length || t - tops[tops.length - 1] > 4) tops.push(t);
+        }
+        lines = Math.max(lines, tops.length);
+      }
       if (lines > 1) {
         out.wrapped.push({
           text: (el.textContent || "").trim().slice(0, 34),

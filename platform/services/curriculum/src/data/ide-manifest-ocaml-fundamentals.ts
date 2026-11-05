@@ -3,8 +3,8 @@
 export const IDE_MANIFEST_OCAML_FUNDAMENTALS: unknown = {
   "id": "ocaml-fundamentals",
   "title": "OCaml fundamentals",
-  "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report you write yourself.",
-  "version": 1,
+  "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, mutable state, variants, polymorphic variants, modules and functors, errors with exceptions and with result, the standard library, tests you write yourself, and the effects and domains of OCaml 5. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is an evaluator you write yourself.",
+  "version": 2,
   "role": "main",
   "phases": [
     {
@@ -62,9 +62,27 @@ export const IDE_MANIFEST_OCAML_FUNDAMENTALS: unknown = {
       "activityCount": 4
     },
     {
+      "id": "ocaml-mutable",
+      "title": "Mutable state",
+      "goal": "A reference and a mutable field: the two places OCaml keeps a value that changes.",
+      "level": 2,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
       "id": "ocaml-variants",
       "title": "Variants and pattern matching",
       "goal": "A value that is one of several shapes, and the match that takes it apart.",
+      "level": 2,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
+      "id": "ocaml-polymorphic-variants",
+      "title": "Polymorphic variants",
+      "goal": "A tag with no type declaration, and the open row that lets a function accept one.",
       "level": 2,
       "tier": "pro",
       "authored": true,
@@ -98,9 +116,27 @@ export const IDE_MANIFEST_OCAML_FUNDAMENTALS: unknown = {
       "activityCount": 4
     },
     {
+      "id": "ocaml-testing",
+      "title": "Test what you write",
+      "goal": "Write the suite yourself, and find out whether it would catch a broken implementation.",
+      "level": 3,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
+      "id": "ocaml-effects",
+      "title": "Effects and domains",
+      "goal": "OCaml 5: a computation that asks its handler for something, and work that runs on a domain of its own.",
+      "level": 3,
+      "tier": "pro",
+      "authored": true,
+      "activityCount": 4
+    },
+    {
       "id": "ocaml-your-turn",
-      "title": "Your turn: the report",
-      "goal": "The report you write: the shape is yours, the contract is not.",
+      "title": "Your turn: the evaluator",
+      "goal": "The evaluator you write: recursive, environment-aware, and honest about failure.",
       "level": 3,
       "tier": "pro",
       "authored": true,

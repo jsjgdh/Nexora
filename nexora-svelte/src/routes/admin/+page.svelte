@@ -347,8 +347,8 @@
                   {
                     label: ADMIN.configuration.authMode,
                     value:
-                      overview.configuration.authMode === "clerk"
-                        ? ADMIN.configuration.authModeClerk
+                      overview.configuration.authMode === "kinde"
+                        ? ADMIN.configuration.authModeKinde
                         : ADMIN.configuration.authModeLocal,
                   },
                   {

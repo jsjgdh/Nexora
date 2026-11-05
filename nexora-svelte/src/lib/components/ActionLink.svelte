@@ -1,21 +1,12 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import { magnet } from "$lib/motion";
   import { actionClass, type ActionSize, type ActionVariant } from "$lib/ui";
   import { cn } from "$lib/format";
 
-  /* An anchor that goes somewhere.
-   *
-   * The island is the one flourish: a small circled arrow that leans toward
-   * the pointer. It is `aria-hidden` and the label carries the meaning, so a
-   * screen reader hears the destination once rather than twice; the `magnet`
-   * action is skipped entirely on touch and under reduced motion, which leaves
-   * an ordinary, perfectly good link.
-   *
-   * The circle is drawn from the element's own colour rather than from a
-   * fixed one, because an action can sit on an amber fill or on the dark
-   * ground and a circle that only works on one of them is a circle that is
-   * invisible half the time. */
+  /* An anchor that goes somewhere. The label carries the meaning; the arrow is
+   * a typographic mark, not a drawn icon, and it is hidden from a screen
+   * reader. There is no magnetic pull and no custom hit area: the platform
+   * already owns the pointer. */
 
   type Props = {
     href: string;
@@ -23,6 +14,9 @@
     size?: ActionSize;
     island?: boolean;
     external?: boolean;
+    /** An accessible name when the visible label is short. The visible text
+        stays in the name, so voice control still matches what is on screen. */
+    label?: string;
     class?: string;
     children: Snippet;
   };
@@ -33,6 +27,7 @@
     size = "md",
     island = false,
     external = false,
+    label,
     class: klass = "",
     children,
   }: Props = $props();
@@ -40,31 +35,25 @@
 
 <a
   {href}
+  aria-label={label}
   rel={external ? "external noopener" : undefined}
   class={cn(actionClass(variant, size), klass)}
-  use:magnet={{ strength: 3 }}
 >
   {@render children()}
   {#if island}
-    <span class="island" aria-hidden="true">
-      <svg width="11" height="11" viewBox="0 0 11 11" focusable="false">
-        <path d="M2.5 8.5 8.5 2.5M4 2.5h4.5V7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" />
-      </svg>
-    </span>
+    <span class="arrow" aria-hidden="true">→</span>
   {/if}
 </a>
 
 <style>
-  .island {
-    display: grid;
-    place-items: center;
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, currentColor 16%, transparent);
-    transition: transform 320ms var(--ease-sheet);
+  .arrow {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1;
+    transition: transform var(--dur-1) var(--ease-out);
   }
-  a:hover .island {
-    transform: translate(1px, -1px);
+
+  a:hover .arrow {
+    transform: translateX(2px);
   }
 </style>

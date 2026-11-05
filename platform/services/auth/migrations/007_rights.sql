@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS erasures (
 
 /* Work queued for the processors that hold their own copy of the record.
  *
- * Clerk holds the identity and Dodo holds the payment relationship; neither is
+ * Kinde holds the identity and Dodo holds the payment relationship; neither is
  * reachable by "delete the row here". An uncompleted row is the operator's open
  * work, and the retention schedule's manual procedure is exactly this queue.
  */

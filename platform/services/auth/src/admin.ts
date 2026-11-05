@@ -244,7 +244,7 @@ export function registerAdminRoutes(app: FastifyInstance, pool: Pool): void {
         pendingProcessorDeletions: Number(row.pending_processor_deletions ?? 0),
       },
       configuration: {
-        authMode: process.env.AUTH_MODE === "clerk" ? "clerk" : "local",
+        authMode: process.env.AUTH_MODE === "kinde" ? "kinde" : "local",
         mailConfigured: Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM),
         meshKeyPresent: Boolean(process.env.INTERNAL_API_KEY),
         cohortsAvailable: cohorts,

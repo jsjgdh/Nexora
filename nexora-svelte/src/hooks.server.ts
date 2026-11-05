@@ -1,5 +1,7 @@
 import type { Handle } from "@sveltejs/kit";
+import type { EventHandler } from "@kinde-oss/kinde-auth-sveltekit";
 import { env } from "$env/dynamic/public";
+import { kindeConfigured } from "$lib/auth-mode";
 
 /* Baseline security headers for the HTML origin.
  *
@@ -17,8 +19,10 @@ import { env } from "$env/dynamic/public";
  * report-only, which meant the browser collected violations nobody read. The
  * other headers below are safe to enforce, so they are enforced.
  *
- * Clerk is same-origin (its script is bundled, not fetched from a CDN) and its
- * API calls are covered by connect-src https:. */
+ * Kinde is a redirect flow, not a script embedded in this origin: the learner
+ * leaves for Kinde's sign-in page and comes back to the callback route, so no
+ * third-party script joins the page and connect-src does not need Kinde's
+ * origin. The session cookies Kinde's SDK writes are HttpOnly. */
 
 /**
  * The platform's origin, as the browser sees it.
@@ -48,6 +52,13 @@ function platformOrigin(): string | null {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
+  /* Kinde's SDK hangs its cookie session off the request before any route can
+     use it. Only loaded in a Kinde build: a local-mode deployment does not need
+     the SDK, and importing it would read a configuration it was never given. */
+  if (kindeConfigured) {
+    const { sessionHooks } = await import("@kinde-oss/kinde-auth-sveltekit");
+    await sessionHooks({ event: event as unknown as EventHandler });
+  }
   event.setHeaders({
     "x-content-type-options": "nosniff",
     "x-frame-options": "DENY",

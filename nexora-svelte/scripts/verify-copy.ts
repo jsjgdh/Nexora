@@ -211,10 +211,20 @@ export function crossChecks(
     surface: string;
   }[] = [];
 
-  // One primary call to action per surface.
+  // One primary call to action per surface. The shared chrome is excluded:
+  // the header and the footer each carry the one action on purpose, and the
+  // release module is the source of the label rather than a rendering of it.
+  const CHROME = new Set([
+    "src/lib/components/Header.svelte",
+    "src/lib/components/Footer.svelte",
+    "src/lib/release.ts",
+  ]);
   for (const surface of surfaces) {
     const carried = strings.filter(
-      (entry) => surface.files.has(entry.file) && entry.text.trim() === CTA_LABEL
+      (entry) =>
+        surface.files.has(entry.file) &&
+        !CHROME.has(entry.file) &&
+        entry.text.trim() === CTA_LABEL
     );
     if (carried.length > 1) {
       for (const entry of carried.slice(1)) {
@@ -243,8 +253,14 @@ export function crossChecks(
   }
 
   // One label per intent: the same action is not called two different things.
+  // The rule is about controls, so it compares the files a page actually
+  // renders, and it leaves inline prose links alone: a legal sentence may
+  // call a document "the privacy notice" without that becoming a second
+  // label on the control that opens it.
+  const surfaceFiles = new Set(surfaces.flatMap((surface) => [...surface.files]));
+  const controls = actions.filter((action) => surfaceFiles.has(action.file) && !action.prose);
   const byTarget = new Map<string, SiteAction[]>();
-  for (const action of actions) {
+  for (const action of controls) {
     if (!action.target || !action.label) continue;
     const list = byTarget.get(action.target) ?? [];
     list.push(action);
@@ -271,7 +287,7 @@ export function crossChecks(
 
   // One label per intent: the same label does not name two actions on one page.
   for (const surface of surfaces) {
-    const onSurface = actions.filter((action) => surface.files.has(action.file));
+    const onSurface = controls.filter((action) => surface.files.has(action.file));
     const byLabel = new Map<string, SiteAction[]>();
     for (const action of onSurface) {
       if (!action.target || !action.label) continue;

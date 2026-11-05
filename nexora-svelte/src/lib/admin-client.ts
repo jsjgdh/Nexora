@@ -127,7 +127,7 @@ export interface AdminOverview {
     pendingProcessorDeletions: number;
   };
   configuration: {
-    authMode: "local" | "clerk";
+    authMode: "local" | "kinde";
     mailConfigured: boolean;
     meshKeyPresent: boolean;
     cohortsAvailable: boolean;

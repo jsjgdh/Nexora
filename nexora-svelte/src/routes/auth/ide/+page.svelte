@@ -134,7 +134,7 @@
             is yours.
           </p>
           <div class="mt-5">
-            <ActionLink href="/auth" variant="ghost" size="sm" island>Sign in, then come back</ActionLink>
+            <ActionLink href="/auth" variant="ghost" size="sm" island>Sign in</ActionLink>
           </div>
         </Plate>
       {:else if approved}
@@ -198,9 +198,9 @@
       {/if}
 
       {#if phases.length > 0}
-        <section class="mt-6" aria-label="What your tier unlocks">
+        <section class="mt-6" aria-label="What your tier opens">
           <Plate>
-            <p class="stamp text-[11px] text-faint">what your tier unlocks</p>
+            <p class="stamp text-[11px] text-faint">what your tier opens</p>
             <ul class="mt-4 border-t border-rule">
               {#each free as p (p.id)}
                 <li class="flex items-baseline justify-between gap-4 border-b border-rule py-3">

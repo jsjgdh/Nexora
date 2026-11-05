@@ -5,11 +5,17 @@ text is in `OFL.txt` beside this file.
 
 | Family | Copyright | Designer |
 |---|---|---|
-| Archivo | Copyright 2019 The Archivo Project Authors | Omnibus-Type |
-| IBM Plex Mono | Copyright 2017 IBM Corp. | Mike Abbink, Paul van der Laan, Pieter van Rosmalen |
-| Newsreader | Copyright 2019 The Newsreader Project Authors | Production Type |
+| Instrument Sans | Copyright 2022 The Instrument Sans Project Authors | Rodrigo Fuenzalida |
+| JetBrains Mono | Copyright 2020 The JetBrains Mono Project Authors | Philipp Nurullin, Konstantin Bulenkov |
 
 The Latin subset of each face is served, because the site has no use for the
-others, and the axis the site never sets (the width axis of Archivo) is not
-included. The faces are served from this site, so the front door makes no
+others. The faces are served from this site, so the front door makes no
 third-party request to render a page.
+
+The files:
+
+- `instrument-sans-latin.woff2` — variable, weight 400 to 700, roman.
+- `jetbrains-mono-latin.woff2` — variable, weight 400 to 700, roman.
+
+The roman faces are the whole set: the site sets no italic, so it serves no
+italic face and asks no browser to download one.

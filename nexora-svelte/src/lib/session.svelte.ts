@@ -1,5 +1,6 @@
 import { browser } from "$app/environment";
 import { env } from "$env/dynamic/public";
+import { kindeConfigured } from "./auth-mode";
 import {
   isExpiring,
   parseSessionStart,
@@ -13,9 +14,10 @@ export type { SessionUser } from "./session-core";
 
 /* Cloud session layer (production backend). When PUBLIC_API_URL is unset the
    app runs fully local (localStorage progress, on-page tutor) — the gateway
-   slice below activates automatically once configured. In AUTH_MODE=clerk
-   deployments, swap the email/password forms for the Clerk components and
-   store the Clerk session token here instead (see /auth page notes).
+   slice below activates automatically once configured. With
+   PUBLIC_AUTH_PROVIDER=kinde, the identity provider is Kinde: its SDK keeps
+   the session in HttpOnly cookies, and this store asks this app's server for
+   the short-lived token it holds in memory (see /auth/session/kinde).
  *
  * Two credentials, two homes, deliberately (see lib/server/session-broker.ts):
  *
@@ -41,12 +43,11 @@ const BASE = ((env.PUBLIC_API_URL as string | undefined) ?? "").replace(/\/$/, "
  */
 const LEGACY_TOKEN_KEY = "nexora-jwt";
 /**
- * Clerk deployments keep their session in Clerk's own storage and renew it
- * through the provider, so there is no cookie here to restore and nothing for the
- * broker to do. Read from the same public key clerk.ts keys off, so the two agree
- * about the mode without this module importing Clerk.
+ * In a Kinde build the session is a set of HttpOnly cookies on this origin,
+ * managed by Kinde's SDK. The page still cannot read it, so restore and renew
+ * both go to this app's server; only the endpoint changes.
  */
-const CLERK_MODE = (((env.PUBLIC_CLERK_PUBLISHABLE_KEY as string | undefined) ?? "").trim()).startsWith("pk_");
+const KINDE_MODE = kindeConfigured;
 /**
  * Same-origin, always: these are the app's own endpoints, served by this app's
  * server rather than by the gateway. Named one by one so the whole session
@@ -57,6 +58,10 @@ const SESSION_BASE = "/auth/session";
 const LOGIN_PATH = `${SESSION_BASE}/login`;
 const REGISTER_PATH = `${SESSION_BASE}/register`;
 const REFRESH_PATH = `${SESSION_BASE}/refresh`;
+/** The Kinde broker: same-origin, reads Kinde's cookie session server-side. */
+const KINDE_SESSION_PATH = `${SESSION_BASE}/kinde`;
+/** Clears the local Kinde cookie session without leaving the page. */
+const KINDE_LOGOUT_PATH = `${SESSION_BASE}/kinde/logout`;
 const LOGOUT_PATH = `${SESSION_BASE}/logout`;
 const LOGOUT_ALL_PATH = `${SESSION_BASE}/logout-all`;
 /* The three account flows that are not a session but go through the same
@@ -124,7 +129,15 @@ class SessionStore {
    * this to clear: on a fresh load that claim is not yet known to be true, because
    * the credential is a cookie and no cookie is readable to scripts.
    */
-  restoring = $state(apiConfigured && !CLERK_MODE);
+  restoring = $state(apiConfigured);
+  /**
+   * Why the last Kinde handoff did not produce a session, when the page can do
+   * something with the reason. A conflict is an account that exists under a
+   * different method; an identity failure is the two sign-in settings not
+   * agreeing; unavailable is the platform not answering. A plain 401 is not an
+   * error — it is a visitor who is not signed in.
+   */
+  authError = $state<"conflict" | "identity" | "unavailable" | null>(null);
   /**
    * Bumped when the *identity* changes — sign-in, sign-out, an account switch —
    * and never when a live session is renewed.
@@ -136,37 +149,12 @@ class SessionStore {
    * would re-hit billing every few minutes.
    */
   epoch = $state(0);
-  /**
-   * External identity (Clerk). When set, API calls resolve a fresh token
-   * through it instead of trusting the stored one — Clerk rotates session
-   * tokens, and a cached copy would go stale mid-lesson. The rest of the
-   * app keeps reading `session.token`; the provider only refreshes it.
-   */
-  private tokenProvider: (() => Promise<string | null>) | null = null;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private inFlight: Promise<string | null> | null = null;
   private bootstrapped = false;
 
   get loggedIn(): boolean {
     return this.token !== null;
-  }
-
-  setTokenProvider(provider: (() => Promise<string | null>) | null) {
-    this.tokenProvider = provider;
-    // Whoever owns freshness, owns it alone: two schedulers would race each
-    // other into the rotation-reuse detection above.
-    if (provider) this.cancelTimer();
-    else this.schedule();
-  }
-
-  /**
-   * Adopt a token minted elsewhere (a Clerk session token). Clears the
-   * cached user so the header re-resolves identity against the new token,
-   * and drops any provider the previous mode installed.
-   */
-  useExternalToken(token: string | null) {
-    this.setTokenProvider(null);
-    this.persist(token, null);
   }
 
   /**
@@ -194,7 +182,7 @@ class SessionStore {
       } catch {
         /* storage disabled */
       }
-      if (!apiConfigured || CLERK_MODE) return;
+      if (!apiConfigured) return;
       await this.refresh();
     } finally {
       this.restoring = false;
@@ -208,7 +196,6 @@ class SessionStore {
    * stale token must produce one rotation, not ten.
    */
   async refresh(): Promise<string | null> {
-    if (this.tokenProvider) return this.token;
     if (!apiConfigured) return this.token;
     this.inFlight ??= this.rotate().finally(() => {
       this.inFlight = null;
@@ -217,19 +204,6 @@ class SessionStore {
   }
 
   async resolveToken(): Promise<string | null> {
-    if (this.tokenProvider) {
-      try {
-        const fresh = await this.tokenProvider();
-        // persist(), not useExternalToken(): the latter drops the provider as
-        // part of adopting a token from elsewhere, and here the provider is the
-        // thing keeping this token fresh. Dropping it would leave Clerk sessions
-        // with no renewal path on the first call after a rotation.
-        if (fresh && fresh !== this.token) this.persist(fresh, this.user);
-        return fresh ?? this.token;
-      } catch {
-        return this.token;
-      }
-    }
     // No token yet — a page that has not finished restoring, or one whose copy
     // was cleared: the cookie may still hold the session, so ask for it rather
     // than send a request the platform will reject.
@@ -248,7 +222,7 @@ class SessionStore {
   /** Refresh this token slightly before it dies, for as long as it lives. */
   private schedule() {
     this.cancelTimer();
-    if (!browser || this.tokenProvider || !this.token || !apiConfigured) return;
+    if (!browser || !this.token || !apiConfigured) return;
     const delay = refreshDelayMs(tokenExpiryMs(this.token));
     if (delay === null) return;
     this.timer = setTimeout(() => {
@@ -262,21 +236,43 @@ class SessionStore {
       // cookie the entire browser shares, so whatever another tab rotated it to is
       // already what this request carries. The lock is what keeps two of them
       // from being in flight with the same value.
+      //
+      // In Kinde mode the cookie belongs to Kinde's SDK and this app's server
+      // turns it into the token below. The lock still matters: two tabs asking
+      // at once would otherwise both run Kinde's refresh exchange.
       let res: Response;
       try {
-        res = await fetch(REFRESH_PATH, { method: "POST" });
+        res = await fetch(KINDE_MODE ? KINDE_SESSION_PATH : REFRESH_PATH, { method: "POST" });
       } catch {
         // We learned nothing (offline, tunnel down). The session stands, and the
         // timer or the next call retries.
         return this.token;
       }
       if (res.status === 401) {
-        // Authoritative: revoked, expired, or replayed. The session is over, and
-        // pretending otherwise would leave a signed-in shell around nothing.
+        // Authoritative: no Kinde session, or a revoked/expired/replayed local
+        // refresh cookie. Either way the session is over, and pretending
+        // otherwise would leave a signed-in shell around nothing.
+        //
+        // The body is drained rather than left unread: an unread response is a
+        // request the browser has not finished with, and every sweep that waits
+        // for a quiet network would hang on it.
+        await res.text().catch(() => "");
         this.persist(null, null);
+        this.authError = null;
         return null;
       }
-      if (!res.ok) return this.token;
+      if (!res.ok) {
+        if (KINDE_MODE) {
+          const failure = (await res.json().catch(() => null)) as
+            | { error?: { code?: unknown } }
+            | null;
+          const code = failure?.error?.code;
+          this.persist(null, null);
+          this.authError =
+            code === "conflict" ? "conflict" : code === "identity_invalid" ? "identity" : "unavailable";
+        }
+        return this.token;
+      }
       const start = parseSessionStart(await res.json().catch(() => null));
       if (!start) return this.token;
       this.persist(start.accessToken, start.user ?? this.user);
@@ -293,9 +289,8 @@ class SessionStore {
     // page instead of lasting until someone clears their browser.
     this.token = token;
     this.user = user;
-    // A renewal keeps the same identity, so it must not look like a switch. A
-    // Clerk rotation passes through a null user on its way back to the same one,
-    // which is why the account test needs both sides to be known.
+    if (token !== null) this.authError = null;
+    // A renewal keeps the same identity, so it must not look like a switch.
     const signedInChanged = wasSignedIn !== (token !== null);
     const switchedAccount = idBefore !== null && idAfter !== null && idBefore !== idAfter;
     if (signedInChanged || switchedAccount) this.epoch += 1;
@@ -596,24 +591,20 @@ class SessionStore {
     }>("/api/curriculum/ide/manifest", { token: await this.resolveToken() });
   }
 
-  async linkClerkProfile(email: string, name?: string) {
-    const r = await this.request<{ user: SessionUser; linked: boolean }>("/api/auth/link", {
-      method: "POST",
-      token: await this.resolveToken(),
-      body: name ? { email, name } : { email },
-    });
-    this.user = r.user;
-  }
-
   /**
-   * End the session locally first, then revoke it on the server.
+   * End the session locally first, then clear it on the server.
    *
    * Local state goes immediately so nothing in the interface keeps acting as a
-   * signed-in learner if the network is slow; the broker call then revokes both
-   * halves — the refresh family (and with it the cookie) and, because the access
-   * token travels with the request, that token's own `jti`, so the credential in
-   * hand stops being accepted at once instead of at the end of its TTL. It never
-   * throws: a sign-out that fails must still leave the learner signed out here.
+   * signed-in learner if the network is slow. In local mode the broker call then
+   * revokes both halves — the refresh family (and with it the cookie) and,
+   * because the access token travels with the request, that token's own `jti`,
+   * so the credential in hand stops being accepted at once instead of at the
+   * end of its TTL. In Kinde mode it clears Kinde's local cookie session; the
+   * full "sign out of Kinde" redirect is the sign-out module's job, because a
+   * page like the account receipt still has something to show.
+   *
+   * It never throws: a sign-out that fails must still leave the learner signed
+   * out here.
    */
   async logout(): Promise<void> {
     // Read before clearing, and do not renew: this is the credential the server
@@ -624,6 +615,10 @@ class SessionStore {
     this.persist(null, null);
     if (!apiConfigured) return;
     try {
+      if (KINDE_MODE) {
+        await fetch(KINDE_LOGOUT_PATH, { method: "POST" });
+        return;
+      }
       await fetch(LOGOUT_PATH, {
         method: "POST",
         headers: token ? { authorization: `Bearer ${token}` } : {},
@@ -648,6 +643,9 @@ class SessionStore {
    * Returns how many server-side sessions were ended, for the confirmation line.
    */
   async logoutEverywhere(): Promise<number> {
+    if (KINDE_MODE) {
+      throw new Error("Sessions on this account are managed by Kinde. Sign out on each device from Kinde.");
+    }
     const token = this.token;
     if (!apiConfigured || !token) {
       this.persist(null, null);

@@ -37,7 +37,7 @@ export const PRIVACY_CONTACT = "privacy@nexora.dev";
 export const SECURITY_CONTACT = "security@nexora.dev";
 
 /** The jurisdiction whose law governs the terms of service. */
-export const GOVERNING_LAW = "[[ governing law — set before publishing ]]";
+export const GOVERNING_LAW = "[[ governing law, set before publishing ]]";
 
 /**
  * `false` until the four values above are real. While it is `false`, every
@@ -63,10 +63,10 @@ export const SUBPROCESSORS = [
     location: "United States",
   },
   {
-    name: "Clerk",
+    name: "Kinde",
     purpose: "Account sign-in and identity",
-    data: "Email address, display name, session tokens",
-    location: "United States",
+    data: "Email address, display name, sign-in metadata, session tokens",
+    location: "Australia (AWS regions in Australia, Canada, Ireland, the UK and the US)",
   },
   {
     name: "Dodo Payments",
@@ -118,7 +118,7 @@ export const SUBPROCESSORS = [
  */
 export const RIGHT_KINDS = [
   { id: "access", label: "A copy of everything held about me", note: "Immediate, as a file, from this page." },
-  { id: "portability", label: "That copy in a machine-readable format", note: "The same file — JSON, with the schema named inside it." },
+  { id: "portability", label: "That copy in a machine-readable format", note: "The same file: JSON, with the schema named inside it." },
   { id: "erasure", label: "Delete my account and its records", note: "Immediate and self-serve, from the account page." },
   { id: "rectification", label: "Correct something inaccurate", note: "Answered within one month." },
   { id: "restriction", label: "Stop using my data while a dispute is resolved", note: "Answered within one month." },
@@ -146,7 +146,7 @@ export const SUBSCRIPTION_TERMS = {
   renewal:
     "Plans renew automatically until you cancel. The renewal date is shown before you pay, in your profile afterwards, and in every receipt.",
   cancellation:
-    "Cancel yourself, in the provider's own billing portal, from your profile — two clicks, no email, no retention call. Cancelling stops the next renewal; access runs to the end of the period you already paid for.",
+    "Cancel yourself, in the provider's own billing portal, from your profile: two clicks, no email, no retention call. Cancelling stops the next renewal; access runs to the end of the period you already paid for.",
   refund:
     "If you cancel within 14 days of the first payment and have not completed a paid-tier course, ask for a full refund and you will get one. After that, the period you paid for is yours to finish.",
   withdrawal:
@@ -183,13 +183,13 @@ export const AI_SYSTEMS = [
     name: "Claude agent SDK",
     provider: "Anthropic",
     role: "An optional agent bundled in the IDE's build, for the same chat surface.",
-    sends: "The same — only what you send.",
+    sends: "The same, only what you send.",
   },
   {
     name: "Codex agent SDK",
     provider: "OpenAI",
     role: "An optional agent bundled in the IDE's build, for the same chat surface.",
-    sends: "The same — only what you send.",
+    sends: "The same, only what you send.",
   },
 ] as const;
 
@@ -199,11 +199,11 @@ export const AI_DISCLOSURE = {
   interaction:
     "When you use the chat pane, you are talking to a third-party AI system, not to NEXORA and not to a person. The assistant's replies are generated, can be wrong, and are not reviewed before you see them.",
   decides:
-    "No AI grades your work, now or later. Which phase you have completed is decided by a deterministic rule engine running the platform's own checks over your own code — never by a model. That is a product commitment, and it is the reason assessment sits outside the AI Act's high-risk education category.",
+    "No AI grades your work, now or later. Which phase you have completed is decided by a deterministic rule engine running the platform's own checks over your own code, never by a model. That is a product commitment, and it is the reason assessment sits outside the AI Act's high-risk education category.",
   transfer:
     "Enabling an assistant sends what you type in that pane to the provider named above, from your machine. Without your input, nothing leaves it.",
   literacy:
-    "We do not train people to use AI. What this product owes you is a plain description of what the assistants are, what they receive, what they can be wrong about, and how to turn them off — which is what this page is.",
+    "We do not train people to use AI. What this product owes you is a plain description of what the assistants are, what they receive, what they can be wrong about, and how to turn them off. That is what this page is.",
 } as const;
 
 /** The public legal pages, in the order the footer lists them. */
@@ -237,8 +237,8 @@ export const REGIME_DATES = [
   { regime: "California (Automatic Renewal Law)", duty: "Renewal disclosure, consent and cancellation", date: "In force for every seller, whatever its size" },
   { regime: "EU Consumer Rights Directive", duty: "Pre-contract information and 14-day withdrawal", date: "In force" },
   { regime: "India (DPDP Act 2023 + Rules 2025)", duty: "Notice, consent, rights, children, breach reporting", date: "Operational duties commence 13 May 2027" },
-  { regime: "EU AI Act — transparency (Art. 50)", duty: "AI interaction disclosure, AI-content labelling", date: "In force since 2 August 2026" },
-  { regime: "EU AI Act — high-risk education systems", duty: "Annex III obligations", date: "Applies 2 December 2027 — and does not capture deterministic assessment" },
+  { regime: "EU AI Act, transparency (Art. 50)", duty: "AI interaction disclosure, AI-content labelling", date: "In force since 2 August 2026" },
+  { regime: "EU AI Act, high-risk education systems", duty: "Annex III obligations", date: "Applies 2 December 2027, and does not capture deterministic assessment" },
   { regime: "EU Cyber Resilience Act", duty: "Vulnerability reporting: 24-hour early warning, 72-hour notification", date: "In force since 11 September 2026" },
 ] as const;
 
@@ -257,7 +257,7 @@ export const LEGAL_BASES = [
   },
   {
     name: "Legitimate interests",
-    text: "A smaller part we hold on our legitimate interest in keeping the service secure and working — refusing a forged receipt, detecting a replayed sign-in.",
+    text: "A smaller part we hold on our legitimate interest in keeping the service secure and working: refusing a forged receipt, detecting a replayed sign-in.",
   },
   {
     name: "Legal obligation",
@@ -277,10 +277,10 @@ export const LEGAL_BASES = [
  * the subject are one decision, not two.
  */
 export function rightsSubjectLine(): string {
-  return `Subject: NEXORA data processing enquiry — ${PRIVACY_CONTACT}`;
+  return `Subject: NEXORA data processing enquiry: ${PRIVACY_CONTACT}`;
 }
 
 /** The subject line for a security report, beside its address. */
 export function securitySubjectLine(): string {
-  return `Subject: NEXORA security report — ${SECURITY_CONTACT}`;
+  return `Subject: NEXORA security report: ${SECURITY_CONTACT}`;
 }

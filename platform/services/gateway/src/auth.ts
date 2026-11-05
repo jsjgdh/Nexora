@@ -1,16 +1,25 @@
 import jwt from "jsonwebtoken";
-import { verifyToken } from "@clerk/backend";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
-/* Token verification behind one interface, two backends:
+/* Token verification behind one interface:
    - local:  HS256 with our own secret (zero-config dev, custom auth service).
-   - clerk:  Clerk session tokens via JWKS (secretKey) or pinned PEM (jwtKey).
+   - kinde:  Kinde access tokens, RS256, verified against the issuer's JWKS and
+             the API audience.
    Services downstream never know the difference — they see x-user-id.
 
    A verifier answers "who is this?" and, when the token format can name it,
    "which credential is it?" — the second is what lets the edge ask whether that
-   particular token has been revoked. Clerk owns its own session revocation and
-   its tokens carry no id we can look up, so it answers null there and the edge
-   skips the check: it never invents a verification the issuer does not perform. */
+   particular token has been revoked. Kinde owns its own session revocation, and
+   this platform's denylist never records a Kinde session's id, so it answers
+   null there and the edge skips a check that would always be clear: it never
+   invents a verification the issuer does not perform.
+
+   Kinde mode keeps the local verifier as a narrow fallback. The desktop IDE
+   signs in with a device code that a Kinde-authenticated browser approves; the
+   auth service then issues that device a short-lived platform token. The web's
+   tokens are Kinde's; the IDE's token is the platform's own receipt for a
+   session Kinde already approved. Password login and registration are refused
+   in Kinde mode, so no other local token can be minted. */
 
 export interface VerifiedToken {
   userId: string;
@@ -59,37 +68,87 @@ export function localVerifier(secret: string): TokenVerifier {
   };
 }
 
-export function clerkVerifier(opts: {
-  secretKey?: string;
-  jwtKey?: string;
-  /** Backend API base; empty/undefined means Clerk's hosted default. This is the
-      address the JWKS signing keys are fetched from when a pinned PEM is not in
-      use, so a self-hosted or sovereign Clerk is reachable and the HTTP key path
-      can be exercised against a local issuer. */
-  apiUrl?: string;
-  authorizedParties: string[];
+/**
+ * Kinde access tokens, verified where Kinde publishes the keys.
+ *
+ * The issuer is the business's own domain (`https://acme.kinde.com`), and the
+ * audience is the API registered for this platform. Both are checked: a valid
+ * signature from the same Kinde business is not enough, because that business
+ * may have other applications whose tokens were never meant for this service.
+ *
+ * The key set is fetched once and cached by jose, which also re-fetches when a
+ * token names a key id it has not seen. `KINDE_JWKS_URL` exists for a sovereign
+ * issuer or a local proof server; the default is Kinde's own published path.
+ */
+export function kindeVerifier(opts: {
+  issuer: string;
+  audience: string;
+  jwksUrl?: string;
 }): TokenVerifier {
-  if (!opts.secretKey && !opts.jwtKey) {
-    throw new Error("Clerk mode needs CLERK_SECRET_KEY or CLERK_JWT_KEY");
-  }
+  const issuer = opts.issuer.replace(/\/$/, "");
+  if (!/^https?:\/\//.test(issuer)) throw new Error("Kinde mode needs KINDE_ISSUER_URL");
+  if (!opts.audience) throw new Error("Kinde mode needs KINDE_AUDIENCE");
+  const jwksUrl = opts.jwksUrl
+    ? new URL(opts.jwksUrl)
+    : new URL(`${issuer}/.well-known/jwks.json`);
+  const keys = createRemoteJWKSet(jwksUrl);
   return {
     verify: async (token: string) => {
       try {
-        const payload = await verifyToken(token, {
-          ...(opts.secretKey ? { secretKey: opts.secretKey } : {}),
-          ...(opts.jwtKey ? { jwtKey: opts.jwtKey } : {}),
-          ...(opts.apiUrl ? { apiUrl: opts.apiUrl } : {}),
-          authorizedParties: opts.authorizedParties,
+        const { payload } = await jwtVerify(token, keys, {
+          issuer,
+          audience: opts.audience,
+          algorithms: ["RS256"],
         });
-        const sub = (payload as { sub?: unknown }).sub;
+        const sub = payload.sub;
         if (typeof sub !== "string" || !sub) throw new Error("bad subject");
-        // jti/exp/iat are deliberately not read: Clerk is the authority for its
-        // own sessions, and a local denylist keyed on a Clerk id would be a
-        // revocation story that quietly does not work (see VerifiedToken).
-        return { userId: sub, jti: null, expiresAtMs: null, issuedAtMs: null };
+        // Kinde is the authority for its own sessions. The platform's denylist
+        // never records a Kinde `jti`, so returning one would make the edge ask
+        // a question whose answer is always "clear" — a revocation guarantee
+        // that does not exist. See VerifiedToken.
+        return {
+          userId: sub,
+          jti: null,
+          expiresAtMs: typeof payload.exp === "number" ? payload.exp * 1000 : null,
+          issuedAtMs: typeof payload.iat === "number" ? payload.iat * 1000 : null,
+        };
       } catch {
         throw new Error("invalid token");
       }
+    },
+  };
+}
+
+/** The JWT header's `alg`, read only to route a token to the verifier that can
+    check it. The verifier still decides whether the token is genuine. */
+function algorithmOf(token: string): string | null {
+  const part = token.split(".")[0];
+  if (!part) return null;
+  try {
+    const header = JSON.parse(Buffer.from(part, "base64url").toString("utf8")) as {
+      alg?: unknown;
+    };
+    return typeof header.alg === "string" ? header.alg : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Two kinds of token in one deployment, routed by their signing algorithm.
+ *
+ * Kinde signs RS256; the platform's device-code handoff signs HS256. Trying the
+ * Kinde verifier first on an HS256 token would fetch a JWKS only to reject it,
+ * so the header picks the door and the chosen verifier still does the work.
+ * A token that names any other algorithm is refused without a fallback.
+ */
+export function compositeVerifier(primary: TokenVerifier, fallback: TokenVerifier): TokenVerifier {
+  return {
+    verify: async (token: string) => {
+      const alg = algorithmOf(token);
+      if (alg === "RS256") return primary.verify(token);
+      if (alg === "HS256") return fallback.verify(token);
+      throw new Error("invalid token");
     },
   };
 }

@@ -129,16 +129,29 @@ the bullets below describe.
   terminates TLS and forwards headers works. Only ports 80/443 are
   published on the host firewall — the compose-published 8080/3000 bind to
   loopback or move behind the proxy network, never to the open internet.
-- The gateway is the only public API surface. `FRONTEND_URL` and
-  `CLERK_AUTHORIZED_PARTIES` are set to the real origin — CORS is exact,
-  never `*` (see `platform/.env.example`).
+- The gateway is the only public API surface. `FRONTEND_URL` is set to the
+  real origin — CORS is exact, never `*` (see `platform/.env.example`).
+- In Kinde mode, three settings have to agree: the site's application
+  (`KINDE_CLIENT_ID` / `KINDE_CLIENT_SECRET`), the gateway's
+  `KINDE_ISSUER_URL` and `KINDE_AUDIENCE`, and the site's `KINDE_AUDIENCE`.
+  Register `<site>/api/auth/kinde_callback` in Kinde, set
+  `PUBLIC_AUTH_PROVIDER=kinde` on the site, and name the same API audience on
+  both sides. A mismatch is reported on `/auth` as "the two ends do not
+  agree"; it is not a silent signed-out loop.
+- Social providers are dashboard-first: register the OAuth app with the
+  provider, add the connection in Kinde, then copy its Kinde connection id
+  into `KINDE_CONNECTION_GOOGLE`, `KINDE_CONNECTION_GITHUB` or
+  `KINDE_CONNECTION_DISCORD`. Each id gives that provider its own button on
+  `/auth`; with no id the provider has no button, while Kinde's hosted page
+  still shows it once the connection is enabled.
 - The frontend needs **two** addresses for that gateway, because it has two
   callers: `PUBLIC_API_URL` is the browser's route to it (the published
   `127.0.0.1:8080`), and `GATEWAY_URL` is the app server's own route (`http://gateway:8080`
   on the compose network — inside the container, 127.0.0.1 is the container).
-  `GATEWAY_URL` is what `/auth/session/*` uses to hold the learner's refresh
-  token in an `HttpOnly` cookie. Get it wrong and sign-in alone fails, with
-  "the sign-in service did not answer", while every other page looks healthy.
+  `GATEWAY_URL` is what `/auth/session/*` uses to reach the platform; in local
+  mode it is also what keeps the refresh token in an `HttpOnly` cookie. Get it
+  wrong and sign-in alone fails, with "the sign-in service did not answer",
+  while every other page looks healthy.
 
 ## The pipeline
 

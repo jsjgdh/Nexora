@@ -1,0 +1,65 @@
+{
+  "runs": [
+    {
+      "date": "2026-10-26",
+      "surface": "NEXORA public site",
+      "kind": "redesign",
+      "macrostructure": "Split Studio",
+      "theme": "Cobalt Workshop (custom)",
+      "genre": "technical studio",
+      "anchor": "cobalt",
+      "type": "Instrument Sans / JetBrains Mono",
+      "pages": [
+        "/",
+        "/courses",
+        "/courses/task-manager",
+        "/courses/go",
+        "/courses/rust",
+        "/courses/sql",
+        "/courses/zig",
+        "/courses/ocaml",
+        "/courses/api",
+        "/pricing",
+        "/employers",
+        "/universities",
+        "/teach",
+        "/teach/join",
+        "/download",
+        "/verify",
+        "legal, account, auth and error surfaces"
+      ],
+      "notes": "Replaced the dark laboratory bench and the field manual with a light studio: near-white paper, one cobalt action, course identity colours, dark product windows, and product artifacts as the imagery. Every phase name, count, tier and goal is read from the shipped manifest. Download labels follow PUBLIC_IDE_DOWNLOAD_URL."
+    },
+    {
+      "date": "2026-10-27",
+      "surface": "NEXORA public site",
+      "kind": "redesign",
+      "macrostructure": "Split Studio",
+      "theme": "Petrol Press (custom)",
+      "genre": "technical studio, set like a printed sheet",
+      "anchor": "petrol",
+      "type": "Instrument Sans / JetBrains Mono",
+      "pages": [
+        "/",
+        "/courses",
+        "/courses/task-manager",
+        "/courses/go",
+        "/courses/rust",
+        "/courses/sql",
+        "/courses/zig",
+        "/courses/ocaml",
+        "/courses/api",
+        "/pricing",
+        "/employers",
+        "/universities",
+        "/teach",
+        "/teach/join",
+        "/download",
+        "/verify",
+        "/auth",
+        "legal, account and error surfaces"
+      ],
+      "notes": "Cobalt Workshop replaced in place, macrostructure kept. Warm bone stock replaces near-white, warm ink replaces graphite, and petrol at 45% 0.09 210 replaces cobalt as the single action hue; the product plate moved from navy to the same petrol driven down. Every container was cut square: 8px sheets, 4px controls and chips, round reserved for dots and rings, so the pill radius token is gone. Elevation was pulled in and tinted by the ink instead of blooming grey. The display scale became four named tokens (--text-hero, --text-page, --text-section, --text-band) and every route title now reads one of them rather than writing its own clamp, which closes the title drift the audit found. The auth route moved off raw utilities onto the shared field classes and scoped CSS. Palette was measured against every contrast invariant verify.ts asserts before it was written: tightest ramp 4.99:1, tightest state 5.12:1, tightest course mark 5.80:1, no failures."
+    }
+  ]
+}

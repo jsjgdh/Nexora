@@ -3,8 +3,8 @@
 export const IDE_MANIFEST_ZIG_FUNDAMENTALS: unknown = {
   "id": "zig-fundamentals",
   "title": "Zig fundamentals",
-  "description": "Zig itself, from the first program to the test runner. What build.zig decides, values and types, control flow, functions, structs and methods, pointers, error unions, the allocator, defer and errdefer, comptime and generics, the standard library, and the test runner. The phases build one small sheet program, and each is judged by the project's own Zig tests read by the Zig test runner. Every phase is Learn, then Solve, then Review.",
-  "version": 1,
+  "description": "Zig itself, from the first program to the test runner. What build.zig decides, values and types, control flow, functions, structs and methods, pointers, error unions, the allocator, defer and errdefer, comptime and generics, the standard library, and the test runner. The phases build the sheet program and a second audit program; each phase is judged by the Zig tests the project ships and, for the two programs, by what they print. Every phase is Learn, then Ask, then Solve, then Review.",
+  "version": 2,
   "role": "main",
   "phases": [
     {

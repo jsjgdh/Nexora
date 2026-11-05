@@ -107,24 +107,24 @@ export const TAGLINE =
 export const HERO_VARIANTS = [
   {
     id: "a",
-    lineOne: "Learn to build software.",
-    lineTwo: "Learn to think like an engineer.",
-    markOne: "build",
-    lede: "Build real applications, debug real failures, and understand how software works, inside a development environment built for learning by doing.",
+    lineOne: "Learn by shipping.",
+    lineTwo: "Keep the receipt.",
+    markOne: "",
+    lede: "A course inside a real IDE. Code decides each phase, and every pass leaves a receipt anyone can verify.",
   },
   {
     id: "b",
-    lineOne: "The tutorials end. The work begins.",
-    lineTwo: "Now build the thing.",
-    markOne: "work",
-    lede: "The hard part is rarely the syntax. It is the blank file, the test that fails, and the bug you have never seen before. This course works on that part.",
+    lineOne: "Write the code.",
+    lineTwo: "Earn the verdict.",
+    markOne: "",
+    lede: "The lesson, the editor and the check share a window. Your files are judged, and a miss explains itself.",
   },
   {
     id: "c",
-    lineOne: "Every phase is real software.",
-    lineTwo: "In your own workspace.",
-    markOne: "real",
-    lede: "Write the code, run the checks, read the failure, fix the cause. A finished phase leaves a receipt anyone can re-derive, and there is no score inside it.",
+    lineOne: "The course runs.",
+    lineTwo: "The code decides.",
+    markOne: "",
+    lede: "No quizzes and no scores. A real application, a deterministic check, and a record a stranger can re-derive.",
   },
 ] as const;
 
@@ -412,7 +412,7 @@ export const EMPLOYER = {
     {
       claim: "That the scope is known.",
       evidence:
-        "The curriculum is a public manifest: eighty phases, each with a name, an order and a tier.",
+        "The curriculum is a public manifest: every phase has a name, an order and a tier.",
     },
     {
       claim: "That it was not a quiz.",
@@ -725,11 +725,15 @@ export const OCAML_FUNDAMENTALS: [string, string, "free" | "pro"][] = [
   ["ocaml-functions", "Functions", "pro"],
   ["ocaml-lists", "Lists and recursion", "pro"],
   ["ocaml-records", "Records", "pro"],
+  ["ocaml-mutable", "Mutable state", "pro"],
   ["ocaml-variants", "Variants and pattern matching", "pro"],
+  ["ocaml-polymorphic-variants", "Polymorphic variants", "pro"],
   ["ocaml-modules", "Modules and functors", "pro"],
   ["ocaml-errors", "Errors", "pro"],
   ["ocaml-stdlib", "The standard library", "pro"],
-  ["ocaml-your-turn", "Your turn: the report", "pro"],
+  ["ocaml-testing", "Test what you write", "pro"],
+  ["ocaml-effects", "Effects and domains", "pro"],
+  ["ocaml-your-turn", "Your turn: the evaluator", "pro"],
 ];
 
 /**
@@ -989,7 +993,7 @@ export const STEPS = [
     id: "tier",
     title: "Your tier opens the courses.",
     caption:
-      `The first phase of every course is free, and so is the whole API primer: ${FREE_PHASES_IN_WORDS} phases, free forever, and assessment is never gated. A subscription unlocks the rest, and unlocking means the phases appear inside the IDE you already have.`,
+      `The first phase of every course is free, and so is the whole API primer: ${FREE_PHASES_IN_WORDS} phases, free forever, and assessment is never gated. A subscription opens the rest, and those phases appear inside the IDE you already have.`,
     points: [
       "Free: the first phase of every course, and the API primer whole",
       "Pro: every further phase, fetched per entitlement",
@@ -1109,6 +1113,39 @@ export const NO_LIST = [
   "No model decides whether you passed. It explains a failure; it never grades one.",
   "Nothing to collect: no completion badge, no badge at all, and no score for finishing.",
   "No XP, no streak, no leaderboard. Activity is not evidence.",
+] as const;
+
+/**
+ * The four properties the front door argues for, and where each one is
+ * enforced. The table is a specification, not a feature row: every line names
+ * a mechanism the product already has, and the last column says where a reader
+ * would meet it.
+ */
+export const DIFFERENCES = [
+  {
+    property: "The verdict",
+    meaning:
+      "Tests run against your own files. A model may explain a failure; it never decides one.",
+    enforced: "Every phase",
+  },
+  {
+    property: "The window",
+    meaning:
+      "The lesson, the editor and the check share one window, so there is no second tab to keep in sync.",
+    enforced: "The IDE",
+  },
+  {
+    property: "The record",
+    meaning:
+      "A finished run leaves a command, an exit code, a file hash and a duration. Anyone can re-derive it.",
+    enforced: "/verify",
+  },
+  {
+    property: "The help",
+    meaning:
+      "Every activity says how much of the answer it will give. Later phases give the question only.",
+    enforced: "Every activity",
+  },
 ] as const;
 
 /** The questions that actually get asked before the first download. */
@@ -1267,7 +1304,7 @@ const TEAM_PLAN = {
   dependsOn: "The quote depends on how many people, for how long, and on which courses.",
   cap: "The quote is capped: a licence never costs more than the same people would pay for Pro on their own.",
   checkout: "There is no checkout for a team licence. It is invoiced, and the quote comes first.",
-  action: { href: "/employers#contact", label: "Let's talk" },
+  action: { href: "/employers#contact", label: "Talk about Teams" },
 } as const;
 
 const CAMPUS_PLAN = {
@@ -1287,7 +1324,7 @@ const CAMPUS_PLAN = {
     "The quote depends on the size of the cohort, the length of the term, and the courses you teach.",
   cap: "The quote is capped: a licence never costs more than the same students would pay for Pro on their own.",
   checkout: "There is no checkout for a campus licence. It is invoiced, and the quote comes first.",
-  action: { href: "/universities#contact", label: "Let's talk" },
+  action: { href: "/universities#contact", label: "Talk about Campus" },
 } as const;
 
 /** The two quoted offers, in the order a reader meets them. */
@@ -1396,16 +1433,14 @@ export const FOOTER_LINKS = [
   { href: "/universities", label: "For teaching" },
 ] as const;
 
+/** The bar's destinations. `Courses` is the menu the header renders from
+ *  `COURSES`, so it is not repeated here; teaching and the verifier live in the
+ *  footer and on their own pages. */
 export const NAV = [
-  { href: "/#loop", label: "How it works" },
-  { href: "/#build", label: "What you build" },
-  { href: "/#why", label: "Why" },
+  { href: "/#how", label: "How it works" },
   { href: "/#proof", label: "Proof" },
-  { href: "/courses", label: "Courses" },
-  { href: "/employers", label: "For hiring" },
-  { href: "/universities", label: "For teaching" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/verify", label: "Verify" },
+  { href: "/employers", label: "For hiring" },
 ] as const;
 
 /**

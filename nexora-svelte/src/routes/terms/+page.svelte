@@ -33,26 +33,26 @@
   path="/terms"
 />
 
-<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+<div class="mx-auto max-w-[1100px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
   <Headline
     as="h1"
     lines={["The deal,", "in plain clauses."]}
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
-  <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
+  <p class="document-lede">
     These terms cover the three surfaces you can use: this website, the desktop IDE, and the hosted
     runner that executes code you submit. Where the product cannot do what a clause would claim, the
     clause says what it actually does.
   </p>
 </div>
 
-<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+<div class="mx-auto max-w-[1100px] px-5 pb-20 sm:px-8 sm:pb-28">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,38rem)_minmax(0,1fr)]">
     <Plate crosshair>
       <p class="stamp text-[11px] text-faint">terms of service</p>
       <DocStatus />
 
-      <div class="mt-6 grid gap-8 text-[13.5px] leading-relaxed text-muted">
+      <div class="mt-6 grid gap-8 text-[14.5px] leading-relaxed text-muted">
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Who these terms are with</h2>
           <p class="mt-3">
@@ -67,10 +67,10 @@
         </section>
 
         <section>
-          <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">What is free, and what a paid tier unlocks</h2>
+          <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">What is free, and what a paid tier opens</h2>
           <p class="mt-3">
             The IDE download, the {FREE_PHASES_PHRASE} bundled inside it, and every check and verdict are free
-            and stay free: assessment is never placed behind the paywall. A paid tier unlocks further
+            and stay free: assessment is never placed behind the paywall. A paid tier opens further
             courses, which are fetched into the IDE for the account that is entitled to them. The
             price, the billing period and what each tier includes are shown on the pricing page and at
             checkout, and we do not add charges you were not shown.
@@ -277,18 +277,18 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">the short version</p>
         <ul class="mt-4 grid gap-4">
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Your code stays yours.</span> You grant only the licence needed to
             run and re-judge what you submit.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Renews until you cancel.</span> The date is shown before you pay and
             in your account, and cancelling takes two clicks.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Assessment stays free.</span> No check is ever behind the paywall.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">A receipt is evidence, not a qualification.</span> We do not claim
             it makes you employable.
           </li>
@@ -298,13 +298,13 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">what these terms do not promise</p>
         <ul class="mt-4 grid gap-4">
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">No uptime figure.</span> There is no SLA and no status page.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">No automatic refunds.</span> A refund request is handled by hand.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">No backup.</span> Keep your own copy of your work.
           </li>
         </ul>

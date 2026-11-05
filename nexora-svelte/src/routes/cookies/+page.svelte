@@ -45,26 +45,26 @@
   path="/cookies"
 />
 
-<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+<div class="mx-auto max-w-[1100px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
   <Headline
     as="h1"
     lines={["One cookie.", "Nothing watching you."]}
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
-  <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
+  <p class="document-lede">
     This site sets one cookie of its own, and it is the one that keeps you signed in. There is no
     analytics, no advertising, and no tracking of any kind, so there is nothing here for a banner to
     ask you about.
   </p>
 </div>
 
-<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+<div class="mx-auto max-w-[1100px] px-5 pb-20 sm:px-8 sm:pb-28">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,38rem)_minmax(0,1fr)]">
     <Plate crosshair>
       <p class="stamp text-[11px] text-faint">cookie notice</p>
       <DocStatus />
 
-      <div class="mt-6 grid gap-8 text-[13.5px] leading-relaxed text-muted">
+      <div class="mt-6 grid gap-8 text-[14.5px] leading-relaxed text-muted">
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">What is stored</h2>
           <p class="mt-3">
@@ -185,16 +185,16 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">the inventory</p>
         <ul class="mt-4 grid gap-4">
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">one cookie</span><br />
             <span class="num text-[12.5px] text-ink">nexora_refresh</span>: the signed-in session,
             HttpOnly and path-scoped to the session endpoints.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">zero trackers</span><br />
             No analytics, no advertising, no pixels, no profiling, no fingerprinting.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">no consent banner</span><br />
             Because there is nothing non-essential to consent to. The first thing that is gets a
             real mechanism first.
@@ -205,10 +205,10 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">not used here</p>
         <ul class="mt-4 grid gap-3">
-          <li class="text-[13.5px] leading-relaxed text-muted">Analytics or product measurement</li>
-          <li class="text-[13.5px] leading-relaxed text-muted">Advertising or retargeting pixels</li>
-          <li class="text-[13.5px] leading-relaxed text-muted">Cross-site tracking or profiling</li>
-          <li class="text-[13.5px] leading-relaxed text-muted">Fingerprinting or device identifiers</li>
+          <li class="text-[14.5px] leading-relaxed text-muted">Analytics or product measurement</li>
+          <li class="text-[14.5px] leading-relaxed text-muted">Advertising or retargeting pixels</li>
+          <li class="text-[14.5px] leading-relaxed text-muted">Cross-site tracking or profiling</li>
+          <li class="text-[14.5px] leading-relaxed text-muted">Fingerprinting or device identifiers</li>
         </ul>
       </Plate>
     </div>

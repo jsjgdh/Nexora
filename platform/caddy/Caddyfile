@@ -62,10 +62,10 @@
 #   break the site. The API host does have one, because the API answers with
 #   JSON and nothing else.
 #
-#   It does not set Cross-Origin-Opener-Policy on the site host. Clerk
-#   sign-in opens a popup, and a strict opener policy severs the relationship
-#   the popup needs to hand the session back. It is set on the API host,
-#   where there is no popup.
+#   It does not set Cross-Origin-Opener-Policy on the site host. The site's
+#   SvelteKit hooks own the document headers, and the identity provider's flow
+#   is a decision for that layer rather than for the edge. It is set on the API
+#   host, where there is no document.
 #
 #   It was not executed. This was written on a machine with no Caddy binary
 #   and no deployment to point it at. The syntax follows the Caddyfile

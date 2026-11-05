@@ -629,7 +629,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       "lesson": [
         {
           "kind": "prose",
-          "body": "You have finished the JavaScript track. This one is written in Go, in a second project on your disk: Go Ledger, which holds money as whole numbers. The method does not change, you still Learn, then Solve, then Review alone, so the level reads 2 again because the language is new, not because you fell behind."
+          "body": "This course is written in Go, in a project of its own on your disk: Go Ledger, which holds money as whole numbers. The method does not change, you still Learn, then Solve, then Review alone, so the level reads 2 again because the language is new, not because the work is being repeated."
         },
         {
           "kind": "prose",
@@ -699,7 +699,12 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
           "label": "Go Spec: type declarations and the zero value",
           "url": "https://go.dev/ref/spec#Type_declarations"
         }
-      ]
+      ],
+      "bridge": {
+        "course": "task-manager",
+        "phase": "fundamentals",
+        "text": "In JavaScript a value has a type and a variable starts as undefined until you assign it. In Go the type is written down and the value starts at its zero: 0 for a number, \"\" for a string, and nothing is ever undefined."
+      }
     },
     "go-values-ask": {
       "id": "go-values-ask",
@@ -1340,6 +1345,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "bridge": {
         "course": "task-manager",
+        "phase": "fundamentals",
         "text": "In JavaScript an object holds named fields and you find one by its key. A Go struct holds the same fields with their types written down, so a function that takes the struct can only see what the struct allows."
       }
     },
@@ -1578,6 +1584,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "bridge": {
         "course": "task-manager",
+        "phase": "fundamentals",
         "text": "In JavaScript a function is a value you pass around, and it belongs to nothing. A Go method belongs to a type and receives the value it works on, and whether it receives a copy or the address decides what it can change."
       }
     },
@@ -2232,6 +2239,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "bridge": {
         "course": "task-manager",
+        "phase": "fundamentals",
         "text": "In JavaScript an array keeps its order and an object is found by a key. In Go those are two types: a slice keeps the order, and a map is found by a key, and assigning to a key again replaces what was there."
       }
     },
@@ -2911,6 +2919,7 @@ export const IDE_COURSE_GO_FUNDAMENTALS: unknown = {
       ],
       "bridge": {
         "course": "task-manager",
+        "phase": "web-basics",
         "text": "In JavaScript a function that cannot do its job throws, and the caller catches it. In Go a function that cannot do its job returns an error as a second value, and the caller reads it."
       }
     },

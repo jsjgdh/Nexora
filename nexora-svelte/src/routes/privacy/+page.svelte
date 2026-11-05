@@ -36,11 +36,11 @@
       why: "To create your account and sign you in. The password is stored only as a bcrypt hash, never as text.",
     },
     {
-      what: "Billing details for a paid tier — email, name, plan, and the customer id your payment carries",
+      what: "Billing details for a paid tier: email, name, plan, and the customer id your payment carries",
       why: "To run the subscription and let you manage or cancel it. Card numbers never reach this platform; they go to the payment provider.",
     },
     {
-      what: "Your learning record — which competency you demonstrated, at what level, and a hash of the evidence",
+      what: "Your learning record: which competency you demonstrated, at what level, and a hash of the evidence",
       why: "To show your progress and to let a third party re-check a receipt you choose to share. The record is what makes a verdict provable later.",
     },
     {
@@ -72,26 +72,26 @@
   path="/privacy"
 />
 
-<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+<div class="mx-auto max-w-[1100px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
   <Headline
     as="h1"
     lines={["What we hold,", "and what we do not."]}
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
-  <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
+  <p class="document-lede">
     This notice describes the data the product actually handles, at the level of detail the code
     supports. Where a control does not exist yet, it says so in the sentence that would otherwise
     claim it.
   </p>
 </div>
 
-<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+<div class="mx-auto max-w-[1100px] px-5 pb-20 sm:px-8 sm:pb-28">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,38rem)_minmax(0,1fr)]">
     <Plate crosshair>
       <p class="stamp text-[11px] text-faint">privacy notice</p>
       <DocStatus />
 
-      <div class="mt-6 grid gap-8 text-[13.5px] leading-relaxed text-muted">
+      <div class="mt-6 grid gap-8 text-[14.5px] leading-relaxed text-muted">
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Who is responsible</h2>
           <p class="mt-3">
@@ -304,17 +304,17 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">the short version</p>
         <ul class="mt-4 grid gap-4">
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Your code stays yours.</span> It leaves your machine only for a run
             you asked for, or for an AI assistant you switched on.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">No tracking.</span> No analytics, no pixels, no profiling.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">No selling.</span> Data is not sold or shared for advertising.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">A real contact.</span> One address answers access, correction and
             erasure requests.
           </li>
@@ -331,7 +331,7 @@
 
       <Plate>
         <p class="stamp text-[11px] text-faint">reach a person about any of this</p>
-        <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+        <p class="mt-3 text-[14.5px] leading-relaxed text-muted">
           The form below sends the same address pre-filled for the purpose you pick: privacy, rights,
           or security. Use it when you want a reply from us, or open your mailer with the address
           pre-filled when you prefer.

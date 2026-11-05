@@ -51,7 +51,7 @@ export const ADMIN = {
   configuration: {
     authMode: "Sign-in method",
     authModeLocal: "Email and password, on this platform",
-    authModeClerk: "Clerk",
+    authModeKinde: "Kinde",
     mailConfigured: "Mail provider",
     mailOn: "Configured",
     mailOff: "Not configured",

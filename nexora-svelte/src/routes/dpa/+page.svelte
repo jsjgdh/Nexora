@@ -40,26 +40,26 @@
   path="/dpa"
 />
 
-<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+<div class="mx-auto max-w-[1100px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
   <Headline
     as="h1"
     lines={["Processing on your behalf,", "in writing."]}
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
-  <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
+  <p class="document-lede">
     When a customer brings learners to this service, <span class="text-ink">{LEGAL_ENTITY}</span>
     processes their personal data on the customer's instructions. This page states what that
     means and what is still missing before it can be signed.
   </p>
 </div>
 
-<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+<div class="mx-auto max-w-[1100px] px-5 pb-20 sm:px-8 sm:pb-28">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,38rem)_minmax(0,1fr)]">
     <Plate crosshair>
       <p class="stamp text-[11px] text-faint">data processing agreement</p>
       <DocStatus />
 
-      <div class="mt-6 grid gap-8 text-[13.5px] leading-relaxed text-muted">
+      <div class="mt-6 grid gap-8 text-[14.5px] leading-relaxed text-muted">
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Status of this document</h2>
           <p class="mt-3">
@@ -202,19 +202,19 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">the short version</p>
         <ul class="mt-4 grid gap-4">
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">You are the controller; we are the processor.</span> We act only
             on your documented instructions.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Named subprocessors, published before they start.</span>
             {SUBPROCESSORS.length} listed, each with what it touches and where.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Transfers named, clauses pending.</span> SCCs plus UK Addendum
             and a transfer assessment must attach before signing.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">No isolation warranty yet.</span> Stated here so it is never
             discovered in diligence.
           </li>
@@ -233,7 +233,7 @@
 
       <Plate>
         <p class="stamp text-[11px] text-faint">write to the operator from this page</p>
-        <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+        <p class="mt-3 text-[14.5px] leading-relaxed text-muted">
           The form below is the same address, pre-filled for the purpose you select. Use it when you
           want a reply from us, or open your mailer with the address pre-filled when you prefer.
         </p>
@@ -249,7 +249,7 @@
         <p class="stamp text-[11px] text-faint">the lawful bases we rely on</p>
         <ul class="mt-3 grid gap-4">
           {#each LEGAL_BASES as base (base.name)}
-            <li class="text-[13.5px] leading-relaxed text-muted">
+            <li class="text-[14.5px] leading-relaxed text-muted">
               <span class="text-ink">{base.name}.</span>
               {base.text}
             </li>

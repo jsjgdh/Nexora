@@ -14,10 +14,14 @@
  * machine-readable files (robots.txt, sitemap.xml) are not pages and carry no
  * script, so they are not here; the error page is, because a visitor meets it
  * the moment a link is wrong. */
+
+import { COURSE_PAGES } from "../src/lib/content/courses";
+
 export const allRoutes = [
   "/",
   "/pricing",
   "/courses",
+  ...COURSE_PAGES.map((course) => `/courses/${course.slug}`),
   "/employers",
   "/universities",
   // The cohort surface. A lecturer and a student arrive here, and both pages

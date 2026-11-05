@@ -176,7 +176,12 @@ export interface GatewayReply {
  * session (it must not — an outage is not a rejection) or is merely an error to
  * show.
  */
-export async function gatewayPost(path: string, payload: unknown, timeoutMs = GATEWAY_TIMEOUT_MS): Promise<GatewayReply> {
+export async function gatewayPost(
+  path: string,
+  payload: unknown,
+  timeoutMs = GATEWAY_TIMEOUT_MS,
+  headers: Record<string, string> = {}
+): Promise<GatewayReply> {
   const base = gatewayBase();
   if (!base) {
     return {
@@ -187,7 +192,7 @@ export async function gatewayPost(path: string, payload: unknown, timeoutMs = GA
   try {
     const res = await fetch(base + path, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...headers },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(timeoutMs),
     });

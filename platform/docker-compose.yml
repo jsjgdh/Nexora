@@ -248,7 +248,7 @@ services:
         PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-}
         PUBLIC_API_URL: ${PUBLIC_API_URL:-}
         PUBLIC_IDE_DOWNLOAD_URL: ${PUBLIC_IDE_DOWNLOAD_URL:-}
-        PUBLIC_CLERK_PUBLISHABLE_KEY: ${PUBLIC_CLERK_PUBLISHABLE_KEY:-}
+        PUBLIC_AUTH_PROVIDER: ${PUBLIC_AUTH_PROVIDER:-local}
     env_file:
       - path: .env
         required: false
@@ -267,6 +267,10 @@ services:
       # HttpOnly cookie. PUBLIC_API_URL cannot serve there: inside this container
       # 127.0.0.1 is the container itself, not the host's published port.
       GATEWAY_URL: ${GATEWAY_URL:-http://gateway:8080}
+      # adapter-node's own view of the public origin. Without it, event.url is
+      # derived from the socket, and a same-origin check (the session bridge)
+      # can disagree with the browser's Origin behind a proxy.
+      ORIGIN: ${PUBLIC_SITE_URL:-http://localhost:3000}
     ports:
       - "3000:3000"
     depends_on:

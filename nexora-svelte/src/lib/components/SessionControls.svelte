@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { clerkConfigured, signOutThisDevice } from "$lib/sign-out";
+  import { kindeConfigured, signOutThisDevice } from "$lib/sign-out";
   import { session } from "$lib/session.svelte";
   import Button from "$lib/components/Button.svelte";
   import Plate from "$lib/components/Plate.svelte";
@@ -76,7 +76,7 @@
 {#snippet Controls()}
   <div class="flex flex-wrap items-center gap-3">
     <Button variant="ghost" onclick={signOut}>Sign out</Button>
-    {#if !clerkConfigured}
+    {#if !kindeConfigured}
       <Button variant="quiet" disabled={everywhereBusy} onclick={signOutEverywhere}>
         {everywhereBusy
           ? "Ending every session"
@@ -87,9 +87,9 @@
     {/if}
   </div>
   <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
-    {#if clerkConfigured}
-      Sessions on this account are managed by Clerk, so ending them on every device is done from
-      its dashboard. Signing out here ends this device.
+    {#if kindeConfigured}
+      Sessions on this account are managed by Kinde, so ending them on every device is done from
+      Kinde. Signing out here ends this device.
     {:else}
       "Sign out everywhere" ends every session on this account, every tab and every device,
       including this one, for a device you no longer hold or trust.

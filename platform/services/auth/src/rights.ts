@@ -75,13 +75,13 @@ export const CONSENT_META: Record<ConsentDocument, { purpose: string; basis: Law
  * The processors whose copy of a learner's record no request to *us* can reach,
  * and which therefore become open work on the deletion queue.
  *
- * This is honest about the shape of the integration: Clerk holds the identity
+ * This is honest about the shape of the integration: Kinde holds the identity
  * and Dodo holds the payment relationship, and neither is reachable by deleting
  * a row in this database. Queuing is what makes the gap visible — an uncompleted
  * row is the operator's open task, and the retention schedule's manual procedure
  * is this queue rather than a paragraph promising it was done.
  */
-export const PROCESSOR_HANDOFFS = ["Clerk (identity)", "Dodo Payments (merchant of record)"] as const;
+export const PROCESSOR_HANDOFFS = ["Kinde (identity)", "Dodo Payments (merchant of record)"] as const;
 
 /**
  * What an erasure retains, and why. Kept as data so the response, the receipt
@@ -497,7 +497,7 @@ export function registerRightsRoutes(app: FastifyInstance, pool: Pool): void {
      * and a receipt written after it would not survive a crash in between.
      *
      * Anything that cannot be reached from here — the payment records in billing,
-     * Clerk's copy of the identity — is recorded as open work rather than
+     * Kinde's copy of the identity — is recorded as open work rather than
      * described as done. Called after the commit, the billing handoff can fail
      * without taking the account deletion with it, which is the correct direction:
      * an account that is gone with a follow-up owed is a compliance task, and an

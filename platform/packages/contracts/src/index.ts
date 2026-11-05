@@ -224,7 +224,7 @@ export interface RevocationCheckResponse {
   reason?: "credential" | "account";
 }
 
-/* Clerk-mode provisioning: the gateway verified the Clerk session token and
+/* Kinde-mode provisioning: the gateway verified the Kinde access token and
    forwarded its subject as the user id, so this id IS the authenticated
    user. Creates the local profile row on first sight; idempotent after that.
    Email is immutable here — never merges two identities. */
@@ -258,7 +258,7 @@ export interface PublicUser {
  * an address was never confirmed at all.
  *
  * Both request routes answer the same way whatever the address turns out to
- * be: an existing local account, a Clerk-managed account, an address nobody
+ * be: an existing local account, a Kinde-managed account, an address nobody
  * has heard of. There is no enumeration here, ever. The bodies are identical,
  * the statuses are identical, and the work done before the answer is the same
  * work in every case, so the answer does not arrive faster for an address

@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
   import PageHead from "$lib/components/PageHead.svelte";
-  import Headline from "$lib/components/Headline.svelte";
-  import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import HiringEnquiry from "$lib/components/HiringEnquiry.svelte";
   import MarketPanel from "$lib/components/MarketPanel.svelte";
@@ -12,28 +10,13 @@
 
   /* The employer one-pager.
    *
-   * The research's §7 lists the collateral this product should have, and the
-   * employer one-pager is the one piece of it a hiring manager would actually
-   * read: one page, one question, printed on one sheet.
+   * One page, one question, and a printed sheet that keeps its shape. The page
+   * says what is not built yet with the same weight as what is, because the
+   * fastest way to lose a reader who was willing to believe you is to let them
+   * find the gap themselves.
    *
-   * The research's sample employer copy promises three things: hires that
-   * arrive with a portfolio, less onboarding overhead, and graduates who are
-   * fluent with generated code. Two of those cannot be written, because
-   * there is no portfolio to attach and no cohort to have graduated. The
-   * third can, and it is the strongest of the three, so the page is built
-   * around the same three propositions as the site and around the artefacts
-   * that back them.
-   *
-   * The page says what is not built yet, in the same place and with the same
-   * weight as what is. A hiring manager who reads that and walks away was
-   * never going to buy, and the ones who read it and stay are the ones worth
-   * talking to.
-   *
-   * It is meant to be printed: the print stylesheet in `app.css` turns this
-   * route into a single sheet of paper, because a document that has to be
-   * screenshotted is a document that does not get read. The one thing the
-   * printed sheet drops is the form: a field a reader cannot fill in on
-   * paper is not worth the space, and the address and the promise stay. */
+   * The market context is screen-only: a learner does not need it, and the
+   * paper version is still the thing the page claims to be. */
 
   let { data }: PageProps = $props();
 
@@ -46,171 +29,494 @@
   path="/employers"
 />
 
-<div class="onepager mx-auto max-w-[1320px] px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
-  <!-- ===================== The pitch ===================== -->
-  <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-16">
-    <div>
-      <Headline
-        as="h1"
-        lines={["What a hire comes with,", "and how you check it."]}
-        class="max-w-[16ch] text-[clamp(2rem,5vw,3.6rem)] text-ink"
-      />
-      <p class="reading mt-6 max-w-[52ch] text-[16px] leading-relaxed text-muted">
-        Every finished phase leaves a signed receipt: the command, the exit code, the file hash, the
-        duration. Anyone can re-derive it at /verify, with no account and no call.
-      </p>
-      <div class="mt-8 flex flex-wrap items-center gap-3">
-        <ActionLink href="/verify" island>Check a receipt yourself</ActionLink>
-        <ActionLink href="/#courses" variant="ghost">Read the curriculum</ActionLink>
+<div class="onepager">
+  <section class="employer-hero">
+    <div class="container-page employer-grid">
+      <div>
+        <h1 class="display employer-title">What a hire comes with, and how you check it.</h1>
+        <p class="employer-lede">
+          Every finished phase leaves a signed receipt: the command, the exit code, the file hash,
+          the duration. Anyone can re-derive it at /verify, with no account and no call.
+        </p>
+        <div class="employer-actions">
+          <ActionLink href="/verify" size="lg" island>Verify a receipt</ActionLink>
+          <ActionLink href="/#courses" variant="ghost" size="lg">Read the curriculum</ActionLink>
+        </div>
+      </div>
+
+      <aside class="scope-card card">
+        <p class="stamp scope-label">The scope, in one line</p>
+        <dl class="scope-list">
+          {#each FACTS as fact (fact.label)}
+            <div>
+              <dt>{fact.label}</dt>
+              <dd class="num">{fact.value}</dd>
+            </div>
+          {/each}
+        </dl>
+        <p class="scope-note">
+          {total} phases, every one of them judged inside the desktop IDE.
+          {COURSES.map((course) => course.title).join(", ")}.
+        </p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section-pad props-section" aria-labelledby="employer-props">
+    <div class="container-page">
+      <h2 id="employer-props" class="display section-title">Three things a hire comes with.</h2>
+      <ul class="props">
+        {#each PROPS.employer as prop, i (prop.id)}
+          <li>
+            <span class="num prop-n">{String(i + 1).padStart(2, "0")}</span>
+            <h3 class="prop-title">{prop.title}</h3>
+            <p class="prop-body">{prop.body}</p>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  </section>
+
+  <section id="market" class="screen-only market-section" aria-labelledby="employer-market">
+    <div class="container-page">
+      <h2 id="employer-market" class="display section-title">The market this answer is for.</h2>
+      <div class="market-card card">
+        <MarketPanel />
+      </div>
+      <div class="category-card card">
+        <CategoryMap />
       </div>
     </div>
+  </section>
 
-    <Plate>
-      <p class="stamp text-faint">the scope, in one line</p>
-      <dl class="mt-5 grid gap-4">
-        {#each FACTS as fact (fact.label)}
-          <div class="flex items-baseline gap-4 border-t border-rule pt-3 first:border-t-0 first:pt-0">
-            <dt class="max-w-[22ch] text-[13px] leading-snug text-muted">{fact.label}</dt>
-            <dd class="num ml-auto text-[15px] font-bold text-ink">{fact.value}</dd>
-          </div>
+  <section class="section-pad evidence-section" aria-labelledby="employer-checks">
+    <div class="container-page">
+      <h2 id="employer-checks" class="display section-title">{EMPLOYER.title}</h2>
+      <ul class="evidence">
+        {#each EMPLOYER.checks as check (check.claim)}
+          <li>
+            <p class="evidence-claim">{check.claim}</p>
+            <p class="evidence-body">{check.evidence}</p>
+          </li>
         {/each}
-      </dl>
-      <p class="mt-6 border-t border-rule pt-4 text-[12.5px] leading-relaxed text-faint">
-        {total} phases, every one of them judged inside the desktop IDE. {COURSES.map((course) => course.title).join(", ")}.
-      </p>
-    </Plate>
-  </div>
-
-  <!-- ===================== The three propositions ===================== -->
-  <section class="mt-20 border-t border-rule pt-12" aria-labelledby="employer-props">
-    <h2 id="employer-props" class="display max-w-[20ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
-      Three things a hire comes with.
-    </h2>
-    <ul class="mt-10 grid gap-8 lg:grid-cols-3 lg:gap-12">
-      {#each PROPS.employer as prop (prop.id)}
-        <li class="border-t border-rule-strong pt-6">
-          <h3 class="display max-w-[18ch] text-[clamp(1.15rem,1.9vw,1.5rem)] text-ink">{prop.title}</h3>
-          <p class="reading mt-3 max-w-[40ch] text-[15px] leading-relaxed text-muted">{prop.body}</p>
-        </li>
-      {/each}
-    </ul>
-  </section>
-
-  <!-- ===================== The market this product answers =====================
-       The hiring research, with each figure and the study it came from. It
-       lives here rather than on the homepage because a learner arriving to
-       learn to code has no use for a hiring market, and a hiring manager
-       arriving to compare vendors has exactly this use for it.
-
-       It is screen context, not part of the one-pager's argument, so it does
-       not print. The sheet on paper is still the one thing this page claims to
-       be: what a hire comes with, and how you check it. -->
-  <section
-    id="market"
-    class="screen-only mt-20 border-t border-rule pt-12"
-    aria-labelledby="employer-market"
-  >
-    <h2 id="employer-market" class="display max-w-[22ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
-      The market this answer is for.
-    </h2>
-    <div class="mt-10">
-      <MarketPanel />
-    </div>
-    <div class="mt-14">
-      <CategoryMap />
+      </ul>
     </div>
   </section>
 
-  <!-- ===================== The evidence ===================== -->
-  <section class="mt-20 border-t border-rule pt-12" aria-labelledby="employer-checks">
-    <h2 id="employer-checks" class="display max-w-[22ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
-      {EMPLOYER.title}
-    </h2>
-    <ul class="mt-10 border-t border-rule">
-      {#each EMPLOYER.checks as check (check.claim)}
-        <li class="grid gap-3 border-b border-rule py-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-12">
-          <p class="text-[15.5px] font-semibold text-ink">{check.claim}</p>
-          <p class="reading max-w-[60ch] text-[15px] leading-relaxed text-muted">{check.evidence}</p>
-        </li>
-      {/each}
-    </ul>
-  </section>
-
-  <!-- ===================== The limits ===================== -->
-  <section class="mt-20 grid gap-10 border-t border-rule pt-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
-    <div>
-      <h2 class="display max-w-[16ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
-        What is not built yet.
-      </h2>
-      <p class="reading mt-4 max-w-[40ch] text-[15px] leading-relaxed text-muted">
-        Stated here rather than in a footnote, because the fastest way to lose a reader who was
-        willing to believe you is to let them find the gap themselves.
-      </p>
+  <section class="limits-section">
+    <div class="container-page limits-grid">
+      <div>
+        <h2 class="display limits-title">What is not built yet.</h2>
+        <p class="limits-lede">
+          Stated here rather than in a footnote, because the fastest way to lose a reader who was
+          willing to believe you is to let them find the gap themselves.
+        </p>
+      </div>
+      <ul class="limits">
+        {#each EMPLOYER.notYet as gap (gap.text)}
+          <li>
+            <span class="num cross" aria-hidden="true">✗</span>
+            <span>{gap.text}</span>
+          </li>
+        {/each}
+      </ul>
     </div>
-    <ul class="grid gap-4">
-      {#each EMPLOYER.notYet as gap (gap.text)}
-        <li class="grid grid-cols-[auto_1fr] gap-4 border-t border-rule pt-4 text-[15px] leading-relaxed text-muted">
-          <span class="num pt-0.5 text-[12px] text-removed" aria-hidden="true">✗</span>
-          <span>{gap.text}</span>
-        </li>
-      {/each}
-    </ul>
   </section>
 
-  <!-- ===================== The pilot ===================== -->
-  <section class="mt-20 border-t border-rule pt-12" aria-labelledby="employer-pilot">
-    <h2 id="employer-pilot" class="display max-w-[20ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
-      How a pilot starts.
-    </h2>
-    <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-16">
-      <p class="reading max-w-[62ch] text-[16px] leading-relaxed text-muted">
-        {EMPLOYER.pilot.body}
-      </p>
-      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <ActionLink href="/download" variant="ghost">Download the IDE</ActionLink>
+  <section class="section-pad pilot-section" aria-labelledby="employer-pilot">
+    <div class="container-page pilot-grid">
+      <div>
+        <h2 id="employer-pilot" class="display section-title">How a pilot starts.</h2>
+        <p class="pilot-body">{EMPLOYER.pilot.body}</p>
+      </div>
+      <div class="pilot-actions">
+        <ActionLink href="/download" variant="ghost">{data.release.label}</ActionLink>
         <ActionLink href="/verify" island>Verify a receipt</ActionLink>
       </div>
     </div>
   </section>
 
-  <!-- ===================== The contact ===================== -->
-  <!-- The way to reach a person. This page used to end with a refusal and no
-       address, which is the worst of both: a reader who believes the page and
-       wants to talk has nowhere to go. -->
-  <section id="contact" class="mt-20 border-t border-rule pt-12" aria-labelledby="employer-contact">
-    <h2 id="employer-contact" class="display max-w-[20ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
-      {HIRING_ENQUIRY.title}
-    </h2>
-    <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
-      <div class="min-w-0">
-        <p class="reading max-w-[46ch] text-[15px] leading-relaxed text-muted">
-          {HIRING_ENQUIRY.lead}
-        </p>
-        <p class="reading mt-4 max-w-[46ch] text-[15px] leading-relaxed text-muted">
-          {HIRING_ENQUIRY.next}
-        </p>
-        <p class="mt-6 border-t border-rule pt-4 text-[13.5px] leading-relaxed text-muted">
+  <section id="contact" class="contact-section" aria-labelledby="employer-contact">
+    <div class="container-page contact-grid">
+      <div>
+        <h2 id="employer-contact" class="display section-title">{HIRING_ENQUIRY.title}</h2>
+        <p class="contact-body">{HIRING_ENQUIRY.lead}</p>
+        <p class="contact-body">{HIRING_ENQUIRY.next}</p>
+        <p class="contact-address">
           Write to
-          <a class="text-accent underline underline-offset-4" href="mailto:{HIRING_CONTACT}">{HIRING_CONTACT}</a>
+          <a href="mailto:{HIRING_CONTACT}">{HIRING_CONTACT}</a>
           if you would rather not use a form. It is the same mailbox.
         </p>
       </div>
-      <div class="min-w-0">
+      <div class="contact-form">
         <HiringEnquiry mailConfigured={data.mailConfigured} />
       </div>
     </div>
   </section>
 
-  <!-- ===================== The close ===================== -->
-  <section class="mt-20 border-t-2 border-rule-strong pt-12" aria-labelledby="employer-close">
-    <h2 id="employer-close" class="display max-w-[24ch] text-[clamp(1.5rem,2.8vw,2.2rem)] text-ink">
-      There is no cohort behind this page yet.
-    </h2>
-    <p class="reading mt-4 max-w-[64ch] text-[16px] leading-relaxed text-muted">
-      No placement rate, no salary figure and no customer logo, because we have not run a cohort we
-      could honestly report on. What is here is the mechanism: the work runs, the rule engine judges
-      it, the receipt is signed, and anybody can re-derive it. Judge the mechanism first, and the
-      rest of the argument can wait until there is something to report.
-    </p>
+  <section class="employer-close">
+    <div class="container-page">
+      <h2 class="display close-title">There is no cohort behind this page yet.</h2>
+      <p class="close-body">
+        No placement rate, no salary figure and no customer logo, because we have not run a cohort
+        we could honestly report on. What is here is the mechanism: the work runs, the rule engine
+        judges it, the receipt is signed, and anybody can re-derive it. Judge the mechanism first,
+        and the rest of the argument can wait until there is something to report.
+      </p>
+    </div>
   </section>
 </div>
+
+<style>
+  .employer-hero {
+    padding-block: clamp(3.5rem, 7vw, 6rem) clamp(2.5rem, 5vw, 4rem);
+    border-bottom: 1px solid var(--color-rule);
+    background:
+      radial-gradient(60% 80% at 85% 20%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 60%);
+  }
+
+  .employer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    align-items: center;
+  }
+
+  @media (min-width: 1080px) {
+    .employer-grid {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: clamp(3rem, 6vw, 5rem);
+    }
+  }
+
+  .employer-title {
+    margin-top: var(--space-5);
+    font-size: var(--text-page);
+    line-height: 0.95;
+    letter-spacing: -0.055em;
+    text-wrap: balance;
+  }
+
+  .employer-lede {
+    margin-top: var(--space-5);
+    max-width: 50ch;
+    font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .employer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-7);
+  }
+
+  .scope-card {
+    padding: var(--space-6);
+  }
+
+  @media (min-width: 640px) {
+    .scope-card {
+      padding: var(--space-8);
+    }
+  }
+
+  .scope-label {
+    color: var(--color-faint);
+  }
+
+  .scope-list {
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .scope-list div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .scope-list dt {
+    max-width: 26ch;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--color-muted);
+  }
+
+  .scope-list dd {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--color-ink);
+  }
+
+  .scope-note {
+    margin-top: var(--space-4);
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--color-faint);
+  }
+
+  .props-section {
+    background: var(--color-panel);
+  }
+
+  .section-title {
+    font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  }
+
+  .props {
+    list-style: none;
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 900px) {
+    .props {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .props li {
+    padding-top: var(--space-4);
+    border-top: 2px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-rule));
+  }
+
+  .prop-n {
+    font-size: 9px;
+    color: var(--color-faint);
+  }
+
+  .prop-title {
+    margin-top: var(--space-2);
+    max-width: 18ch;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .prop-body {
+    margin-top: var(--space-2);
+    max-width: 38ch;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .market-section {
+    padding-block: clamp(4rem, 7vw, 6.5rem);
+    background: var(--color-raised);
+    border-block: 1px solid var(--color-rule);
+  }
+
+  .market-card,
+  .category-card {
+    margin-top: var(--space-6);
+    padding: var(--space-5);
+  }
+
+  .evidence-section {
+    background: var(--color-panel);
+  }
+
+  .evidence {
+    list-style: none;
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--color-rule-strong);
+  }
+
+  .evidence li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--color-rule-strong);
+  }
+
+  @media (min-width: 900px) {
+    .evidence li {
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      gap: var(--space-10);
+    }
+  }
+
+  .evidence-claim {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .evidence-body {
+    max-width: 58ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .limits-section {
+    padding-block: clamp(4rem, 7vw, 6.5rem);
+    background: var(--color-raised);
+    border-block: 1px solid var(--color-rule);
+  }
+
+  .limits-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+
+  @media (min-width: 980px) {
+    .limits-grid {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: clamp(3rem, 7vw, 6rem);
+    }
+  }
+
+  .limits-title {
+    margin-top: var(--space-4);
+    max-width: 14ch;
+    font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  }
+
+  .limits-lede {
+    margin-top: var(--space-4);
+    max-width: 42ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .limits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--color-rule-strong);
+  }
+
+  .limits li {
+    display: grid;
+    grid-template-columns: 1.4rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-rule-strong);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--color-ink);
+  }
+
+  .cross {
+    color: var(--color-fail);
+    font-size: 10px;
+  }
+
+  .pilot-section {
+    background: var(--color-panel);
+  }
+
+  .pilot-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+
+  @media (min-width: 980px) {
+    .pilot-grid {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-16);
+    }
+  }
+
+  .pilot-body {
+    margin-top: var(--space-4);
+    max-width: 62ch;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .pilot-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .contact-section {
+    padding-block: clamp(4rem, 7vw, 6.5rem);
+    background: var(--color-raised);
+    border-block: 1px solid var(--color-rule);
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  @media (min-width: 980px) {
+    .contact-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: clamp(3rem, 7vw, 6rem);
+    }
+  }
+
+  .contact-body {
+    margin-top: var(--space-4);
+    max-width: 46ch;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .contact-address {
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-rule);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--color-muted);
+  }
+
+  .contact-address a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .contact-form {
+    min-width: 0;
+  }
+
+  .employer-close {
+    padding-block: clamp(4rem, 7vw, 6.5rem);
+    background: var(--color-screen);
+    color: var(--color-screen-ink);
+  }
+
+  .close-title {
+    max-width: 22ch;
+    font-size: clamp(1.9rem, 4vw, 3rem);
+    color: var(--color-screen-ink);
+  }
+
+  .close-body {
+    margin-top: var(--space-4);
+    max-width: 66ch;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-screen-muted);
+  }
+</style>

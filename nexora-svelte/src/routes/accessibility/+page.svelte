@@ -44,25 +44,25 @@
   path="/accessibility"
 />
 
-<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+<div class="mx-auto max-w-[1100px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
   <Headline
     as="h1"
     lines={["A position,", "not a certificate."]}
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
-  <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
+  <p class="document-lede">
     Accessibility work that is described honestly is worth more than a badge, so this page says what
     is tested, by what means, and where the gaps still are.
   </p>
 </div>
 
-<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+<div class="mx-auto max-w-[1100px] px-5 pb-20 sm:px-8 sm:pb-28">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,38rem)_minmax(0,1fr)]">
     <Plate crosshair>
       <p class="stamp text-[11px] text-faint">accessibility statement</p>
       <DocStatus />
 
-      <div class="mt-6 grid gap-8 text-[13.5px] leading-relaxed text-muted">
+      <div class="mt-6 grid gap-8 text-[14.5px] leading-relaxed text-muted">
         <section>
           <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">What we work to</h2>
           <p class="mt-3">
@@ -167,18 +167,18 @@
       <Plate>
         <p class="stamp text-[11px] text-faint">in one line</p>
         <ul class="mt-4 grid gap-4">
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Target:</span> WCAG 2.1 AA, tested against, not certified.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Automated:</span> axe-core over the site's production pages, pinned
             in the suite.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Manual:</span> keyboard operability, visible focus, reduced motion,
             dark-first design.
           </li>
-          <li class="text-[13.5px] leading-relaxed text-muted">
+          <li class="text-[14.5px] leading-relaxed text-muted">
             <span class="text-ink">Missing:</span> an independent audit, an ACR/VPAT, and a pass over
             the IDE's lab panels.
           </li>
@@ -187,7 +187,7 @@
 
       <Plate>
         <p class="stamp text-[11px] text-faint">report a barrier</p>
-        <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+        <p class="mt-3 text-[14.5px] leading-relaxed text-muted">
           A boundary report is a defect in something we already claim to support, triaged as one. Use
           the form below when you want a response, or open your mailer with the address pre-filled.
         </p>

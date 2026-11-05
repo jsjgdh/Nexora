@@ -1,110 +1,27 @@
-/* The typefaces, served from this site. */
+/* The typefaces, served from this site. Latin subset, variable where the face
+   provides an axis, roman only: there is no italic face in this world, so none
+   is served and none has to be downloaded. No third-party request is made to
+   render a page. */
+
 @font-face {
-  font-family: 'Archivo';
-  font-style: italic;
-  font-weight: 100 900;
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 400 700;
   font-stretch: 100%;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   font-display: swap;
-  src: url('/fonts/archivo-italic-0.woff2') format('woff2');
+  src: url("/fonts/instrument-sans-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-  font-family: 'Archivo';
+  font-family: "JetBrains Mono";
   font-style: normal;
-  font-weight: 100 900;
-  font-stretch: 100%;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  font-weight: 400 700;
   font-display: swap;
-  src: url('/fonts/archivo-normal-1.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: italic;
-  font-weight: 400;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/ibm-plex-mono-italic-0.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: italic;
-  font-weight: 500;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/ibm-plex-mono-italic-1.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: italic;
-  font-weight: 600;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/ibm-plex-mono-italic-2.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: italic;
-  font-weight: 700;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/ibm-plex-mono-italic-3.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 400;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/ibm-plex-mono-normal-4.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 500;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/ibm-plex-mono-normal-5.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 600;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/ibm-plex-mono-normal-6.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 700;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/ibm-plex-mono-normal-7.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Newsreader';
-  font-style: italic;
-  font-weight: 200 800;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/newsreader-italic-0.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Newsreader';
-  font-style: normal;
-  font-weight: 200 800;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-  font-display: swap;
-  src: url('/fonts/newsreader-normal-1.woff2') format('woff2');
+  src: url("/fonts/jetbrains-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
 }

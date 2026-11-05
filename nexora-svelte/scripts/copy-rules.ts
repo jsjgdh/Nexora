@@ -22,8 +22,16 @@
 export const EM_DASH = "\u2014";
 export const EN_DASH = "\u2013";
 
-/** The one primary call to action. */
-export const CTA_LABEL = "Try it free";
+/**
+ * The one primary call to action.
+ *
+ * The label is release-aware in the product (`release.label`), so the two
+ * spellings are the two states of the world, not two marketing variants. The
+ * retired sales phrase is still caught below, because it must not come back
+ * over a build that does not exist.
+ */
+export const CTA_LABEL = "Download the IDE";
+export const CTA_LABELS: readonly string[] = [CTA_LABEL, "Get the IDE when it ships"];
 
 /**
  * The words the product refuses.

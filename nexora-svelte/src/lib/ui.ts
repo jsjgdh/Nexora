@@ -1,43 +1,42 @@
 /* The action vocabulary.
  *
- * There is exactly one shape of action on this site and it is defined here, so
- * a link and a button cannot drift into looking like two different products.
- * `ActionLink` (an anchor that goes somewhere) and `Button` (a control that
- * does something) both build their classes from this function; the only
- * difference between them is the element and the semantics.
+ * One shape for every action: a cut chip, a 48px target, sentence case, a
+ * petrol fill for the one thing a page wants done, and a quiet rule for
+ * everything else. `ActionLink` (a link that goes somewhere) and `Button` (a
+ * control that does something) build their classes here, so the two cannot
+ * drift.
  *
- * Every variant clears a 44px minimum height, because the one measurement a
- * design cannot argue with is a thumb. `sm` is narrower and set smaller — never
- * shorter. A 36px "small" action was here, and 36 is not a small button, it is
- * a button that a thumb misses.
+ * Petrol is the action hue. Course colours decorate a mark and its tag; they
+ * never paint a button. `inverse` exists for the dark band, where the action
+ * sits on the petrol plate and has to turn to paper. `danger` is the
+ * failed-check ink, used only by a destructive control.
  *
- * The transition names its properties instead of using `transition-colors`,
- * which also covers `outline-color` — and a focus ring that fades in is a ring
- * that is not there yet. Measured on the primary variant: the ring began at the
- * element's own text colour (the room's ground on an accent fill, which is
- * invisible) and only reached the accent after 200ms, so a keyboard user got no
- * indicator for the first sixth of a second. Focus is instant; only the hover
- * colours move.
- *
- * The press is real too: an action sinks by one pixel while it is held down,
- * so a click has a physical answer rather than only a colour change. */
+ * Focus is instant; hover and lift are short and eased. */
 
-export type ActionVariant = "primary" | "ghost" | "quiet" | "danger";
-export type ActionSize = "sm" | "md";
+export type ActionVariant = "primary" | "ghost" | "quiet" | "danger" | "inverse";
+export type ActionSize = "sm" | "md" | "lg";
 
 export function actionClass(variant: ActionVariant = "primary", size: ActionSize = "md"): string {
   const base =
-    "inline-flex items-center justify-center gap-3 border font-semibold whitespace-nowrap " +
-    "transition-[color,background-color,border-color,transform] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] " +
-    "active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50";
-  const sizing = size === "sm" ? "min-h-[44px] px-3 text-[12.5px]" : "min-h-[44px] px-5 text-[13.5px]";
+    "inline-flex items-center justify-center gap-2.5 rounded-chip border font-semibold whitespace-nowrap " +
+    "transition-[color,background-color,border-color,transform,box-shadow] duration-200 " +
+    "ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 active:translate-y-0 " +
+    "disabled:cursor-not-allowed disabled:opacity-50";
+  const sizing =
+    size === "sm"
+      ? "min-h-[44px] px-4 text-[13px]"
+      : size === "lg"
+        ? "min-h-[52px] px-7 text-[15px]"
+        : "min-h-[48px] px-6 text-[14px]";
   const skin =
     variant === "primary"
-      ? "border-accent bg-accent text-ground hover:bg-accent-bright hover:border-accent-bright"
+      ? "border-accent bg-accent text-on-accent shadow-[var(--shadow-cta)] hover:border-accent-strong hover:bg-accent-strong"
       : variant === "ghost"
-        ? "border-rule-strong text-ink hover:border-accent hover:text-accent"
+        ? "border-rule-strong bg-panel text-ink hover:border-ink/30 hover:bg-raised"
         : variant === "danger"
-          ? "border-removed text-removed hover:bg-raised"
-          : "border-transparent text-muted hover:text-ink";
+          ? "border-fail bg-transparent text-fail hover:bg-fail/10"
+          : variant === "inverse"
+            ? "border-on-accent bg-on-accent text-accent-strong hover:border-accent hover:bg-transparent hover:text-on-accent"
+            : "border-transparent bg-transparent text-muted hover:text-ink";
   return `${base} ${sizing} ${skin}`;
 }

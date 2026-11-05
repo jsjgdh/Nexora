@@ -31,7 +31,7 @@ for (let i = 0; i < 80; i++) {
 
 const browser = await chromium.launch();
 
-for (const route of ["/", "/pricing"]) {
+for (const route of ["/", "/courses/task-manager", "/pricing"]) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const seen = new Map();
   page.on("response", async (res) => {
@@ -52,9 +52,23 @@ for (const route of ["/", "/pricing"]) {
     console.log(`  ${(bytes / 1024).toFixed(1).padStart(8)} kB  ${url.slice(0, 90)}`);
   }
 
-  // The field is below the fold, so it should not have been asked for yet.
-  const three = [...seen.keys()].filter((u) => /field|three/i.test(u));
-  console.log(`  the 3D field requested on first load: ${three.length > 0 ? "YES" : "no"}`);
+  // There is no 3D scene on any public page, so nothing may request one.
+  const three = [...seen.keys()].filter((u) => /three|webgl/i.test(u));
+  console.log(`  a 3D renderer requested on first load: ${three.length > 0 ? "YES" : "no"}`);
+
+  const lcp = (await page.evaluate(`new Promise((resolve) => {
+    let value = -1;
+    try {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) value = entry.startTime;
+      });
+      observer.observe({ type: "largest-contentful-paint", buffered: true });
+    } catch {
+      /* not supported */
+    }
+    setTimeout(() => resolve(Math.round(value)), 400);
+  })`)) as number;
+  console.log(`  largest contentful paint: ${lcp < 0 ? "not reported" : lcp + "ms"}`);
 
   await page.close();
 }

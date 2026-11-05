@@ -4,9 +4,8 @@
   import { courseTitle, joinFailure, type Cohort } from "$lib/cohorts";
   import Button from "$lib/components/Button.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
-  import Headline from "$lib/components/Headline.svelte";
-  import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
+  import type { ReleaseState } from "$lib/release";
   import { pageTitle } from "$lib/seo";
 
   /* How a student joins a cohort.
@@ -23,7 +22,7 @@
    * not answer, never as a refusal. The learner is told which of the two
    * happened. */
 
-  let { data }: { data: { code: string } } = $props();
+  let { data }: { data: { code: string; release: ReleaseState } } = $props();
 
   /**
    * The code in the field.
@@ -81,72 +80,67 @@
   path="/teach/join"
 />
 
-<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-20 sm:px-8 sm:pt-24 sm:pb-28">
-  <div class="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
-    <div>
-      <Headline
-        as="h1"
-        lines={[COHORT_JOIN.title]}
-        class="text-[clamp(1.9rem,4.4vw,3.2rem)] text-ink"
-      />
-      <p class="reading mt-6 max-w-[46ch] text-[15px] leading-relaxed text-muted">
-        {COHORT_JOIN.lede}
-      </p>
+<div class="container-page join-page">
+  <div class="join-layout">
+    <div class="join-copy">
+      <h1 class="display join-title">{COHORT_JOIN.title}</h1>
+      <p class="join-lede">{COHORT_JOIN.lede}</p>
 
-      <div class="mt-10 grid gap-4 border-t border-rule pt-6">
-        <p class="stamp text-[11px] text-faint">what joining gives you</p>
-        <p class="max-w-[46ch] text-[13.5px] leading-relaxed text-muted">{COHORT_JOIN.gives}</p>
-        <p class="max-w-[46ch] text-[13.5px] leading-relaxed text-muted">{COHORT_JOIN.pending}</p>
-        <p class="max-w-[46ch] text-[13.5px] leading-relaxed text-faint">{COHORT_JOIN.free}</p>
+      <div class="join-gives">
+        <p class="stamp">What joining gives you</p>
+        <p class="join-point">{COHORT_JOIN.gives}</p>
+        <p class="join-point">{COHORT_JOIN.pending}</p>
+        <p class="join-fine">{COHORT_JOIN.free}</p>
       </div>
     </div>
 
-    <div class="min-w-0">
+    <div class="join-panel">
       {#if !apiConfigured}
-        <Plate>
-          <p class="stamp text-review">cloud accounts not connected</p>
-          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">{COHORT_JOIN.notConfigured}</p>
-        </Plate>
+        <div class="state-card card">
+          <span class="tag">Local mode</span>
+          <p class="state-body">{COHORT_JOIN.notConfigured}</p>
+          <div class="state-action">
+            <ActionLink href="/download" variant="ghost" island>{data.release.label}</ActionLink>
+          </div>
+        </div>
       {:else if session.restoring}
-        <Plate>
-          <p class="stamp text-muted">checking your session</p>
-          <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+        <div class="state-card card">
+          <span class="tag">Checking your session</span>
+          <p class="state-body">
             Your session lives in a cookie this page cannot read, so it asks the server before it can
             join anything.
           </p>
-        </Plate>
+        </div>
       {:else if !session.loggedIn}
-        <Plate crosshair>
-          <p class="stamp text-faint">signed out</p>
-          <p class="mt-3 max-w-[52ch] text-[13.5px] leading-relaxed text-muted">
-            {COHORT_JOIN.signedOut}
-          </p>
-          <div class="mt-6">
+        <div class="state-card card">
+          <span class="tag">Signed out</span>
+          <p class="state-body">{COHORT_JOIN.signedOut}</p>
+          <div class="state-action">
             <ActionLink href="/auth" island>Sign in</ActionLink>
           </div>
-        </Plate>
+        </div>
       {:else}
-        <Plate crosshair>
+        <div class="join-card card">
           {#if joined}
-            <p class="stamp text-approved">{COHORT_JOIN.joined}</p>
-            <h2 class="mt-3 text-[19px] text-ink">
+            <p class="tag tag-pass">{COHORT_JOIN.joined}</p>
+            <h2 class="joined-title">
               {alreadyMember ? COHORT_JOIN.joinedAlready : joined.name}
             </h2>
-            <dl class="mt-4 border-t border-rule text-[13.5px]">
-              <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule py-2">
-                <dt class="stamp text-faint">{COHORT_JOIN.inCourse}</dt>
-                <dd class="text-ink">{courseTitle(joined.courseId)}</dd>
+            <dl class="joined-facts">
+              <div>
+                <dt>{COHORT_JOIN.inCourse}</dt>
+                <dd>{courseTitle(joined.courseId)}</dd>
               </div>
-              <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule py-2">
-                <dt class="stamp text-faint">{COHORT_JOIN.atInstitution}</dt>
-                <dd class="text-ink">{joined.institution}</dd>
+              <div>
+                <dt>{COHORT_JOIN.atInstitution}</dt>
+                <dd>{joined.institution}</dd>
               </div>
-              <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule py-2">
-                <dt class="stamp text-faint">{COHORT_JOIN.theTerm}</dt>
-                <dd class="text-ink">{joined.term}</dd>
+              <div>
+                <dt>{COHORT_JOIN.theTerm}</dt>
+                <dd>{joined.term}</dd>
               </div>
             </dl>
-            <p class="mt-4 max-w-[52ch] text-[13.5px] leading-relaxed text-muted">
+            <p class="state-body">
               {#if joined.status === "active"}
                 {COHORT_ACCOUNT.active}
               {:else if joined.status === "ended"}
@@ -155,14 +149,14 @@
                 {COHORT_ACCOUNT.pending}
               {/if}
             </p>
-            <div class="mt-6 flex flex-wrap gap-3 border-t border-rule pt-5">
+            <div class="joined-action">
               <ActionLink href="/account" variant="ghost" size="sm" island>
-                See your account
+                Your account
               </ActionLink>
             </div>
           {:else}
-            <form onsubmit={join}>
-              <label for="join-code" class="stamp block text-faint">{COHORT_JOIN.field}</label>
+            <form onsubmit={join} class="join-form">
+              <label for="join-code" class="field-label">{COHORT_JOIN.field}</label>
               <input
                 id="join-code"
                 bind:value={code}
@@ -171,25 +165,183 @@
                 autocomplete="off"
                 spellcheck={false}
                 placeholder={COHORT_JOIN.placeholder}
-                class="num mt-2 min-h-[44px] w-full border border-control bg-raised px-3 py-2.5 text-[18px] tracking-[0.12em] text-ink placeholder:text-faint"
+                class="field-input num join-input"
               />
               {#if error}
-                <div class="mt-5 border-l border-removed pl-4" role="alert">
-                  <p class="text-[13.5px] leading-relaxed text-muted">{error}</p>
-                </div>
+                <p class="join-error" role="alert">{error}</p>
               {/if}
-              <div class="mt-6">
+              <div class="join-submit">
                 <Button type="submit" busy={busy}>
                   {busy ? COHORT_JOIN.working : COHORT_JOIN.action}
                 </Button>
               </div>
             </form>
-            <p class="mt-5 text-[12.5px] leading-relaxed text-faint">
+            <p class="join-fine">
               The code is on the slide, and it is typed once. The dash and the case do not matter.
             </p>
           {/if}
-        </Plate>
+        </div>
       {/if}
     </div>
   </div>
 </div>
+
+<style>
+  .join-page {
+    padding-block: clamp(3rem, 6vw, 5.5rem) clamp(4rem, 8vw, 7rem);
+  }
+
+  .join-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    align-items: start;
+  }
+
+  @media (min-width: 960px) {
+    .join-layout {
+      grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+      gap: clamp(3rem, 7vw, 6rem);
+    }
+  }
+
+  .join-copy,
+  .join-panel {
+    min-width: 0;
+  }
+
+  .join-title {
+    max-width: 16ch;
+    font-size: var(--text-page);
+    color: var(--color-ink);
+  }
+
+  .join-lede {
+    margin-top: var(--space-5);
+    max-width: 48ch;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .join-gives {
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+    border-top: 2px solid var(--color-ink);
+  }
+
+  .join-gives .stamp {
+    color: var(--color-faint);
+  }
+
+  .join-point {
+    margin-top: var(--space-3);
+    max-width: 46ch;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .join-fine {
+    margin-top: var(--space-4);
+    max-width: 48ch;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--color-faint);
+  }
+
+  .state-card,
+  .join-card {
+    padding: var(--space-6);
+  }
+
+  @media (min-width: 640px) {
+    .state-card,
+    .join-card {
+      padding: var(--space-8);
+    }
+  }
+
+  .state-body {
+    margin-top: var(--space-3);
+    max-width: 56ch;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .state-action {
+    margin-top: var(--space-6);
+  }
+
+  .join-form {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .join-input {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+
+  .join-error {
+    margin-top: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-fail);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-fail) 6%, var(--color-panel));
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--color-ink);
+  }
+
+  .join-submit {
+    margin-top: var(--space-5);
+  }
+
+  .joined-title {
+    margin-top: var(--space-4);
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 2.4vw, 1.8rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+  }
+
+  .joined-facts {
+    margin: var(--space-5) 0 0;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .joined-facts div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .joined-facts dt {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  .joined-facts dd {
+    margin: 0;
+    text-align: right;
+    font-size: 13.5px;
+    color: var(--color-ink);
+  }
+
+  .joined-action {
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-rule);
+  }
+</style>

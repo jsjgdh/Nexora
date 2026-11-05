@@ -56,17 +56,16 @@
     width: 20px;
     height: 20px;
     border: 1px solid var(--color-control);
-    background: var(--color-raised);
+    border-radius: var(--radius-sm);
+    background: var(--color-panel);
     transition:
-      background-color 150ms var(--ease-out),
-      border-color 150ms var(--ease-out);
+      background-color var(--dur-1) var(--ease-out),
+      border-color var(--dur-1) var(--ease-out);
   }
   label:has(input:checked) .box {
     background: var(--color-accent);
     border-color: var(--color-accent);
   }
-  /* The tick: two borders and a rotation, the way every other mark in this
-     house is drawn. */
   label:has(input:checked) .box::after {
     content: "";
     position: absolute;
@@ -74,12 +73,12 @@
     top: 2px;
     width: 5px;
     height: 10px;
-    border: solid var(--color-ground);
+    border: solid var(--color-on-accent);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
   }
   label:has(input:focus-visible) .box {
-    outline: 1px solid var(--color-accent);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 </style>

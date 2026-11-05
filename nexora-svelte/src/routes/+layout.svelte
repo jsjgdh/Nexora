@@ -77,7 +77,7 @@
        the page. It is a literal because a meta tag cannot read a custom
        property, and it is a copy of `--color-ground`: if the ground moves,
        this moves with it. -->
-  <meta name="theme-color" content="#0b0e12" />
+  <meta name="theme-color" content="#0d1014" />
   <meta property="og:site_name" content={SITE_NAME} />
   <meta name="twitter:card" content="summary" />
 </svelte:head>

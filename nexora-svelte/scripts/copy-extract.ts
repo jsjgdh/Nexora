@@ -235,6 +235,10 @@ export type Action = {
   label: string;
   target: string | null;
   offset: number;
+  /** An inline link inside a sentence is prose, not a control label: it may
+      name a document in the reader's grammar ("the privacy notice") without
+      becoming a second label for the same destination. */
+  prose?: boolean;
 };
 
 /* ------------------------------------------------------------------ helpers */
@@ -444,6 +448,40 @@ export function extractModule(
  * it. The script and style blocks are left to the module reader, and the
  * comments are left to nobody.
  */
+/**
+ * The index of the `>` that closes an opening tag.
+ *
+ * A Svelte event handler can carry an arrow function (`() => ...`) and a
+ * quoted attribute can carry a `>`; both sit inside a tag and neither ends
+ * it. The scanner tracks braces and quotes so the tag's own closing bracket
+ * is the one found.
+ */
+function tagEnd(source: string, open: number): number {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let i = open + 1; i < source.length; i++) {
+    const ch = source[i]!;
+    if (quote !== null) {
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+    if (ch === "{") {
+      depth++;
+      continue;
+    }
+    if (ch === "}") {
+      if (depth > 0) depth--;
+      continue;
+    }
+    if (ch === ">" && depth === 0) return i;
+  }
+  return -1;
+}
+
 export function extractMarkup(fileName: string, text: string): { strings: StringEntry[]; actions: Action[] } {
   const strings: StringEntry[] = [];
   const actions: Action[] = [];
@@ -464,7 +502,7 @@ export function extractMarkup(fileName: string, text: string): { strings: String
       break;
     }
     if (open > index) pushText(work.slice(index, open), index);
-    const close = work.indexOf(">", open);
+    const close = tagEnd(work, open);
     if (close === -1) break;
     const tag = work.slice(open, close + 1);
     const attributes = attributesOf(tag);
@@ -482,6 +520,9 @@ export function extractMarkup(fileName: string, text: string): { strings: String
           label,
           target: href ?? (id === null ? null : `id:${id}`),
           offset: open,
+          prose:
+            name === "a" &&
+            /(?:^|\s)underline(?:\s|$)/.test(attributes.class ?? ""),
         });
       }
     }
@@ -626,7 +667,9 @@ function innerMarkup(work: string, from: number, name: string): string | null {
 export function plainText(markup: string): string | null {
   const withoutTags = markup.replace(/<[^>]*>/g, " ");
   if (withoutTags.includes("{")) return null;
-  return withoutTags.replace(/\s+/g, " ").trim();
+  // An arrow is a mark, not a word: "All courses →" and "All courses" are one
+  // label, and a rule about wording should not read the arrow as wording.
+  return withoutTags.replace(/[→↗←]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /* ----------------------------------------------------------------- imports */

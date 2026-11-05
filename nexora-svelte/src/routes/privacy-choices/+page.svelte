@@ -52,14 +52,14 @@
 
   <!-- The single most important statement on this page, and the one a switch
        would obscure: there is nothing to opt out of. -->
-  <div class="mt-10 border border-rule p-6">
-    <p class="stamp text-[11px] text-accent">do not sell or share my personal information</p>
+  <div class="card mt-10 p-6">
+    <p class="stamp text-accent">do not sell or share my personal information</p>
     <p class="mt-4 max-w-[70ch] text-[15px] leading-relaxed text-ink">
       Nothing you give this platform is sold, rented, or shared for advertising: not to data brokers,
       not to advertisers, not to an analytics provider, because there is no analytics provider. There
       is no cross-context behavioural advertising, and no profile of you is built for one.
     </p>
-    <p class="mt-4 max-w-[70ch] text-[13.5px] leading-relaxed text-muted">
+    <p class="mt-4 max-w-[70ch] text-[14.5px] leading-relaxed text-muted">
       So there is no "opt out of sale" switch to offer you, and a switch for a thing that never happens
       would be decoration. What stays true is the right itself: if you ask {LEGAL_ENTITY} to stop
       selling or sharing your personal information, the answer is a record of the request and a
@@ -83,7 +83,7 @@
 
       <div class="mt-10 border-t border-rule pt-6">
         <p class="stamp text-[11px] text-faint">how to exercise them</p>
-        <p class="mt-4 max-w-[62ch] text-[13.5px] leading-relaxed text-muted">
+        <p class="mt-4 max-w-[62ch] text-[14.5px] leading-relaxed text-muted">
           Two routes, and neither requires the other. Signed in, the account page holds every control,
           including a download of your whole record and self-service deletion. Signed out, or if you
           never had an account, write to <span class="text-ink">{PRIVACY_CONTACT}</span> and the same
@@ -91,14 +91,14 @@
           to ask, and no charge for asking twice in a year.
         </p>
         <div class="mt-6 flex flex-wrap gap-3">
-          <ActionLink href="/account" island>Open your account data</ActionLink>
+          <ActionLink href="/account" island>Your account</ActionLink>
           <ActionLink href="/privacy" variant="ghost" island>Read the privacy notice</ActionLink>
         </div>
       </div>
 
       <div class="mt-10 border-t border-rule pt-6">
         <p class="stamp text-[11px] text-faint">no discrimination, and no incentive games</p>
-        <p class="mt-4 max-w-[62ch] text-[13.5px] leading-relaxed text-muted">
+        <p class="mt-4 max-w-[62ch] text-[14.5px] leading-relaxed text-muted">
           Exercising any right here changes nothing about your access, your price or your tier. There
           is no financial incentive offered for personal information, so there is no incentive scheme
           to disclose. Assessment (which is the thing a learner might expect a "right" to touch) is
@@ -108,7 +108,7 @@
 
       <div class="mt-8 border-t border-rule pt-6">
         <p class="stamp text-[11px] text-faint">write to the operator</p>
-        <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+        <p class="mt-3 text-[14.5px] leading-relaxed text-muted">
           When you cannot sign in, or never had an account, the same address handles privacy
           requests and security reports. Use the form below when you want a reply from us, or open
           your mailer with the address pre-filled when you prefer.
@@ -133,7 +133,7 @@
 
       <Plate>
         <p class="stamp text-[11px] text-faint">retention, in one line</p>
-        <p class="mt-3 text-[13.5px] leading-relaxed text-muted">
+        <p class="mt-3 text-[14.5px] leading-relaxed text-muted">
           Your account and its records are held while the account exists, and an erasure request
           removes them, with the transaction record kept because accounting law requires it, stated
           before you commit rather than after.

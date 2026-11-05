@@ -266,9 +266,13 @@ environment rather than by a branch.
 |---|---|---|
 | `PUBLIC_API_URL` | public, inlined at build | `https://api.nexora.dev` |
 | `GATEWAY_URL` | private, runtime | `https://api.nexora.dev` |
+| `ORIGIN` | private, runtime | the site's public origin, so adapter-node and the browser agree |
 | `PUBLIC_SITE_URL` | public | `https://nexora.dev` |
 | `RESEND_API_KEY` | private | the Resend key |
-| `PUBLIC_CLERK_PUBLISHABLE_KEY` | public | only if `AUTH_MODE=clerk` |
+| `PUBLIC_AUTH_PROVIDER` | public | `kinde` when `AUTH_MODE=kinde`, otherwise `local` |
+| `KINDE_CLIENT_ID`, `KINDE_CLIENT_SECRET` | private, runtime | the site's Kinde application |
+| `KINDE_REDIRECT_URL`, `KINDE_POST_LOGIN_REDIRECT_URL`, `KINDE_POST_LOGOUT_REDIRECT_URL` | public, runtime | the site's Kinde callback and return routes |
+| `KINDE_CONNECTION_GOOGLE`, `KINDE_CONNECTION_GITHUB`, `KINDE_CONNECTION_DISCORD` | private, runtime | optional Kinde connection ids; each one gives that provider its own button on `/auth` |
 
 `GATEWAY_URL` and `PUBLIC_API_URL` are both the gateway's address, and they
 are separate variables on purpose: the browser's route to the gateway and the

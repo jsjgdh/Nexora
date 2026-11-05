@@ -84,7 +84,7 @@
             {FREE_PHASES_PHRASE} in the IDE work without one, offline, and every check is free.
           </p>
           <div class="mt-5">
-            <ActionLink href="/download" variant="ghost" size="sm" island>Download the IDE</ActionLink>
+            <ActionLink href="/download" variant="ghost" size="sm" island>The download page</ActionLink>
           </div>
         </Plate>
       {:else}

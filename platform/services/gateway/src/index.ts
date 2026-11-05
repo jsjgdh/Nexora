@@ -3,7 +3,13 @@ import helmet from "@fastify/helmet";
 import { randomUUID } from "node:crypto";
 import { ApiError } from "@nexora/service-kit";
 import { loadConfig, type RouteConfig } from "./config.js";
-import { bearerIdentity, clerkVerifier, localVerifier, type TokenVerifier } from "./auth.js";
+import {
+  bearerIdentity,
+  compositeVerifier,
+  kindeVerifier,
+  localVerifier,
+  type TokenVerifier,
+} from "./auth.js";
 import { FixedWindow, EdgeBudget } from "./limits.js";
 import { DependencyBreaker } from "./breaker.js";
 import { MAX_BODY_BYTES, forward, matchRoute, buildForwardHeaders, upstreamPathFor } from "./proxy.js";
@@ -23,13 +29,15 @@ import { RevocationCache, revocationLookup } from "./revocation.js";
 const config = loadConfig();
 const isProd = (process.env.NODE_ENV ?? "development") === "production";
 const verifier: TokenVerifier =
-  config.authMode === "clerk"
-    ? clerkVerifier({
-        secretKey: config.clerkSecretKey || undefined,
-        jwtKey: config.clerkJwtKey || undefined,
-        apiUrl: config.clerkApiUrl || undefined,
-        authorizedParties: config.clerkAuthorizedParties,
-      })
+  config.authMode === "kinde"
+    ? compositeVerifier(
+        kindeVerifier({
+          issuer: config.kindeIssuerUrl,
+          audience: config.kindeAudience,
+          jwksUrl: config.kindeJwksUrl || undefined,
+        }),
+        localVerifier(config.jwtSecret)
+      )
     : localVerifier(config.jwtSecret);
 const globalLimiter = new FixedWindow(config.globalLimit.windowMs, config.globalLimit.max);
 const routeLimiters = new Map(config.routes.map((r) => [r.prefix, new FixedWindow(r.limit.windowMs, r.limit.max)]));
@@ -374,9 +382,11 @@ app.route({
     /* Sign-out has to end the credential, not just the session's ability to
        renew: without this the token a learner was holding kept working until it
        expired, which is exactly the window a thief needs. A token that names
-       itself (`jti`) is checked against the auth service's denylist; Clerk tokens
-       carry no id we can look up, so Clerk's own revocation stands for them and
-       nothing is invented here. Three answers, and the third is not a verdict:
+       itself (`jti`) is checked against the auth service's denylist. Kinde tokens
+       answer null for that id because Kinde owns its own sessions and this
+       platform's denylist never records them; the device-code tokens the IDE
+       holds do name themselves and are checked. Nothing is invented here.
+       Three answers, and the third is not a verdict:
        revoked → 401, clear → continue, unreachable → 503 rather than a silent
        allow. "Unreachable" has one bounded exception — a credential confirmed clear
        within `revocationClearTtlMs` continues, and the request says so in the log

@@ -29,7 +29,7 @@ import { toPublic, type UserRow } from "./public-user.js";
  * not in the body, and not in how long the answer takes. The rules that make
  * that true, each one a decision:
  *
- *   1. One answer for every case: an existing account, a Clerk-managed
+ *   1. One answer for every case: an existing account, a Kinde-managed
  *      account, an address nobody has heard of, an address that is already
  *      confirmed. All of them get 202 with the same body.
  *   2. The same work before the answer, so the answer does not arrive faster
@@ -201,7 +201,7 @@ interface RequestFlow {
   /**
    * Whether this account can be given a token of this kind at all.
    *
-   * A password reset needs a local password to reset: a Clerk-managed
+   * A password reset needs a local password to reset: a Kinde-managed
    * account has no password here, and minting one would create a second way
    * into an identity the provider owns. An already-confirmed address needs
    * no confirmation: asking again is a no-op that still answers 202.

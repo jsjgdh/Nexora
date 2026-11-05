@@ -422,6 +422,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       },
       "bridge": {
         "course": "task-manager",
+        "phase": "data",
         "text": "In JavaScript your records live in an array in memory, and they are gone when the program stops. A table is the same records in a file: a shape you write down once, and rows that survive the program."
       }
     },
@@ -651,6 +652,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       },
       "bridge": {
         "course": "task-manager",
+        "phase": "fundamentals",
         "text": "In JavaScript you keep the rows you want with filter. In SQL the same choice is written as a WHERE clause, and it names the rows the answer is made of."
       }
     },
@@ -1101,6 +1103,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       },
       "bridge": {
         "course": "task-manager",
+        "phase": "fundamentals",
         "text": "In JavaScript you fold a list into one number with reduce. In SQL the fold is GROUP BY, and it names the column that makes the groups, so the aggregate is computed for each group and not for the whole list."
       }
     },
@@ -1329,6 +1332,7 @@ export const IDE_COURSE_SQL_FUNDAMENTALS: unknown = {
       },
       "bridge": {
         "course": "task-manager",
+        "phase": "crud-data",
         "text": "In JavaScript a record names the thing it belongs to by its id. In SQL that id is a column, and a join is the query matching the rows of one table against the rows of the other, so you do not look the other one up by hand."
       }
     },

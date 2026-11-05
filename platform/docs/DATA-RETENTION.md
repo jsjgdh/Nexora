@@ -251,7 +251,7 @@ retained categories are:
 ### 4.1 What the erasure cannot reach
 
 The processors' own copies are queued as open work, not described as done.
-`PROCESSOR_HANDOFFS` names them: **Clerk (identity)** and **Dodo Payments
+`PROCESSOR_HANDOFFS` names them: **Kinde (identity)** and **Dodo Payments
 (merchant of record)**. The billing service is not a processor, because the
 platform asks it to sever the record over the mesh, at the same moment, and
 that call is made after the auth transaction commits, so a failure there does
@@ -259,10 +259,10 @@ not take the account deletion with it.
 
 **The residual, stated plainly:**
 
-- **The Clerk copy is not deleted by this code.** In `clerk` mode, Clerk holds
+- **The Kinde copy is not deleted by this code.** In `kinde` mode, Kinde holds
   the identity. The erasure queues the handoff and it has to be completed in
-  Clerk's own dashboard by a person. If the operator does not do it, the
-  learner's identity is still at Clerk, and the platform has no way to
+  Kinde's own dashboard by a person. If the operator does not do it, the
+  learner's identity is still at Kinde, and the platform has no way to
   detect that it is still there.
 - **The Dodo copy is severed, not deleted.** The billing service removes the
   learner's email, name and provider customer id from its rows and keeps the
@@ -327,7 +327,7 @@ will need re-reading.
 - **The payment provider's own records.** Dodo's data, its retention and its
   deletion process are Dodo's, and the platform's contract with it is
   whatever the data processing agreement says.
-- **The identity provider's own records.** Clerk's, in `clerk` mode, and the
+- **The identity provider's own records.** Kinde's, in `kinde` mode, and the
   same.
 - **The operator's own copy of the database.** A snapshot taken for support,
   a dump copied to a laptop, a database restored onto a machine for

@@ -24,7 +24,8 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { chromium } from "playwright";
-import { CURRICULUM } from "../src/lib/content/site";
+import { ALL_PHASES, FREE_PHASE_COUNT } from "../src/lib/content/site";
+import { releaseState } from "../src/lib/release";
 
 const PORT = 5199;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
@@ -35,6 +36,7 @@ const ORIGIN = `http://127.0.0.1:${PORT}`;
 const SETTLE =
   ".js .line-mask > span{transform:translateY(0)!important;transition:none!important}" +
   ".js .fade-up{opacity:1!important;transform:none!important;transition:none!important}" +
+  ".js .reveal-item{opacity:1!important;transform:none!important;transition:none!important}" +
   ".js .draw{transform:scaleX(1)!important}";
 
 
@@ -182,9 +184,15 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   });
   const page = await context.newPage();
   await page.goto(ORIGIN, { waitUntil: "load" });
+  // The entrance is a CSS animation; let it finish before judging what is
+  // visible. Without script the page is still allowed to arrive.
+  await page.waitForTimeout(900);
   const read = await page.evaluate(() => {
     const h1 = document.querySelector("h1");
     const hidden = [...document.querySelectorAll("h1, h2, h3, p")].filter((el) => {
+      // A closed native dialog is not hidden content; it is a sheet that has
+      // not been opened.
+      if (el.closest("dialog:not([open])")) return false;
       const cs = getComputedStyle(el);
       return cs.opacity === "0" || cs.visibility === "hidden" || el.getBoundingClientRect().height === 0;
     });
@@ -234,6 +242,7 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.waitForTimeout(600);
   const read = await page.evaluate(() => {
     const hidden = [...document.querySelectorAll("h1, h2, h3, p, li")].filter((el) => {
+      if (el.closest("dialog:not([open])")) return false;
       const cs = getComputedStyle(el);
       return cs.opacity === "0" || el.getBoundingClientRect().height === 0;
     });
@@ -248,8 +257,8 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
 }
 
 /* ------------------------------------------------------------------ *
- * 4. Keyboard only: the switch, the tier toggle, the ledger, the FAQ, the
- *    device code and the replay must all be drivable.
+ * 4. Keyboard only: the Courses menu, the FAQ, the device code and the
+ *    mobile sheet must all be drivable.
  * ------------------------------------------------------------------ */
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -257,13 +266,21 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.addStyleTag({ content: SETTLE });
   await page.waitForTimeout(800);
 
-  const hiring = page.locator("button", { hasText: "I'M HIRING" }).first();
-  await hiring.focus();
+  const courses = page.locator("button", { hasText: "Courses" }).first();
+  await courses.focus();
   await page.keyboard.press("Enter");
+  await page.waitForTimeout(250);
+  if ((await courses.getAttribute("aria-expanded")) !== "true") {
+    note("keyboard", "the Courses menu did not open with the keyboard");
+  }
+  const menuLinks = page.locator("#courses-panel a");
+  if ((await menuLinks.count()) < 7) {
+    note("keyboard", `the Courses menu lists ${await menuLinks.count()} links, not the whole shelf`);
+  }
+  await page.keyboard.press("Escape");
   await page.waitForTimeout(200);
-  const h1After = await page.locator("h1").innerText();
-  if (!/Juniors arrive/i.test(h1After)) {
-    note("keyboard", `the audience switch did not change the hero (${h1After.slice(0, 40)})`);
+  if ((await courses.getAttribute("aria-expanded")) !== "false") {
+    note("keyboard", "the Courses menu did not close on Escape");
   }
 
   const ring = await page.evaluate(() => {
@@ -276,53 +293,53 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     note("keyboard", `the focused control has no visible ring (${ring})`);
   }
 
-  // The tier toggle is gone: the front page no longer prices the curriculum
-  // line by line, so there is nothing here to press.
-
-  const summary = page.locator("details.nexora-details summary").first();
+  const summary = page.locator("details summary").first();
   await summary.focus();
   await page.keyboard.press("Enter");
   await page.waitForTimeout(200);
   const open = await page
-    .locator("details.nexora-details")
+    .locator("details")
     .first()
     .evaluate((d) => (d as HTMLDetailsElement).open);
   if (!open) note("keyboard", "an answer did not open with the keyboard");
 
-  const replay = page.locator("button", { hasText: "Run it again" }).first();
-  await replay.focus();
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(900);
-  if ((await page.locator("text=Running").count()) === 0) {
-    note("keyboard", "the run did not replay with the keyboard");
-  }
-
   await page.close();
 }
 
-/* The curriculum page has its own controls, and they are checked the same
- * way. The exhaustive list moved off the homepage onto its own page, and the
- * drawer that opens a course lives with it. */
+/* The mobile sheet is the same destinations, in a native dialog. */
+{
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await page.goto(ORIGIN, { waitUntil: "networkidle" });
+  await page.locator(".menu-button").click();
+  await page.waitForTimeout(250);
+  const dialog = page.locator("dialog#mobile-menu");
+  if (!(await dialog.evaluate((d) => (d as HTMLDialogElement).open))) {
+    note("mobile sheet", "the menu button did not open the dialog");
+  }
+  if ((await page.locator(".mobile-courses a").count()) < 7) {
+    note("mobile sheet", "the sheet does not list the whole shelf");
+  }
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  if (await dialog.evaluate((d) => (d as HTMLDialogElement).open)) {
+    note("mobile sheet", "Escape did not close the dialog");
+  }
+  await page.close();
+}
+
+/* A course page is a document: every phase is present, not behind a
+ * disclosure, and the page is reached from the shelf. */
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  await page.goto(`${ORIGIN}/courses`, { waitUntil: "networkidle" });
+  await page.goto(`${ORIGIN}/courses/go`, { waitUntil: "networkidle" });
   await page.waitForTimeout(600);
-
-  const head = page.locator("button[id^='course-head-']").nth(1);
-  await head.focus();
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(300);
-  if ((await head.getAttribute("aria-expanded")) !== "true") {
-    note("keyboard", "a course drawer did not open with the keyboard");
+  const phases = await page.locator(".phase-list li").count();
+  const openPanels = await page.locator("details[open]").count();
+  if (phases < 10) note("course page", `only ${phases} phases rendered`);
+  if (openPanels > 0) note("course page", "the syllabus is hidden behind a disclosure");
+  if ((await page.locator("h1").innerText()).trim().length === 0) {
+    note("course page", "the course page has no title");
   }
-
-  // The panel the drawer opens has to be reachable and has to be the one the
-  // button says it controls.
-  const panel = page.locator(`#course-panel-${(await head.getAttribute("aria-controls"))?.replace("course-panel-", "")}`);
-  if ((await panel.count()) === 0) {
-    note("keyboard", "the course drawer does not control the panel it names");
-  }
-
   await page.close();
 }
 
@@ -362,7 +379,7 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.goto(ORIGIN, { waitUntil: "networkidle" });
   await page.addStyleTag({ content: SETTLE });
   await page.waitForTimeout(800);
-  for (const id of ["loop", "gap", "build", "why", "proof", "courses", "employers"]) {
+  for (const id of ["courses", "proof", "why", "hiring", "questions", "how"]) {
     await page.evaluate((target) => {
       document.documentElement.style.scrollBehavior = "auto";
       document.getElementById(target)?.scrollIntoView();
@@ -370,16 +387,16 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     await page.waitForTimeout(250);
     const landed = await page.evaluate((target) => {
       const section = document.getElementById(target);
-      const folio = document.querySelector(".folio");
-      const heading = section?.querySelector("h2");
+      const bar = document.querySelector(".site-nav");
+      const heading = section?.querySelector("h1, h2");
       return {
         headingTop: heading ? heading.getBoundingClientRect().top : null,
-        folioBottom: folio ? folio.getBoundingClientRect().bottom : 0,
+        barBottom: bar ? bar.getBoundingClientRect().bottom : 0,
       };
     }, id);
     if (landed.headingTop === null) note("anchors", `#${id} has no heading`);
-    else if (landed.headingTop < landed.folioBottom) {
-      note("anchors", `#${id} lands ${Math.round(landed.folioBottom - landed.headingTop)}px under the folio`);
+    else if (landed.headingTop < landed.barBottom) {
+      note("anchors", `#${id} lands ${Math.round(landed.barBottom - landed.headingTop)}px under the bar`);
     }
   }
   await page.close();
@@ -390,6 +407,14 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
  * ------------------------------------------------------------------ */
 {
   const routes = [
+    "/courses",
+    "/courses/task-manager",
+    "/courses/go",
+    "/courses/rust",
+    "/courses/sql",
+    "/courses/zig",
+    "/courses/ocaml",
+    "/courses/api",
     "/pricing",
     "/universities",
     "/teach",
@@ -427,6 +452,7 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
     const read = await page.evaluate(() => {
       const doc = document.documentElement;
       const hidden = [...document.querySelectorAll("h1, h2, h3, p, li")].filter((el) => {
+        if (el.closest("dialog:not([open])")) return false;
         const cs = getComputedStyle(el);
         return cs.opacity === "0" || el.getBoundingClientRect().height === 0;
       });
@@ -458,7 +484,18 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
  *    is focused.
  * ------------------------------------------------------------------ */
 {
-  const routes = ["/", "/courses", "/pricing", "/universities", "/employers", "/download", "/teach"];
+  const routes = [
+    "/",
+    "/courses",
+    "/courses/task-manager",
+    "/courses/go",
+    "/courses/ocaml",
+    "/pricing",
+    "/universities",
+    "/employers",
+    "/download",
+    "/teach",
+  ];
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   for (const route of routes) {
     await page.goto(ORIGIN + route, { waitUntil: "networkidle" });
@@ -502,6 +539,10 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
 {
   const routes = [
     "/",
+    "/courses",
+    "/courses/task-manager",
+    "/courses/go",
+    "/courses/ocaml",
     "/pricing",
     "/universities",
     "/teach",
@@ -650,10 +691,9 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
 }
 
 /* ------------------------------------------------------------------ *
- * 9. The interactions, not just the markup. A section that claims to
- *    scrub against the scroll must actually scrub; a readout that claims
- *    to name the cell under the pointer must actually name it; and the
- *    reveal's safety net must rescue a transition that never finishes.
+ * 9. The front door's readings are computed, not typed. The phase total
+ *    and the free count have to be the manifest's, and the shelf has to
+ *    render every reader-facing course.
  * ------------------------------------------------------------------ */
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -661,44 +701,15 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.addStyleTag({ content: SETTLE });
   await page.waitForTimeout(800);
 
-  // The chain scrubs: scrolling past it lights more of it.
-  const chainTop = await page.evaluate(() => {
-    const chain = document.querySelector(".chain");
-    if (!chain) return null;
-    return chain.getBoundingClientRect().top + window.scrollY;
-  });
-  if (chainTop === null) {
-    note("chain", "the chain is not on the page");
-  } else {
-    const litAt = async (y: number): Promise<number> => {
-      await page.evaluate((top) => {
-        document.documentElement.style.scrollBehavior = "auto";
-        window.scrollTo(0, top);
-      }, y);
-      await page.waitForTimeout(400);
-      return page.locator(".chain-link.on").count();
-    };
-    const before = await litAt(chainTop - 700);
-    const after = await litAt(chainTop + 300);
-    if (after <= before) {
-      note("chain", `scrolling past the chain lit no more of it (${before} then ${after})`);
-    }
+  const facts = await page.locator(".hero-facts li").allInnerTexts();
+  if (!facts.some((text) => text.includes(String(ALL_PHASES.length)))) {
+    note("readings", `the hero does not state the manifest's ${ALL_PHASES.length} phases`);
   }
-
-  // The manifest names the cell under the pointer.
-  const cells = page.locator("[data-phase-cell]");
-  if ((await cells.count()) > 3) {
-    const readout = page.locator("[data-readout]").first();
-    const beforeReadout = await readout.textContent();
-    await cells.nth(3).hover();
-    await page.waitForTimeout(200);
-    const afterReadout = await readout.textContent();
-    if (afterReadout === beforeReadout) {
-      note("manifest", `hovering a phase did not change the readout ("${beforeReadout}")`);
-    }
-  } else {
-    note("manifest", "the phase plate has no cells to hover");
+  if (!facts.some((text) => text.includes(String(FREE_PHASE_COUNT)))) {
+    note("readings", `the hero does not state the ${FREE_PHASE_COUNT} free phases`);
   }
+  const cards = await page.locator(".course-card").count();
+  if (cards < 7) note("shelf", `the front door renders ${cards} course cards`);
 
   await page.close();
 }
@@ -711,25 +722,23 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   await page.addInitScript(() => {
     const style = document.createElement("style");
-    style.textContent = ".js .line-mask > span{transition-duration:60s!important}";
+    style.textContent = ".js .reveal-item{transition-duration:60s!important}";
     (document.head ?? document.documentElement).appendChild(style);
   });
   await page.goto(ORIGIN, { waitUntil: "networkidle" });
+  await page.locator("#courses").scrollIntoViewIfNeeded();
   await page.waitForTimeout(2200);
   const state = await page.evaluate(() => {
-    const inner = document.querySelector("h1 .line-mask > span");
-    if (!inner) return null;
-    const r = inner.getBoundingClientRect();
-    const mask = inner.parentElement?.getBoundingClientRect();
-    return {
-      transform: getComputedStyle(inner).transform,
-      offset: mask ? Math.round(r.top - mask.top) : null,
-      height: Math.round(r.height),
-    };
+    const card = document.querySelector(".course-card");
+    if (!card) return null;
+    const cs = getComputedStyle(card.parentElement as Element);
+    return { opacity: cs.opacity, transform: cs.transform };
   });
-  if (!state) note("reveal safety net", "the heading is not on the page");
-  else if (state.offset === null || state.offset > 4) {
-    note("reveal safety net", `the heading never settled (${state.offset}px below its mask)`);
+  const settled =
+    state?.transform === "none" || state?.transform === "matrix(1, 0, 0, 1, 0, 0)";
+  if (!state) note("reveal safety net", "the shelf is not on the page");
+  else if (state.opacity !== "1" || !settled) {
+    note("reveal safety net", `a card never settled (${state.opacity}, ${state.transform})`);
   }
   await page.close();
 }
@@ -780,18 +789,15 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
 {
   const html = await (await fetch(ORIGIN)).text();
   for (const phrase of [
-    // The poster's second line is not the marked one, so it is one string in
-    // the document and can be looked for as it is read.
-    "Learn to think like an engineer",
-    "Build real software",
-    "What this is, and where it stands",
-    "Every phase is Learn, then Solve, then Review",
-    "You followed the tutorial. Then the project was empty.",
-    "NEXORA exists for that moment",
-    "One app, from an empty folder to a reviewed pull request",
-    "What makes the experience different",
-    "How a verdict earns trust",
-    "The questions, answered plainly",
+    // Headline variants rotate, so the document is checked for the section
+    // copy that does not: the shelf, the gap, the mechanism and the price.
+    "Choose your path.",
+    "Fewer promises. More mechanism.",
+    "A hire can arrive with the work.",
+    "Free to start. Pro for the rest.",
+    "The questions.",
+    "More than a course.",
+    "Build the judgment. Keep the record.",
   ]) {
     if (!html.includes(phrase)) {
       note("server render", `the document does not contain "${phrase}"`);
@@ -826,11 +832,11 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   const plain = (html: string): string =>
     html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ");
 
-  if (!plain(askedHtml).includes("The tutorials end. The work begins.")) {
+  if (!plain(askedHtml).includes("Earn the verdict.")) {
     note("headline test", "the variant that was asked for did not render");
   }
 
-  if (plain(defaultHtml).includes("The tutorials end. The work begins.")) {
+  if (plain(defaultHtml).includes("Earn the verdict.")) {
     note("headline test", "the default document renders more than one variant");
   }
 }
@@ -870,17 +876,25 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.setViewportSize({ width: 1024, height: 1400 });
   await page.emulateMedia({ media: "print" });
   await page.waitForTimeout(200);
-  const printed = await page.evaluate(() => ({
-    // The visual height, not the layout height: a zoomed document reports a
-    // taller layout than the sheet it actually prints on.
-    height: Math.round(document.body.getBoundingClientRect().height),
-    ground: getComputedStyle(document.body).backgroundColor,
-  }));
+  const printed = (await page.evaluate(`(() => {
+    const dark = [...document.querySelectorAll("section")].filter((el) => {
+      const value = getComputedStyle(el).backgroundColor;
+      if (value === "rgba(0, 0, 0, 0)") return false;
+      const parts = value.match(/rgba?\\(([^)]+)\\)/)?.[1].split(",").map((p) => parseFloat(p));
+      if (!parts) return false;
+      const [r, g, b] = parts.map((v) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.5;
+    }).map((el) => String(el.className).split(" ")[0]);
+    return { height: Math.round(document.body.getBoundingClientRect().height), dark };
+  })()`)) as { height: number; dark: string[] };
   if (printed.height > 1180) {
     note("employers", `the printed page runs to ${printed.height}px, which is more than one sheet`);
   }
-  if (printed.ground === "rgb(11, 14, 18)") {
-    note("employers", "the printed page is still the dark sheet");
+  if (printed.dark.length) {
+    note("employers", `the printed sheet keeps a dark ground: ${printed.dark.join(", ")}`);
   }
   await page.close();
 }
@@ -919,16 +933,29 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.setViewportSize({ width: 1024, height: 1400 });
   await page.emulateMedia({ media: "print" });
   await page.waitForTimeout(200);
-  const printed = await page.evaluate(() => ({
-    height: Math.round(document.body.getBoundingClientRect().height),
-    ground: getComputedStyle(document.body).backgroundColor,
-    text: document.body.innerText,
-  }));
+  const printed = (await page.evaluate(`(() => {
+    const dark = [...document.querySelectorAll("section")].filter((el) => {
+      const value = getComputedStyle(el).backgroundColor;
+      if (value === "rgba(0, 0, 0, 0)") return false;
+      const parts = value.match(/rgba?\\(([^)]+)\\)/)?.[1].split(",").map((p) => parseFloat(p));
+      if (!parts) return false;
+      const [r, g, b] = parts.map((v) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.5;
+    }).map((el) => String(el.className).split(" ")[0]);
+    return {
+      height: Math.round(document.body.getBoundingClientRect().height),
+      dark,
+      text: document.body.innerText
+    };
+  })()`)) as { height: number; dark: string[]; text: string };
   if (printed.height > 1180) {
     note("universities", `the printed page runs to ${printed.height}px, which is more than one sheet`);
   }
-  if (printed.ground === "rgb(11, 14, 18)") {
-    note("universities", "the printed page is still the dark sheet");
+  if (printed.dark.length) {
+    note("universities", `the printed sheet keeps a dark ground: ${printed.dark.join(", ")}`);
   }
   if (!printed.text.includes("teaching@nexora.dev")) {
     note("universities", "the printed sheet dropped the address");
@@ -954,9 +981,8 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
 }
 
 /* ------------------------------------------------------------------ *
- * 12. The 3D field. Two things have to be true: the renderer is not in
- *     the first payload, and a browser that cannot have it still gets a
- *     complete page.
+ * 12. There is no 3D scene and no second surface. The page is text, a
+ *     product window and the ordinary app chunk.
  * ------------------------------------------------------------------ */
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -973,43 +999,14 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.goto(ORIGIN, { waitUntil: "networkidle" });
   await page.waitForTimeout(500);
   if (bodies.some((body) => body.includes("WebGLRenderer"))) {
-    note("field", "the 3D renderer is in the first payload");
+    note("payload", "a 3D renderer is in the first payload");
   }
-
-  await page.locator("[data-phase-canvas]").scrollIntoViewIfNeeded();
-  await page.waitForTimeout(2500);
-
-  if ((await page.locator("[data-phase-field]").count()) === 0) {
-    note("field", "the field is not on the page");
+  if ((await page.locator("[data-phase-canvas], [data-phase-field]").count()) > 0) {
+    note("payload", "a 3D field is on the page");
   }
-  if ((await page.locator("[data-phase-readout]").count()) === 0) {
-    note("field", "the field has no readout");
-  }
-  if (!bodies.some((body) => body.includes("WebGLRenderer"))) {
-    note("field", "the renderer was never fetched when the field came into view");
-  }
-  await page.close();
-}
-
-/* The same page with the renderer refused. The curriculum has to be there
-   anyway, because the field was never the content. */
-{
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  await page.route("**/_app/immutable/**", (route) => {
-    const url = route.request().url();
-    if (url.includes("/chunks/")) {
-      void route.continue();
-      return;
-    }
-    void route.abort();
-  });
-  await page.goto(ORIGIN, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(1500);
-  const body = await page.content();
-  // The line is read from the copy module rather than written here, so the
-  // check follows the words the page actually prints.
-  if (!body.includes(CURRICULUM.title)) {
-    note("field", "the field's own line is missing when the renderer cannot be fetched");
+  const documentHtml = await page.content();
+  if (!documentHtml.includes("Choose your path.")) {
+    note("payload", "the shelf heading is missing from the document");
   }
   await page.close();
 }
@@ -1023,8 +1020,15 @@ for (const width of [320, 375, 414, 640, 768, 1024, 1440]) {
   await page.goto(ORIGIN + "/download", { waitUntil: "networkidle" });
   await page.waitForTimeout(600);
 
+  const release = releaseState(process.env.PUBLIC_IDE_DOWNLOAD_URL);
   const form = page.locator("[data-launch-list]");
-  if ((await form.count()) === 0) {
+  if (release.available) {
+    // The build is published, so the page offers the download and must not
+    // ask for an address it does not need.
+    if ((await form.count()) > 0) {
+      note("launch list", "a published build still asks for a launch address");
+    }
+  } else if ((await form.count()) === 0) {
     note("launch list", "the download page has no launch list");
   } else {
     const field = page.locator("[data-launch-list] input");

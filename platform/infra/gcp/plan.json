@@ -369,10 +369,9 @@
         }
       ],
       "optionalEnv": {
-        "CLERK_SECRET_KEY": "Only read in clerk mode. This deployment runs AUTH_MODE=local, where the auth service signs its own tokens; switching to Clerk means setting this and re-running the plan check.",
-        "CLERK_JWT_KEY": "Only read in clerk mode, and only as the alternative to CLERK_SECRET_KEY. Local mode never fetches a JWKS, so there is no address to reach.",
-        "CLERK_API_URL": "Only read in clerk mode, and only to point at a self-hosted or sovereign Clerk instead of Clerk's hosted default. Local mode has no Clerk to point at.",
-        "CLERK_AUTHORIZED_PARTIES": "Only read in clerk mode. In local mode the allowed origin comes from FRONTEND_URL, which this plan sets."
+        "KINDE_ISSUER_URL": "Only read in kinde mode. This deployment runs AUTH_MODE=local, where the auth service signs its own tokens; switching to Kinde means setting this, KINDE_AUDIENCE and the site's KINDE_* values, then re-running the plan check.",
+        "KINDE_AUDIENCE": "Only read in kinde mode. The registered API audience binds a token to this platform rather than to another application in the same Kinde business.",
+        "KINDE_JWKS_URL": "Only read in kinde mode, and only to point at a sovereign issuer or a local proof server. The default is the issuer's own /.well-known/jwks.json."
       },
       "cpuThreshold": 70,
       "concurrency": 80,

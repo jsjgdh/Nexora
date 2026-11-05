@@ -139,8 +139,8 @@ function renderEnvFile(entries, header) {
  * The values that point at other services are forced to the local addresses:
  * this stack is the only thing running, and a leftover compose hostname
  * (`http://auth:8101`) would fail with a name that resolves nowhere. Everything
- * else the file already had is kept, so a real Dodo key or a Clerk key
- * survives a run.
+ * else the file already had is kept, so a real Dodo key or a Kinde
+ * configuration survives a run.
  */
 function stackEnv(existing) {
   const env = toMap(existing);
@@ -153,7 +153,10 @@ function stackEnv(existing) {
     CURRICULUM_URL: `http://127.0.0.1:${PORTS.curriculum}`,
     EXECUTION_URL: `http://127.0.0.1:${PORTS.execution}`,
     BILLING_URL: `http://127.0.0.1:${PORTS.billing}`,
-    AUTH_MODE: "local",
+    /* Local by default, but a developer testing Kinde keeps the mode they set:
+       the gateway and the site must agree, and silently forcing local would
+       make the site's Kinde door point at a gateway that cannot verify it. */
+    AUTH_MODE: env.get("AUTH_MODE") === "kinde" ? "kinde" : "local",
     /* The origin the site is served from. The auth service builds the links it
        would mail (a password reset, an address confirmation) against this
        value, and refuses to issue a token when it is missing: a link that
@@ -196,16 +199,42 @@ async function writeStackEnv() {
   return env;
 }
 
+/* The half of Kinde the learner app owns. The issuer and audience are here
+   too: the site validates the access token against the same issuer the gateway
+   trusts, and the session bridge refuses to hand out a token whose subject
+   disagrees with the ID token. */
+const KINDE_APP_KEYS = [
+  "KINDE_ISSUER_URL",
+  "KINDE_CLIENT_ID",
+  "KINDE_CLIENT_SECRET",
+  "KINDE_REDIRECT_URL",
+  "KINDE_POST_LOGIN_REDIRECT_URL",
+  "KINDE_POST_LOGOUT_REDIRECT_URL",
+  "KINDE_AUDIENCE",
+  "KINDE_SCOPE",
+  "KINDE_AUTH_WITH_PKCE",
+  "KINDE_COOKIE_DOMAIN",
+  "KINDE_CONNECTION_GOOGLE",
+  "KINDE_CONNECTION_GITHUB",
+  "KINDE_CONNECTION_DISCORD",
+];
+
 /**
- * The learner app's own environment: the two addresses that take it out of
- * local mode.
+ * The learner app's own environment: the addresses that take it out of local
+ * mode, and the account door the stack is actually running.
  *
  * PUBLIC_API_URL is the browser's route to the gateway, and GATEWAY_URL is
  * this server's route to the same gateway. In a plain local run they are the
  * same address, because there is no container boundary in between. Any other
  * key the file already had is kept.
+ *
+ * The account door follows the stack's AUTH_MODE. Leaving the site in local
+ * mode while the gateway expects Kinde tokens produces a sign-in that mints a
+ * token the gateway refuses, and the failure looks like a broken password
+ * rather than a mismatched configuration. In local mode the Kinde values are
+ * removed so a stale door cannot survive a mode switch.
  */
-async function writeAppEnv() {
+async function writeAppEnv(stack) {
   const existing = await readEnvFile(APP_ENV_FILE);
   const env = toMap(existing);
   env.set("PUBLIC_API_URL", GATEWAY_URL);
@@ -214,6 +243,21 @@ async function writeAppEnv() {
      its mail against this value, so the two halves agree on where a learner
      is sent. */
   env.set("PUBLIC_SITE_URL", APP_URL);
+  /* adapter-node's own view of the origin. The dev server derives it correctly,
+     but a production build started from this file needs it for the same-origin
+     session bridge. */
+  env.set("ORIGIN", APP_URL);
+  const kinde = stack.get("AUTH_MODE") === "kinde";
+  env.set("PUBLIC_AUTH_PROVIDER", kinde ? "kinde" : "local");
+  for (const key of KINDE_APP_KEYS) {
+    if (kinde) {
+      const value = stack.get(key);
+      if (value) env.set(key, value);
+      else env.delete(key);
+    } else {
+      env.delete(key);
+    }
+  }
   const header = [
     "# Written by `npm run dev:stack` in platform/. Gitignored.",
     "# PUBLIC_API_URL is the browser's route to the gateway; GATEWAY_URL is this",
@@ -221,6 +265,9 @@ async function writeAppEnv() {
     "# run because there is no container boundary in between.",
     "# PUBLIC_SITE_URL is the origin this site is served from. The auth service",
     "# builds the links in its mail against the same value.",
+    "# ORIGIN is the same origin as adapter-node sees it, for same-origin checks.",
+    "# PUBLIC_AUTH_PROVIDER and the KINDE_* values mirror the platform's",
+    "# AUTH_MODE, so the door the site draws is the door the gateway verifies.",
   ].join("\n");
   await writeFile(APP_ENV_FILE, renderEnvFile([...env], header), "utf8");
 }
@@ -476,7 +523,7 @@ async function main() {
   }
 
   const env = await writeStackEnv();
-  await writeAppEnv();
+  await writeAppEnv(env);
   process.stdout.write(
     `wrote ${ENV_FILE} and ${APP_ENV_FILE} (both gitignored; the two secrets are generated)\n`
   );
@@ -564,7 +611,8 @@ async function main() {
       `  billingdb    postgres://nexora:nexora@127.0.0.1:${DB_PORTS.billingdb}/billingdb`,
       "",
       `  learner app  cd nexora-svelte && npm run dev   ->  ${FRONTEND_URL}`,
-      "               (its .env now points at the gateway, so /auth shows the sign-in form)",
+      "               (its .env now points at the gateway; /auth draws the door",
+      "                this stack verifies, local password or Kinde)",
       "",
       "  Ctrl-C stops everything.",
       "",

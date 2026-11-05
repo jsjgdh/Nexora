@@ -1,375 +1,362 @@
-# The front door, as a brief
+# NEXORA, Petrol Press
 
-The design brief for `nexora-svelte`. It exists so that a later change can be
-judged against something written down, instead of against a memory of what the
-page used to look like.
+This is the design brief for `nexora-svelte`. A later change can be judged
+against it instead of against a memory of the last screenshot.
 
-This brief was rewritten when the front door was rebuilt around the learner's
-experience rather than around the product's argument. What changed is stated
-below, and the reasons are given, because a brief that only describes the
-current state cannot tell the next person what was tried and rejected.
+Three worlds are gone. The dark laboratory bench and the austere field manual
+both treated the product as a document. The near-white studio that followed
+treated it as a brochure about a tool: soft corners, a lift on hover, one
+bright action. This world treats it as something printed. Warm bone stock,
+warm ink, one deep petrol action, and every surface cut square. It should feel
+like a specification sheet someone actually pulled off a press, not like a
+screen wearing a theme.
 
 ## Purpose and audience
 
 Two readers, in this order.
 
-**The learner.** Someone who can follow a tutorial perfectly and cannot start
-a blank file. They are not short of content; they are short of a verdict that
-is not somebody's opinion. The page has to make one promise and keep it: the
-lesson runs in the editor, the judgement is deterministic, and the record of
-the work can be re-derived by a stranger.
+**The learner.** Someone who can follow a tutorial and still freeze in front of
+a blank file. They need a place where their own code is judged, the reason for
+a failure is legible, and the record of the work can be checked by a stranger.
 
-**The hiring manager.** Someone who has been sold "graduates with portfolios"
-before and does not believe it. They will not read a long page. They will look
-for a way to check a claim in five minutes, with no onboarding, and for a
-vendor willing to print their own gaps.
+**The hiring manager.** Someone who has been promised "job-ready graduates"
+before. They will look for one claim they can verify in five minutes, without an
+account, and for a vendor willing to say what does not exist yet.
 
-The learner is the default and the homepage is written for them. The hiring
-manager has their own document at `/employers`, and the homepage's hiring
-section is a summary that points there.
+The learner is the default. The hiring manager has `/employers` and one section
+on the home page.
 
 ## Register
 
-**Brand**, with a product's rigour. The design is the argument, so it is
-built to be looked at; but every claim it makes is one the code can back, so it
-is built to be checked.
+**Confident, technical, plain.** Short sentences. Concrete claims. Evidence
+next to the claim. No congratulation, no superlative where a fact will do, no
+"journey", no "unlock", no "level up". The product is serious; the design can be
+warm without being cute.
 
 ## Aesthetic direction
 
-**Laboratory instrumentation.** One extreme, committed: this is a bench, not a
-lounge. A dark ground ruled like a measuring surface, hairlines instead of
-borders, one amber that means "an action", a mono face for every reading, and
-a serif that appears only where a person is reading prose.
+**Petrol Press.** A product-grade technical studio set like a printed sheet.
 
-What that rules out: soft shadows (elevation is a rule and a background step,
-never a blur), large radii (the corner is a cut corner, as on a plate),
-card grids, decorative icons, stock photography, and any colour that is not
-doing a job.
+- Warm bone ground, warm near-black ink, petrol for the one action on a page.
+- White sheets with an 8px cut, a hairline, and one tight warm elevation.
+- Dark petrol product plates where the editor, terminal and receipt live.
+- Each course has an identity colour used on its mark, tag and top rule. That
+  colour never paints a button, a link or a verdict.
+- Large neo-grotesk headlines, comfortable body copy, a mono face for data.
+- Rules and whitespace carry structure; cards are reserved for a thing that is
+  actually a unit (a course, a plan, a build item).
+- One hand-drawn arrow annotation in the hero, because a human made the page.
 
-This direction survived the rebuild. It was never the problem. The problem was
-that the page applied it evenly: every section had the same weight, the same
-measure and the same type size, so a page with sixteen sections read as one
-long document. The rebuild changed the order and the hierarchy, not the world.
+**Commitment level: restrained on paper, committed on the plate.** The paper is
+tinted neutrals plus one accent, and the accent never exceeds the band it is
+allowed. The plate is the one place the surface becomes the colour: a full
+petrol room with paper-coloured type. Mixing those two registers inside one
+section reads as indecision, so a section is either paper or plate.
 
-## The order of the page
+**The unforgettable thing: the receipt.** A white slip on warm stock, off by
+less than a degree, perforated at the bottom edge, carrying a serial, a hash and
+a signature line. It is the only object on the site that pretends to be
+physical, and it is the argument: the record exists, it is signed, and anyone
+can re-derive it at `/verify`.
 
-The old front door led with the argument. The market research came first, then
-the datasheet, then the categories, then the refusals, and the experience was
-somewhere near the bottom. A reader who had not yet understood the product was
-asked to agree with its principles before they had seen what it does.
+What it is not: the dark bench, amber, a serif reading face, glass panels, a
+3D field, a scroll rail, a custom cursor, an audience switch, three equal
+benefit cards, stock photography, fake testimonials, customer logos, invented
+metrics, or a screenshot of software that does not exist.
 
-The order now is the argument, in the order a reader needs it:
+The product artifacts are the imagery. A product window may be composed from
+the shipped manifest and the run transcript, but it is labelled as an
+illustration. It is never presented as a screenshot of a published build.
 
-1. **The poster.** A line that says who this is for, the headline, the lede, one
-   action, and the three facts a person hesitates on.
-2. **What this is, and where it stands.** The state of the release, and the
-   three facts about where the product runs.
-3. **A real phase.** The shipped manifest, read: a phase, its goal, its
-   activities, and the shape every phase has.
-4. **Watch how learning happens.** The five steps a learner takes, each with
-   the panel it would actually show, taken from the product's own transcript.
-5. **The gap.** The four things that have already happened to the reader, in
-   order, ending on the one NEXORA is for.
-6. **What you build.** One app, from an empty folder to a reviewed pull
-   request, and the other lines behind it.
-7. **What makes the experience different.** The benefits.
-8. **How a verdict earns trust.** The datasheet, the receipt chain, the
-   disclosure about what can be re-derived, and the three things that are
-   deliberately absent.
-9. **The curriculum.** The readings, the field, and the way into the full list.
-10. **For the people who hire.** The other reader.
-11. **The questions, answered plainly.**
-12. **The close.** One action again, and the way to be told when it changes.
+## The order of the home page
 
-A section earns its place by being the only place that says its thing. The
-market research and the categories moved to `/employers`, where they are
-context for the reader who came for them. The exhaustive phase list moved to
-`/courses`, because a homepage that prints eighty names before it has said
-what the product does is a catalogue.
+1. **The statement.** A two-line headline, a lede, the release-aware action,
+   and a real workspace illustration with a phase list, a failing check, the
+   same check passing, and a receipt. No eyebrow: the headline is the label.
+2. **The capabilities.** Build, Debug, Verify, Grow, in one ruled row with thin
+   line marks. Not four cards.
+3. **The shelf.** One card per course. Task Manager is featured; Go and Rust
+   show both tracks; SQL, Zig and OCaml follow; APIs from the outside is a side
+   course; a dark tile leads to the full catalogue. No count of courses.
+4. **The gap.** The tutorial problem, in four short lines, ending on the turn.
+5. **What you build.** The seven real beats of Task Manager with phase names.
+6. **The proof.** The receipt as an object, with a verification path, the stamp,
+   and the example label.
+7. **The mechanism.** Four properties, each with where it is enforced.
+8. **The plate.** The five moves of a phase, in a product window, on petrol.
+9. **For hiring.** Three checks with the artefact behind each.
+10. **The price.** Free and Pro, real prices, the Pro plan on the plate.
+11. **The questions.** Native `<details>`, no numbering.
+12. **The close.** A petrol band, the release action, and the launch list only
+    when the build is not published.
 
-## What the prototypes gave, and what they did not
+## The course page contract
 
-Two HTML prototypes were built for the front door and a number of things in
-them were taken. The ones that were not are written down here, because a
-prototype is not a brief and the house rules are not optional.
+**A language is one page.** Go fundamentals and Go in production are two tracks
+of `/courses/go`; Rust fundamentals and Rust in production are two tracks of
+`/courses/rust`. `TRACK_TO_COURSE` maps every shipped track id to its page, so
+the merged page can never invent a route of its own. The catalogue lists one
+card per language, not one per track.
 
-**Taken.**
+Every course page renders, in order:
 
-- **A line that says who the page is for**, above the headline, so a reader
-  knows in the first second whether this is for them. It changes with the
-  audience switch, because the two readers are not looking for the same thing.
-- **The three facts under the button.** Everyone hesitates on the same three
-  things, and each answer is a fact about the product rather than a promise.
-- **The gap as a sequence.** Four lines that light up in turn and end on the
-  moment the product is for. It is a progression, not a set, and a set of
-  columns made it a list.
-- **The loop as five steps with a panel each.** The panels are read out of
-  `RUN_SCRIPT`, so the failure on the page is a failure the platform really
-  produces, and the suite checks that every line in every panel is a line of
-  that transcript.
-- **The capstone as a horizontal track.** A project is a direction, and a
-  column makes it a list.
+1. Breadcrumb, language eyebrow, title, promise, release action and "Read the
+   phases".
+2. A product window built from the manifest: the first track's phases, the
+   language, track count, phase count, activity count, free count, and a
+   terminal that loads the course.
+3. Four stats: phases, activities, free, tracks.
+4. What it is, where it is used, and what you build.
+5. The phases. Every phase in the track, with its number, title, tier word, the
+   manifest's goal and its activity count. Nothing is behind a disclosure. Go and
+   Rust show both tracks, each with a jump link and a strong divider.
+6. The shape of a phase, in five moves.
+7. The record, compact, with the receipt and `/verify`.
+8. Previous and next volumes, then a course-specific close.
 
-**Not taken, and why.**
-
-- **The three testimonials.** They are sample quotes with a note saying to
-  replace them. The site has no testimonials and will not have any until
-  there are real learners to quote.
-- **"100% of results are recomputable."** It is not true. Some checks are
-  recomputed by the platform from the learner's own run; a few are the
-  browser's report of what it saw, and the platform has to take those on
-  trust. The disclosure says so, and a headline cannot say the opposite.
-- **"Five full courses."** The site never counts the courses. The courses are
-  named, and the number of them is a thing that changes.
-- **The comparison table.** "Another course" against "NEXORA" is the framing
-  the front door was rebuilt to remove: it defines the product by what it
-  rejects, and it puts the reader on the defensive before they know anything.
-- **The scrolling marquee.** It is motion that carries no information the
-  section does not already carry, and the house rule is one focal element and
-  no motion without meaning.
-- **The cursor ring, the magnetic buttons, the tilting cards, the 3D point
-  cloud.** The house refuses custom cursors and un-motivated motion, and the
-  site already has one piece of 3D that means something: the field, which is
-  the curriculum.
-- **The Python and pytest examples.** The course in the prototype is Python
-  and the course in the product is JavaScript. Showing the prototype's code
-  would be showing a product that does not exist.
-
-## The unforgettable thing
-
-**The receipt.** A slip of paper that says what ran, what it judged, what
-failed, why, and how long it took, with a hash and a signature, which any
-stranger can re-derive at `/verify`. It is the product's artefact, it is the
-thing the whole site is arguing for, and it is the only picture of the
-product that is not a screenshot of a screen that does not exist yet.
-
-**The phase.** Above it, near the top of the page, a panel that shows one
-phase of the shipped course: its real name, the manifest's own sentence about
-what it is for, how many activities it holds, and the four steps every phase
-has. It is not a drawing of the IDE. It reads the manifest, so it cannot fall
-out of step with what the IDE ships, and a reader who never sees the picture
-still gets the whole curriculum from the list beside it.
-
-Behind it, in the courses section, **the field**: the eighty shipped phases
-as eighty points in space, one arm of one spine for each of the courses,
-every point the same ink, because a public page does not put a price on a
-phase. It is the same data the ledger prints, read a third way.
-
-## What is true today
-
-There is one switch, `PUBLIC_IDE_DOWNLOAD_URL`, and it decides whether a
-desktop build is published. The server reads it once, in
-`+layout.server.ts`, and the answer travels with the page.
-
-The label follows the state: a build means "Download the IDE", and no build
-means "Get the IDE when it ships". There is no third label, and no surface is
-allowed to write its own, because a page that says "try it free" over a build
-that is not published is lying with a button.
-
-The release state is a fact about the world, and it is written down in one
-place (`$lib/release.ts`) so that the hero, the header, the footer, the
-download page and the pricing page cannot disagree about it.
-
-## How many courses there are
-
-**Never written.** The courses are named, always, and the number of them is
-never printed: a count of courses reads as a count of videos, and it is a
-number that changes. That covers both orders, because "five courses" and
-"course five" are the same mistake, and the second one is the way it sneaks
-in, since an ordering reads like a fact rather than like a statistic.
-
-So the site has no course count to go stale, and a course added in the IDE
-reaches the page by way of the sync:
-
-- The list of courses is the shipped list. `COURSES` carries the editorial
-  title and line for each, and the suite compares it against the manifest, so
-  a course that ships and is not on the page fails the build.
-- The lines the homepage prints about the courses after the first are derived
-  from that list. A course we have written something about is printed with
-  what we wrote; a course we have not is printed with the shipped list's own
-  line for it.
-- The curriculum sentence and the answer to "what is actually in the
-  curriculum" name every course and its depth, computed from the shipped
-  phase lists.
-- The course labels carry no ordering.
-
-The same rule applies to the numbers that *are* printed, because a typed-in
-number is a number that goes stale the day after a course is added. The
-masthead's status line, the readings on the bench, the free-tier sentences,
-the depth of the flagship course and the closing sentence are all computed
-from the shipped phase list. The copy module is not allowed to contain a
-literal count of phases or of courses at all, and the suite fails if one
-appears.
-
-What *is* allowed is a number that is a fact about the product rather than a
-count of the curriculum: no badges, no scores, one editor. Those are true
-whatever the curriculum does.
+A course added to the manifest must reach the site through `COURSE_PAGES` and
+`COURSES`; no phase name, count or goal is typed in a route.
 
 ## Palette
 
-Restrained neutrals with one committed accent.
+All values are OKLCH tokens in `src/app.css`. Text combinations are checked
+against WCAG AA in the verification suite.
 
-| Role | Token | Use |
+| Token | Value | Role |
 |---|---|---|
-| Ground | `--color-ground` | the page |
-| Panel | `--color-panel` | a surface inside a surface |
-| Ink | `--color-ink` | the reading text |
-| Muted, faint | `--color-muted`, `--color-faint` | second and third voices |
-| Rule | `--color-rule`, `--color-rule-strong` | the hairlines that divide |
-| Accent | `--color-accent` | an action, and only an action |
-| Added, removed, review, approved | the state inks | a state, never a decoration |
-| Paper | `--color-paper` | the receipt, and the printed page |
+| `--color-ground` | `oklch(97.6% 0.006 85)` | page |
+| `--color-panel` | `oklch(99.4% 0.003 85)` | sheet |
+| `--color-raised` | `oklch(95.4% 0.009 85)` | inset band |
+| `--color-raised-2` | `oklch(92.2% 0.013 85)` | deeper band |
+| `--color-ink` | `oklch(22% 0.018 60)` | reading text |
+| `--color-muted` | `oklch(44% 0.017 60)` | second voice |
+| `--color-faint` | `oklch(49% 0.015 60)` | third voice, AA at 12px |
+| `--color-rule` | `oklch(88.5% 0.01 80)` | hairline |
+| `--color-rule-strong` | `oklch(78% 0.014 80)` | structural rule |
+| `--color-control` | `oklch(55% 0.02 80)` | field boundary |
+| `--color-accent` | `oklch(45% 0.09 210)` | petrol, action only |
+| `--color-accent-strong` | `oklch(38% 0.085 210)` | pressed |
+| `--color-accent-soft` | `oklch(95% 0.02 210)` | tinted band |
+| `--color-accent-bright` | `oklch(66% 0.085 210)` | petrol action on the plate only |
+| `--color-on-accent` | `oklch(99% 0.003 85)` | text on petrol |
+| `--color-screen` | `oklch(22% 0.02 215)` | product plate |
+| `--color-screen-2` | `oklch(26% 0.022 215)` | plate step |
+| `--color-screen-ink` | `oklch(96% 0.005 85)` | plate text |
+| `--color-screen-muted` | `oklch(74% 0.012 85)` | plate annotation |
+| `--color-screen-rule` | `oklch(36% 0.02 215)` | plate boundary |
+| `--color-screen-glow` | `oklch(30% 0.06 215)` | the plate tint, always mixed over `screen` |
+| `--color-pass` | `oklch(47% 0.115 155)` | passed check, free marker |
+| `--color-fail` | `oklch(50% 0.19 27)` | failed check, destructive |
+| `--color-pass-screen` | `oklch(80% 0.15 155)` | passed check on petrol |
+| `--color-fail-screen` | `oklch(74% 0.17 27)` | failed check on petrol |
+| `--color-go` | `oklch(50% 0.1 205)` | Go identity |
+| `--color-rust` | `oklch(52% 0.15 48)` | Rust identity |
+| `--color-zig` | `oklch(60% 0.13 88)` | Zig identity |
+| `--color-ocaml` | `oklch(50% 0.15 305)` | OCaml identity |
+| `--color-sql` | `oklch(47% 0.125 255)` | SQL identity |
+| `--color-api` | `oklch(48% 0.11 160)` | API identity |
+| `--color-script` | `oklch(55% 0.13 80)` | Task Manager identity |
 
-Every neutral is tinted: the ground is a cool near-black and the paper a warm
-off-white. There is no pure black and no pure white anywhere, in either
-medium, and the suite fails the build if one appears.
+Rules:
 
-Amber is the only colour a reader can act on. If it is not a thing you can
-click, it does not get to be amber.
+- Petrol is the only action hue. A link, a button, a focus ring, an active nav
+  mark. It is not a background for a whole section except the close and the
+  plate. On the plate the action steps up to `--color-accent-bright`, the one
+  token that exists only for the dark room and never appears on paper.
+- Course colours are identity, not status. They may tint a mark, a tag border,
+  a top rule and a decorative dot. They never colour an action.
+- Pass green and fail red mean a verdict. Green also marks a free phase, because
+  free access is a fact worth seeing. They never decorate. On the petrol plate
+  the two verdicts step up to `--color-pass-screen` and `--color-fail-screen`,
+  which are the same meanings at a contrast that clears AA on the dark ground.
+- No gradient except a subtle radial tint behind a product area or a closing
+  band, and the paper edge of the receipt. On the plate that tint is
+  `--color-screen-glow` mixed over `screen`; on paper it is `--color-accent-soft`
+  or a course colour at a low mix. There is no third kind, and no plate carries
+  a petrol of its own.
+- Every neutral is tinted toward the warm hue, from 0.005 chroma upward. On
+  screen there is no pure white and no pure black anywhere. Print is the one
+  exception and only because paper is the medium: the print sheet is white
+  stock and prints white, which is why the `@media print` block redefines the
+  ground rather than inheriting the screen's bone.
 
 ## Typography
 
-- **Archivo** for display and text. A grotesque with a width axis, set tight
-  and large.
-- **IBM Plex Mono** for every reading: counts, phases, hashes, commands,
-  timestamps, labels.
-- **Newsreader** for prose, and for one word inside a poster line, in italic.
-  The serif is the reading voice; it is not allowed anywhere else.
+- **Display and text: Instrument Sans.** 700 for display, 400 to 600 for text.
+  Roman only: no serif token, and no italic face is served at all. Emphasis is
+  weight, the accent colour, or a drawn underline.
+- **Data: JetBrains Mono.** Tabular numerals for phases, counts, commands,
+  hashes, serials.
+- The display scale is four tokens and a route picks one of them. It never
+  writes a clamp of its own, which is why a title cannot drift from page to
+  page again:
+  - `--text-hero` `clamp(3rem, 6.6vw, 5.5rem)` — the front door statement.
+  - `--text-page` `clamp(2.5rem, 5.4vw, 4.5rem)` — every page title.
+  - `--text-section` `clamp(1.9rem, 3.6vw, 3rem)` — section heads and the
+    footer's closing line.
+  - `--text-band` `clamp(2.1rem, 4.6vw, 3.8rem)` — a title that sits on the
+    plate or closes a band.
+- `.display-tight` is the one step tighter than the scale, `line-height: 0.96`
+  at `-0.045em`, reserved for the two-line hero statement and never for a
+  wrapped heading.
+- Display line-height `1.02`, tracking `-0.035em`; headings inside a page
+  `1.1` at `-0.02em`.
+- Body: 17px on 1.62; reading measures 46ch to 62ch; captions 56ch; display
+  15ch to 22ch.
+- Data labels: 8px to 11px mono at `0.12em`, uppercase only where it is a
+  label. Never set a paragraph in mono.
 
-One marked word per poster: the word that carries the promise, said by the
-other instrument.
+## Shape, layout and depth
 
-Two measures, and they are not the same. A heading is a poster line and is
-allowed a wide measure, so it runs to two lines rather than five. A caption is
-prose and is held to about sixty characters. The container is wide and the
-caption narrows itself inside it, because a measure computed in characters of
-the body face would break a display line into a block of fragments.
+- Container 1320px, 12-column thinking, asymmetric splits. No centred hero.
+- Section rhythm `clamp(4.5rem, 8vw, 7rem)`; internal rhythm 4px to 32px.
+- Radii, and this is the whole scale: sheets and product windows 8px; inputs,
+  small panels and the wordmark plate 4px; chips, tags, filters and actions 4px;
+  rules square. Round is reserved for what genuinely is a dot or a ring: a
+  status lamp, a bullet, a decorative orbit. No container is a pill.
+- Elevation: one tight warm shadow for sheets, one deeper for product windows,
+  one petrol glow for the primary action. The shadow is tinted by the ink the
+  surface sits on and is pulled in close; no grey bloom under a white box.
+- One surface step is also allowed (sheet on ground, raised band on sheet).
+- Sticky header is a masthead, two rows: 48px for the name, then the 44px
+  destination row, 93px with the rule. It does not change height; the edge
+  beneath the masthead's own hairline inks in on scroll, so the pair closes as
+  a double rule.
 
-The body is set at 16.5px on a 1.66 line. The previous build set it at 15.5px
-on 1.62, and the result was a page that was legible but thin: the copy read as
-a label strip rather than as sentences. The raised size is the single biggest
-readability change in this rebuild.
+## Chrome
+
+**Header.** An N6 masthead rather than a bar. The wordmark is centred on the
+first row, flanked at 1280px and above by the two edition lines `MASTHEAD`
+prints (the descriptor, and the shipped counts, both computed from the
+manifest); a full-bleed rule separates that row from the destinations, which
+sit centred beneath it, and a double rule closes the block. Courses, How it
+works, Proof, Pricing, For hiring, Sign in, release-aware action. The Courses
+menu is a real disclosure listing one row per course with its mark and counts;
+Escape and outside click close it. Below 1024px the destination row is gone
+and it becomes a native `<dialog>` with the same links and the full course
+list.
+
+**Footer.** One closing statement, the release note and action, then an index:
+Courses, Product, For, Documents. A colophon line. No newsletter unless it is
+the real launch list; no social icons that do not exist.
+
+**Labels.** One label per intent. Primary action is always `release.label`
+("Download the IDE" or "Get the IDE when it ships"). The catalogue action is
+"All courses"; the course-page action is "Read the phases". Sign-in is always
+"Sign in".
+
+## Components and states
+
+Every component is a deliberate unit, not a default box.
+
+- **ActionLink / Button.** A cut chip, 48px target, 14px semibold, optional
+  trailing arrow. Default, hover (lift and darken), focus (2px petrol ring,
+  instant), active (settle), disabled (50% and no pointer), busy (`aria-busy`).
+  The inverse variant is for the petrol band and the plate only.
+- **Course card.** Accent top rule, mark, tag, title, promise, track list or
+  phase preview, counts, arrow. Hover lifts 3px, deepens the shadow and moves
+  the arrow. It is a link, so the whole card is clickable; focus rings the card.
+- **Course mark.** One neutral specimen plate, sized by `--mark-size` and
+  derived from it (padding, radius, type). Five courses carry official artwork:
+  JavaScript, Rust, Zig, OCaml, and the Go gopher, which is the permitted Go
+  mark. SQL and API use their letters because they have no official mark. The
+  plate is hidden from assistive technology because the course title is always
+  beside it. The footer carries the licences and sources for every third-party
+  mark.
+- **Phase row.** Number, title, tier word, goal, activity count. Static, not
+  clickable, so there is no hover affordance. Tier is text plus a green dot for
+  free, never colour alone.
+- **Product window.** A petrol card with a bar, a phase rail, the lesson or
+  manifest, and a terminal. It is an illustration and says so. It is not fake
+  browser chrome: no URL bar, no traffic lights pretending to be a browser, and
+  no invented working directory. The terminal's head is a typographic rule with
+  a mono label under it, which is a label and not a window bar.
+- **Receipt.** White on paper in the home proof section; petrol in the course
+  record strip. Same data, different ground. Off-square by less than a degree.
+  Always labelled an example.
+- **Form fields.** 4px radius, 44px minimum, visible label, focus border and
+  petrol ring, error text in fail ink, no placeholder as the only label. Every
+  form uses the shared `.field-label` and `.field-input` classes rather than
+  utilities of its own.
+- **FAQ.** Native `<details>`, 48px summary, plus rotates to a cross. No custom
+  ARIA tree.
 
 ## Motion
 
-One lens: **polish**. Choreographed, measured, with a reason.
+The lens is **restraint on the product surfaces, polish on the front door**, and
+neither is ever allowed to delay a sentence.
 
-- The reveal: a line masked and lifted out of its own overflow box, once, and
-  never again.
-- The stagger: a list arriving in order, because a list has an order.
-- The scrub: the proof chain tied to the scroll, because the chain is the
-  argument.
-- The field: the one continuous moment, in the courses section, where the
-  reader has asked for it.
-- The cross-fade: between documents, where the browser has the API for it.
+- One hero entrance: copy and product window fade and rise, CSS only, settled
+  state visible without JavaScript.
+- Cards and sections reveal once when they enter the viewport, staggered 55ms
+  to 60ms. The hidden state exists only under `.js`. Four surfaces reveal on
+  scroll; a fifth means the budget is spent.
+- Hover: 180ms to 320ms, custom cubic-bezier. Arrows translate 2px to 3px.
+- Page transitions between documents via the View Transitions API.
+- Reduced motion settles everything immediately and never hides content.
+- No scroll hijack, no scrub, no 3D, no magnetic controls, no infinite loops,
+  no custom cursor, no marquee.
 
-Rules: under reduced motion everything is static and everything is visible,
-with no exceptions and no faster animations. No motion that does not carry
-meaning. No motion in the first paint that waits for a library.
+## Responsive
 
-## The chrome
+- Breakpoints: 640, 720, 768, 900, 980, 1024, 1080, 1280.
+- 320 / 375 / 414: one column, 20px page padding, hero headline two or three
+  lines, actions full width where they would wrap awkwardly, product window
+  hides its left rail, phase list one column, cards one column.
+- 768: two-column cards and phase lists.
+- 1024: desktop navigation, two-column hero and two-column auth.
+- 1080: three-column course grid.
+- No horizontal scroll at any width. Grid tracks use `minmax(0, 1fr)`.
 
-One bar, and it is the only thing that crosses the page.
+## Truth rules
 
-It holds the **nameplate** (the amber plate mark and the word), the **folio**
-(the sections, flat and dim, with a drawn rule under the one you are inside),
-and the **controls** (the one action, and who is signed in). The three are in
-that order and they do not move.
+- The download label is a function of `PUBLIC_IDE_DOWNLOAD_URL`. Never "start
+  free" over a build that does not exist; never a static label.
+- Phase names, goals, activity counts, tier words and counts come from the
+  shipped manifest. Nothing is typed into a route.
+- Never print a count of courses.
+- No invented testimonial, logo, placement rate, salary, time estimate,
+  difficulty score or metric.
+- No em dash, en dash, exclamation mark or emoji in visible copy.
+- A product illustration is labelled. A receipt is labelled an example. No
+  claim is made about a build that is not published.
 
-The bar is sticky, and it is the header that sticks rather than a bar nested
-inside a header, because a nested sticky element unsticks the moment its
-parent scrolls away. The page dissolves into it through a short fade instead
-of stopping at a rule. The fade is a change of **opacity**, never of height:
-the bar sits at the top of every page, and a height transition is a layout
-transition.
+## Third-party marks
 
-**Below 1280px the folio takes a row of its own**, the full width of the page.
-Squeezed into the space left beside a wordmark and two buttons, nine links
-become a forty-pixel slot on a phone, and five of the site's destinations are
-invisible. The strip still scrolls at narrow widths, because nine destinations
-do not fit in a phone, and the link that is half off the edge is the signal
-that there is more.
+- A course mark is either the project's own published mark or the course's
+  letters. It is never a redrawn, recoloured or cropped logo.
+- JavaScript (MIT), Rust (CC BY 4.0), Zig (CC BY-SA 4.0), OCaml (public
+  domain) and the Go gopher by Renee French (CC BY 4.0) use official artwork
+  inside the neutral specimen plate. The gopher is cropped to its face so it
+  reads at 30px, and the credit says so. The Go graphic logo is not used,
+  because its brand rules restrict it on a commercial site. SQL and APIs have
+  no official mark and use plain type.
+- Attribution and licence links live in the footer credits. The source files
+  and full licence texts are in `design-assets/logos/`; only the four marks
+  that are actually rendered are copied to `static/logos/`.
+- If a project changes its terms, remove its file and fall back to the letters.
+  The course still works without the mark.
 
-The reading about the product's state, and the desk's description of it, live
-in the footer's title block, because those are facts about the product and the
-title block is where the facts are.
+## Accessibility and print
 
-## How much the page moves
+- 2px petrol focus ring, 2px offset, instant. Skip link first in the document.
+- 44px minimum targets; 48px for primary actions.
+- Text combinations meet WCAG AA; the verification suite parses the tokens.
+- Every form has a visible label, a described error and a status region.
+- Without JavaScript: h1, lede, actions, course cards, phase lists, FAQ answers
+  and the product windows are in the server-rendered document.
+- Print: employer and legal sheets drop the chrome and forms, keep the address,
+  and print in black on warm-neutral ink on white.
 
-**One orchestrated entrance**, and then content that is simply there.
+## Refusals
 
-The poster's masked reveal is the entrance. The gap's four lines light up in
-turn, because the gap is a progression and the order is the point. The five
-steps of a loop and the courses arrive in order, because a list with an order
-should show it. Everything else — the section headings, the caption under
-them, the footer's title block — is structure, and structure is always
-visible. A heading that fades in when it reaches the viewport is a heading
-that is not there for a reader who scrolls fast, and a page where every
-heading arrives is a page that never settles.
+Do not add: a dark mode that reintroduces the bench; an audience switch; a
+search that does not search; a newsletter that does not exist; a logo wall; a
+testimonial carousel; a bento grid of invented metrics; a second accent; a new
+radius; a new font; a pill container; a card for every paragraph; an animation
+that delays the content; a page per track; a 3D hero; a grain or noise overlay;
+a velocity marquee; a custom cursor; purple gradients on white.
 
-The suite counts the reveals and fails above ten, so the budget cannot be
-spent by accident.
-
-## The one word in the poster
-
-The poster marks one word, and it is set in the italic serif: the second
-voice, saying the thing the promise hangs on.
-
-This is a deliberate house decision and it is the one place where this site
-knowingly breaks a common rule of thumb, which is that a heading should never
-carry an italic word. The brief says it, the type system says it, and the
-alternative (a weight, an accent colour) would spend the amber, which is
-reserved for things a reader can act on. It is written down here so that the
-next person to meet the rule knows the exception and the reason for it.
-
-## Composition
-
-Full-bleed bands, a measured column inside them, and a shape change between
-them: a poster, a strip of readings, a panel, a run of five steps, a sequence,
-a track of stages, a datasheet, a scrubbed chain, a plate of lights, a field,
-a set of limits, a plain list of questions.
-
-The grid is broken twice: the poster overlaps the light behind it, and the
-field runs off the right edge of the page.
-
-## Constraints
-
-- Dark only. Light is what a printer gets.
-- Every control is at least 44 pixels tall, and a checkbox is a 44 pixel
-  target with a 20 pixel drawing on it.
-- WCAG AA, and axe clean, on every route.
-- 320 pixels and up, reflow without a sideways scroll.
-- One label per intent: the download is called the same thing everywhere, and
-  the label is the release state's.
-- No em dash or en dash in a visible string.
-- Nothing on the page that the code cannot back: no customer logo, no
-  placement rate, no testimonial, no count that is not the shipped manifest.
-- Print is a first-class output: the legal documents and the hiring one-pager
-  print on paper, with a paper palette and their chrome removed. The hiring
-  sheet drops the form and the market context, so the sheet on paper is still
-  one sheet.
-- The curriculum the site prints is the manifest the IDE ships. The phase
-  list, the goals and the activity counts are generated from the manifests and
-  the suite fails if they drift.
-
-## What this site will not do
-
-It will not use the moves the reference designs reach for, and each refusal
-has a reason:
-
-- **Shadows and glows.** The surface system declares elevation as a rule and
-  a background step. A blur of whatever happens to be behind is the thing
-  this house refuses.
-- **A custom cursor.** The reader is aiming at a word, not at a picture.
-- **A 3D object in the first paint.** The renderer is 700 kilobytes and the
-  first screen does not wait for a library. The field is flat, still and a
-  few kilobytes, and the rotating one is further down the page.
-- **A headline that changes on every visit.** The headline test assigns one
-  variant on the server and keeps it, so the page means the same thing twice.
-- **A gradient doing the work of a claim.** Depth comes from one pool of
-  light under the poster and from the rules; the argument comes from the
-  sentences.
-- **A count of courses.** The curriculum is named, never counted. A count of
-  courses reads as a count of videos.
-- **A phase the IDE does not ship.** Every phase on the site is read from the
-  shipped manifest, and the suite compares them one by one.
+The measure of this world is simple: every claim has an artefact, every colour
+has a job, every corner is cut square, and every component would still make
+sense if the page were printed.

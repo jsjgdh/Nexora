@@ -256,7 +256,7 @@
           </div>
         {:else}
           <p class="mt-4 text-[13.5px] leading-relaxed text-muted">
-            Free plan: the {FREE_PHASES_PHRASE} in the IDE are free. Pro unlocks the further courses per your
+            Free plan: the {FREE_PHASES_PHRASE} in the IDE are free. Pro opens the further courses per your
             tier, inside the IDE you already have.
           </p>
           {#if plans.length > 0}

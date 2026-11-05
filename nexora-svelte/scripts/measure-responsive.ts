@@ -23,7 +23,7 @@ type Measured = Record<string, any>;
 
 const PORT = 5213;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
-const ROUTES = ["/", "/pricing", "/courses", "/employers", "/universities", "/download", "/verify"];
+const ROUTES = ["/", "/pricing", "/courses", "/courses/task-manager", "/courses/go", "/employers", "/universities", "/download", "/verify"];
 const WIDTHS: number[] = [320, 375, 414, 768, 1024, 1440];
 
 const server = spawn(process.execPath, ["build/index.js"], {
@@ -66,12 +66,24 @@ function measureScript(width: number) {
       const r = el.getBoundingClientRect();
       return r.width <= 2 && r.height <= 2;
     };
+    /* A label wraps when one run of its own text covers more than one line.
+     * Measuring every descendant rect would count an inline-flex mark beside
+     * the word, or a title above a count, as wrapping when the layout means
+     * them to sit on separate rows. */
     const lineCount = (el) => {
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      const rects = [...range.getClientRects()].filter((r) => r.width > 4 && r.height > 4);
-      if (rects.length === 0) return 0;
-      return new Set(rects.map((r) => Math.round(r.top))).size;
+      let most = 0;
+      for (const node of el.childNodes) {
+        if (node.nodeType !== 3 || !node.textContent || !node.textContent.trim()) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const rects = [...range.getClientRects()].filter((r) => r.width > 4 && r.height > 4);
+        const tops = [];
+        for (const r of rects.map((x) => Math.round(x.top)).sort((a, b) => a - b)) {
+          if (!tops.length || r - tops[tops.length - 1] > 4) tops.push(r);
+        }
+        most = Math.max(most, tops.length);
+      }
+      return most;
     };
     const overflowing = [];
     const offScreen = [];
@@ -101,7 +113,9 @@ function measureScript(width: number) {
         small.push({ sel: tag, h, w: cw });
       }
       const lines = lineCount(el);
-      if (lines > 1 && !wrapped.some((o) => o.sel === tag)) wrapped.push({ sel: tag, lines });
+      /* A link inside a sentence is prose: it wraps with the sentence, and
+         that is not a control whose label has broken. */
+      if (!inline && lines > 1 && !wrapped.some((o) => o.sel === tag)) wrapped.push({ sel: tag, lines });
     }
     const doc = document.documentElement;
     return {

@@ -3,8 +3,8 @@
 export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
   "id": "ocaml-fundamentals",
   "title": "OCaml fundamentals",
-  "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, variants, modules and functors, errors with exceptions and with result, and the standard library. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is a report you write yourself.",
-  "version": 1,
+  "description": "OCaml itself, from the first program to a module built by a functor. A dune project and what the compiler does with it, values and types, control flow and pattern matching, functions, lists and recursion, records, mutable state, variants, polymorphic variants, modules and functors, errors with exceptions and with result, the standard library, tests you write yourself, and the effects and domains of OCaml 5. The phases build one calculator, one module at a time, and every phase is judged by code that will not compile or pass without the idea it teaches. Every phase is Learn, then Solve, then Review, and the last one is an evaluator you write yourself.",
+  "version": 2,
   "freePhases": 1,
   "glossary": [
     {
@@ -38,9 +38,19 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "definition": "A type with named fields, whose types are written down. A value never changes, so changing a field builds a new record."
     },
     {
+      "term": "mutable field",
+      "phase": "ocaml-mutable",
+      "definition": "A record field declared with mutable, which a function can write in place so the caller sees the new value."
+    },
+    {
       "term": "variant",
       "phase": "ocaml-variants",
       "definition": "A type whose value is one of several shapes. Each constructor names a shape and says what it holds."
+    },
+    {
+      "term": "polymorphic variant",
+      "phase": "ocaml-polymorphic-variants",
+      "definition": "A tag written with a backtick, with a type of its own, so modules can share tags without sharing a declaration."
     },
     {
       "term": "exception",
@@ -58,6 +68,16 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "definition": "What the module a functor is given has to provide."
     },
     {
+      "term": "effect handler",
+      "phase": "ocaml-effects",
+      "definition": "The code around a computation that answers the effects it performs and continues it where it stopped."
+    },
+    {
+      "term": "domain",
+      "phase": "ocaml-effects",
+      "definition": "A separate OCaml runtime that runs beside the main one, with Domain.spawn and Domain.join as the way in and out."
+    },
+    {
       "term": "functor",
       "phase": "ocaml-modules",
       "definition": "A module built from another module. It is written as a module type and a body, and applied to a module to make a module of its own."
@@ -73,8 +93,8 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-project-learn",
-        "ocaml-project-do",
         "ocaml-project-ask",
+        "ocaml-project-do",
         "ocaml-project-review"
       ],
       "interviewQuestions": [
@@ -92,8 +112,8 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-values-learn",
-        "ocaml-values-do",
         "ocaml-values-ask",
+        "ocaml-values-do",
         "ocaml-values-review"
       ],
       "interviewQuestions": [
@@ -111,8 +131,8 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-control-flow-learn",
-        "ocaml-control-flow-do",
         "ocaml-control-flow-ask",
+        "ocaml-control-flow-do",
         "ocaml-control-flow-review"
       ],
       "interviewQuestions": [
@@ -130,8 +150,8 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-functions-learn",
-        "ocaml-functions-do",
         "ocaml-functions-ask",
+        "ocaml-functions-do",
         "ocaml-functions-review"
       ],
       "interviewQuestions": [
@@ -149,8 +169,8 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-lists-learn",
-        "ocaml-lists-do",
         "ocaml-lists-ask",
+        "ocaml-lists-do",
         "ocaml-lists-review"
       ],
       "interviewQuestions": [
@@ -168,14 +188,33 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-records-learn",
-        "ocaml-records-do",
         "ocaml-records-ask",
+        "ocaml-records-do",
         "ocaml-records-review"
       ],
       "interviewQuestions": [
         "What is a record in OCaml, and how is one declared?",
         "Why does changing a field of a record produce a new record rather than changing the old one?",
         "How do you read a field, and how do you make a copy with one field changed?"
+      ]
+    },
+    {
+      "id": "ocaml-mutable",
+      "title": "Mutable state",
+      "goal": "A reference and a mutable field: the two places OCaml keeps a value that changes.",
+      "level": 2,
+      "authored": true,
+      "project": "ocaml-calc",
+      "activities": [
+        "ocaml-mutable-learn",
+        "ocaml-mutable-ask",
+        "ocaml-mutable-do",
+        "ocaml-mutable-review"
+      ],
+      "interviewQuestions": [
+        "What is a reference in OCaml, and how do ! and := work on one?",
+        "Why does a function that bumps a counter return unit rather than a new counter?",
+        "When would you reach for a mutable record field instead of returning a new value?"
       ]
     },
     {
@@ -187,14 +226,33 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-variants-learn",
-        "ocaml-variants-do",
         "ocaml-variants-ask",
+        "ocaml-variants-do",
         "ocaml-variants-review"
       ],
       "interviewQuestions": [
         "What is a variant type, and what does a constructor carry?",
         "Why does the compiler report a match that leaves a case out?",
         "What does a pattern match over a variant give you that a chain of conditions does not?"
+      ]
+    },
+    {
+      "id": "ocaml-polymorphic-variants",
+      "title": "Polymorphic variants",
+      "goal": "A tag with no type declaration, and the open row that lets a function accept one.",
+      "level": 2,
+      "authored": true,
+      "project": "ocaml-calc",
+      "activities": [
+        "ocaml-polymorphic-variants-learn",
+        "ocaml-polymorphic-variants-ask",
+        "ocaml-polymorphic-variants-do",
+        "ocaml-polymorphic-variants-review"
+      ],
+      "interviewQuestions": [
+        "What is a polymorphic variant, and how does it differ from a constructor of a declared type?",
+        "What does a row written with a lower bound mean at a function boundary?",
+        "When would you choose a polymorphic variant over a declared variant?"
       ]
     },
     {
@@ -206,8 +264,8 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-modules-learn",
-        "ocaml-modules-do",
         "ocaml-modules-ask",
+        "ocaml-modules-do",
         "ocaml-modules-review"
       ],
       "interviewQuestions": [
@@ -225,8 +283,8 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-errors-learn",
-        "ocaml-errors-do",
         "ocaml-errors-ask",
+        "ocaml-errors-do",
         "ocaml-errors-review"
       ],
       "interviewQuestions": [
@@ -244,8 +302,8 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "project": "ocaml-calc",
       "activities": [
         "ocaml-stdlib-learn",
-        "ocaml-stdlib-do",
         "ocaml-stdlib-ask",
+        "ocaml-stdlib-do",
         "ocaml-stdlib-review"
       ],
       "interviewQuestions": [
@@ -255,22 +313,60 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       ]
     },
     {
+      "id": "ocaml-testing",
+      "title": "Test what you write",
+      "goal": "Write the suite yourself, and find out whether it would catch a broken implementation.",
+      "level": 3,
+      "authored": true,
+      "project": "ocaml-calc",
+      "activities": [
+        "ocaml-testing-learn",
+        "ocaml-testing-ask",
+        "ocaml-testing-do",
+        "ocaml-testing-review"
+      ],
+      "interviewQuestions": [
+        "What makes a test worth more than a line that happens to run?",
+        "Why does a test at the boundary catch a defect that a test away from it cannot?",
+        "How would you prove your suite notices a behaviour that has been removed?"
+      ]
+    },
+    {
+      "id": "ocaml-effects",
+      "title": "Effects and domains",
+      "goal": "OCaml 5: a computation that asks its handler for something, and work that runs on a domain of its own.",
+      "level": 3,
+      "authored": true,
+      "project": "ocaml-calc",
+      "activities": [
+        "ocaml-effects-learn",
+        "ocaml-effects-ask",
+        "ocaml-effects-do",
+        "ocaml-effects-review"
+      ],
+      "interviewQuestions": [
+        "What is an effect in OCaml 5, and how does a handler answer one?",
+        "How does a continuation let the computation resume after it performed the effect?",
+        "What does Domain.spawn start, and what does Domain.join give back?"
+      ]
+    },
+    {
       "id": "ocaml-your-turn",
-      "title": "Your turn: the report",
-      "goal": "The report you write: the shape is yours, the contract is not.",
+      "title": "Your turn: the evaluator",
+      "goal": "The evaluator you write: recursive, environment-aware, and honest about failure.",
       "level": 3,
       "authored": true,
       "project": "ocaml-calc",
       "activities": [
         "ocaml-your-turn-learn",
-        "ocaml-your-turn-do",
         "ocaml-your-turn-ask",
+        "ocaml-your-turn-do",
         "ocaml-your-turn-review"
       ],
       "interviewQuestions": [
-        "What does a contract say, and what does it leave to the person keeping it?",
-        "How do you write a function that is judged on what it returns rather than on how it is written?",
-        "What can an automated check say about a piece of work, and what can it not say?"
+        "How does an evaluator give a variable its value, and where does that binding live?",
+        "Why does a let binding affect the body of the let and not the expression beside it?",
+        "How do you report a name that is not bound without raising an exception?"
       ]
     }
   ],
@@ -362,6 +458,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
             "A library is modules other code uses; a program is something a person runs.",
             "The compiler compiles a module at a time; the linker joins the pieces."
           ]
+        },
+        {
+          "kind": "example",
+          "body": "The same project with one library and one program, both complete:",
+          "code": "(* lib/units/units.ml: a library module with one function. *)\nlet add (a : int) (b : int) : int = a + b\n\n(* bin/main.ml: the program names the library in its dune file. *)\nlet () =\n  Printf.printf \"%d\" (Units.add 2 3)"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Which file makes the units library available to the program?",
+          "items": [
+            "The dune file beside the program, which names the library.",
+            "The OCaml compiler, which finds every library on its own.",
+            "The opam file, which lists the library once for the whole machine.",
+            "The README, which tells you to open the library folder."
+          ],
+          "answer": 0,
+          "explain": "A program only sees the libraries its dune stanza names, so the bin dune file carries (libraries units)."
         },
         {
           "kind": "example",
@@ -567,6 +680,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
             "An annotation is checked by the compiler, and a wrong one stops the build.",
             "= and <> compare two values of the same type."
           ]
+        },
+        {
+          "kind": "example",
+          "body": "A complete program that keeps the price as cents and prints both parts:",
+          "code": "let cents = 199\nlet dollars = cents / 100\nlet remainder = cents mod 100\nlet () = Printf.printf \"%d dollars and %d cents\" dollars remainder"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does 199 / 100 evaluate to in OCaml?",
+          "items": [
+            "1, because both numbers are integers.",
+            "1.99, because division keeps the decimal part.",
+            "2, because the division rounds to the nearest whole number.",
+            "An error, because 199 does not divide evenly."
+          ],
+          "answer": 0,
+          "explain": "Both operands are int, so / is integer division and the fractional part is dropped; 199 / 100 is 1."
         },
         {
           "kind": "example",
@@ -781,6 +911,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "A complete sign_of with all three answers, and the values that select them:",
+          "code": "let sign_of (n : int) : string =\n  if n > 0 then \"positive\"\n  else if n < 0 then \"negative\"\n  else \"zero\"\n\nlet () = Printf.printf \"%s %s %s\" (sign_of 7) (sign_of (-3)) (sign_of 0)"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does sign_of 0 return?",
+          "items": [
+            "\"zero\", because neither comparison is true.",
+            "\"positive\", because zero is greater than or equal to zero.",
+            "\"negative\", because zero is less than one.",
+            "An error, because no branch mentions zero."
+          ],
+          "answer": 0,
+          "explain": "The first two comparisons are false for zero, so the else branch returns \"zero\"; every case has an answer."
+        },
+        {
+          "kind": "example",
           "body": "The command that runs the checks for this phase, and the command you run yourself:",
           "code": "dune runtest test/control-flow   # the phase test, by hand\nnode --test --test-reporter=tap test/control-flow.test.mjs   # what the Run button calls"
         },
@@ -874,26 +1021,26 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         "ocaml-control-flow"
       ],
       "hints": [
-        "Ask what the match does with the value, and in what order the branches are tried."
+        "Ask what a match does when the value reaches the end with no branch to take it."
       ],
       "misconceptions": [
-        "Thinking every branch of a match runs and the last one wins.",
-        "Thinking the compiler works out which branch runs for a value it has not seen."
+        "Thinking a match that compiles must have a branch for every value it receives.",
+        "Thinking a failed match returns the value unchanged instead of raising."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "A match has three branches and the value fits none of them. What does OCaml do?"
+          "body": "A match compiles with three branches, and at run time the value fits none of them. What happens?"
         }
       ],
       "options": [
-        "The value is tried against the branches in the order they are written, and the first one that fits decides.",
-        "Every branch runs in turn, and the last one to run gives the answer, so a match computes the whole thing and keeps the last.",
-        "The compiler counts the branches and picks one, so that every branch is used equally often.",
-        "The match is skipped and the value is returned as it was, unchanged."
+        "Nothing: the match returns the value unchanged, and the program carries on.",
+        "The match raises Match_failure, because no branch was chosen.",
+        "The last branch runs anyway, because a match has to produce a value.",
+        "The compiler counts the branches and picks the closest one at run time."
       ],
-      "answer": 0,
-      "explanation": "A match tries the value against the patterns in order and stops at the first one that fits, so a broad pattern such as `_` belongs last. When no pattern fits, the match has no answer, and the compiler says so while it checks the code, before the program runs. The branches are not run in turn, and the compiler never counts them."
+      "answer": 1,
+      "explanation": "When no pattern fits, there is no branch to take the value, and OCaml raises Match_failure. The compiler warns at build time when it can see the match is not exhaustive, and `_` is the branch that makes it exhaustive. Neither the value nor the last branch is a substitute for a branch that does not fit."
     },
     "ocaml-control-flow-review": {
       "id": "ocaml-control-flow-review",
@@ -1003,6 +1150,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
             "A function built inside another one keeps what was in scope.",
             "Giving one argument of two gives back a function waiting for the other."
           ]
+        },
+        {
+          "kind": "example",
+          "body": "A complete pair that builds a function and applies it twice:",
+          "code": "let apply_twice (f : int -> int) (x : int) : int = f (f x)\nlet make_adder (n : int) : int -> int = fun x -> x + n\n\nlet () = Printf.printf \"%d %d\" (apply_twice (make_adder 3) 5) (make_adder 4 5)"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What is the type of make_adder 4?",
+          "items": [
+            "int -> int, because one number is still missing.",
+            "int, because 4 is the number it adds.",
+            "int -> int -> int, because make_adder takes two arguments.",
+            "int * int, because the two numbers become a pair."
+          ],
+          "answer": 0,
+          "explain": "make_adder takes one int and returns a function; the second int is supplied when that function is called."
         },
         {
           "kind": "example",
@@ -1220,6 +1384,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "A complete walk that builds a new list, one head at a time:",
+          "code": "let rec double_all (xs : int list) : int list =\n  match xs with\n  | [] -> []\n  | x :: rest -> (x * 2) :: double_all rest\n\nlet () = List.iter (fun n -> Printf.printf \"%d \" n) (double_all [1; 2; 3])"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What is double_all [1; 2; 3]?",
+          "items": [
+            "[2; 4; 6], because each head is doubled.",
+            "[1; 2; 3], because the list is unchanged.",
+            "6, because the numbers are added together.",
+            "An error, because the function is not tail recursive."
+          ],
+          "answer": 0,
+          "explain": "The pattern x :: rest doubles the head and conses it onto the doubled tail, so the order is kept."
+        },
+        {
+          "kind": "example",
           "body": "The command that runs the checks for this phase, and the command you run yourself:",
           "code": "dune runtest test/lists   # the phase test, by hand\nnode --test --test-reporter=tap test/lists.test.mjs   # what the Run button calls"
         },
@@ -1229,27 +1410,48 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "pattern-match",
+        "type": "event-flow",
         "spec": {
-          "value": "1 :: 2 :: 3 :: []",
-          "cases": [
+          "steps": [
+            "sum [1; 2; 3]",
+            "sum [2; 3]",
+            "sum [3]",
+            "sum []",
+            "sum [] is 0",
+            "3, 5, then 6"
+          ],
+          "moments": [
             {
-              "pattern": "[]",
-              "binds": "the list is empty",
-              "note": "the case that ends the walk"
+              "step": 0,
+              "note": "The first call needs the sum of the tail, so it waits."
             },
             {
-              "pattern": "x :: rest",
-              "binds": "x is 1, rest is 2 :: 3 :: []",
-              "note": "the case that does one piece of work"
+              "step": 1,
+              "note": "The same function is called again with one fewer number."
+            },
+            {
+              "step": 2,
+              "note": "The walk reaches a list with one number."
+            },
+            {
+              "step": 3,
+              "note": "The empty list is the case that does not call itself."
+            },
+            {
+              "step": 4,
+              "note": "The empty list answers 0, and the calls start to return."
+            },
+            {
+              "step": 5,
+              "note": "Each waiting call adds its head: 3, then 5, then 6."
             }
-          ],
-          "fired": 1
+          ]
         },
-        "caption": "A list is taken apart by matching on its shape. The empty case ends the walk, and the other case does one piece of work and calls the function on the tail."
+        "caption": "The call on the tail waits for the answer, so the walk goes down to the empty list and the additions come back up: 3, then 5, then 6."
       },
       "bridge": {
         "course": "task-manager",
+        "phase": "fundamentals",
         "text": "In JavaScript an array keeps its elements in order and you count from zero. In OCaml a list is either empty or a head joined to a tail, so taking one apart is a match on its shape."
       }
     },
@@ -1323,11 +1525,11 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       ],
       "options": [
         "Nothing at all: the compiler reads the body and sees the call either way, and the keyword is only for the reader.",
-        "It lets the name of the function inside its own body stand for the function being defined, instead of some other binding of that name.",
+        "It lets the name inside the body stand for the function being defined, not some earlier binding.",
         "It makes the compiler turn the function into a loop, so the program does not use any stack.",
         "It lets the function take more arguments than its type says, so that it can walk a list."
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "Without rec, the name in its own body means whatever it was bound to before, and nothing is there. With rec, it stands for the function being defined, so the call on the tail reaches the function. A tail call is a call, not a loop: the stack grows with the list, so a long list wants a tail-recursive body. It says nothing about the number of arguments."
     },
     "ocaml-lists-review": {
@@ -1433,6 +1635,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "A complete deposit that returns a new record and leaves the old one alone:",
+          "code": "type account = { name : string; cents : int }\n\nlet balance (a : account) : int = a.cents\n\nlet deposit (a : account) (amount : int) : account =\n  { a with cents = a.cents + amount }\n\nlet () =\n  let a = { name = \"Ada\"; cents = 500 } in\n  let b = deposit a 250 in\n  Printf.printf \"%d %d\" (balance a) (balance b)"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does balance a read after let b = deposit a 250?",
+          "items": [
+            "500, because a was not changed.",
+            "750, because deposit writes the new amount.",
+            "250, because the function returns the amount.",
+            "An error, because records cannot be read after an update."
+          ],
+          "answer": 0,
+          "explain": "The update builds b from a with one field replaced; a still holds its original cents."
+        },
+        {
+          "kind": "example",
           "body": "The command that runs the checks for this phase, and the command you run yourself:",
           "code": "dune runtest test/records   # the phase test, by hand\nnode --test --test-reporter=tap test/records.test.mjs   # what the Run button calls"
         },
@@ -1463,6 +1682,7 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       },
       "bridge": {
         "course": "task-manager",
+        "phase": "fundamentals",
         "text": "In JavaScript an object holds named fields and you find one by its key. In OCaml a record has its fields and their types written down, and a value never changes, so a changed field means a new record."
       }
     },
@@ -1540,7 +1760,7 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         "Ask the record to change itself, and the record refuses if nobody is holding it any more.",
         "Nothing can be done with an account, because a record is a fixed shape and its fields cannot hold new values."
       ],
-      "answer": 0,
+      "answer": 1,
       "explanation": "Every value in OCaml is immutable, so no record field is written to. The record update builds a new record with the field replaced and the others carried over; that is what comes back. That is not a limitation dressed up: two functions can share a record, neither changes what the other sees, and it refuses nothing. It is not a fixed shape that cannot hold new values."
     },
     "ocaml-records-review": {
@@ -1580,6 +1800,262 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "misconceptions": [
         "Building the new record from the amount alone, so the name of the account is lost.",
         "Giving back the old account, which passes the second check and fails the first."
+      ]
+    },
+    "ocaml-mutable-learn": {
+      "id": "ocaml-mutable-learn",
+      "title": "Learn: a value that can change",
+      "kind": "lesson",
+      "direction": "guided",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "ocaml-mutable"
+      ],
+      "objectives": [
+        "Explain what a reference is, and how ! and := read and write it.",
+        "Describe a mutable record field, and when a shared counter is the right shape.",
+        "Implement a counter that changes in place, and prove it by running the phase test."
+      ],
+      "hints": [
+        "Read lib/tally/tally.ml before you write anything. The record declaration says which field can change, and every function works on that one record.",
+        "A local reference is written ref 0. Reading it is !r, and writing it is r := !r + 1. The exclamation mark is a function, not punctuation."
+      ],
+      "misconceptions": [
+        "Thinking a mutable field means the caller can switch in a different record. The field changes, and the name still refers to the same record.",
+        "Thinking a bump returns a new counter. A bump returns unit, and the caller reads the same counter afterwards.",
+        "Thinking a ref is a variable of the language. A ref is a record with one mutable field, and ! and := are functions on it."
+      ],
+      "resources": [
+        {
+          "label": "The OCaml manual: the core language",
+          "url": "https://ocaml.org/manual/5.5/core.html"
+        },
+        {
+          "label": "The OCaml standard library: References",
+          "url": "https://ocaml.org/api/5.5/Stdlib/ref.html"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Every value in OCaml is immutable, and a program still needs a count that changes. The language gives two ways: a reference, which is a small cell with one value, and a record field declared mutable, which can be assigned a new value in place."
+        },
+        {
+          "kind": "example",
+          "body": "The file this phase works in, lib/tally/tally.ml:",
+          "code": "type counter = { label : string; mutable count : int }\n\n(* Add one to the counter it is given. *)\nlet bump (c : counter) : unit =\n  failwith \"implement bump\""
+        },
+        {
+          "kind": "prose",
+          "body": "A reference is written `ref 0`. Its value is read with `!r` and written with `r := 3`. The exclamation mark is a function, not punctuation: `!r` is a call that gives back what the cell holds."
+        },
+        {
+          "kind": "prose",
+          "body": "A mutable field is declared with the word `mutable` in the record type and assigned with `<-`, as in `c.count <- c.count + 1`. A function that returns `unit` changes the record the caller already holds, so the caller reads the same value it passed in."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A reference is a cell: ref builds it, ! reads it, := writes it.",
+            "A mutable field is declared with the word mutable.",
+            "A unit function changes the value the caller already holds.",
+            "A counter is shared, so every function sees the latest count."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "A complete counter that changes the record the caller already holds:",
+          "code": "type counter = { label : string; mutable count : int }\n\nlet bump (c : counter) : unit = c.count <- c.count + 1\n\nlet () =\n  let c = { label = \"hits\"; count = 0 } in\n  bump c;\n  bump c;\n  Printf.printf \"%d\" c.count"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does the program print after two bump calls?",
+          "items": [
+            "2, because both calls write the same record.",
+            "0, because each call gets its own copy of 0.",
+            "1, because the second call replaces the first.",
+            "An error, because a record cannot be passed to a function."
+          ],
+          "answer": 0,
+          "explain": "The record is one value the caller holds; both calls write its field, so two increments reach 2."
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the checks for this phase, and the command you run yourself:",
+          "code": "dune runtest test/mutable   # the phase test, by hand\nnode --test --test-reporter=tap test/mutable.test.mjs   # what the Run button calls"
+        },
+        {
+          "kind": "task",
+          "body": "Open lib/tally/tally.ml and write make, bump and value so that a bump changes the counter it was given. Then run dune runtest test/mutable and read what it said."
+        }
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "the counter the caller holds",
+            "lines": [
+              "label = \"clicks\"",
+              "count = 0"
+            ]
+          },
+          "after": {
+            "title": "after two bumps",
+            "lines": [
+              "label = \"clicks\"",
+              "count = 2"
+            ]
+          }
+        },
+        "caption": "The name still points at one counter. A bump writes the field in place, so the value the caller holds is the value that changed."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "phase": "fundamentals",
+        "text": "In JavaScript a variable is reassigned and an object field is written. In OCaml a name is bound once, and a reference or a mutable field is how a value is changed on purpose."
+      }
+    },
+    "ocaml-mutable-do": {
+      "id": "ocaml-mutable-do",
+      "title": "Solve: a counter you can bump",
+      "kind": "challenge",
+      "direction": "guided",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "ocaml-mutable"
+      ],
+      "files": [
+        "lib/tally/tally.ml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/mutable.test.mjs",
+      "checks": [
+        {
+          "id": "bump",
+          "label": "A bump changes the counter it was given",
+          "tests": [
+            "a bump changes the counter it was given"
+          ],
+          "feedback": "A bump returns unit, so the only way to show it worked is to read the same counter afterwards. Update the record you were given, then run the suite and read the count the check saw."
+        },
+        {
+          "id": "adding",
+          "label": "Adding an amount changes the same counter",
+          "tests": [
+            "adding an amount changes the same counter"
+          ],
+          "feedback": "add takes a number and adds it to the field of the counter it was given. The check passes 40 to a counter that already holds 2, so a body that starts from zero fails it."
+        },
+        {
+          "id": "local-ref",
+          "label": "A local reference counts every item",
+          "tests": [
+            "a local reference counts every item"
+          ],
+          "feedback": "The count function walks a list and keeps a local reference. Start it at zero, add one for each item, and read the cell when the list ends."
+        },
+        {
+          "id": "edge-empty",
+          "label": "The total of no counters is zero",
+          "tests": [
+            "the total of no counters is zero"
+          ],
+          "feedback": "An empty list of counters has a total of zero. That case catches a body that reads the first counter without checking whether there is one, and a body that never starts from zero.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open lib/tally/tally.ml. Every signature is already there and every body is a placeholder that raises. Run dune runtest test/mutable before you change anything and read which checks failed.",
+        "make builds the record, and the field that changes is declared mutable at the top of the file. The label is written once and never changes.",
+        "bump and add return unit. Change the field of the counter you were given with <-, and do not build a new record.",
+        "count has no counter to work with. Make a local reference with ref 0, walk the list, and add one for each item with :=.",
+        "The total walks the list of counters and adds value of each one. Start from zero so the empty list answers zero."
+      ],
+      "misconceptions": [
+        "Building a new counter with the new count and returning it. The signature returns unit, and the caller is still holding the old record.",
+        "Writing !r := when the write is r :=. The exclamation mark reads a reference and does not belong on the left of an assignment."
+      ]
+    },
+    "ocaml-mutable-ask": {
+      "id": "ocaml-mutable-ask",
+      "title": "Reason: the count a caller still holds",
+      "kind": "question",
+      "direction": "guided",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "ocaml-mutable"
+      ],
+      "hints": [
+        "Ask what bump was given: a counter, or a copy of one.",
+        "Ask what the function returns, and what the caller still holds after it returns."
+      ],
+      "misconceptions": [
+        "Thinking unit means nothing happened. The change is in the record, and the unit is only what the call gives back.",
+        "Thinking the caller has to receive the counter again. It already holds it."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A function is given a counter that holds 2. It calls bump on the counter and returns. What does the caller see, and why?"
+        }
+      ],
+      "options": [
+        "The counter now holds 3, because bump changed the record the caller passed in.",
+        "The caller sees 2, because every OCaml value is a copy and the change stayed inside the call.",
+        "The call fails to compile, because a record field cannot be changed after the record is built.",
+        "The caller sees 3 and never sees 2 again."
+      ],
+      "answer": 0,
+      "explanation": "A mutable field is written in place, so the record the caller passed in is the record that changed. The function returns unit, but it does not need to return the counter: the caller already holds it, and reading the field afterwards gives the new count. A copy would leave the caller at 2, and a record field that cannot change would not compile."
+    },
+    "ocaml-mutable-review": {
+      "id": "ocaml-mutable-review",
+      "title": "Review: two counters, one at a time",
+      "kind": "retrieval",
+      "direction": "guided",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "ocaml-mutable"
+      ],
+      "files": [
+        "lib/tally/tally.ml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/mutable-review.test.mjs",
+      "checks": [
+        {
+          "id": "independent",
+          "label": "Each counter keeps its own count",
+          "tests": [
+            "each counter keeps its own count"
+          ],
+          "feedback": "Two counters built by make are two records, so adding to one must leave the other alone. A body that stores the count in a shared place fails this check."
+        },
+        {
+          "id": "total",
+          "label": "A total reads every counter it is given",
+          "tests": [
+            "a total reads every counter it is given"
+          ],
+          "feedback": "total adds value of each counter in the list. The check gives it two counters that hold different counts, so a body that reads only the first one fails."
+        },
+        {
+          "id": "edge-later-bump",
+          "label": "A bump after a total is visible in the next total",
+          "tests": [
+            "a bump after a total is visible in the next total"
+          ],
+          "feedback": "The second total has to see the bump, which means the counters a previous total read are the same counters the bump changed. A total that copied the counts answers the old number.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Building one counter and giving it two labels, so both names read the same count.",
+        "Holding the total in a mutable field on the counter, which makes two totals depend on the order they ran."
       ]
     },
     "ocaml-variants-learn": {
@@ -1647,6 +2123,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
             "A match on a variant is checked against the constructors.",
             "A constructor pattern can name what it holds."
           ]
+        },
+        {
+          "kind": "example",
+          "body": "A complete show with one branch for every constructor:",
+          "code": "type expr =\n  | Num of float\n  | Add of expr * expr\n  | Mul of expr * expr\n  | Div of expr * expr\n  | Neg of expr\n\nlet rec show (e : expr) : string =\n  match e with\n  | Num n -> string_of_float n\n  | Add (a, b) -> \"(\" ^ show a ^ \" + \" ^ show b ^ \")\"\n  | Mul (a, b) -> \"(\" ^ show a ^ \" * \" ^ show b ^ \")\"\n  | Div (a, b) -> \"(\" ^ show a ^ \" / \" ^ show b ^ \")\"\n  | Neg a -> \"-\" ^ show a\n\nlet () = print_string (show (Add (Num 1.0, Neg (Num 2.0))))"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does the compiler do if a match over expr misses Neg?",
+          "items": [
+            "It warns that the match is not exhaustive.",
+            "It adds the missing branch automatically at run time.",
+            "It refuses to compile the type declaration.",
+            "It treats the missing constructor as a wildcard."
+          ],
+          "answer": 0,
+          "explain": "The compiler knows every constructor, so a missing one makes the match non-exhaustive and produces a warning; _ would silence it."
         },
         {
           "kind": "example",
@@ -1804,6 +2297,262 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         "Adding the depths of the two sides instead of taking the larger one, which counts a branch twice."
       ]
     },
+    "ocaml-polymorphic-variants-learn": {
+      "id": "ocaml-polymorphic-variants-learn",
+      "title": "Learn: a tag without a declaration",
+      "kind": "lesson",
+      "direction": "guided",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "ocaml-polymorphic-variants"
+      ],
+      "objectives": [
+        "Explain how a polymorphic variant tag differs from a constructor of a declared type.",
+        "Read a row type and say which tags a function accepts.",
+        "Implement a rank and a filter over levels, and prove it by running the phase test."
+      ],
+      "hints": [
+        "Read lib/route/route.ml before you write anything. The type at the top is a row of tags, and the functions name the row where they need it.",
+        "A tag is written with a backtick, as in `Warn. A value of the type is one of the tags, and the compiler tells the tags apart by name."
+      ],
+      "misconceptions": [
+        "Thinking a polymorphic variant is a string. The backtick is part of the value, and the compiler checks the tags a function accepts.",
+        "Thinking `Warn and `warn are the same tag. A tag is case-sensitive, and a name parsed from text has to be turned into the tag it means.",
+        "Thinking a function written for one row cannot accept a wider row. A type with a lower bound accepts every tag in that row and more."
+      ],
+      "resources": [
+        {
+          "label": "The OCaml manual: polymorphic variants",
+          "url": "https://ocaml.org/manual/5.5/polyvariant.html"
+        },
+        {
+          "label": "The OCaml tutorial: data types and pattern matching",
+          "url": "https://ocaml.org/tutorial/datatypes.html"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A variant declared with type needs every constructor in one place. A polymorphic variant is a tag written with a backtick, and the type is a row of tags that a function names where it needs them."
+        },
+        {
+          "kind": "example",
+          "body": "The file this phase works in, lib/route/route.ml:",
+          "code": "type level = [ `Debug | `Info | `Warn | `Error ]\n\n(* How serious a level is, counting from zero. *)\nlet rank (level : level) : int =\n  failwith \"implement rank\""
+        },
+        {
+          "kind": "prose",
+          "body": "A tag is a value on its own: `Warn has a type that says a row holds at least Warn. A function that takes `[< `Debug | `Info ]` accepts any row made of those tags, so two modules can share tags without sharing a type declaration."
+        },
+        {
+          "kind": "prose",
+          "body": "The names in this file are lower-case, so parse turns text into a tag and rank turns a tag into a number. A name this module does not know becomes `Debug, which is the level that reports the least."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A polymorphic variant is a backtick tag, not a declared constructor.",
+            "A row can be open, so a function accepts more tags than it names.",
+            "A tag is compared by name, and the name is case-sensitive.",
+            "A parser maps text to a tag and names a default for the rest."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "A complete rank over the tags, with one branch for each:",
+          "code": "type level = [ `Debug | `Info | `Warn | `Error ]\n\nlet rank (level : level) : int =\n  match level with\n  | `Debug -> 0\n  | `Info -> 1\n  | `Warn -> 2\n  | `Error -> 3\n\nlet () = Printf.printf \"%d %d\" (rank `Warn) (rank `Error)"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does the type [> `Warn | `Error ] promise?",
+          "items": [
+            "Any row that has at least Warn and Error.",
+            "Exactly two tags, and no others.",
+            "A row with no tags at all.",
+            "Exactly the two tags Warn and Error, with nothing else allowed in the row."
+          ],
+          "answer": 0,
+          "explain": "The > is a lower bound: the caller may pass a row with more tags, and the function only relies on these two."
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the checks for this phase, and the command you run yourself:",
+          "code": "dune runtest test/polymorphic-variants   # the phase test, by hand\nnode --test --test-reporter=tap test/polymorphic-variants.test.mjs   # what the Run button calls"
+        },
+        {
+          "kind": "task",
+          "body": "Open lib/route/route.ml and write rank so that debug is zero and error is three. Then run dune runtest test/polymorphic-variants and read what it said."
+        }
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "the row a level names",
+            "lines": [
+              "[ `Debug | `Info | `Warn | `Error ]",
+              "rank `Warn = 2"
+            ]
+          },
+          "after": {
+            "title": "the row a function accepts",
+            "lines": [
+              "[< `Debug | `Info | `Warn ]",
+              "every tag in that row"
+            ]
+          }
+        },
+        "caption": "The tag is a value. The function names the row it needs, and a wider row still fits."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "phase": "behavior",
+        "text": "In JavaScript a string is often the only thing standing for a state, and a typo travels to the server. A polymorphic variant makes the tag a value the compiler checks, and the row says which ones a function accepts."
+      }
+    },
+    "ocaml-polymorphic-variants-do": {
+      "id": "ocaml-polymorphic-variants-do",
+      "title": "Solve: rank the levels",
+      "kind": "challenge",
+      "direction": "guided",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "ocaml-polymorphic-variants"
+      ],
+      "files": [
+        "lib/route/route.ml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/polymorphic-variants.test.mjs",
+      "checks": [
+        {
+          "id": "rank",
+          "label": "Every level has a rank of its own",
+          "tests": [
+            "every level has a rank of its own"
+          ],
+          "feedback": "rank matches the four tags and gives each one a different number, with debug at zero. A body that gives two tags the same number fails the check that reads all four."
+        },
+        {
+          "id": "louder",
+          "label": "A louder level outranks the one before it",
+          "tests": [
+            "a louder level outranks the one before it"
+          ],
+          "feedback": "louder moves one step up the row and leaves error where it is, because there is nothing above it. The check asks for the level above info, so a body that returns its argument fails."
+        },
+        {
+          "id": "parse",
+          "label": "A level name parses back to its level",
+          "tests": [
+            "a level name parses back to its level"
+          ],
+          "feedback": "parse compares the lower-case name with the names of the tags. A body that matches the text case-sensitively passes warn and fails Warn, so use the lower-case form of the input."
+        },
+        {
+          "id": "edge-unknown",
+          "label": "A name that is not a level is debug",
+          "tests": [
+            "a name that is not a level is debug"
+          ],
+          "feedback": "A name that matches no tag has to land somewhere, and this module says debug. The check reads the answer for a word that is not a level, which is the case that catches a parser that raises or picks the loudest level.",
+          "edge": true
+        }
+      ],
+      "hints": [
+        "Open lib/route/route.ml. Every signature is already there and every body is a placeholder that raises. Run dune runtest test/polymorphic-variants before you change anything and read which checks failed.",
+        "rank matches the four tags and gives 0, 1, 2, 3. Write each pattern with a backtick, so the tag is a tag and not a constructor.",
+        "louder moves one step up the row. Error has nothing above it, so it stays error rather than wrapping around to debug.",
+        "parse compares the lower-case name with the names of the tags. Use String.lowercase_ascii so Warn and warn mean the same level.",
+        "A name that matches no tag is `Debug. The compiler wants every case covered, and the last case is the one that catches the rest."
+      ],
+      "misconceptions": [
+        "Writing the tags without the backtick, which the compiler reads as constructors that were never declared.",
+        "Mapping every unknown name to `Error, which turns a typo into the loudest level in the system."
+      ]
+    },
+    "ocaml-polymorphic-variants-ask": {
+      "id": "ocaml-polymorphic-variants-ask",
+      "title": "Reason: a wider row at a call",
+      "kind": "question",
+      "direction": "guided",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "ocaml-polymorphic-variants"
+      ],
+      "hints": [
+        "Ask which row is required and which row is supplied, and whether one holds the other.",
+        "A lower-bound row accepts any row inside it, and the value itself does not change."
+      ],
+      "misconceptions": [
+        "Thinking a wider row is an error. The extra tag is allowed because the function only promises to read the ones it names.",
+        "Thinking the value is converted to a smaller type at the call. The check is on the tags the function may receive."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A function accepts levels of type `[< `Debug | `Info ]`. A caller passes a value of type `[ `Debug | `Info | `Warn ]`. What does the compiler do, and why?"
+        }
+      ],
+      "options": [
+        "It refuses the call, because the caller row holds tags the function never named.",
+        "It accepts the call, because the caller row holds every tag the function needs.",
+        "It accepts the call only after the caller copies the value into the smaller row by hand.",
+        "It accepts the call and widens the function row to include warn at the same time."
+      ],
+      "answer": 1,
+      "explanation": "A row with a lower bound accepts any row that holds at least those tags. The function promised to work with debug and info, and the caller supplied a value that has both, so the extra warn tag is no obstacle. The function cannot promise to handle it, and nothing is copied; the type is a check on which tags may arrive, not a list the value carries."
+    },
+    "ocaml-polymorphic-variants-review": {
+      "id": "ocaml-polymorphic-variants-review",
+      "title": "Review: the levels at least as serious",
+      "kind": "retrieval",
+      "direction": "guided",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "ocaml-polymorphic-variants"
+      ],
+      "files": [
+        "lib/route/route.ml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/polymorphic-variants-review.test.mjs",
+      "checks": [
+        {
+          "id": "minimum",
+          "label": "A level at the minimum is kept",
+          "tests": [
+            "a level at the minimum is kept"
+          ],
+          "feedback": "at_least keeps the levels as serious as the minimum, and the minimum itself counts. A body that compares with the wrong direction drops the level the check put at the boundary."
+        },
+        {
+          "id": "order",
+          "label": "The filter keeps the order it was given",
+          "tests": [
+            "the filter keeps the order it was given"
+          ],
+          "feedback": "The filter walks the list and keeps the levels that pass, so the result is in the order of the input. A body that rebuilds the list backwards fails the check that gives error before info."
+        },
+        {
+          "id": "edge-everything",
+          "label": "The lowest minimum keeps every level",
+          "tests": [
+            "the lowest minimum keeps every level"
+          ],
+          "feedback": "With debug as the minimum, no level is below it, so the answer is the input. That case catches a body that always drops the first level, and one that treats the minimum as an exclusive bound.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Sorting the levels by rank, which loses the order the caller gave and changes more than the filter was asked to.",
+        "Comparing the tags by name rather than by rank, so warn is kept for the wrong reason and error can be dropped."
+      ]
+    },
     "ocaml-modules-learn": {
       "id": "ocaml-modules-learn",
       "title": "Learn: modules, signatures and functors",
@@ -1882,6 +2631,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "A complete signature, a module that fits it, and the module the functor builds:",
+          "code": "module type COMPARABLE = sig\n  type t\n  val compare : t -> t -> int\n  val show : t -> string\nend\n\nmodule Int_key : COMPARABLE = struct\n  type t = int\n  let compare (a : int) (b : int) : int = a - b\n  let show (n : int) : string = string_of_int n\nend\n\nmodule Ordered (C : COMPARABLE) = struct\n  let same (a : C.t) (b : C.t) : bool = C.compare a b = 0\n  let label (k : C.t) : string = C.show k\nend\n\nmodule Int_ordered = Ordered (Int_key)\n\nlet () = Printf.printf \"%b %s\" (Int_ordered.same 2 2) (Int_ordered.label 7)"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does Ordered (Int_key) produce?",
+          "items": [
+            "A module whose functions use Int_key.",
+            "A function that compares two integers immediately.",
+            "A new signature that replaces COMPARABLE.",
+            "A value of type int."
+          ],
+          "answer": 0,
+          "explain": "A functor takes a module and returns a module; Ordered (Int_key) builds one whose functions call the Int_key it was given."
+        },
+        {
+          "kind": "example",
           "body": "The command that runs the checks for this phase, and the command you run yourself:",
           "code": "dune runtest test/modules   # the phase test, by hand\nnode --test --test-reporter=tap test/modules.test.mjs   # what the Run button calls"
         },
@@ -1891,23 +2657,34 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "state-compare",
+        "type": "event-flow",
         "spec": {
-          "before": {
-            "title": "the module",
-            "lines": [
-              "eval",
-              "a helper nobody promised"
-            ]
-          },
-          "after": {
-            "title": "what the signature allows",
-            "lines": [
-              "eval"
-            ]
-          }
+          "steps": [
+            "SERIES signature",
+            "Series : SERIES",
+            "Make(Series)",
+            "compare and show"
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "The signature says what a module must provide, not how it does it."
+            },
+            {
+              "step": 1,
+              "note": "Series provides compare and show, so it fits the signature."
+            },
+            {
+              "step": 2,
+              "note": "The functor Make takes Series and builds a module from it."
+            },
+            {
+              "step": 3,
+              "note": "The built module uses compare and show from the module it was given."
+            }
+          ]
         },
-        "caption": "The signature is the promise. The compiler builds the module against it, so anything the signature does not name cannot be reached from outside."
+        "caption": "A functor is a module built from another module. Make(Series) takes the functions Series promises and builds the counter with them."
       }
     },
     "ocaml-modules-do": {
@@ -2069,7 +2846,7 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       ],
       "resources": [
         {
-          "label": "The OCaml manual: exceptions",
+          "label": "The OCaml manual: the core library",
           "url": "https://ocaml.org/manual/5.5/core.html"
         },
         {
@@ -2107,6 +2884,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "A complete safe_eval that turns a raised exception into a result:",
+          "code": "let safe_eval (e : Ast.expr) : (float, string) result =\n  try Ok (Eval.eval e)\n  with Division_by_zero -> Error \"division by zero\""
+        },
+        {
+          "kind": "quickcheck",
+          "body": "Who catches an exception raised inside a function?",
+          "items": [
+            "The nearest caller with a matching try ... with.",
+            "The function that raised it, before it returns.",
+            "Nobody: the program stops at the raise.",
+            "The compiler, which turns the raise into an Error value."
+          ],
+          "answer": 0,
+          "explain": "An exception unwinds the stack until a caller has a try ... with that matches it; the raiser does not catch its own exception unless it has a handler."
+        },
+        {
+          "kind": "example",
           "body": "The command that runs the checks for this phase, and the command you run yourself:",
           "code": "dune runtest test/errors   # the phase test, by hand\nnode --test --test-reporter=tap test/errors.test.mjs   # what the Run button calls"
         },
@@ -2116,27 +2910,43 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         }
       ],
       "visualization": {
-        "type": "pattern-match",
+        "type": "event-flow",
         "spec": {
-          "value": "Ok 2.5",
-          "cases": [
+          "steps": [
+            "eval raises",
+            "Division_by_zero",
+            "run does not catch",
+            "safe_eval catches",
+            "Error reason"
+          ],
+          "moments": [
             {
-              "pattern": "Ok v",
-              "binds": "v is 2.5",
-              "note": "the answer"
+              "step": 0,
+              "note": "eval divides by zero and raises."
             },
             {
-              "pattern": "Error e",
-              "binds": "e is the reason",
-              "note": "there is no answer"
+              "step": 1,
+              "note": "The exception travels up the call stack looking for a handler."
+            },
+            {
+              "step": 2,
+              "note": "run does not catch it, so the exception keeps going."
+            },
+            {
+              "step": 3,
+              "note": "safe_eval has a try ... with around the call, so it catches."
+            },
+            {
+              "step": 4,
+              "note": "The catch turns the exception into an Error value the caller can read."
             }
-          ],
-          "fired": 0
+          ]
         },
-        "caption": "A result is a value, so the caller receives it like any other value and has to look at which one it got. An exception is the other way: it travels up the stack until a caller catches it."
+        "caption": "An exception travels up the stack until a caller catches it. A result is the other way: the function answers with the reason, and the caller reads it."
       },
       "bridge": {
         "course": "task-manager",
+        "phase": "web-basics",
         "text": "In JavaScript a function that cannot do its job throws, and the caller catches it. In OCaml there are two ways to say it went wrong: a result is a value the caller has to look at, and an exception travels up the stack until somebody catches it."
       }
     },
@@ -2332,6 +3142,23 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "example",
+          "body": "A complete describe and average, using the list functions the phase names:",
+          "code": "let describe (r : (float, string) result) : string =\n  match r with\n  | Ok value -> Printf.sprintf \"answer: %.2f\" value\n  | Error reason -> \"no answer: \" ^ reason\n\nlet average (xs : float list) : float option =\n  match xs with\n  | [] -> None\n  | _ -> Some (List.fold_left ( +. ) 0.0 xs /. float_of_int (List.length xs))\n\nlet () = print_endline (describe (Ok 2.5))"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What is List.fold_left ( + ) 0 [1; 2; 3]?",
+          "items": [
+            "6, because it adds every element to 0.",
+            "3, because the last element is the answer.",
+            "[1; 2; 3], because fold keeps the list.",
+            "0, because the accumulator is returned unchanged."
+          ],
+          "answer": 0,
+          "explain": "fold_left carries an accumulator from the left; 0 + 1 + 2 + 3 is 6."
+        },
+        {
+          "kind": "example",
           "body": "The command that runs the checks for this phase, and the command you run yourself:",
           "code": "dune runtest test/stdlib   # the phase test, by hand\nnode --test --test-reporter=tap test/stdlib.test.mjs   # what the Run button calls"
         },
@@ -2477,9 +3304,612 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         "Giving back Some of a number for the empty list, which is a mean of nothing."
       ]
     },
+    "ocaml-testing-learn": {
+      "id": "ocaml-testing-learn",
+      "title": "Learn: a suite you can break",
+      "kind": "lesson",
+      "direction": "guided",
+      "mode": "learn",
+      "guidance": 2,
+      "competencyIds": [
+        "ocaml-testing"
+      ],
+      "objectives": [
+        "Explain why a check is worth what it can catch, not how many assertions it holds.",
+        "Write an OCaml check that names a behaviour and sits on the boundary the contract names.",
+        "Prove the suite by running it against the reference and against seeded breakages."
+      ],
+      "hints": [
+        "Read test/native-tests/native_tests.ml before you write anything. Its checks pass false on purpose, so the suite is red before you start.",
+        "Read lib/tested/tested.ml after that. The threshold comparison and the discount are the two places a defect can hide."
+      ],
+      "misconceptions": [
+        "Thinking a green suite is the proof. The proof is that the suite goes red on a version that is wrong, and the run against the reference is only the precondition.",
+        "Thinking more assertions mean more testing. Ten assertions of one value test one behaviour ten times.",
+        "Thinking a test has to name a line of code. A test names a behaviour the contract promises, so a rewrite that keeps the promise still passes."
+      ],
+      "resources": [
+        {
+          "label": "The OCaml manual: the core language",
+          "url": "https://ocaml.org/manual/5.5/core.html"
+        },
+        {
+          "label": "Alcotest: a lightweight test framework for OCaml",
+          "url": "https://github.com/mirage/alcotest"
+        },
+        {
+          "label": "QCheck: property-based testing for OCaml",
+          "url": "https://github.com/c-cube/qcheck"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "Every phase so far shipped the suite. This one gives you a module with a defect and asks you to write the checks that find it. A check that has never failed has not shown what it is watching."
+        },
+        {
+          "kind": "example",
+          "body": "The file you write, test/native-tests/native_tests.ml:",
+          "code": "let () =\n  Checker.check \"a price at the threshold gets the discount\" false;\n  Checker.report \"native-tests\""
+        },
+        {
+          "kind": "prose",
+          "body": "The project's Checker records a name and whether it held. It prints every name that did not hold and exits with a failure, so one run names every check that missed rather than only the first."
+        },
+        {
+          "kind": "prose",
+          "body": "Real projects write this shape with Alcotest, where each case has a name and a body, or with QCheck, where a property is tried on generated values. This project keeps its own Checker so it needs nothing installed, and the rule is the same: a named behaviour that either holds or does not."
+        },
+        {
+          "kind": "prose",
+          "body": "A suite is judged twice: once against the correct module, where every check must pass, and once against each seeded breakage, where at least one check must fail. A suite that passes a broken version has proved nothing about that behaviour."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "A check names a behaviour, not an implementation detail.",
+            "A test at the boundary is the one an off-by-one cannot pass.",
+            "The same suite has to pass the reference and fail every breakage.",
+            "A check that cannot fail is a comment."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "A complete suite in the project's own shape, with the assertion each case makes:",
+          "code": "let () =\n  Checker.check \"a price at the threshold gets the discount\" (total_after_discount 100 100 = 90);\n  Checker.check \"a price below the threshold is full price\" (total_after_discount 90 100 = 90);\n  Checker.report \"native-tests\""
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What makes a test catch a removed discount?",
+          "items": [
+            "An assertion on a total that only the discount changes.",
+            "A test that runs the function without checking its answer.",
+            "A test with more assertions on the same value.",
+            "A test that names the line where the discount is written."
+          ],
+          "answer": 0,
+          "explain": "A check catches a removal only if its expected answer depends on the discount; otherwise the broken module still passes."
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the checks for this phase, and the command you run yourself:",
+          "code": "dune runtest test/native-tests   # your suite, by hand\nnode --test --test-reporter=tap test/testing.test.mjs   # what the Run button calls"
+        },
+        {
+          "kind": "task",
+          "body": "Open test/native-tests/native_tests.ml and replace the false checks with real ones against lib/tested/tested.ml. Run dune runtest test/native-tests after every change."
+        }
+      ],
+      "visualization": {
+        "type": "state-compare",
+        "spec": {
+          "before": {
+            "title": "the suite and the reference",
+            "lines": [
+              "the price at the threshold",
+              "every check passes"
+            ]
+          },
+          "after": {
+            "title": "the suite and a breakage",
+            "lines": [
+              "the discount deleted",
+              "one check fails"
+            ]
+          }
+        },
+        "caption": "The same suite, two implementations. The run against the breakage is the one that proves the suite is watching."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "phase": "testing",
+        "text": "In JavaScript you write an assertion and watch it pass. In OCaml you write the same assertion, and then watch it fail on a copy with the behaviour removed, because that is what makes it a test."
+      }
+    },
+    "ocaml-testing-do": {
+      "id": "ocaml-testing-do",
+      "title": "Solve: write the checks that catch the defect",
+      "kind": "challenge",
+      "direction": "guided",
+      "mode": "solve",
+      "guidance": 3,
+      "competencyIds": [
+        "ocaml-testing"
+      ],
+      "files": [
+        "test/native-tests/native_tests.ml",
+        "lib/tested/tested.ml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/testing.test.mjs",
+      "mutationJudge": {
+        "source": "(* The discount under test, with the ten-unit discount in place. *)\n\n(* The price after a ten-unit discount, once the total reaches the threshold. *)\nlet total_after_discount (total : int) (threshold : int) : int =\n  if total >= threshold then max 0 (total - 10) else total\n",
+        "target": "lib/tested/tested.ml",
+        "mutants": [
+          {
+            "id": "strict-threshold",
+            "find": "if total >= threshold then",
+            "replace": "if total > threshold then",
+            "breaks": "a total exactly on the threshold is charged the full price"
+          },
+          {
+            "id": "no-discount",
+            "find": "then max 0 (total - 10) else total",
+            "replace": "then total else total",
+            "breaks": "the ten-unit discount is never applied"
+          },
+          {
+            "id": "negative-after-discount",
+            "find": "max 0 (total - 10)",
+            "replace": "total - 10",
+            "breaks": "a total smaller than the discount comes back negative"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "id": "boundary",
+          "label": "The threshold is decided, not guessed",
+          "tests": [
+            "a price at the threshold gets the discount"
+          ],
+          "mutant": "strict-threshold",
+          "feedback": "A total exactly on the threshold is already at it. Assert that case by its exact answer, so the comparison itself is covered rather than assumed from the value below it."
+        },
+        {
+          "id": "discount",
+          "label": "The discount is caught when it is missing",
+          "tests": [
+            "a price above the threshold is reduced"
+          ],
+          "mutant": "no-discount",
+          "feedback": "Your suite passes a module that never applies the discount. Write the assertion that states what the discount is for: a total over the threshold comes back ten smaller."
+        },
+        {
+          "id": "floor",
+          "label": "A total is never negative",
+          "tests": [
+            "a discount larger than the total is zero"
+          ],
+          "mutant": "negative-after-discount",
+          "feedback": "A total smaller than the discount would come back negative without the floor. Pick a total between zero and ten and assert the answer is zero.",
+          "edge": true
+        },
+        {
+          "id": "below",
+          "label": "A total below the threshold is full price",
+          "tests": [
+            "a price below the threshold is full price"
+          ],
+          "feedback": "A total below the threshold keeps its value, and that is the case a body that always discounts gets wrong. The check reads the reference run, so the answer has to hold before the breakages are tried."
+        }
+      ],
+      "hints": [
+        "Open test/native-tests/native_tests.ml. Its checks pass false on purpose, so the starter suite is red before you touch it. Run dune runtest test/native-tests and read the names.",
+        "Read lib/tested/tested.ml before you write a check. The threshold comparison and the discount are the two places the defect can hide.",
+        "Write one check per behaviour: below the threshold, exactly on it, above it, and a total smaller than the discount. Name each check after the behaviour.",
+        "Use Checker.check \"name\" condition. The condition is an OCaml expression, so a comparison is written with = and two conditions are joined with &&.",
+        "Run the suite against the correct module first. A check that does not pass there has not proved it can fail on a breakage."
+      ],
+      "misconceptions": [
+        "Testing only the value you happened to see. A number away from the boundary cannot tell >= from >.",
+        "Writing one assertion that calls the function once, when the defect lives in a branch the call never reached."
+      ]
+    },
+    "ocaml-testing-ask": {
+      "id": "ocaml-testing-ask",
+      "title": "Reason: what a green run proves",
+      "kind": "question",
+      "direction": "guided",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "ocaml-testing"
+      ],
+      "hints": [
+        "Ask what the run against the breakage was supposed to show.",
+        "Ask which behaviour the deleted discount belonged to."
+      ],
+      "misconceptions": [
+        "Thinking a green run on the correct code is the proof. It is the precondition; the breakage is the proof.",
+        "Thinking a suite has to test every line. It has to test the behaviour the contract names, and the boundary is part of that."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A suite passes the correct implementation and also passes a version with the discount deleted. What does that run prove?"
+        }
+      ],
+      "options": [
+        "It proves the suite is correct, because a suite that passes is a suite that works.",
+        "It proves the discount is not important, because the suite still runs without it.",
+        "It proves the suite covers more than the discount, since the other checks still pass.",
+        "It proves the suite never checked the discount; that behaviour is unwatched."
+      ],
+      "answer": 3,
+      "explanation": "A suite that passes a broken version has not tested the behaviour that version removed. The run against the correct code shows the checks can pass; only the run against the breakage shows what they can catch. The missing discount belongs to the suite as a gap, not to the code as a small problem."
+    },
+    "ocaml-testing-review": {
+      "id": "ocaml-testing-review",
+      "title": "Review: a suite for the bulk price",
+      "kind": "retrieval",
+      "direction": "guided",
+      "mode": "review",
+      "guidance": 3,
+      "competencyIds": [
+        "ocaml-testing"
+      ],
+      "files": [
+        "test/native-review/native_review_test.ml",
+        "lib/discount/discount.ml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/testing-review.test.mjs",
+      "mutationJudge": {
+        "source": "(* Bulk pricing, with ten percent off once ten are bought. *)\n\n(* The price of a quantity, with ten percent off once ten are bought. *)\nlet bulk_price (quantity : int) (unit_price : int) : int =\n  if quantity >= 10 then (quantity * unit_price * 9) / 10\n  else quantity * unit_price\n",
+        "target": "lib/discount/discount.ml",
+        "mutants": [
+          {
+            "id": "strict-threshold",
+            "find": "if quantity >= 10 then",
+            "replace": "if quantity > 10 then",
+            "breaks": "a purchase of exactly ten is charged the full price"
+          },
+          {
+            "id": "no-discount",
+            "find": "then (quantity * unit_price * 9) / 10",
+            "replace": "then quantity * unit_price",
+            "breaks": "the bulk discount is never applied"
+          },
+          {
+            "id": "wrong-rate",
+            "find": "* 9) / 10",
+            "replace": "* 8) / 10",
+            "breaks": "the discount is twenty percent instead of ten"
+          }
+        ]
+      },
+      "checks": [
+        {
+          "id": "below",
+          "label": "A full price is charged below the threshold",
+          "tests": [
+            "a full price is charged below the threshold"
+          ],
+          "feedback": "Below ten units the price is quantity times unit price, with no discount. Assert an exact total for a small quantity, so a body that discounts everything fails."
+        },
+        {
+          "id": "boundary",
+          "label": "The discount starts at the threshold",
+          "tests": [
+            "the discount starts at the threshold"
+          ],
+          "mutant": "strict-threshold",
+          "feedback": "Exactly ten units gets the discount, which is the case a strict comparison gets wrong. Pick a unit price where the discounted total is different from the full one.",
+          "edge": true
+        },
+        {
+          "id": "rate",
+          "label": "The discount is ten percent",
+          "tests": [
+            "the discount is ten percent"
+          ],
+          "mutant": "wrong-rate",
+          "feedback": "The contract names ten percent, so assert an exact discounted total. A check that only asks for a smaller number passes a twenty-percent discount too."
+        },
+        {
+          "id": "missing",
+          "label": "A missing discount is caught",
+          "tests": [
+            "a purchase above the threshold is discounted"
+          ],
+          "mutant": "no-discount",
+          "feedback": "Your suite passes a module that never discounts. A purchase above the threshold has to come back smaller than the full price, asserted as an exact total."
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Asserting that a large purchase costs less, without saying how much less, which lets a wrong rate pass.",
+        "Testing only ten units, where the full price and the discounted price can share a number for some unit prices."
+      ]
+    },
+    "ocaml-effects-learn": {
+      "id": "ocaml-effects-learn",
+      "title": "Learn: a computation that asks",
+      "kind": "lesson",
+      "direction": "guided",
+      "mode": "learn",
+      "guidance": 1,
+      "competencyIds": [
+        "ocaml-effects"
+      ],
+      "objectives": [
+        "Explain how a computation performs an effect and how a handler answers it.",
+        "Describe what a domain is, and how a spawned computation is joined back.",
+        "Implement a logging handler and a parallel sum, and prove it by running the phase test."
+      ],
+      "hints": [
+        "Read lib/effects/effects.ml before you write anything. The effect is declared at the top, and the computations that use it are below.",
+        "An effect is performed with Effect.perform. The handler receives it in effc and continues the computation with Effect.Deep.continue."
+      ],
+      "misconceptions": [
+        "Thinking an effect is an exception. An exception leaves the computation for good, and a handler that continues an effect resumes the computation where it stopped.",
+        "Thinking a domain is a thread with shared variables. A domain has its own runtime lock, and the values that cross are the ones passed in and returned.",
+        "Thinking a handler can be added after the computation runs. The handler has to be around the call, because the effect is performed while the call is on the stack."
+      ],
+      "resources": [
+        {
+          "label": "The OCaml manual: effects",
+          "url": "https://ocaml.org/manual/5.5/effects.html"
+        },
+        {
+          "label": "The OCaml manual: parallelism and domains",
+          "url": "https://ocaml.org/manual/5.5/parallelism.html"
+        }
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "An effect is a request a computation makes to whoever is running it. The computation performs the effect and stops, and a handler around the call decides what to do next, including continuing the computation where it stopped."
+        },
+        {
+          "kind": "example",
+          "body": "The file this phase works in, lib/effects/effects.ml:",
+          "code": "type _ Effect.t += Log : string -> unit Effect.t\n\n(* Run a computation and collect every message it logged. *)\nlet with_log (f : unit -> 'a) : 'a * string list =\n  failwith \"implement with_log\""
+        },
+        {
+          "kind": "prose",
+          "body": "The declaration says Log carries a string and gives back unit. A handler lists the effects it knows and answers each one, and a computation that is continued keeps running after the request."
+        },
+        {
+          "kind": "prose",
+          "body": "OCaml 5 ships two handlers: Effect.Deep, where the handler continues the computation for you, and Effect.Shallow, where it hands back a continuation and decides when to resume it. This phase uses Deep, and names Shallow because the choice of who controls resumption is the design decision behind every handler."
+        },
+        {
+          "kind": "prose",
+          "body": "A domain is a separate runtime that runs beside the main one. Domain.spawn starts a computation on one, and Domain.join waits for it and gives back its answer."
+        },
+        {
+          "kind": "keypoints",
+          "body": "Key Points",
+          "items": [
+            "An effect is a request, and Effect.perform makes it.",
+            "A handler answers an effect and may continue the computation.",
+            "Domain.spawn starts work on another runtime, and Domain.join collects it.",
+            "A handler around the call is what makes the effect answerable."
+          ]
+        },
+        {
+          "kind": "example",
+          "body": "A complete handler that records each request and resumes the computation:",
+          "code": "type _ Effect.t += Log : string -> unit Effect.t\n\nlet with_log (f : unit -> 'a) : 'a * string list =\n  let logs = ref [] in\n  let result =\n    Effect.Deep.try_with f ()\n      { effc = fun (type a) (e : a Effect.t) ->\n          match e with\n          | Log message -> Some (fun (k : (a, _) Effect.Deep.continuation) ->\n              logs := message :: !logs;\n              Effect.Deep.continue k ())\n          | _ -> None }\n  in\n  (result, List.rev !logs)"
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does Effect.Deep.continue k () do?",
+          "items": [
+            "It resumes the computation where the handler stopped it.",
+            "It performs the same effect again.",
+            "It stops the computation and returns unit.",
+            "It removes the handler and starts the computation again."
+          ],
+          "answer": 0,
+          "explain": "The continuation k is the rest of the computation; continuing it runs from the point after perform."
+        },
+        {
+          "kind": "example",
+          "body": "The command that runs the checks for this phase, and the command you run yourself:",
+          "code": "dune runtest test/effects   # the phase test, by hand\nnode --test --test-reporter=tap test/effects.test.mjs   # what the Run button calls"
+        },
+        {
+          "kind": "task",
+          "body": "Open lib/effects/effects.ml and write with_log so that every message the computation logs is collected in the order it was logged. Then run dune runtest test/effects and read what it said."
+        }
+      ],
+      "visualization": {
+        "type": "event-flow",
+        "spec": {
+          "steps": [
+            "log \"start\"",
+            "Effect.perform Log",
+            "handler records it",
+            "continuation resumes",
+            "(42, [\"start\"])"
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "The computation asks to log, and the request travels to the handler."
+            },
+            {
+              "step": 1,
+              "note": "perform Log stops the computation at the request."
+            },
+            {
+              "step": 2,
+              "note": "The handler records \"start\" and keeps the continuation."
+            },
+            {
+              "step": 3,
+              "note": "Deep.continue resumes the computation where it stopped."
+            },
+            {
+              "step": 4,
+              "note": "The computation returns 42, and the handler returns the value with its log."
+            }
+          ]
+        },
+        "caption": "The computation stops at the request, the handler answers it, and the continuation resumes. The caller sees one result and every message beside it."
+      },
+      "bridge": {
+        "course": "task-manager",
+        "phase": "api",
+        "text": "In JavaScript a Promise pauses a function at an await and resumes it when the value arrives. An effect pauses a computation at a request and resumes it when the handler continues it."
+      }
+    },
+    "ocaml-effects-do": {
+      "id": "ocaml-effects-do",
+      "title": "Solve: log through a handler",
+      "kind": "challenge",
+      "direction": "guided",
+      "mode": "solve",
+      "guidance": 2,
+      "competencyIds": [
+        "ocaml-effects"
+      ],
+      "files": [
+        "lib/effects/effects.ml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/effects.test.mjs",
+      "checks": [
+        {
+          "id": "messages",
+          "label": "The handler records every message",
+          "tests": [
+            "the handler records every message"
+          ],
+          "feedback": "Every Log the computation performs has to reach the handler, and the handler has to keep the message before it continues. A handler that answers without recording leaves the list empty."
+        },
+        {
+          "id": "result",
+          "label": "The result comes back through the handler",
+          "tests": [
+            "the result comes back through the handler"
+          ],
+          "feedback": "The handler continues the computation instead of replacing it, so the value the computation returns is the value with_log returns. A handler that answers with unit loses the 42 the check expects."
+        },
+        {
+          "id": "none",
+          "label": "A computation that logs nothing records no messages",
+          "tests": [
+            "a computation that logs nothing records no messages"
+          ],
+          "feedback": "A computation with no Log still runs through the handler, and the list it collected is empty. That case catches a handler that invents a message, and one that never returns the computation value.",
+          "edge": true
+        },
+        {
+          "id": "domains",
+          "label": "The parts are summed on every domain",
+          "tests": [
+            "the parts are summed on every domain"
+          ],
+          "feedback": "parallel_sum spawns one domain per part and joins every handle before it answers. The check gives it an empty part, so a body that assumes at least one number fails."
+        }
+      ],
+      "hints": [
+        "Open lib/effects/effects.ml. The effect is declared for you and every body is a placeholder. Run dune runtest test/effects before you change anything and read which checks failed.",
+        "log is one call to Effect.perform with the message inside the Log constructor.",
+        "with_log makes a local reference for the messages. The handler records a message and continues the computation with unit.",
+        "The handler is an effc function: match the effect it knows, and answer None for anything else. The compiler needs the locally abstract type to accept it.",
+        "parallel_sum maps Domain.spawn over the parts, then folds Domain.join over the handles. Add the answers, not the handles."
+      ],
+      "misconceptions": [
+        "Returning the messages instead of continuing the computation, which drops the value the caller asked for.",
+        "Joining a domain inside the function that spawned it before the other domains start, which gives up the parallelism."
+      ]
+    },
+    "ocaml-effects-ask": {
+      "id": "ocaml-effects-ask",
+      "title": "Reason: what happens at the perform",
+      "kind": "question",
+      "direction": "guided",
+      "mode": "review",
+      "guidance": 1,
+      "competencyIds": [
+        "ocaml-effects"
+      ],
+      "hints": [
+        "Ask what the handler holds while it answers: the computation, paused.",
+        "Ask what continue gives back to the computation."
+      ],
+      "misconceptions": [
+        "Thinking the effect replaces the result. The result is still the computation value, and the handler adds to it.",
+        "Thinking the computation runs twice. It is suspended once and resumed once for each request."
+      ],
+      "lesson": [
+        {
+          "kind": "prose",
+          "body": "A computation performs Log and the handler records the message. What happens to the computation itself?"
+        }
+      ],
+      "options": [
+        "It ends at the perform, and the caller receives the message as the result of the call.",
+        "It restarts from the beginning after the handler answers, so it logs every message twice.",
+        "It resumes after the perform when the handler continues the computation.",
+        "It keeps running beside the handler, and the two race to finish the same computation."
+      ],
+      "answer": 2,
+      "explanation": "An effect is not an exit. Effect.perform hands the request to the handler and suspends the computation; when the handler calls continue, the computation resumes at that point with the value the handler supplied. That is why with_log can return both the messages and the answer the computation produced: the same call ran on both sides of every request."
+    },
+    "ocaml-effects-review": {
+      "id": "ocaml-effects-review",
+      "title": "Review: the work beside the work",
+      "kind": "retrieval",
+      "direction": "guided",
+      "mode": "review",
+      "guidance": 2,
+      "competencyIds": [
+        "ocaml-effects"
+      ],
+      "files": [
+        "lib/effects/effects.ml"
+      ],
+      "testCommand": "node --test --test-reporter=tap test/effects-review.test.mjs",
+      "checks": [
+        {
+          "id": "around",
+          "label": "The handler keeps messages from around the work",
+          "tests": [
+            "the handler keeps messages from around the work"
+          ],
+          "feedback": "A message logged before the domains start and one logged after they finish both belong to the same handler. A handler that leaves at the first domain boundary loses one of them."
+        },
+        {
+          "id": "sum",
+          "label": "The domains answer the same sum as one loop",
+          "tests": [
+            "the domains answer the same sum as one loop"
+          ],
+          "feedback": "Every domain adds its own part, and the join collects the answers without changing them. The check compares the total with the sum of the parts, so a body that joins the wrong handle fails."
+        },
+        {
+          "id": "edge-empty",
+          "label": "The sum of no parts is zero",
+          "tests": [
+            "the sum of no parts is zero"
+          ],
+          "feedback": "No parts means no domains, and the fold that adds the answers starts from zero. That case catches a body that spawns one domain before it looks at the list, and one that never starts from zero.",
+          "edge": true
+        }
+      ],
+      "hints": [],
+      "misconceptions": [
+        "Joining one handle and forgetting the rest, which returns a total that depends on which part ran first.",
+        "Returning the list of handles instead of the joined answers, which looks parallel and answers nothing."
+      ]
+    },
     "ocaml-your-turn-learn": {
       "id": "ocaml-your-turn-learn",
-      "title": "Learn: the shape of a report",
+      "title": "Learn: an expression with names",
       "kind": "lesson",
       "direction": "independent",
       "mode": "learn",
@@ -2488,64 +3918,77 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         "ocaml-your-turn"
       ],
       "objectives": [
-        "Describe the contract the report has to keep, and the parts of it that are yours to choose.",
-        "Choose how the report is laid out, and say what the platform can check about that choice.",
-        "Write the report and prove it by running the phase test."
+        "Trace how an environment gives a variable its value while the body of a let runs.",
+        "Apply recursion over the expression variants to evaluate a nested expression.",
+        "Explain how a result carries the reason a name has no value."
       ],
       "hints": [
-        "Read lib/your_turn/your_turn.ml before you write anything. The function you have to write is named there, and so is the type it has to have.",
-        "Every phase before this one gave you the shape of the answer. This one gives you the shape of the question and the shape of the report is yours."
+        "Read lib/your_turn/your_turn.ml before you write anything. The expression type, the environment type, and the two functions are named there.",
+        "Every phase before this one gave you the shape of the answer. This one gives you the shape of the question, and the body of the evaluator is yours."
       ],
       "misconceptions": [
-        "Thinking the checks read your code and judge how you wrote it. They read what your function gives back, so the same answer passes however it was written.",
-        "Thinking the layout of the report is checked. It is not, and the copy below says so.",
-        "Thinking the report has to be one line per expression in the order they were given. The contract names every expression and every value; the rest is yours."
+        "Thinking the environment is a place to store every name for good. A let adds a binding for its body, and the binding ends with it.",
+        "Thinking an unbound name should raise an exception. The signature returns a result, so the reason travels back as a value.",
+        "Thinking the checks read your code and judge how you wrote it. They read what your functions give back, so the same answer passes however it was written."
       ],
       "resources": [
         {
-          "label": "The OCaml manual: the standard library",
-          "url": "https://ocaml.org/manual/5.5/stdlib.html"
+          "label": "The OCaml manual: the core language",
+          "url": "https://ocaml.org/manual/5.5/core.html"
         },
         {
-          "label": "The OCaml standard library API",
-          "url": "https://ocaml.org/api/5.5/index.html"
+          "label": "The OCaml standard library: Result",
+          "url": "https://ocaml.org/api/5.5/Stdlib/Result.html"
         }
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "The last phase of the course is yours. The calculator has an expression type, an evaluator that answers with a value or with a reason, and a report module that is empty. What you write in that module is the report the calculator shows: a piece of text that says what each expression was and what it came to."
+          "body": "The last phase of the course is yours. The module holds an expression type with numbers, names, addition, multiplication, and let bindings. It also holds an environment, which is a list of names and the values they stand for. What you write in eval and run is the evaluator the calculator shows: it takes an expression and answers with a value or with the reason there is none."
         },
         {
           "kind": "prose",
-          "body": "The contract is small and it is not yours to change. The module is your_turn and it holds one function called report, which takes a list of expressions and gives back a string."
-        },
-        {
-          "kind": "prose",
-          "body": "The report has to name every expression it was given, the way the module of the variants phase writes them, and carry the value of every one of them. An expression that has no value is named with the reason instead."
+          "body": "The contract is small and it is not yours to change. eval takes an environment and an expression, and gives back a result. run takes one expression and starts it in an empty environment."
         },
         {
           "kind": "example",
           "body": "The file you write in, lib/your_turn/your_turn.ml:",
-          "code": "(* The report you write: the shape is yours, the contract is not. *)\n\n(* One line for every expression, each with the value it has. *)\nlet report (exprs : Ast.expr list) : string =\n  failwith \"implement report\""
+          "code": "(* An expression with names and let bindings. *)\ntype expr =\n  | Num of float\n  | Var of string\n  | Add of expr * expr\n  | Mul of expr * expr\n  | Let of string * expr * expr\n\n(* The value of the expression in the environment, or why it has none. *)\nlet eval (env : env) (e : expr) : (float, string) result =\n  failwith \"implement eval\""
         },
         {
           "kind": "prose",
-          "body": "What the platform checks is the answer: that the report names every expression it was given, that it carries the value of every expression, that an expression with no value is named with its reason, and that the report of no expressions is the empty text."
+          "body": "A variable reads the nearest binding in the environment, and a let adds a binding for its body. The body runs with the new name in front of the old environment, and a name bound outside is still visible behind it. When the body ends, the binding is gone, which is why the expression beside a let does not see it."
         },
         {
           "kind": "prose",
-          "body": "What the platform cannot check is the part you chose: the layout, the order of the lines, the wording between the names and the values, and whether you wrote one function or three. Those are yours, and the checks do not read them."
+          "body": "A name that is not in the environment has no value, and the evaluator answers with Error and a reason that names the variable. The result type is what lets the reason travel as a value instead of an exception."
         },
         {
           "kind": "keypoints",
           "body": "Key Points",
           "items": [
-            "The contract names the module, the function and its type.",
-            "The report has to name every expression and carry every value.",
-            "An expression with no value is named with its reason.",
-            "The layout, the order and the wording are yours."
+            "The environment is an association list, and the nearest binding wins.",
+            "A let adds its name for its body only.",
+            "Recursion follows the shape of the expression, one variant at a time.",
+            "An unbound name comes back as Error with a reason."
           ]
+        },
+        {
+          "kind": "example",
+          "body": "A complete lookup, which is the case the capstone's Var needs:",
+          "code": "type expr =\n  | Num of float\n  | Var of string\n  | Add of expr * expr\n  | Mul of expr * expr\n  | Let of string * expr * expr\n\ntype env = (string * float) list\n\nlet rec lookup (name : string) (env : env) : float option =\n  match env with\n  | [] -> None\n  | (key, value) :: rest -> if key = name then Some value else lookup name rest\n\nlet () =\n  match lookup \"x\" [ (\"x\", 5.0); (\"y\", 2.0) ] with\n  | Some v -> Printf.printf \"%.0f\" v\n  | None -> print_endline \"unbound\""
+        },
+        {
+          "kind": "quickcheck",
+          "body": "What does Var \"x\" evaluate to under [(\"x\", 5.0)]?",
+          "items": [
+            "5.0, because lookup finds x at the front.",
+            "An error, because x is not a number.",
+            "0.0, because a variable with no binding is zero.",
+            "The whole environment, because Var reads every binding."
+          ],
+          "answer": 0,
+          "explain": "lookup walks the association list and finds (\"x\", 5.0), so Var x answers Ok 5.0."
         },
         {
           "kind": "example",
@@ -2554,25 +3997,53 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         },
         {
           "kind": "task",
-          "body": "Open lib/your_turn/your_turn.ml and write the body of report. The check reads the text your function gives back, so it holds whatever shape you choose. Then run dune runtest test/your-turn and read what it said."
+          "body": "Open lib/your_turn/your_turn.ml and write eval and run. Start with Num and Var, then add the arithmetic cases, then Let. Run dune runtest test/your-turn and read what it said."
         }
       ],
       "visualization": {
         "type": "event-flow",
         "spec": {
           "steps": [
-            "the expressions",
-            "the value of each",
-            "the reason for the rest",
-            "one line each"
+            "Let (\"x\", Num 5)",
+            "Num 5 is 5",
+            "env: x = 5",
+            "Var \"x\" reads 5",
+            "5 + 2",
+            "Ok 7"
+          ],
+          "moments": [
+            {
+              "step": 0,
+              "note": "The evaluator sees a let and evaluates the expression it binds."
+            },
+            {
+              "step": 1,
+              "note": "The bound expression is a number, so it answers 5."
+            },
+            {
+              "step": 2,
+              "note": "The let puts (\"x\", 5) at the front of the environment."
+            },
+            {
+              "step": 3,
+              "note": "The body runs with that longer environment, and Var \"x\" finds 5."
+            },
+            {
+              "step": 4,
+              "note": "Both sides of the addition are numbers, so they are added."
+            },
+            {
+              "step": 5,
+              "note": "The body answers 7, and the let answers with it."
+            }
           ]
         },
-        "caption": "One line for every expression: the value when there is one, and the reason when there is not."
+        "caption": "The environment is a list of names and values. A let puts its name at the front for the body, so Var \"x\" reads 5 and the expression answers 7."
       }
     },
     "ocaml-your-turn-do": {
       "id": "ocaml-your-turn-do",
-      "title": "Solve: the report",
+      "title": "Solve: evaluate with an environment",
       "kind": "challenge",
       "direction": "independent",
       "mode": "solve",
@@ -2586,46 +4057,54 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "testCommand": "node --test --test-reporter=tap test/your-turn.test.mjs",
       "checks": [
         {
-          "id": "values",
-          "label": "The report carries the value of every expression",
+          "id": "literal",
+          "label": "A number evaluates to itself",
           "tests": [
-            "the report carries the value of every expression"
+            "a number evaluates to itself"
           ],
-          "feedback": "Every expression in the report has to be followed by the value it came to, so the value of each one has to be in the text. The evaluator of the errors phase gives back a value or a reason, and the report has to look at which one it got."
+          "feedback": "A Num carries a float, so its value is that float inside Ok. This is the case every recursive call ends at, and the one to write first."
         },
         {
-          "id": "names",
-          "label": "The report names every expression it was given",
+          "id": "variable",
+          "label": "A variable reads the value bound to it",
           "tests": [
-            "the report names every expression it was given"
+            "a variable reads the value bound to it"
           ],
-          "feedback": "The report has to name each expression as the expression type writes it, and the module of the variants phase has the function that does that. A report with only the values in it says nothing about which value belongs to which expression."
+          "feedback": "A Var carries a name, and the environment holds the name and its value. Look the name up in the list the caller gave you, and answer with the value you found."
         },
         {
-          "id": "edge-empty",
-          "label": "The report of no expressions is the empty string",
+          "id": "let",
+          "label": "A let binds its name in the body",
           "tests": [
-            "the report of no expressions is the empty string"
+            "a let binds its name in the body"
           ],
-          "feedback": "The report of no expressions is the empty text, and that is the case that catches a report that always writes a heading or a trailing mark. The check reads the empty report as well as a full one.",
+          "feedback": "A Let carries a name, a bound expression, and a body. Evaluate the bound expression first, add the pair to the front of the environment, and evaluate the body with that environment."
+        },
+        {
+          "id": "edge-unbound",
+          "label": "An unbound name is a reason, not a crash",
+          "tests": [
+            "an unbound name is a reason, not a crash"
+          ],
+          "feedback": "A name that is not in the environment still has to come back as a value. Answer Error with a reason that names the variable, and let the caller decide what to do with it.",
           "edge": true
         }
       ],
       "hints": [
-        "Open lib/your_turn/your_turn.ml. The signature of report is already there, and the body is a placeholder that raises. Run dune runtest test/your-turn before you change anything and read which checks failed.",
-        "Walk the list of expressions, and for each one write the expression and its value. The library has a function that turns a list into a list of strings, and one that joins a list of strings into one.",
-        "The value of an expression comes from the evaluator of the errors phase, which gives back either a value or a reason. The report has to look at which one it got.",
-        "Run dune runtest test/your-turn again and read the checks. If the build failed, the compiler is telling you the type of the body is not the type the signature promises.",
-        "The body is a walk over the list, and each expression becomes a piece of text with its name and its value. How the pieces are joined is your choice."
+        "Open lib/your_turn/your_turn.ml. Both signatures are already there, and every body is a placeholder that raises. Run dune runtest test/your-turn before you change anything and read which checks failed.",
+        "Walk the expression with a recursive function. Each variant becomes one case, and the two-expression cases call the function on both sides.",
+        "To read a name, walk the environment and compare strings. The first pair whose name matches is the nearest binding, and List.assoc is the standard library function that does that walk.",
+        "A let evaluates the bound expression in the environment it was given, adds the pair to the front of that environment, and evaluates the body with the longer list.",
+        "For a name that is not in the environment, answer Error (\"unbound variable \" ^ name). The check reads that reason, so the name has to be in it."
       ],
       "misconceptions": [
-        "Writing only the values and leaving out the names, which the check reads as a report about nothing.",
-        "Forgetting the expressions that have no value, which makes the report shorter than the list it was given."
+        "Returning the raw float and leaving the caller to deal with a missing name. The signature returns a result, and every case has to answer one.",
+        "Replacing the environment instead of extending it. A let adds one name in front, so the names bound outside are still visible."
       ]
     },
     "ocaml-your-turn-ask": {
       "id": "ocaml-your-turn-ask",
-      "title": "Reason: what a check can say",
+      "title": "Reason: where a binding lives",
       "kind": "question",
       "direction": "guided",
       "mode": "review",
@@ -2634,30 +4113,30 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
         "ocaml-your-turn"
       ],
       "hints": [
-        "Ask what the check is given: the answer, or the code that produced it."
+        "Ask which expression the let body is, and which expression it is not."
       ],
       "misconceptions": [
-        "Thinking a check judges the way the work was written.",
-        "Thinking a check that passes says the work is good."
+        "Thinking a binding stays in the environment after the body finishes.",
+        "Thinking the expression beside a let runs inside the binding."
       ],
       "lesson": [
         {
           "kind": "prose",
-          "body": "The report in this phase is judged by a check that reads what your function gives back. What can that check say about your work, and what can it not?"
+          "body": "An evaluator is given the expression Let (\"x\", Num 5, Add (Var \"x\", Num 2)) in an empty environment. What value does it come to, and why does the binding not leak?"
         }
       ],
       "options": [
-        "It can say the answer holds the contract, and it cannot say how the answer was made.",
-        "It can say the answer holds, and it can also say the code is written the way the course taught.",
-        "It can say the answer holds, and it cannot say whether the answer is any good.",
-        "It can say nothing about the work, because only a person can judge an answer."
+        "7, because the let binds x while the body runs and drops it after.",
+        "2, because the binding is added only after the let body has finished.",
+        "7, because x stays bound in the environment after the let body ends.",
+        "The evaluation fails, because a name inside a let is not bound yet."
       ],
       "answer": 0,
-      "explanation": "The check is given the answer and the contract, and says whether it holds. It never sees the code, so it cannot say how the work was written or judge the layout. That is what makes it fair: it checks the fixed part and leaves the rest to you. A passing check says the answer holds, not that the work is good; the rest is yours to read."
+      "explanation": "The let evaluates its bound expression to 5, adds (\"x\", 5) to the front of the environment, and evaluates the body with that longer list. The body reads x as 5 and adds 2, so the answer is 7. The binding lasts only while the body runs, so the expression beside a let does not see it."
     },
     "ocaml-your-turn-review": {
       "id": "ocaml-your-turn-review",
-      "title": "Review: the expression with no value",
+      "title": "Review: shadowing and scope",
       "kind": "retrieval",
       "direction": "independent",
       "mode": "review",
@@ -2671,27 +4150,35 @@ export const IDE_COURSE_OCAML_FUNDAMENTALS: unknown = {
       "testCommand": "node --test --test-reporter=tap test/your-turn-review.test.mjs",
       "checks": [
         {
-          "id": "reason",
-          "label": "The report names the reason an expression has no value",
+          "id": "shadow",
+          "label": "The nearest binding wins",
           "tests": [
-            "the report names the reason an expression has no value"
+            "the nearest binding wins"
           ],
-          "feedback": "An expression that has no value still has to be in the report, named with the reason it has none. The reason is what the evaluator of the errors phase gives back in its failure case."
+          "feedback": "The environment already holds x when the let binds x again. Adding the new pair to the front makes it the first match, so the body reads the inner value."
         },
         {
-          "id": "edge-others",
-          "label": "The report keeps the other expressions when one of them has no value",
+          "id": "scope",
+          "label": "A let binding does not escape its body",
           "tests": [
-            "the report keeps the other expressions when one of them has no value"
+            "a let binding does not escape its body"
           ],
-          "feedback": "One expression with no value does not shorten the report: the expressions beside it are still named and still carry their values. A report that stops at the first failure is a report about the failure and not about the list.",
+          "feedback": "The test evaluates a let on one side of an addition. The name belongs to the let body, so the other side of the addition is evaluated in the environment the let was given."
+        },
+        {
+          "id": "edge-reason",
+          "label": "The reason names the variable that was not bound",
+          "tests": [
+            "the reason names the variable that was not bound"
+          ],
+          "feedback": "A reason that only says something failed tells the caller nothing. The reason has to carry the name the environment could not find, so the check looks for that name in the text.",
           "edge": true
         }
       ],
       "hints": [],
       "misconceptions": [
-        "Leaving out the expressions that have no value, which makes the report shorter than the list it was given.",
-        "Writing a heading above the report, which is text in the report of no expressions."
+        "Looking up the oldest binding first, which turns shadowing into a search for the wrong value.",
+        "Keeping the binding after the body, which makes a name beside a let look bound."
       ]
     }
   }

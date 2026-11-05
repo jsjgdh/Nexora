@@ -1,540 +1,1157 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
   import PageHead from "$lib/components/PageHead.svelte";
-  import Headline from "$lib/components/Headline.svelte";
   import SectionHead from "$lib/components/SectionHead.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
-  import AudienceSwitch from "$lib/components/AudienceSwitch.svelte";
-  import ProofRun from "$lib/components/ProofRun.svelte";
-  import ProofChain from "$lib/components/ProofChain.svelte";
-  import ScrollRail from "$lib/components/ScrollRail.svelte";
-  import PhaseMatrix from "$lib/components/PhaseMatrix.svelte";
-  import PhaseField from "$lib/components/PhaseField.svelte";
-  import SpecSheet from "$lib/components/SpecSheet.svelte";
-  import FactStrip from "$lib/components/FactStrip.svelte";
-  import EmployerBoard from "$lib/components/EmployerBoard.svelte";
+  import CourseCard from "$lib/components/CourseCard.svelte";
+  import WorkspaceHero from "$lib/components/WorkspaceHero.svelte";
+  import FeatureRow from "$lib/components/FeatureRow.svelte";
+  import VerificationCard from "$lib/components/VerificationCard.svelte";
+  import WorkspaceBand from "$lib/components/WorkspaceBand.svelte";
   import LaunchList from "$lib/components/LaunchList.svelte";
-  import PropositionStack from "$lib/components/PropositionStack.svelte";
-  import PhasePanel from "$lib/components/PhasePanel.svelte";
-  import LoopCards from "$lib/components/LoopCards.svelte";
-  import GapSequence from "$lib/components/GapSequence.svelte";
-  import StageTrack from "$lib/components/StageTrack.svelte";
-  import AudienceLine from "$lib/components/AudienceLine.svelte";
-  import MicroFacts from "$lib/components/MicroFacts.svelte";
-  import CoursePaths from "$lib/components/CoursePaths.svelte";
-  import { inView, inViewStagger, reduced } from "$lib/motion";
-  import { SITE_DESCRIPTION, SITE_TITLE } from "$lib/seo";
+  import { COURSE_PAGES } from "$lib/content/courses";
   import {
-    HERO,
-    HERO_VARIANTS,
-    HIRING,
-    LANDSCAPE,
-    DISCLOSURE,
-    NO_LIST,
-    FAQ,
-    CURRICULUM,
-    COURSES,
-    LEARN_CYCLE,
+    ALL_PHASES,
     BUILD_JOURNEY,
-    CLOSING,
+    COURSES,
+    DIFFERENCES,
+    EMPLOYER,
+    FAQ,
+    FREE_PHASE_COUNT,
+    GAP,
+    HERO_VARIANTS,
+    PRICING_PLANS,
   } from "$lib/content/site";
+  import { SITE_DESCRIPTION, SITE_TITLE } from "$lib/seo";
+  import { inViewStagger } from "$lib/motion";
 
-  /* The front door, told as a story.
+  /* The front door.
    *
-   * The earlier build led with the argument: here is the market, here is the
-   * datasheet, here is what we refuse to do, and somewhere near the bottom the
-   * experience. A reader who had not yet understood the product was asked to
-   * agree with its principles before they had seen what it does.
+   * A statement, the product and the shelf. The hero pairs one claim with the
+   * workspace it is about; the page then moves through the shelf, the problem,
+   * the project, the proof, the mechanism, the hiring reader, the price and
+   * the questions. Every count and phase name comes from the shipped manifest.
+   * The only invented thing here is copy.
    *
-   * This build is ordered the other way round, and the order is the whole
-   * change:
-   *
-   *   1. what it is, and one action that is true today
-   *   2. what a phase actually is, shown with the shipped curriculum
-   *   3. the situation a learner is in, in their own words
-   *   4. what they end up holding
-   *   5. what makes the experience different
-   *   6. how a verdict earns trust, said once and said plainly
-   *   7. the curriculum, and the two other audiences
-   *
-   * The technical depth is not gone. It has moved down the page, to where a
-   * reader who has caught the idea can decide they want it, and the exhaustive
-   * phase list has moved to its own page, where the reader who came for the
-   * manifest can have all of it without the rest of the site in the way.
-   *
-   * Every number and every phase comes from `$lib/content/site` or from the
-   * shipped manifest, the modules the suite reads. Nothing here is invented:
-   * no testimonial, no customer logo, no download that does not exist, no
-   * price, and no phase named that the IDE does not ship. */
+   * The headline is assigned on the server and only the assigned variant is
+   * rendered. The other two are not in the document. */
 
-  const downloadHref = "/download";
-  const pricingHref = "/pricing";
-  const verifyHref = "/verify";
-  const coursesHref = "/courses";
-  const employersHref = "/employers";
-
-  const railSections = [
-    { id: "loop", label: "How" },
-    { id: "gap", label: "Gap" },
-    { id: "build", label: "Build" },
-    { id: "why", label: "Why" },
-    { id: "proof", label: "Proof" },
-    { id: "courses", label: "Courses" },
-    { id: "employers", label: "Hiring" },
-  ];
-
-  /* The headline the server assigned.
-   *
-   * The research's §5 asks for a headline split test, and a test needs the
-   * assignment to happen before the first byte, so the server picks one
-   * variant and this page renders exactly that one. The other two are not in
-   * the document: a page that renders every variant is a menu, and a menu
-   * measures nothing. */
   let { data }: PageProps = $props();
-  const variant =
-    HERO_VARIANTS.find((v) => v.id === data.headline) ?? HERO_VARIANTS[0];
 
-  /* The two doors. The learner is the default because the download is the
-     product's front door; the hiring variant is one click away and has a
-     full section of its own further down the page. */
-  let audience = $state("learner");
-  const learnerHero = {
-    ...HERO,
-    lineOne: variant.lineOne,
-    lineTwo: variant.lineTwo,
-    markOne: variant.markOne,
-    lede: variant.lede,
-  };
-  const active = $derived(audience === "employer" ? HIRING : learnerHero);
-  const marks = $derived<Record<number, string>>(active.markOne ? { 0: active.markOne } : {});
-
-  /* The release state, decided on the server.
-   *
-   * It decides the label on the one action that matters, and it decides the
-   * sentence under it. A page that says "try it free" over a build that is not
-   * published is lying with a button, and the switch that flips it is the
-   * same switch the download page reads. */
+  const variant = $derived(
+    HERO_VARIANTS.find((item) => item.id === data.headline) ?? HERO_VARIANTS[0]
+  );
   const release = $derived(data.release);
-  const primaryLabel = $derived(audience === "employer" ? "See the evidence" : release.label);
-  const primaryHref = $derived(audience === "employer" ? employersHref : downloadHref);
 
-  /* The field picks a phase. The reader can then open the course it belongs
-     to on the courses page, where the whole list is printed. */
-  function openCourse(pick: { courseSlug: string }): void {
-    window.location.assign(`${coursesHref}#${pick.courseSlug}`);
-  }
+  const taskManager = COURSE_PAGES[0];
+  const languageCourses = COURSE_PAGES.slice(1, 6);
+  const apiCourse = COURSE_PAGES[6];
 
-  /* The bar appears once the masthead is behind you and leaves at the footer.
-     It is mounted rather than hidden, so there is never a focusable element
-     sitting inside something the eye cannot see. */
-  let pastHero = $state(false);
-  let atFooter = $state(false);
-  $effect(() => {
-    const hero = document.getElementById("hero-run");
-    const foot = document.getElementById("foot-sentinel");
-    if (!hero || !foot || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.target === hero) pastHero = !entry.isIntersecting;
-          if (entry.target === foot) atFooter = entry.isIntersecting;
-        }
-      },
-      { threshold: 0 }
-    );
-    io.observe(hero);
-    io.observe(foot);
-    return () => io.disconnect();
-  });
+  const phaseNames = new Map<string, string>(
+    COURSES[0].phases.map(([id, title]) => [id, title])
+  );
+
+  const totalPhases = ALL_PHASES.length;
+  const freePhases = FREE_PHASE_COUNT;
+  const faqs = FAQ.slice(0, 6);
+  const checks = EMPLOYER.checks.slice(0, 3);
 </script>
-
-<svelte:head>
-  <!-- The one marked word in the poster is set in the italic serif, and it is
-       the only place on the site that uses that face. So the page that has
-       one preloads it, and a page that does not is not made to pay for it. -->
-  <link
-    rel="preload"
-    href="/fonts/newsreader-italic-0.woff2"
-    as="font"
-    type="font/woff2"
-    crossorigin="anonymous"
-  />
-</svelte:head>
 
 <PageHead title={SITE_TITLE} description={SITE_DESCRIPTION} path="/" />
 
-<ScrollRail sections={railSections} />
+<!-- 1 · The statement -->
+<section class="hero" data-headline-variant={data.headline}>
+  <div class="container-page hero-grid">
+    <div class="hero-copy">
+      <h1 class="display hero-title">
+        <span>{variant.lineOne}</span>
+        <span>{variant.lineTwo}</span>
+      </h1>
+      <p class="hero-lede">{variant.lede}</p>
 
-<!-- = 1 · The hero =====================
-     The aspiration, and one action that is true today. The headline, the lede
-     and the two actions are the whole poster; the state of the release is in
-     the strip below it, where a reader who wants the detail will look. -->
-<section class="relative overflow-x-clip" data-headline-variant={data.headline}>
-  <div class="hero-block relative z-10 mx-auto max-w-[1320px] px-5 pt-8 pb-12 sm:px-8 sm:pt-10 sm:pb-14">
-    <div class="relative z-10">
-      <AudienceLine {audience} />
-      <Headline
-        as="h1"
-        lines={[active.lineOne, active.lineTwo]}
-        marks={marks}
-        class="mt-6 text-[clamp(2.1rem,4.4vw,3.9rem)] text-ink"
-      />
-      <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16">
-        <p class="reading max-w-[54ch] text-[clamp(1.15rem,1.9vw,1.45rem)] leading-snug text-ink">
-          {active.lede}
-        </p>
-        <div class="hero-actions flex flex-wrap items-center gap-3 lg:justify-end">
-          <ActionLink href={primaryHref} island>{primaryLabel}</ActionLink>
-          <ActionLink href="#loop" variant="ghost">See how it works</ActionLink>
-        </div>
+      <div class="hero-actions">
+        <ActionLink href="/download" size="lg" island>{release.label}</ActionLink>
+        <ActionLink href="/courses" variant="ghost" size="lg">All courses</ActionLink>
       </div>
-      <MicroFacts {audience} />
-    </div>
-  </div>
 
-  <!-- The strip under the poster: what state the product is in, and the three
-       facts about where it runs. A visitor should not have to read the page to
-       learn that the desktop build is not published yet. -->
-  <div class="relative z-10 border-t border-rule bg-panel">
-    <div class="mx-auto max-w-[1320px] px-5 py-10 sm:px-8 sm:py-12">
-      <div class="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
-        <div class="min-w-0">
-          <h2 class="display max-w-[18ch] text-[clamp(1.4rem,2.6vw,2rem)] text-ink">
-            What this is, and where it stands.
-          </h2>
-          <p class="reading mt-4 max-w-[46ch] text-[17px] leading-relaxed text-muted">
-            {release.note}
-          </p>
-          <div class="mt-7">
-            <AudienceSwitch bind:value={audience} />
-          </div>
-        </div>
-        <SpecSheet clusters={["where it runs"]} />
+      <ul class="hero-facts num">
+        <li>{totalPhases} phases</li>
+        <li>{freePhases} free, no account</li>
+        <li>Every verdict verifiable</li>
+      </ul>
+    </div>
+
+    <div class="hero-art">
+      <WorkspaceHero />
+      <div class="annotation">
+        <svg class="annotation-arrow" aria-hidden="true" viewBox="0 0 92 54" fill="none">
+          <path d="M4 50c18-1 44-10 59-30 4-6 7-12 8-17M61 6l11-2 1 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <p>A real run. A real verdict. A receipt.</p>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- The product, near the top: a phase from the shipped course, read from
-       the manifest rather than drawn. -->
-  <div id="hero-run" class="relative z-10 mx-auto max-w-[1320px] px-5 pt-12 sm:px-8 sm:pt-16">
-    <PhasePanel />
+<!-- 2 · The capabilities -->
+<section class="feature-band" aria-label="What the course does">
+  <div class="container-page">
+    <FeatureRow />
   </div>
 </section>
 
-<!-- = 2 · What a phase is =====================
-     The shipped manifest's own sentence, taken apart into the five steps a
-     learner actually takes, and then the product running: a check that fails,
-     the reason, the file and the line, and the receipt that follows. -->
-<section id="loop" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
-    <SectionHead title={LEARN_CYCLE.title} caption={LEARN_CYCLE.caption} wide />
-    <div class="mt-14">
-      <LoopCards />
-    </div>
-
-    <div class="mt-16 border-l-2 border-accent pl-6">
-      <h3 class="display max-w-[24ch] text-[clamp(1.25rem,2.2vw,1.7rem)] text-ink">
-        {LEARN_CYCLE.guidance.title}
-      </h3>
-      <p class="reading mt-3 max-w-[62ch] text-[17px] leading-relaxed text-muted">
-        {LEARN_CYCLE.guidance.body}
-      </p>
-    </div>
-  </div>
-
-  <div class="mx-auto max-w-[1320px] px-5 pb-24 sm:px-8 sm:pb-36">
-    <ProofRun />
-  </div>
-</section>
-
-<!-- = 3 · The gap =====================
-     The situation a learner is in, in their own words, in the order it
-     happens. -->
-<section id="gap" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
-    <GapSequence />
-  </div>
-</section>
-
-<!-- = 4 · What you build =====================
-     One project, as a journey, and the other courses beneath it. -->
-<section id="build" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
-    <SectionHead title={BUILD_JOURNEY.title} caption={BUILD_JOURNEY.caption} wide />
-    <div class="mt-14">
-      <StageTrack />
-    </div>
-  </div>
-
-  <div class="border-t border-rule">
-    <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-32">
+<!-- 3 · The shelf -->
+<section id="courses" class="section-pad">
+  <div class="container-page">
+    <div class="section-top">
       <SectionHead
-        title="The other lines, once the first one is behind you."
-        caption="The JavaScript app is the way in. The Go language, the Go service, the Rust ledger and the API course are what an engineer does next, and they are shipped, not planned."
+        title="Choose your path."
+        caption="One page per language. Go and Rust each carry two tracks, the language and the service behind it. Every phase name and count comes from the shipped manifest."
         wide
       />
-      <div class="mt-12">
-        <CoursePaths />
+      <a href="/courses" class="section-link">All courses <span aria-hidden="true">→</span></a>
+    </div>
+
+    <div class="course-grid" use:inViewStagger={{ step: 55 }}>
+      <div class="cell cell-featured reveal-item" data-stagger-item>
+        <CourseCard course={taskManager} featured />
+      </div>
+      {#each languageCourses as course (course.slug)}
+        <div class="cell reveal-item" data-stagger-item>
+          <CourseCard {course} />
+        </div>
+      {/each}
+      <div class="cell reveal-item" data-stagger-item>
+        <CourseCard course={apiCourse} />
+      </div>
+      <div class="cell all-courses reveal-item" data-stagger-item>
+        <p class="stamp">The shelf</p>
+        <p class="display all-title">Every course,<br />one page each.</p>
+        <a class="all-link" href="/courses">All courses</a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- = 5 · Why it is different =====================
-     The differentiators, as benefits rather than as a list of features. The
-     switch in the hero changes this list too, because a hiring manager being
-     read a learner's proposition is being read to. -->
-<section id="why" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
+<!-- 4 · The problem -->
+<section class="gap-band">
+  <div class="container-page gap-grid">
+    <div>
+      <h2 class="display gap-title">{GAP.title}</h2>
+      <p class="gap-lead">{GAP.lead}</p>
+    </div>
+    <ol class="gap-lines">
+      {#each GAP.lines as line, i (line)}
+        <li data-turn={i === GAP.lines.length - 1 ? "true" : undefined}>
+          <span class="num gap-n">{String(i + 1).padStart(2, "0")}</span>
+          <span>{line}</span>
+        </li>
+      {/each}
+    </ol>
+  </div>
+</section>
+
+<!-- 5 · What you build -->
+<section class="section-pad">
+  <div class="container-page">
+    <SectionHead title={BUILD_JOURNEY.title} caption={BUILD_JOURNEY.caption} wide />
+
+    <ol class="beats">
+      {#each BUILD_JOURNEY.beats as beat (beat.n)}
+        <li>
+          <span class="beat-n num">{beat.n}</span>
+          <div>
+            <h3 class="beat-title">{beat.title}</h3>
+            <p class="beat-body">{beat.body}</p>
+            <p class="beat-phases">
+              {#each beat.phases as id (id)}
+                <span class="phase-chip">{phaseNames.get(id) ?? id}</span>
+              {/each}
+            </p>
+          </div>
+        </li>
+      {/each}
+    </ol>
+  </div>
+</section>
+
+<!-- 6 · The proof -->
+<section id="proof" class="band proof-band">
+  <div class="container-page">
+    <VerificationCard />
+  </div>
+</section>
+
+<!-- 7 · The mechanism -->
+<section id="why" class="section-pad">
+  <div class="container-page">
     <SectionHead
-      title="What makes the experience different."
-      caption="Four properties of the product that a learner feels in the first ten minutes, and a hiring manager can check in the first five."
+      title="Fewer promises. More mechanism."
+      caption="Four properties of the product. Each one is a thing a reader can meet, not an adjective."
       wide
     />
-    <div class="mt-14">
-      <PropositionStack {audience} />
+
+    <div class="difference-grid" use:inViewStagger={{ step: 60 }}>
+      {#each DIFFERENCES as item, i (item.property)}
+        <article class="difference card" data-stagger-item>
+          <span class="difference-n num">{String(i + 1).padStart(2, "0")}</span>
+          <h3 class="difference-title">{item.property}</h3>
+          <p class="difference-body">{item.meaning}</p>
+          <p class="difference-where num">{item.enforced}</p>
+        </article>
+      {/each}
     </div>
-    <div class="mt-16 border-l-2 border-accent pl-6">
-      <p class="reading max-w-[58ch] text-[clamp(1.1rem,1.8vw,1.35rem)] leading-relaxed text-ink">
-        {LANDSCAPE.ours}
+  </div>
+</section>
+
+<!-- 8 · The dark room -->
+<WorkspaceBand />
+
+<!-- 9 · For hiring -->
+<section id="hiring" class="section-pad">
+  <div class="container-page hiring">
+    <div class="hiring-copy">
+      <h2 class="display hiring-title">A hire can arrive with the work.</h2>
+      <p class="hiring-lede">
+        Not a claim about what a graduate might do. Three things a hiring manager can check
+        today, each with the artefact behind it.
       </p>
+      <ActionLink href="/employers" variant="ghost" island>Read the hiring page</ActionLink>
     </div>
+
+    <ul class="checks">
+      {#each checks as check, i (check.claim)}
+        <li>
+          <span class="check-n num">{String(i + 1).padStart(2, "0")}</span>
+          <div>
+            <h3 class="check-claim">{check.claim}</h3>
+            <p class="check-body">{check.evidence}</p>
+          </div>
+        </li>
+      {/each}
+    </ul>
+  </div>
+  <div class="container-page">
+    <p class="honesty num">{EMPLOYER.notYet[0].text}</p>
   </div>
 </section>
 
-<!-- = 6 · How a verdict earns trust =====================
-     Everything the product refuses to do, said once, here, after the reader
-     has seen what it does. The receipt chain, the datasheet, the disclosure
-     about what the platform can and cannot re-derive, and the three things
-     that are deliberately absent. -->
-<section id="proof" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
+<!-- 10 · The price -->
+<section class="price-band">
+  <div class="container-page">
     <SectionHead
-      title="How a verdict earns trust."
-      caption="A pass is not a feeling and it is not a model's opinion. It is a rule engine deciding against your own files, and it leaves a record anybody can re-derive."
+      title="Free to start. Pro for the rest."
+      caption="The free phases ship inside the installer. Pro opens the rest of the shelf, and assessment is never gated."
       wide
     />
 
-    <div class="mt-14">
-      <ProofChain />
+    <div class="plans">
+      {#each PRICING_PLANS as plan (plan.id)}
+        <article class="plan card" data-plan={plan.id}>
+          <div class="plan-head">
+            <p class="plan-name">{plan.name}</p>
+            <p class="num plan-price">{plan.price}</p>
+            <p class="num plan-note">{plan.priceNote}</p>
+          </div>
+          <ul class="plan-points">
+            {#each plan.points.slice(0, plan.id === "free" ? 3 : 4) as point, i (`${plan.id}-${i}`)}
+              <li>{point}</li>
+            {/each}
+          </ul>
+          <a href="/pricing" class="plan-link">
+            {plan.id === "free" ? "All courses" : "See pricing"}
+            <span aria-hidden="true">→</span>
+          </a>
+        </article>
+      {/each}
     </div>
 
-    <div class="mt-16">
-      <SpecSheet clusters={["what decides a verdict", "what you keep"]} />
-    </div>
-
-    <div class="mt-16 grid gap-px border border-rule bg-rule lg:grid-cols-2">
-      <div class="bg-panel p-6 sm:p-8">
-        <h3 class="display text-[clamp(1.2rem,2vw,1.6rem)] text-ink">{DISCLOSURE.title}</h3>
-        <p class="reading mt-3 max-w-[52ch] text-[16.5px] leading-relaxed text-muted">
-          {DISCLOSURE.caption}
-        </p>
-        <ul class="mt-7">
-          {#each DISCLOSURE.rows as row (row.kind)}
-            <li class="border-t border-rule py-4">
-              <p class="num text-[12.5px] text-ink">{row.label}</p>
-              <p class="reading mt-1.5 max-w-[52ch] text-[16px] leading-relaxed text-muted">
-                {row.body}
-              </p>
-            </li>
-          {/each}
-        </ul>
-      </div>
-
-      <div class="bg-panel p-6 sm:p-8">
-        <h3 class="display text-[clamp(1.2rem,2vw,1.6rem)] text-ink">
-          What this will never do.
-        </h3>
-        <ul class="mt-7 grid gap-6">
-          {#each NO_LIST as line, i (`no-${i}`)}
-            <li class="reading flex gap-4 text-[16.5px] leading-relaxed text-muted">
-              <span class="num shrink-0 text-[12px] text-removed" aria-hidden="true">no</span>
-              <span>{line}</span>
-            </li>
-          {/each}
-        </ul>
-        <div class="mt-8">
-          <ActionLink href={verifyHref} variant="ghost" island>Check a receipt yourself</ActionLink>
-        </div>
-      </div>
-    </div>
+    <p class="plan-foot">Teams and Campus are quoted for a term, because the size and the courses change the price.</p>
   </div>
 </section>
 
-<!-- = 7 · The curriculum =====================
-     The readings, the field, and the way into the full list. The eighty phase
-     names live on their own page, because a reader who wants the manifest
-     should not have to read the rest of the site to reach it. -->
-<section id="courses" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
-    <SectionHead title={CURRICULUM.title} caption={CURRICULUM.caption} wide />
-    <div class="mt-12">
-      <FactStrip />
+<!-- 11 · The questions -->
+<section id="questions" class="section-pad">
+  <div class="container-page faq-grid">
+    <div>
+      <SectionHead title="The questions." caption="The ones asked before a download, answered plainly." />
     </div>
-  </div>
-
-  <div class="relative z-10 mx-auto max-w-[1320px] px-5 pb-16 sm:px-8">
-    <PhaseField onselect={openCourse} />
-  </div>
-
-  <div class="mx-auto max-w-[1320px] px-5 pb-24 sm:px-8 sm:pb-36">
-    <div class="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
-      <div class="min-w-0">
-        <PhaseMatrix />
-        <p class="mt-5 text-[13.5px] leading-relaxed text-faint">
-          One point per shipped phase. Every point is the same ink, because a public page does not
-          put a price on a phase.
-        </p>
-      </div>
-      <div class="min-w-0">
-        <ul class="border-t border-rule-strong">
-          {#each COURSES as course (course.slug)}
-            <li class="border-b border-rule-strong py-6">
-              <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                <h3 class="display text-[clamp(1.3rem,2.3vw,1.8rem)] text-ink">{course.title}</h3>
-                <p class="num text-[13px] text-muted">{course.phases.length} phases</p>
-              </div>
-              <p class="reading mt-2 max-w-[58ch] text-[16.5px] leading-relaxed text-muted">
-                {course.sub}
-              </p>
-            </li>
-          {/each}
-        </ul>
-        <div class="mt-10 flex flex-wrap items-center gap-3">
-          <ActionLink href={coursesHref} island>Open the full curriculum</ActionLink>
-          <ActionLink href={downloadHref} variant="ghost">{release.label}</ActionLink>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- = 8 · For hiring =====================
-     The other reader, with a section of their own and a page of their own. -->
-<section id="employers" class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
-    <SectionHead
-      title="For the people who hire."
-      caption="A hiring manager arrives with a different question and a different standard of proof. This section answers it in the product's own terms."
-      wide
-    />
-    <div class="mt-14">
-      <EmployerBoard {verifyHref} />
-    </div>
-    <div class="mt-10 flex flex-wrap items-center gap-3">
-      <ActionLink href={employersHref} variant="ghost" island>Read the hiring page</ActionLink>
-    </div>
-  </div>
-</section>
-
-<!-- = 9 · The questions ===================== -->
-<section class="border-t border-rule">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
-    <SectionHead title="The questions, answered plainly." wide />
-    <div class="mt-12 border-t border-rule">
-      {#each FAQ as item, i (`q-${i}`)}
-        <details class="nexora-details border-b border-rule">
-          <summary
-            class="flex cursor-pointer items-start gap-5 py-5 text-left text-[clamp(1.05rem,1.7vw,1.35rem)] font-semibold text-ink"
-          >
-            <span class="num shrink-0 pt-1 text-[11px] text-faint">{String(i + 1).padStart(2, "0")}</span>
-            <span class="flex-1">{item.q}</span>
-            <span class="stamp shrink-0 text-[14px] text-accent" aria-hidden="true">+</span>
+    <div class="faq">
+      {#each faqs as item, i (`q-${i}`)}
+        <details class="nexora-details faq-item">
+          <summary>
+            <span class="faq-q">{item.q}</span>
+            <span class="faq-plus" aria-hidden="true">+</span>
           </summary>
-          <p class="reading max-w-[68ch] pb-6 pl-[2.6rem] text-[17px] leading-relaxed text-muted">
-            {item.a}
-          </p>
+          <p class="faq-a">{item.a}</p>
         </details>
       {/each}
     </div>
   </div>
 </section>
 
-<!-- = 10 · The close =====================
-     One action again, and the way to be told when it changes. -->
-<section class="border-t-2 border-rule-strong">
-  <div class="mx-auto max-w-[1320px] px-5 py-24 sm:px-8 sm:py-36">
-    <Headline
-      lines={["Learn by building.", "Then keep building."]}
-      class="max-w-[18ch] text-[clamp(2.2rem,5.4vw,4rem)] text-ink"
-    />
-    <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-      <p class="reading max-w-[48ch] text-[17px] leading-relaxed text-muted">
-        {CLOSING}
+<!-- 12 · The close -->
+<section class="closing">
+  <div class="container-page closing-inner">
+    <div>
+      <h2 class="display closing-title">Start with the work.</h2>
+      <p class="closing-lede">
+        The first phase runs inside the editor, on your files, with no account. The check at
+        the end is the same check every later phase uses.
       </p>
-      <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-        <ActionLink href={downloadHref} island>{release.label}</ActionLink>
-        <ActionLink href={pricingHref} variant="ghost">See pricing</ActionLink>
-      </div>
     </div>
-    <div class="mt-12 border-t border-rule pt-8">
-      <p class="stamp text-faint">
-        {release.available
-          ? "The desktop build is published. The link above is the real file."
-          : "The desktop build is not published yet. Leave your address and we will tell you when it is."}
-      </p>
-      <div class="mt-4">
-        <LaunchList variant={data.headline} />
-      </div>
+    <div class="closing-action">
+      <ActionLink href="/download" variant="inverse" size="lg" island>{release.label}</ActionLink>
+      <p class="closing-note">{release.note}</p>
+      {#if !release.available}
+        <div class="closing-list">
+          <LaunchList variant={data.headline} tone="inverse" />
+        </div>
+      {/if}
     </div>
-    <div id="foot-sentinel" class="h-px" aria-hidden="true"></div>
   </div>
 </section>
 
-{#if pastHero && !atFooter}
-  <aside class="ctabar" aria-label="Get the IDE">
-    <p class="stamp hidden text-[11.5px] text-faint sm:inline">{release.label}</p>
-    <ActionLink href={downloadHref} size="sm" island>{release.labelShort}</ActionLink>
-  </aside>
-{/if}
-
 <style>
-  /* The poster sits on a pool of light. The one soft edge on the page, and it
-     is under the type rather than around it, so the headline reads as lit
-     from below rather than as a panel. */
-  .hero-block::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
+  /* ---------- 1 · Hero ---------- */
+
+  .hero {
+    padding-block: clamp(2.5rem, 4vw, 4.25rem) clamp(4rem, 6.5vw, 6rem);
+    overflow-x: clip;
+    position: relative;
     background:
-      radial-gradient(120% 78% at 12% 0%, color-mix(in srgb, var(--color-accent) 9%, transparent) 0%, transparent 62%),
-      radial-gradient(90% 60% at 92% 8%, color-mix(in srgb, var(--color-review) 7%, transparent) 0%, transparent 60%);
+      radial-gradient(60% 80% at 85% 20%, color-mix(in srgb, var(--color-accent) 18%, transparent), transparent 60%),
+      radial-gradient(40% 60% at 10% 90%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 70%);
   }
 
-  /* The bar that follows the reader down the page. It is mounted rather than
-     hidden, so there is never a focusable element inside something the eye
-     cannot see. */
-  .ctabar {
-    position: fixed;
-    left: 50%;
-    bottom: var(--space-5);
-    z-index: var(--z-rail);
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    align-items: center;
+  }
+
+  @media (min-width: 1080px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+      gap: clamp(2rem, 4vw, 4rem);
+    }
+  }
+
+  .hero-copy {
+    min-width: 0;
+  }
+
+  .hero-title {
+    margin-top: var(--space-5);
+    font-size: var(--text-hero);
+    line-height: 0.96;
+    letter-spacing: -0.05em;
+    color: var(--color-ink);
+  }
+
+  .hero-title span {
+    display: block;
+  }
+
+  .hero-lede {
+    margin-top: var(--space-5);
+    max-width: 46ch;
+    font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+    line-height: 1.55;
+    color: var(--color-muted);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-7);
+  }
+
+  .hero-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-7);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-rule);
+    list-style: none;
+    font-size: 10.5px;
+    color: var(--color-faint);
+  }
+
+  .hero-facts li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .hero-facts li::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-accent);
+  }
+
+  .hero-art {
+    min-width: 0;
+    position: relative;
+  }
+
+  .annotation {
     display: flex;
     align-items: center;
-    gap: var(--space-4);
-    transform: translateX(-50%);
-    border: 1px solid var(--color-rule-strong);
-    background: var(--color-panel);
-    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+    gap: 0.5rem;
+    margin-top: var(--space-3);
+    padding-left: 0.5rem;
+    color: var(--color-faint);
   }
-  .ctabar :global(.stamp) {
+
+  .annotation-arrow {
+    width: 72px;
+    height: 42px;
+    color: var(--color-accent);
+    transform: scaleX(-1);
+    opacity: 0.85;
+  }
+
+  .annotation p {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.01em;
+    color: var(--color-faint);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-copy > :global(*) {
+      animation: hero-in 620ms var(--ease-out) both;
+    }
+    .hero-copy > :global(*:nth-child(2)) {
+      animation-delay: 70ms;
+    }
+    .hero-copy > :global(*:nth-child(3)),
+    .hero-copy > :global(*:nth-child(4)),
+    .hero-copy > :global(*:nth-child(5)) {
+      animation-delay: 140ms;
+    }
+    .hero-art {
+      animation: hero-in 760ms var(--ease-out) 120ms both;
+    }
+  }
+
+  @keyframes hero-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ---------- 2 · Feature row ---------- */
+
+  .feature-band {
+    padding-block: var(--space-6);
+    border-top: 1px solid var(--color-rule);
+    border-bottom: 1px solid var(--color-rule);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 4%, transparent), transparent 60%);
+  }
+
+  /* ---------- 3 · Shelf ---------- */
+
+  .section-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+
+  .section-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 44px;
+    color: var(--color-accent);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
     white-space: nowrap;
   }
 
-  /* On a short window the poster has to give up its air before it gives up
-     its type, or the action falls off the bottom of the screen. */
-  @media (max-height: 660px) {
-    .hero-block {
-      padding-top: var(--space-6);
-      padding-bottom: var(--space-6);
+  .section-link:hover {
+    text-decoration: underline;
+  }
+
+  .course-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    margin-top: var(--space-8);
+  }
+
+  @media (min-width: 720px) {
+    .course-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .hero-block :global(h1) {
-      font-size: clamp(1.9rem, 5vw, 3rem);
+  }
+
+  @media (min-width: 1080px) {
+    .course-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-5);
     }
-    .hero-block .hero-actions {
-      margin-top: var(--space-4);
+  }
+
+  .cell {
+    display: flex;
+    min-width: 0;
+  }
+
+  .cell > :global(*) {
+    width: 100%;
+  }
+
+  .cell-featured {
+    grid-column: span 1;
+  }
+
+  @media (min-width: 720px) {
+    .cell-featured {
+      grid-column: span 2;
     }
+  }
+
+  .cell :global(.card) {
+    height: 100%;
+  }
+
+  .all-courses {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: 220px;
+    padding: var(--space-6);
+    border-radius: var(--radius);
+    background: var(--color-screen);
+    color: var(--color-screen-ink);
+    text-decoration: none;
+    overflow: hidden;
+    position: relative;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .all-courses:hover {
+    transform: translateY(-3px);
+  }
+
+  .all-courses:hover .all-link {
+    color: var(--color-accent-bright);
+  }
+
+  .all-courses::after {
+    content: "";
+    position: absolute;
+    right: -30px;
+    bottom: -50px;
+    width: 170px;
+    height: 170px;
+    border: 1px solid var(--color-screen-rule);
+    border-radius: 50%;
+  }
+
+  .all-courses .stamp {
+    color: var(--color-screen-muted);
+  }
+
+  .all-title {
+    color: var(--color-screen-ink);
+    font-size: clamp(1.4rem, 2vw, 1.8rem);
+  }
+
+  .all-link {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--color-accent-bright);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  /* ---------- 4 · Gap ---------- */
+
+  .gap-band {
+    background:
+      radial-gradient(80% 100% at 0% 0%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 60%),
+      var(--color-raised);
+    border-block: 1px solid var(--color-rule);
+    padding-block: clamp(4.5rem, 8vw, 7rem);
+  }
+
+  .gap-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    align-items: start;
+  }
+
+  @media (min-width: 980px) {
+    .gap-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+      gap: clamp(3rem, 7vw, 7rem);
+    }
+  }
+
+  .gap-title {
+    margin-top: var(--space-4);
+    max-width: 15ch;
+    font-size: clamp(2rem, 4.2vw, 3.4rem);
+  }
+
+  .gap-lead {
+    margin-top: var(--space-4);
+    max-width: 48ch;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .gap-lines {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--color-rule-strong);
+  }
+
+  .gap-lines li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: baseline;
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-rule-strong);
+    font-size: clamp(1rem, 1.6vw, 1.2rem);
+    line-height: 1.45;
+    color: var(--color-ink);
+  }
+
+  .gap-lines li[data-turn="true"] {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .gap-n {
+    font-size: 9.5px;
+    color: var(--color-faint);
+  }
+
+  /* ---------- 5 · Build ---------- */
+
+  .beats {
+    list-style: none;
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 var(--space-10);
+  }
+
+  @media (min-width: 900px) {
+    .beats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .beats li {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    border-top: 1px solid var(--color-rule);
+    transition: border-color var(--dur-2) var(--ease-out);
+  }
+
+  .beats li:hover {
+    border-top-color: var(--color-accent);
+  }
+
+  .beat-n {
+    font-size: 10px;
+    color: var(--color-accent);
+  }
+
+  .beat-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    color: var(--color-ink);
+  }
+
+  .beat-body {
+    margin-top: var(--space-2);
+    max-width: 54ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .beat-phases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: var(--space-3);
+  }
+
+  .phase-chip {
+    padding: 0.16rem 0.5rem;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-chip);
+    background: var(--color-panel);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--color-faint);
+    white-space: nowrap;
+  }
+
+  /* ---------- 6 · Proof ---------- */
+
+  .proof-band {
+    padding-block: clamp(4.5rem, 8vw, 7rem);
+    background:
+      radial-gradient(70% 100% at 100% 0%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 55%),
+      var(--color-panel);
+  }
+
+  /* ---------- 7 · Differences ---------- */
+
+  .difference-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+  }
+
+  @media (min-width: 720px) {
+    .difference-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .difference {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    transition:
+      border-color var(--dur-2) var(--ease-out),
+      background-color var(--dur-2) var(--ease-out);
+  }
+
+  .difference:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-rule));
+    background: color-mix(in srgb, var(--color-accent) 3%, var(--color-panel));
+  }
+
+  .difference-n {
+    font-size: 10px;
+    color: var(--color-accent);
+  }
+
+  .difference-title {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--color-ink);
+  }
+
+  .difference-body {
+    max-width: 46ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .difference-where {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-rule);
+    font-size: 9.5px;
+    color: var(--color-faint);
+  }
+
+  /* ---------- 9 · Hiring ---------- */
+
+  .hiring {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-10);
+    align-items: start;
+  }
+
+  @media (min-width: 980px) {
+    .hiring {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: clamp(3rem, 7vw, 6rem);
+    }
+  }
+
+  .hiring-title {
+    margin-top: var(--space-4);
+    max-width: 14ch;
+    font-size: clamp(2rem, 4.2vw, 3.4rem);
+  }
+
+  .hiring-lede {
+    margin-top: var(--space-4);
+    max-width: 46ch;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .hiring-copy :global(a) {
+    margin-top: var(--space-6);
+  }
+
+  .checks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--color-rule-strong);
+  }
+
+  .checks li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--color-rule-strong);
+    transition: border-color var(--dur-2) var(--ease-out);
+  }
+
+  .checks li:hover {
+    border-bottom-color: var(--color-accent);
+  }
+
+  .check-n {
+    font-size: 10px;
+    color: var(--color-accent);
+  }
+
+  .check-claim {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .check-body {
+    margin-top: var(--space-1);
+    max-width: 58ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .honesty {
+    margin-top: var(--space-8);
+    max-width: 78ch;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-rule);
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: var(--color-faint);
+  }
+
+  /* ---------- 10 · Pricing ---------- */
+
+  .price-band {
+    padding-block: clamp(4.5rem, 8vw, 7rem);
+    background: var(--color-raised);
+    border-block: 1px solid var(--color-rule);
+  }
+
+  .plans {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+  }
+
+  @media (min-width: 820px) {
+    .plans {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+  }
+
+  .plan {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-6);
+  }
+
+  @media (min-width: 640px) {
+    .plan {
+      padding: var(--space-8);
+    }
+  }
+
+  .plan[data-plan="pro"] {
+    background: var(--color-screen);
+    border-color: var(--color-screen);
+    color: var(--color-screen-ink);
+  }
+
+  .plan-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+
+  .plan[data-plan="pro"] .plan-name {
+    color: var(--color-screen-muted);
+  }
+
+  .plan-price {
+    margin-top: var(--space-2);
+    font-size: clamp(2.4rem, 4vw, 3.2rem);
+    line-height: 1;
+    color: var(--color-ink);
+  }
+
+  .plan[data-plan="pro"] .plan-price {
+    color: var(--color-screen-ink);
+  }
+
+  .plan-note {
+    margin-top: var(--space-2);
+    font-size: 10px;
+    color: var(--color-faint);
+  }
+
+  .plan[data-plan="pro"] .plan-note {
+    color: var(--color-screen-muted);
+  }
+
+  .plan-points {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+    border-top: 1px solid var(--color-rule);
+    padding-top: var(--space-4);
+  }
+
+  .plan[data-plan="pro"] .plan-points {
+    border-top-color: var(--color-screen-rule);
+  }
+
+  .plan-points li {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    gap: var(--space-2);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--color-muted);
+  }
+
+  .plan-points li::before {
+    content: "✓";
+    color: var(--color-pass);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  .plan[data-plan="pro"] .plan-points li {
+    color: var(--color-screen-muted);
+  }
+
+  .plan-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 46px;
+    margin-top: auto;
+    padding-inline: var(--space-5);
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-chip);
+    color: var(--color-ink);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      background-color var(--dur-1) var(--ease-out),
+      border-color var(--dur-1) var(--ease-out),
+      color var(--dur-1) var(--ease-out);
+  }
+
+  .plan[data-plan="pro"] .plan-link {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .plan-link:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .plan[data-plan="pro"] .plan-link:hover {
+    background: var(--color-accent-strong);
+    border-color: var(--color-accent-strong);
+    color: var(--color-on-accent);
+  }
+
+  .plan-foot {
+    margin-top: var(--space-5);
+    max-width: 64ch;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--color-faint);
+  }
+
+  /* ---------- 11 · FAQ ---------- */
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  @media (min-width: 980px) {
+    .faq-grid {
+      grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+      gap: clamp(3rem, 7vw, 6rem);
+    }
+  }
+
+  .faq {
+    border-top: 1px solid var(--color-rule-strong);
+  }
+
+  .faq-item {
+    border-bottom: 1px solid var(--color-rule-strong);
+  }
+
+  .faq-item > summary {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    min-height: 48px;
+    cursor: pointer;
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .faq-item > summary:hover .faq-q {
+    color: var(--color-accent);
+  }
+
+  .faq-q {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .faq-plus {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    line-height: 1.3;
+    color: var(--color-accent);
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .faq-item[open] .faq-plus {
+    transform: rotate(45deg);
+  }
+
+  .faq-a {
+    max-width: 64ch;
+    padding-bottom: var(--space-4);
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  /* ---------- 12 · Close ---------- */
+
+  .closing {
+    background:
+      radial-gradient(90% 120% at 80% 0%, color-mix(in srgb, var(--color-accent-bright) 55%, transparent), transparent 60%),
+      linear-gradient(160deg, var(--color-accent-strong), var(--color-accent));
+    color: var(--color-on-accent);
+  }
+
+  .closing-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+    padding-block: clamp(4rem, 7vw, 6.5rem);
+    align-items: start;
+  }
+
+  @media (min-width: 980px) {
+    .closing-inner {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: var(--space-16);
+      align-items: center;
+    }
+  }
+
+  .closing-title {
+    margin-top: var(--space-3);
+    font-size: var(--text-band);
+    color: var(--color-on-accent);
+  }
+
+  .closing-lede {
+    margin-top: var(--space-4);
+    max-width: 46ch;
+    font-size: 15px;
+    line-height: 1.65;
+    color: color-mix(in srgb, var(--color-on-accent) 82%, transparent);
+  }
+
+  .closing-action {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: start;
+  }
+
+  .closing-note {
+    max-width: 38ch;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--color-on-accent);
+  }
+
+  .closing-list {
+    width: 100%;
+    padding-top: var(--space-4);
+    border-top: 1px solid color-mix(in srgb, var(--color-on-accent) 25%, transparent);
   }
 </style>

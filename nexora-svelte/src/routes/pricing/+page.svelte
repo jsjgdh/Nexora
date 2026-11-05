@@ -1,31 +1,37 @@
 <script lang="ts">
+  import type { PageProps } from "./$types";
   import { apiConfigured, session } from "$lib/session.svelte";
   import { startCheckout } from "$lib/billing";
   import Button from "$lib/components/Button.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
-  import Headline from "$lib/components/Headline.svelte";
-  import Plate from "$lib/components/Plate.svelte";
   import ActionLink from "$lib/components/ActionLink.svelte";
   import { pageTitle } from "$lib/seo";
-  import { BILLING_COMMITMENTS, NOT_SOLD, PRICING, PRICING_PLANS, QUOTED_PLANS, money, FREE_PHASES_PHRASE } from "$lib/content/site";
+  import {
+    BILLING_COMMITMENTS,
+    NOT_SOLD,
+    PRICING,
+    PRICING_PLANS,
+    QUOTED_PLANS,
+    money,
+    FREE_PHASES_PHRASE,
+  } from "$lib/content/site";
   import { SUBSCRIPTION_TERMS } from "$lib/legal";
 
-  /* The price, printed. One number in one place, and the same number in the
-     payment provider's dashboard. The page holds no amount of its own: it
-     prints the copy module, and the suite reads the same export. */
+  /* The price, printed. The page holds no amount of its own: it prints the
+     copy module, and the suite reads the same export.
+
+     The layout is two listed plans and two quoted ones. Free and Pro are the
+     decision; Teams and Campus are a conversation. The Pro card keeps every
+     state the service can report, because a checkout that is not configured
+     must say so rather than look broken. */
+
+  let { data }: PageProps = $props();
+
   const price = money(PRICING.monthly);
   const annual = money(PRICING.annual);
 
-  /* The four lines. The campus licence is the fourth: the same Pro, sold to a
-     cohort, on one invoice. It is invoiced rather than bought at a checkout,
-     so there is no provider product for it and the page keeps saying that
-     checkout is not on sale yet. */
-  const priceLines = [...PRICING_PLANS, ...QUOTED_PLANS];
-
-  /* Pricing backed by the real plans feed — never hardcoded copy. The API
-     names plans only (no amounts travel through it), so prices live where
-     they are charged: Dodo's hosted checkout. With zero published plans the
-     page says exactly that instead of inventing a price. */
+  const freePlan = PRICING_PLANS[0];
+  const proPlan = PRICING_PLANS[1];
 
   let plans = $state<{ slug: string; name: string }[]>([]);
   let paymentsConfigured = $state<boolean | null>(null);
@@ -42,8 +48,6 @@
   let busy = $state<string | null>(null);
 
   $effect(() => {
-    // Re-arm on an identity change (sign-in / account switch), never on a token
-    // renewal — `session.epoch` is exactly that signal (see session.svelte.ts).
     const epoch = session.epoch;
     if (epoch !== attemptedEpoch) {
       attemptedEpoch = epoch;
@@ -62,9 +66,6 @@
           error = e instanceof Error ? e.message : "Could not load plans.";
         })
         .finally(() => {
-          // Latch whether it worked or not: one attempt per account, even when
-          // the service is unreachable, so a failure cannot re-trigger this
-          // effect in a loop (the old code latched `loaded` only on success).
           loaded = true;
           loading = false;
         });
@@ -85,231 +86,663 @@
 
 <PageHead
   title={pageTitle("Pricing")}
-  description="What is free, what is paid and what extra. The decided price of the free tier, of Pro and of a team plan, and what is not sold at all."
+  description="What is free, what is paid and what is quoted. The price of the free tier, of Pro, and what is not sold at all."
   path="/pricing"
 />
 
-<div class="mx-auto max-w-[1320px] px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
-  <Headline
-    as="h1"
-    lines={["Free to learn.", "Pro to run more."]}
-    class="text-[clamp(2.2rem,6.5vw,5rem)] text-ink"
-  />
-  <p class="mt-7 max-w-[54ch] font-serif text-[clamp(1.05rem,2vw,1.5rem)] leading-snug text-muted">
-    Learning happens in the IDE. The {FREE_PHASES_PHRASE} ship inside the download and stay free, and
-    assessment is never gated.
-  </p>
-</div>
+<section class="price-hero">
+  <div class="container-page">
+    <h1 class="display price-title">Free to learn.<br />Pro to run more.</h1>
+    <p class="price-lede">
+      Learning happens in the IDE. The {FREE_PHASES_PHRASE} ship inside the download and stay
+      free, and assessment is never gated.
+    </p>
+    <p class="price-note num">No account is needed for the free phases.</p>
+  </div>
+</section>
 
-<div class="mx-auto max-w-[1320px] px-5 pb-20 sm:px-8 sm:pb-28">
-  <!-- The four plans. Every line of them is printed from the copy module, so
-       the page cannot describe one offer three ways, and the number the
-       provider is configured with is the number a reader sees here. -->
-  <div class="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
-    {#each priceLines as plan (plan.id)}
-      <Plate crosshair label="{plan.name} plan">
-        <div class="flex items-baseline justify-between gap-4">
-          <h2 class="display text-[clamp(1.3rem,2.4vw,1.9rem)] text-ink">{plan.name}</h2>
-          {#if plan.id === "free"}
-            <span class="stamp text-[11px] text-added">forever</span>
-          {/if}
+<section class="section-pad listed-section">
+  <div class="container-page">
+    <div class="listed">
+      <article class="plan card" data-plan="free">
+        <div class="plan-head">
+          <div>
+            <p class="plan-name">{freePlan.name}</p>
+            <p class="num plan-price">{freePlan.price}</p>
+            <p class="num plan-note">{freePlan.priceNote}</p>
+          </div>
+          <span class="tag tag-pass">Forever</span>
         </div>
 
-        {#if plan.quoted}
-          <!-- A quoted offer has no price, so it says so in the place a price
-               would be, and then says what the quote depends on. The word is
-               in the reading face rather than the mono one, because it is a
-               sentence and not a reading. -->
-          <p class="display mt-5 text-[clamp(1.9rem,3.6vw,2.6rem)] leading-none text-ink">
-            {plan.price}
-          </p>
-        {:else}
-          <p class="num mt-5 text-[clamp(2rem,4vw,2.75rem)] leading-none text-ink">{plan.price}</p>
-        {/if}
-        <p class="stamp mt-2 text-[11px] text-faint">{plan.priceNote}</p>
-
-        <ul class="mt-6 grid gap-3 border-t border-rule pt-6">
-          {#each plan.points as point, i (`${plan.id}-${i}`)}
-            <li class="text-[13.5px] leading-relaxed text-muted">{point}</li>
+        <ul class="plan-points">
+          {#each freePlan.points as point, i (`free-${i}`)}
+            <li>{point}</li>
           {/each}
         </ul>
 
-        {#if plan.id === "free"}
-          <div class="mt-7">
-            <ActionLink href="/download" island>Try it free</ActionLink>
-          </div>
-        {:else if plan.id === "pro"}
-          <div class="mt-7">
-            <p class="text-[12.5px] leading-relaxed text-faint">
-              The plan is priced and it is not on sale yet.
-            </p>
-            {#if !apiConfigured}
-              <p class="text-[14px] leading-relaxed text-muted">
-                This build runs in local mode. Pro plans appear here once a platform is connected.
-              </p>
-            {:else if session.restoring}
-              <!-- Not "sign in to see plans": on a fresh load we do not yet know
-                   whether this learner is signed in — the cookie is unreadable here. -->
-              <p class="stamp text-muted">checking your session…</p>
-            {:else if !session.loggedIn}
-              <p class="text-[14px] leading-relaxed text-muted">
-                <a href="/auth" class="text-accent underline underline-offset-4">Sign in</a> to subscribe
-                and manage the plan. Everything you can learn stays free either way.
-              </p>
-            {:else if loading}
-              <p class="stamp text-muted">loading plans…</p>
-            {:else if error}
-              <p role="alert" class="text-[14px] text-removed">{error}</p>
-            {:else if subscription?.entitled}
-              <p class="flex flex-wrap items-baseline gap-x-3 text-[14px]">
-                <span class="stamp text-approved">pro active</span>
-                <span class="text-muted">
-                  {subscription.plan}{subscription.currentPeriodEnd
-                    ? ` · renews ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
-                    : ""}
-                </span>
-              </p>
-              <p class="mt-3 text-[12.5px] leading-relaxed text-faint">
-                Manage or cancel from your
-                <a href="/profile" class="text-accent underline underline-offset-4">profile</a>.
-              </p>
-            {:else if plans.length === 0}
-              <p class="text-[14px] leading-relaxed text-muted">
-                The plan is priced and it is not on sale yet. {price} a month, or {annual} a year,
-                opens the other {PRICING.paidPhases} phases inside the editor you already have.
-                Until the checkout opens, everything stays free.
-              </p>
-            {:else if paymentsConfigured === false}
-              <!-- The provider is not configured in this deployment. Saying so is
-                   the honest answer: a checkout button here would send the learner
-                   to a provider that is not there, and the failure would read like a
-                   broken product rather than a setting that has not been made. -->
-              <p class="text-[14px] leading-relaxed text-muted">
-                The payment provider is not configured in this deployment, so the checkout is
-                closed. Nothing is charged, and nothing is asked for. Everything you can learn
-                stays free.
-              </p>
-            {:else}
-              <ul class="grid gap-3">
-                {#each plans as pl (pl.slug)}
-                  <li class="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-3 first:border-t-0 first:pt-0">
-                    <span class="text-[14px] text-ink">{pl.name}</span>
-                    <Button size="sm" variant="ghost" onclick={() => upgrade(pl.slug)} disabled={busy !== null}>
-                      {busy === pl.slug ? "Redirecting…" : `Choose ${pl.name}`}
-                    </Button>
-                  </li>
-                {/each}
-              </ul>
-              <p class="mt-4 text-[12.5px] leading-relaxed text-faint">
-                Prices are shown on the secure checkout (Dodo Payments) before anything is charged.
-                The renewal date is on that page too, before you pay, and not only at the point of
-                cancelling.
-              </p>
-            {/if}
-          </div>
-        {:else if plan.quoted}
-          <!-- The one action a quoted offer has: talk to a person. There is no
-               checkout, because a quoted offer is a conversation, and the
-               quote says what it depends on so the reader can answer in one
-               message. -->
-          <div class="mt-7">
-            <p class="text-[13px] leading-relaxed text-muted">{plan.dependsOn}</p>
-            <p class="mt-3 text-[12.5px] leading-relaxed text-muted">{plan.cap}</p>
-            <p class="mt-3 text-[12.5px] leading-relaxed text-faint">{plan.checkout}</p>
-            <div class="mt-5">
-              <ActionLink href={plan.action.href} variant="ghost">{plan.action.label}</ActionLink>
-            </div>
-          </div>
-        {/if}
-      </Plate>
-    {/each}
-  </div>
+        <div class="plan-action">
+          <ActionLink href="/download" size="md" island>{data.release.label}</ActionLink>
+        </div>
+      </article>
 
-  <!-- What is not sold, stated plainly. A buyer is better served by a refusal
-       they can read than by a promise that is quietly left out. -->
-  <section class="mt-16" aria-labelledby="not-sold">
-    <h2 id="not-sold" class="display text-[clamp(1.5rem,2.8vw,2.1rem)] text-ink">
-      What is not sold.
-    </h2>
-    <ul class="mt-8 grid gap-4 border-t border-rule pt-8 sm:grid-cols-2">
+      <article class="plan card" data-plan="pro">
+        <div class="plan-head">
+          <div>
+            <p class="plan-name">{proPlan.name}</p>
+            <p class="num plan-price">{proPlan.price}</p>
+            <p class="num plan-note">{proPlan.priceNote}</p>
+          </div>
+          <span class="tag pro-tag">The full shelf</span>
+        </div>
+
+        <ul class="plan-points">
+          {#each proPlan.points as point, i (`pro-${i}`)}
+            <li>{point}</li>
+          {/each}
+        </ul>
+
+        <div class="plan-action">
+          <p class="pro-state">
+            The plan is priced and it is not on sale yet.
+          </p>
+
+          {#if !apiConfigured}
+            <p class="pro-body">
+              This build runs in local mode. Pro plans appear here once a platform is connected.
+            </p>
+          {:else if session.restoring}
+            <p class="pro-body">Checking your session.</p>
+          {:else if !session.loggedIn}
+            <p class="pro-body">
+              <a href="/auth">Sign in</a> to subscribe and manage the plan. Everything you can
+              learn stays free either way.
+            </p>
+          {:else if loading}
+            <p class="pro-body">Loading plans.</p>
+          {:else if error}
+            <p class="pro-body error" role="alert">{error}</p>
+          {:else if subscription?.entitled}
+            <p class="pro-status">
+              <span class="tag tag-pass">Pro active</span>
+              <span class="num">
+                {subscription.plan}{subscription.currentPeriodEnd
+                  ? ` · renews ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
+                  : ""}
+              </span>
+            </p>
+            <p class="pro-body">
+              Change or cancel it under <a href="/profile">Manage your plan</a>.
+            </p>
+          {:else if plans.length === 0}
+            <p class="pro-body">
+              {price} a month, or {annual} a year, opens the other {PRICING.paidPhases} phases
+              inside the editor you already have. Until the checkout opens, everything stays free.
+            </p>
+          {:else if paymentsConfigured === false}
+            <p class="pro-body">
+              The payment provider is not configured in this deployment, so the checkout is
+              closed. Nothing is charged, and nothing is asked for. Everything you can learn
+              stays free.
+            </p>
+          {:else}
+            <ul class="checkout-plans">
+              {#each plans as pl (pl.slug)}
+                <li>
+                  <span>{pl.name}</span>
+                  <Button size="sm" variant="inverse" onclick={() => upgrade(pl.slug)} disabled={busy !== null}>
+                    {busy === pl.slug ? "Redirecting" : `Choose ${pl.name}`}
+                  </Button>
+                </li>
+              {/each}
+            </ul>
+            <p class="pro-fine">
+              Prices are shown on the secure checkout (Dodo Payments) before anything is charged.
+              The renewal date is on that page too, before you pay.
+            </p>
+          {/if}
+        </div>
+      </article>
+    </div>
+
+    <div class="quoted-grid">
+      {#each QUOTED_PLANS as plan (plan.id)}
+        <article class="quoted card">
+          <div class="quoted-head">
+            <p class="plan-name">{plan.name}</p>
+            <p class="display quoted-price">{plan.price}</p>
+            <p class="num plan-note">{plan.priceNote}</p>
+          </div>
+          <p class="quoted-depends">{plan.dependsOn}</p>
+          <ul class="quoted-points">
+            {#each plan.points as point, i (`${plan.id}-${i}`)}
+              <li>{point}</li>
+            {/each}
+          </ul>
+          <p class="quoted-fine">{plan.cap}</p>
+          <p class="quoted-fine">{plan.checkout}</p>
+          <div class="quoted-action">
+            <ActionLink href={plan.action.href} variant="ghost">{plan.action.label}</ActionLink>
+          </div>
+        </article>
+      {/each}
+    </div>
+  </div>
+</section>
+
+<section class="not-sold">
+  <div class="container-page not-sold-grid">
+    <div>
+      <h2 class="display not-sold-title">What is not sold.</h2>
+      <p class="not-sold-lede">
+        A plain refusal is more useful than a quiet omission. These are the product's shape, not
+        features waiting on a roadmap.
+      </p>
+    </div>
+    <ul class="not-sold-list">
       {#each NOT_SOLD as line, i (`not-sold-${i}`)}
-        <li class="grid grid-cols-[auto_1fr] gap-4 text-[13.5px] leading-relaxed text-muted">
-          <span class="num pt-0.5 text-[12px] text-removed" aria-hidden="true">✗</span>
+        <li>
+          <span class="num cross" aria-hidden="true">✗</span>
           <span>{line}</span>
         </li>
       {/each}
     </ul>
-  </section>
+  </div>
+</section>
 
-  <!-- The billing promises. Written before there is a price to sell, on purpose:
-       the loudest thing anyone says about a competitor in this category is that
-       they felt cheated on money rather than that the teaching was bad. These
-       are commitments the product has to keep, so the suite asserts them where
-       they are stated. -->
-  <section class="mt-16" aria-label="Billing commitments">
-    <h2 class="display text-[clamp(1.5rem,2.8vw,2.1rem)] text-ink">How billing works here.</h2>
-    <div class="grid gap-8 border-t border-rule pt-8 sm:grid-cols-2">
+<section class="section-pad">
+  <div class="container-page">
+    <h2 class="display section-title">How billing works here.</h2>
+    <div class="commitments">
       {#each BILLING_COMMITMENTS as item, i (`bill-${i}`)}
-        <div class="max-w-[46ch]">
-          <h3 class="text-[15px] font-semibold text-ink">{item.title}</h3>
-          <p class="mt-2 text-[13.5px] leading-relaxed text-muted">{item.body}</p>
+        <div class="commitment">
+          <span class="num commitment-n">{String(i + 1).padStart(2, "0")}</span>
+          <h3>{item.title}</h3>
+          <p>{item.body}</p>
         </div>
       {/each}
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Before the price, not after it.
-       California's Automatic Renewal Law (as amended by AB 2863) requires the
-       renewal terms to be clear and conspicuous, in visual proximity to the
-       consent, *before* checkout completes — and the same facts are what the EU
-       Consumer Rights Directive calls pre-contract information. Both point at the
-       same place: someone deciding whether to pay should be able to read the
-       renewal, the cancellation route, the refund position and the withdrawal
-       right here, without opening another document or reaching a checkout page.
-       The five sentences live in $lib/legal so the terms, this page and the
-       checkout cannot describe one subscription three ways. -->
-  <section class="mt-16" aria-labelledby="paid-terms">
-    <h2 id="paid-terms" class="display text-[clamp(1.5rem,2.8vw,2.1rem)] text-ink">
-      Before you pay: the terms of the subscription.
-    </h2>
-    <p class="mt-4 max-w-[62ch] text-[13.5px] leading-relaxed text-muted">
-      The price above is the decided price, and it is printed here so that nothing is a surprise.
-      Checkout is not on sale yet: the payment provider has to be configured with the same number
-      before it is switched on, and until it is, everything stays free. These are the terms that go
-      with the subscription, in the same place as the decision rather than in a document behind a
-      link.
+<section class="terms-band">
+  <div class="container-page">
+    <h2 class="display section-title">Before you pay: the subscription.</h2>
+    <p class="terms-lede">
+      The price above is the decided price, printed here so that nothing is a surprise. Checkout
+      is not on sale yet: the payment provider has to be configured with the same number before it
+      is switched on, and until it is, everything stays free.
     </p>
-    <dl class="mt-8 grid gap-6 border-t border-rule pt-8 sm:grid-cols-2">
-      <div class="max-w-[46ch]">
-        <dt class="text-[15px] font-semibold text-ink">It renews until you cancel</dt>
-        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.renewal}</dd>
-      </div>
-      <div class="max-w-[46ch]">
-        <dt class="text-[15px] font-semibold text-ink">Cancelling</dt>
-        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.cancellation}</dd>
-      </div>
-      <div class="max-w-[46ch]">
-        <dt class="text-[15px] font-semibold text-ink">Refunds</dt>
-        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.refund}</dd>
-      </div>
-      <div class="max-w-[46ch]">
-        <dt class="text-[15px] font-semibold text-ink">Your 14-day right of withdrawal</dt>
-        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.withdrawal}</dd>
-      </div>
-      <div class="max-w-[46ch]">
-        <dt class="text-[15px] font-semibold text-ink">If a price changes</dt>
-        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.priceChange}</dd>
-      </div>
-      <div class="max-w-[46ch]">
-        <dt class="text-[15px] font-semibold text-ink">Free trials</dt>
-        <dd class="mt-2 text-[13.5px] leading-relaxed text-muted">{SUBSCRIPTION_TERMS.trial}</dd>
-      </div>
+    <dl class="terms">
+      <div><dt>It renews until you cancel</dt><dd>{SUBSCRIPTION_TERMS.renewal}</dd></div>
+      <div><dt>Cancelling</dt><dd>{SUBSCRIPTION_TERMS.cancellation}</dd></div>
+      <div><dt>Refunds</dt><dd>{SUBSCRIPTION_TERMS.refund}</dd></div>
+      <div><dt>Your 14-day right of withdrawal</dt><dd>{SUBSCRIPTION_TERMS.withdrawal}</dd></div>
+      <div><dt>If a price changes</dt><dd>{SUBSCRIPTION_TERMS.priceChange}</dd></div>
+      <div><dt>Free trials</dt><dd>{SUBSCRIPTION_TERMS.trial}</dd></div>
     </dl>
-    <p class="mt-8 max-w-[62ch] text-[12.5px] leading-relaxed text-faint">
-      The same terms are in the
-      <a href="/terms" class="text-accent underline underline-offset-4">terms of service</a>, and the
-      subscription itself is run by the payment provider as merchant of record, which is why
-      cancelling happens in its portal rather than in a form here.
+    <p class="terms-fine">
+      The same terms are in the <a href="/terms">terms of service</a>, and the subscription is run
+      by the payment provider as merchant of record, which is why cancelling happens in its portal
+      rather than in a form here.
     </p>
-  </section>
-</div>
+  </div>
+</section>
+
+<style>
+  .price-hero {
+    padding-block: clamp(3.5rem, 7vw, 6.5rem) clamp(2.5rem, 5vw, 4rem);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .price-title {
+    margin-top: var(--space-5);
+    font-size: var(--text-page);
+    line-height: 0.94;
+    letter-spacing: -0.055em;
+  }
+
+  .price-lede {
+    margin-top: var(--space-5);
+    max-width: 52ch;
+    font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .price-note {
+    margin-top: var(--space-4);
+    font-size: 10px;
+    color: var(--color-faint);
+  }
+
+  .listed-section {
+    background: var(--color-panel);
+  }
+
+  .listed {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 900px) {
+    .listed {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .plan {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-6);
+  }
+
+  @media (min-width: 640px) {
+    .plan {
+      padding: var(--space-8);
+    }
+  }
+
+  .plan[data-plan="pro"] {
+    background:
+      radial-gradient(80% 100% at 100% 0%, color-mix(in srgb, var(--color-screen-glow) 50%, transparent), transparent 60%),
+      var(--color-screen);
+    border-color: var(--color-screen);
+    color: var(--color-screen-ink);
+  }
+
+  .plan-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .plan-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+
+  .plan[data-plan="pro"] .plan-name {
+    color: var(--color-screen-muted);
+  }
+
+  .plan-price {
+    margin-top: var(--space-2);
+    font-size: clamp(2.4rem, 4vw, 3.2rem);
+    line-height: 1;
+    color: var(--color-ink);
+  }
+
+  .plan[data-plan="pro"] .plan-price {
+    color: var(--color-screen-ink);
+  }
+
+  .plan-note {
+    margin-top: var(--space-2);
+    font-size: 10px;
+    color: var(--color-faint);
+  }
+
+  .plan[data-plan="pro"] .plan-note {
+    color: var(--color-screen-muted);
+  }
+
+  .pro-tag {
+    border-color: var(--color-screen-rule);
+    color: var(--color-screen-muted);
+  }
+
+  .plan-points {
+    list-style: none;
+    margin: 0;
+    padding: var(--space-4) 0 0;
+    border-top: 1px solid var(--color-rule);
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .plan[data-plan="pro"] .plan-points {
+    border-top-color: var(--color-screen-rule);
+  }
+
+  .plan-points li {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    gap: var(--space-2);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--color-muted);
+  }
+
+  .plan-points li::before {
+    content: "✓";
+    color: var(--color-pass);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  .plan[data-plan="pro"] .plan-points li {
+    color: var(--color-screen-muted);
+  }
+
+  .plan-action {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: auto;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .plan[data-plan="pro"] .plan-action {
+    border-top-color: var(--color-screen-rule);
+  }
+
+  .pro-state {
+    font-size: 12.5px;
+    color: var(--color-screen-muted);
+  }
+
+  .pro-body {
+    max-width: 48ch;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--color-screen-muted);
+  }
+
+  .pro-body a {
+    color: var(--color-accent-bright);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .pro-body.error {
+    color: var(--color-fail-screen);
+  }
+
+  .pro-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 10px;
+    color: var(--color-screen-muted);
+  }
+
+  .checkout-plans {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .checkout-plans li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-screen-rule);
+    font-size: 13px;
+    color: var(--color-screen-ink);
+  }
+
+  .checkout-plans li:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .pro-fine {
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: var(--color-screen-muted);
+  }
+
+  .quoted-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+  }
+
+  @media (min-width: 900px) {
+    .quoted-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .quoted {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+  }
+
+  .quoted-head {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .quoted-price {
+    margin-top: var(--space-2);
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    color: var(--color-ink);
+  }
+
+  .quoted-depends {
+    max-width: 48ch;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--color-muted);
+  }
+
+  .quoted-points {
+    list-style: none;
+    margin: 0;
+    padding: var(--space-3) 0 0;
+    border-top: 1px solid var(--color-rule);
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .quoted-points li {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    gap: var(--space-2);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--color-muted);
+  }
+
+  .quoted-points li::before {
+    content: "·";
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+  }
+
+  .quoted-fine {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--color-faint);
+  }
+
+  .quoted-action {
+    margin-top: auto;
+    padding-top: var(--space-3);
+  }
+
+  .not-sold {
+    padding-block: clamp(4rem, 7vw, 6.5rem);
+    background:
+      radial-gradient(60% 90% at 0% 100%, color-mix(in srgb, var(--color-fail) 7%, transparent), transparent 60%),
+      var(--color-raised);
+    border-block: 1px solid var(--color-rule);
+  }
+
+  .not-sold-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+
+  @media (min-width: 980px) {
+    .not-sold-grid {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: clamp(3rem, 7vw, 6rem);
+    }
+  }
+
+  .not-sold-title {
+    margin-top: var(--space-4);
+    max-width: 14ch;
+    font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  }
+
+  .not-sold-lede {
+    margin-top: var(--space-4);
+    max-width: 44ch;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .not-sold-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--color-rule-strong);
+  }
+
+  .not-sold-list li {
+    display: grid;
+    grid-template-columns: 1.4rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-rule-strong);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--color-ink);
+    transition: border-color var(--dur-2) var(--ease-out);
+  }
+
+  .not-sold-list li:hover {
+    border-bottom-color: color-mix(in srgb, var(--color-fail) 45%, var(--color-rule-strong));
+  }
+
+  .cross {
+    color: var(--color-fail);
+    font-size: 10px;
+  }
+
+  .section-title {
+    font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  }
+
+  .commitments {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    margin-top: var(--space-8);
+  }
+
+  @media (min-width: 720px) {
+    .commitments {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1080px) {
+    .commitments {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .commitment {
+    padding-top: var(--space-4);
+    border-top: 2px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-rule));
+  }
+
+  .commitment-n {
+    font-size: 9px;
+    color: var(--color-faint);
+  }
+
+  .commitment h3 {
+    margin-top: var(--space-2);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .commitment p {
+    margin-top: var(--space-2);
+    max-width: 34ch;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--color-muted);
+  }
+
+  .terms-band {
+    padding-block: clamp(4rem, 7vw, 6.5rem);
+    background: var(--color-panel);
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .terms-lede {
+    margin-top: var(--space-4);
+    max-width: 62ch;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .terms {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    margin: var(--space-8) 0 0;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-rule);
+  }
+
+  @media (min-width: 720px) {
+    .terms {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .terms dt {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .terms dd {
+    margin: var(--space-2) 0 0;
+    max-width: 46ch;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .terms-fine {
+    margin-top: var(--space-8);
+    max-width: 62ch;
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--color-faint);
+  }
+
+  .terms-fine a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+</style>

@@ -32,26 +32,30 @@ export interface RouteConfig {
   paidPrefixes?: string[];
 }
 
-export type AuthMode = "local" | "clerk";
+export type AuthMode = "local" | "kinde";
 
 export interface GatewayConfig {
   port: number;
   frontendUrl: string;
   authMode: AuthMode;
   jwtSecret: string;
-  clerkSecretKey: string;
-  clerkJwtKey: string;
   /**
-   * Where the Clerk Backend API (and its `/jwks` signing keys) live. Empty means
-   * "use Clerk's hosted default", which is right for the common case but makes
-   * two production shapes impossible: a self-hosted or sovereign Clerk behind a
-   * private issuer, and any offline or CI verification — the JWKS fetch has no
-   * address to reach. Set, it names the issuer the operator actually runs, and
-   * it is the same address the JWKS proof test points at to exercise the HTTP
-   * key path without a network.
+   * The Kinde business address, e.g. https://acme.kinde.com. It is the token's
+   * `iss` and the origin the JWKS is fetched from. Required in kinde mode.
    */
-  clerkApiUrl: string;
-  clerkAuthorizedParties: string[];
+  kindeIssuerUrl: string;
+  /**
+   * The API audience registered in Kinde and requested by the site. Required in
+   * kinde mode: it is what makes a token this platform's token rather than one
+   * minted for another application in the same Kinde business.
+   */
+  kindeAudience: string;
+  /**
+   * Optional JWKS address. Empty means the issuer's own
+   * `/.well-known/jwks.json`, which is the real endpoint. Set, it names a
+   * sovereign issuer or a local proof server.
+   */
+  kindeJwksUrl: string;
   internalKey: string;
   /**
    * The Fastify/proxy-addr trust value. `false` when nothing fronts us;
@@ -181,32 +185,36 @@ function url(env: Record<string, string | undefined>, name: string, fallback: st
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): GatewayConfig {
   const mode = str(env, "AUTH_MODE", "local");
-  if (mode !== "local" && mode !== "clerk") {
-    throw new Error(`AUTH_MODE must be "local" or "clerk", got ${mode}`);
+  if (mode !== "local" && mode !== "kinde") {
+    throw new Error(`AUTH_MODE must be "local" or "kinde", got ${mode}`);
   }
   const frontendUrl = url(env, "FRONTEND_URL", "http://localhost:3000").replace(/\/$/, "");
   const jwtSecret = str(env, "AUTH_JWT_SECRET");
-  // Only meaningful in local mode, where this secret both signs and verifies.
-  // Anyone holding it can mint an access token for any `sub`, i.e. become any
-  // user, so a placeholder here is an impersonation primitive rather than a
-  // weak password — hence a content check, not just a length check.
-  if (mode === "local") assertSecret("AUTH_JWT_SECRET", jwtSecret);
-  // PEM keys in env files often carry literal \n escapes — restore them.
-  const clerkJwtKey = str(env, "CLERK_JWT_KEY").replace(/\\n/g, "\n");
-  const clerkSecretKey = str(env, "CLERK_SECRET_KEY");
-  if (mode === "clerk" && !clerkSecretKey && !clerkJwtKey) {
-    throw new Error("Clerk mode needs CLERK_SECRET_KEY or CLERK_JWT_KEY");
+  // Required in both modes. In local mode it both signs and verifies the web's
+  // access token. In kinde mode it signs the short-lived device-code tokens the
+  // desktop IDE receives after a Kinde-authenticated browser approves the code;
+  // the web's token is verified against Kinde's JWKS instead. Anyone holding it
+  // can mint a token for any `sub`, so a placeholder is an impersonation
+  // primitive rather than a weak password — hence the content check.
+  assertSecret("AUTH_JWT_SECRET", jwtSecret);
+  const kindeIssuerUrl = str(env, "KINDE_ISSUER_URL", "").replace(/\/$/, "");
+  if (mode === "kinde" && !kindeIssuerUrl) {
+    throw new Error("Kinde mode needs KINDE_ISSUER_URL");
   }
-  // Default empty = Clerk's hosted API. A set value must be a real http(s) URL
-  // with no trailing slash, because the SDK appends `/{apiVersion}/jwks` to it.
-  const clerkApiUrl = str(env, "CLERK_API_URL", "").replace(/\/$/, "");
-  if (clerkApiUrl !== "" && !/^https?:\/\//.test(clerkApiUrl)) {
-    throw new Error(`Invalid CLERK_API_URL: must be an http(s) URL`);
+  if (kindeIssuerUrl !== "" && !/^https?:\/\//.test(kindeIssuerUrl)) {
+    throw new Error(`Invalid KINDE_ISSUER_URL: must be an http(s) URL`);
   }
-  const parties = str(env, "CLERK_AUTHORIZED_PARTIES")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const kindeAudience = str(env, "KINDE_AUDIENCE", "").trim();
+  if (mode === "kinde" && !kindeAudience) {
+    throw new Error("Kinde mode needs KINDE_AUDIENCE");
+  }
+  // Empty means the issuer's own /.well-known/jwks.json. A named value is what
+  // lets a sovereign issuer, or a local proof server, exercise the HTTP key path
+  // without pretending to be Kinde.
+  const kindeJwksUrl = str(env, "KINDE_JWKS_URL", "").replace(/\/$/, "");
+  if (kindeJwksUrl !== "" && !/^https?:\/\//.test(kindeJwksUrl)) {
+    throw new Error(`Invalid KINDE_JWKS_URL: must be an http(s) URL`);
+  }
   // The mesh key, or a refusal to boot. The gateway cannot proxy to services it
   // cannot authenticate to, so a gateway running without a key is not a degraded
   // mode — it is the misconfiguration that used to disable the entire identity
@@ -231,10 +239,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     frontendUrl,
     authMode: mode,
     jwtSecret,
-    clerkSecretKey,
-    clerkJwtKey,
-    clerkApiUrl,
-    clerkAuthorizedParties: parties.length > 0 ? parties : [frontendUrl],
+    kindeIssuerUrl,
+    kindeAudience,
+    kindeJwksUrl,
     internalKey,
     trustProxy: parseTrustProxy(env),
     globalLimit: { windowMs: limitWindowMs, max: num(env, "GATEWAY_GLOBAL_LIMIT", 600) },

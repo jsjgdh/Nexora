@@ -2,420 +2,765 @@
   import { onMount } from "svelte";
   import { page } from "$app/state";
   import { session } from "$lib/session.svelte";
-  import { BRAND, NAV } from "$lib/content/site";
+  import { BRAND, MASTHEAD, NAV } from "$lib/content/site";
+  import { COURSE_PAGES, courseActivities, coursePhases } from "$lib/content/courses";
+  import CourseMark from "./CourseMark.svelte";
   import type { ReleaseState } from "$lib/release";
+  import { actionClass } from "$lib/ui";
 
-  /* The instrument face.
+  /* The top edge, set as a masthead rather than as a bar.
    *
-   * A bench has a nameplate, a reading, and the controls. This is the same
-   * three things: the product's name at the size of the page's own display
-   * type, the measured status of the thing next to it, and the two actions
-   * that matter. There is no square logo lockup beside the name — a mark next
-   * to a wordmark reads as a sticker, and the wordmark is doing the work.
+   * Two rows, the way a sheet sets its title: the name on the first row with
+   * the edition lines flanking it, the destinations on the second, and a
+   * double rule closing both. The wordmark is centred because a masthead's
+   * title is centred, and the left and right cells are the same width so the
+   * centre stays the centre however long the edition line runs.
    *
-   * Three structural facts, all of them load-bearing:
+   * The edition lines are `MASTHEAD`: the descriptor and the counts, both
+   * computed from the shipped phase list, so the chrome cannot print a number
+   * the manifest does not carry. They only appear at 1280px and above, where
+   * there is room for them without crowding the name.
    *
-   *   1. The nameplate is the identity, and the way home is the word itself
-   *      rather than a label. It is announced with a hidden word rather than
-   *      an `aria-label`, because a label would *replace* the visible word and
-   *      a name that does not contain the text on screen is a name a voice
-   *      control cannot act on.
-   *   2. The folio — the section bar — is a *sibling* of the masthead, not a
-   *      child of it. A sticky element can only travel inside its own parent's
-   *      box, so a folio nested in the header would unstick the moment the
-   *      header ended. As a sibling its containing block is the page, which is
-   *      what lets it follow the reader from the top of the document to the
-   *      footer.
-   *   3. Only the folio is sticky. The nameplate scrolls away with the page it
-   *      belongs to, because a 120px nameplate pinned to the top of every
-   *      screen is a wall, not navigation.
+   * Courses opens a panel because the shelf is wider than a row; the panel is
+   * a real disclosure, closes on Escape or a click outside, and the same list
+   * appears in the mobile sheet. Below 1024px the second row is gone and the
+   * sheet carries every destination.
    *
-   * Learning itself happens in the IDE — there is deliberately no classroom
-   * link, no site search and no resume CTA here, so the site never reads as a
-   * second way to learn.
-   *
-   * The current item is marked in three ways at once, none of them colour
-   * alone: `aria-current`, an ink rule drawn under the item, and ink for the
-   * text. On the homepage the in-page links (`/#courses`) can never satisfy
-   * `pathname === href`, so the folio tracks which section the reader is
-   * actually inside instead — and it reads the section ids out of `NAV`, so a
-   * link added there is spied on without a second list to keep in step. */
+   * No reading rail, no scroll spy. */
+
+  let { release }: { release: ReleaseState } = $props();
 
   const pathname = $derived(page.url.pathname);
   const hash = $derived(page.url.hash);
 
-  /* The download action, and what it is called.
-   *
-   * The label is the release state's, so the header can never offer a build
-   * that is not published. One switch decides it, the server decides it, and
-   * every surface reads the same answer. */
-  let { release }: { release: ReleaseState } = $props();
-
-  const sectionIds = NAV.filter((item) => item.href.startsWith("/#")).map((item) =>
-    item.href.slice(2)
-  );
-
   let scrolled = $state(false);
-  /* Which anchor the reader is inside, on the page that holds the sections.
-     Empty everywhere else. */
-  let inSection = $state("");
+  let mobileOpen = $state(false);
+  let mobileDialog = $state<HTMLDialogElement | null>(null);
+  let menuOpen = $state(false);
 
-  /** The nav item for the current location, whether it is a route or an anchor. */
   function isCurrent(href: string): boolean {
-    if (href.startsWith("/#")) return pathname === "/" && inSection === href.slice(2);
+    if (href.startsWith("/#")) return pathname === "/" && hash === href.slice(1);
+    if (href === "/courses") return pathname === "/courses" || pathname.startsWith("/courses/");
     return pathname === href;
   }
 
-  function currentKind(href: string): "page" | "location" | undefined {
-    if (!isCurrent(href)) return undefined;
-    return href.startsWith("/#") ? "location" : "page";
+  function openMobile(): void {
+    mobileOpen = true;
+    mobileDialog?.showModal();
   }
 
-  /* How close to the top of the viewport a section has to come before the folio
-     counts the reader as being inside it. This number is coupled to CSS: the
-     anchor line is `section[id] { scroll-margin-top: 4.5rem }` in app.css, so a
-     section jumped to from this folio lands 72px down, clearing the folio's own
-     47px (2px rule, a 44px row, a 1px rule). The spy line must stay at or below
-     that landing, or the folio would mark the section *before* the one the
-     reader just arrived at — the nav contradicting the click that brought them
-     here. */
-  const SPY_LINE = 140;
-
-  /* One listener for both facts — the scrolled state and the section — and one
-     frame at most per scroll. `remeasure` is kept so a client-side navigation
-     can re-run the same pass without a second code path. */
-  let remeasure: (() => void) | null = null;
+  function closeMobile(): void {
+    mobileOpen = false;
+    mobileDialog?.close();
+  }
 
   onMount(() => {
-    let queued = false;
-    const measure = (): void => {
-      queued = false;
-      /* The shadow belongs to the folio only once it is actually pinned, which
-         is the moment the masthead has left the top of the screen. */
-      scrolled = window.scrollY > 24;
-
-      if (window.location.pathname !== "/") {
-        if (inSection !== "") inSection = "";
-        return;
-      }
-
-      // The current section is the *deepest* one whose top has passed the spy
-      // line, not the last one named in NAV — NAV's order is editorial and the
-      // page's order is not, so picking by declaration order marks the wrong
-      // section as soon as two are in view.
-      let found = "";
-      let lowest = -Infinity;
-      for (const id of sectionIds) {
-        const el = document.getElementById(id);
-        if (!el) continue;
-        const top = el.getBoundingClientRect().top;
-        if (top <= SPY_LINE && top > lowest) {
-          lowest = top;
-          found = id;
-        }
-      }
-      if (found !== inSection) inSection = found;
-    };
-    const request = (): void => {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(measure);
-    };
-
-    remeasure = request;
-    measure();
-    window.addEventListener("scroll", request, { passive: true });
-    window.addEventListener("resize", request, { passive: true });
-    window.addEventListener("hashchange", request);
-    return () => {
-      remeasure = null;
-      window.removeEventListener("scroll", request);
-      window.removeEventListener("resize", request);
-      window.removeEventListener("hashchange", request);
-    };
+    const sentinel = document.getElementById("top-sentinel");
+    if (!sentinel || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => (scrolled = !entry.isIntersecting), {
+      threshold: 0,
+    });
+    io.observe(sentinel);
+    return () => io.disconnect();
   });
 
-  /* A client-side navigation changes the path without a scroll, so the pass is
-     re-run when the location does. */
   $effect(() => {
     pathname;
     hash;
-    remeasure?.();
-  });
-
-  /* Resolve the account identity once per signed-in identity, so a reload
-     shows who is signed in without asking again. Keyed on `session.epoch`
-     (the sign-in / sign-out boundary) rather than the token value: a silent
-     renewal every few minutes must not look like a new learner. */
-  let identityAttemptedFor = $state(-1);
-  $effect(() => {
-    const epoch = session.epoch;
-    if (!session.token) {
-      identityAttemptedFor = -1;
-      return;
-    }
-    if (epoch !== identityAttemptedFor && !session.user && !session.loadingUser) {
-      identityAttemptedFor = epoch;
-      void session.refreshUser();
-    }
+    mobileOpen = false;
+    menuOpen = false;
   });
 </script>
 
-<header class="masthead">
-  <div class="bar">
-    <!-- The nameplate: the product's word and the mark that goes with it.
-         It is a link home, and it says so to a screen reader in words rather
-         than with an aria-label, because a label that REPLACES the visible
-         word is a name a voice control cannot act on. -->
-    <a href="/" class="nameplate">
+<svelte:window
+  onclick={(event) => {
+    if (!menuOpen) return;
+    const target = event.target as Node | null;
+    const menu = document.getElementById("courses-menu");
+    if (menu && target && !menu.contains(target)) menuOpen = false;
+  }}
+  onkeydown={(event) => {
+    if (event.key === "Escape") menuOpen = false;
+  }}
+/>
+
+<div id="top-sentinel" class="top-sentinel" aria-hidden="true"></div>
+
+<header class="site-nav" data-scrolled={scrolled ? "true" : "false"}>
+  <div class="nav-inner">
+    <p class="masthead-note">
+      <span class="note-line">{MASTHEAD.descriptor}</span>
+      <span class="note-line">{MASTHEAD.status}</span>
+    </p>
+
+    <a href="/" class="wordmark" aria-label="NEXORA, home">
       <span class="mark" aria-hidden="true"></span>
-      <span class="sr-only">Home</span>
-      <span class="word display">{BRAND}</span>
+      <span class="word">{BRAND}</span>
     </a>
 
-    <!-- The folio: the sections, from the one list the rest of the site reads.
-         It is the only sticky layer, because a nameplate pinned to the top of
-         every screen is a wall and not navigation. -->
-    <nav class="folio" aria-label="Site">
-      <ul class="nice-scroll -mx-4 flex items-stretch overflow-x-auto px-4 sm:-mx-8 sm:px-8">
-        {#each NAV as item (item.href)}
-          <li class="flex">
-            <a href={item.href} aria-current={currentKind(item.href)} class="folio-link">
-              {item.label}
-            </a>
-          </li>
-        {/each}
-      </ul>
+    <nav class="desk-nav" aria-label="Site">
+      <div id="courses-menu" class="courses-menu">
+        <button
+          type="button"
+          class="nav-link menu-trigger"
+          aria-expanded={menuOpen}
+          aria-controls="courses-panel"
+          aria-current={pathname === "/courses" || pathname.startsWith("/courses/") ? "page" : undefined}
+          onclick={() => (menuOpen = !menuOpen)}
+        >
+          Courses
+          <svg class="chev" width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        {#if menuOpen}
+          <div id="courses-panel" class="courses-panel">
+            <div class="panel-head">
+              <p class="stamp">The shelf</p>
+              <a href="/courses" class="panel-all" onclick={() => (menuOpen = false)}>
+                All courses
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+            <ul>
+              {#each COURSE_PAGES as course (course.slug)}
+                <li data-course={course.accent}>
+                  <a href={`/courses/${course.slug}`} onclick={() => (menuOpen = false)}>
+                    <CourseMark {course} size="2.1rem" />
+                    <span class="panel-copy">
+                      <span class="course-title">{course.title}</span>
+                      <span class="course-meta num">
+                        {coursePhases(course).length} phases · {courseActivities(course)} activities
+                      </span>
+                    </span>
+                    <span class="panel-arrow" aria-hidden="true">→</span>
+                  </a>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+      </div>
+
+      {#each NAV as item (item.href)}
+        <a
+          href={item.href}
+          class="nav-link"
+          aria-current={isCurrent(item.href) ? (item.href.startsWith("/#") ? "location" : "page") : undefined}
+        >
+          {item.label}
+        </a>
+      {/each}
     </nav>
 
-    <!-- The controls: the one action, and who is signed in. -->
-    <div class="actions">
-      {#if !session.loggedIn}
-        <a
-          href="/download"
-          aria-current={pathname === "/download" ? "page" : undefined}
-          class="inline-flex min-h-[44px] shrink-0 items-center border border-accent bg-accent px-3.5 text-[12.5px] font-bold whitespace-nowrap text-ground transition-[color,background-color,border-color] duration-200 hover:border-accent-bright hover:bg-accent-bright"
-        >
-          {release.labelShort}
-        </a>
-      {/if}
-
-      <!-- The sign-in link waits for `restoring`: the session lives in a
-           cookie this page cannot read, so "signed out" is not known yet on a
-           fresh load, and offering the link is a claim we cannot make until
-           the server has answered. The avatar has no such problem — being
-           shown something is only ever wrong once. -->
+    <div class="nav-actions">
       {#if session.loggedIn}
         <a
           href="/account"
-          aria-current={pathname === "/account" || pathname === "/profile" || pathname === "/auth" ? "page" : undefined}
+          class="account"
           aria-label={session.user ? `Account: ${session.user.email}` : "Account"}
           title={session.user?.email ?? "Account"}
-          class="grid h-11 w-11 place-items-center border border-rule-strong font-mono text-[12px] font-bold text-ink transition-[color,background-color,border-color] duration-200 hover:border-accent hover:bg-accent hover:text-ground"
         >
           {(session.user?.email ?? "?").slice(0, 1).toUpperCase()}
         </a>
       {:else if !session.restoring}
-        <a
-          href="/auth"
-          aria-current={pathname === "/auth" ? "page" : undefined}
-          class="inline-flex min-h-[44px] items-center border border-rule-strong px-3.5 text-[12.5px] font-semibold whitespace-nowrap text-muted transition-[color,background-color,border-color] duration-200 hover:border-ink hover:text-ink"
-        >
+        <a href="/auth" class="signin" aria-current={pathname === "/auth" ? "page" : undefined}>
           Sign in
         </a>
       {/if}
+
+      <a href="/download" class={actionClass("primary", "sm") + " nav-cta"}>
+        {release.labelShort}
+        <span class="cta-arrow" aria-hidden="true">→</span>
+      </a>
+
+      <button
+        type="button"
+        class="menu-button"
+        aria-expanded={mobileOpen}
+        aria-controls="mobile-menu"
+        onclick={openMobile}
+      >
+        <span class="menu-rule" aria-hidden="true"></span>
+        <span class="menu-rule" aria-hidden="true"></span>
+        <span class="sr-only">Menu</span>
+      </button>
     </div>
   </div>
-
-  <!-- The edge of the bar. The page dissolves into the chrome instead of
-       stopping at a rule, and nothing scrolls under a blur: the house refuses
-       a blur of whatever happens to be behind it. -->
-  <div class="edge" aria-hidden="true"></div>
 </header>
 
-<!-- The folio now lives in the bar above, so there is one row of chrome and
-     not two: the nameplate, the sections and the controls, in one line. -->
+<dialog
+  id="mobile-menu"
+  class="mobile-menu"
+  bind:this={mobileDialog}
+  onclose={() => (mobileOpen = false)}
+  aria-label="Site menu"
+>
+  <div class="mobile-head">
+    <span class="wordmark" aria-hidden="true">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="word">{BRAND}</span>
+    </span>
+    <button type="button" class="close" onclick={closeMobile}>Close</button>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Site">
+    {#each NAV as item (item.href)}
+      <a href={item.href} aria-current={isCurrent(item.href) ? "page" : undefined} onclick={closeMobile}>
+        {item.label}
+      </a>
+    {/each}
+    <a href="/courses" aria-current={pathname === "/courses" ? "page" : undefined} onclick={closeMobile}>
+      All courses
+    </a>
+  </nav>
+
+  <p class="stamp mobile-label">The shelf</p>
+  <ul class="mobile-courses">
+    {#each COURSE_PAGES as course (course.slug)}
+      <li data-course={course.accent}>
+        <a href={`/courses/${course.slug}`} onclick={closeMobile}>
+          <span class="mobile-course">
+            <CourseMark {course} size="2rem" />
+            <span>{course.title}</span>
+          </span>
+          <span class="num">{coursePhases(course).length}</span>
+        </a>
+      </li>
+    {/each}
+  </ul>
+
+  <div class="mobile-actions">
+    <a href="/download" class={actionClass("primary", "md")} onclick={closeMobile}>
+      {release.label}
+    </a>
+    {#if !session.loggedIn && !session.restoring}
+      <a href="/auth" class={actionClass("ghost", "md")} onclick={closeMobile}>Sign in</a>
+    {/if}
+  </div>
+</dialog>
 
 <style>
-  /* The bar. One row: the nameplate, the sections, the controls.
-     It is the only sticky layer, and it is the only thing that crosses the
-     page, so it has to read as an edge rather than as a band of colour. */
-  .masthead {
+  .top-sentinel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  /* The name row's height is a variable because the rule that separates it
+     from the destinations is drawn against it. */
+  .site-nav {
+    --masthead-h: 56px;
     position: sticky;
     top: 0;
     z-index: var(--z-nav);
     background: var(--color-ground);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-2) var(--ease-out);
   }
 
-  .bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: var(--space-3) var(--space-4);
+  /* The masthead's own hairline, four pixels clear of the edge. The scroll
+     state inks the edge in beneath it, so the pair reads as the double rule
+     that closes a title block — and the bar never changes height to get it. */
+  .site-nav::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    height: 1px;
+    background: var(--color-rule);
   }
 
-  @media (min-width: 640px) {
-    .bar {
-      gap: var(--space-4);
-      padding: var(--space-3) var(--space-8);
+  /* The full-bleed rule between the name and the destinations. It belongs to
+     the desktop row only: below 1024px the destinations live in the sheet. */
+  .site-nav::before {
+    content: none;
+  }
+
+  .site-nav[data-scrolled="true"] {
+    border-bottom-color: var(--color-rule);
+    background: color-mix(in srgb, var(--color-ground) 82%, transparent);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  @media (min-width: 1024px) {
+    .site-nav {
+      --masthead-h: 48px;
+    }
+
+    .site-nav::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: var(--masthead-h);
+      height: 1px;
+      background: var(--color-rule);
     }
   }
 
-  /* The edge of the bar. The page dissolves into the chrome instead of
-     stopping at a rule. Nothing blurs: the house refuses a blur of whatever
-     happens to be behind it, and the page coming up under a fade is the
-     same effect without the lie.
-
-     The height is fixed and the DEPTH of the fade changes, because animating
-     `height` is animating a layout property, and the bar sits at the top of
-     every page. */
-  .edge {
-    height: 20px;
-    background: linear-gradient(var(--color-ground), transparent);
-    opacity: 0.55;
-    pointer-events: none;
-    transition: opacity 240ms var(--ease-out);
+  /* Three columns: the edition lines and the action each take a flexible
+     side, so the name in the middle is the centre of the row whatever the
+     two sides happen to measure. The right column may not fall below its own
+     content, which is what keeps the action from reaching into the name on a
+     narrow tablet. */
+  .nav-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(min-content, 1fr);
+    grid-template-rows: var(--masthead-h) auto;
+    align-items: center;
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: var(--space-5);
   }
 
-  /* The attribute is set by the scroll measure at run time, so it has to be
-     addressed globally or the compiler cannot see it. */
-  .edge:global([data-scrolled="true"]) {
-    opacity: 1;
+  @media (min-width: 640px) {
+    .nav-inner {
+      padding-inline: var(--space-8);
+    }
   }
 
-  /* The attribute is set by the scroll measure at run time, so it has to be
-     addressed globally or the compiler cannot see it. */
-  .edge:global([data-scrolled="true"]) {
-    opacity: 1;
+  /* The two lines the chrome prints: what the product is, and how much of it
+     ships. Both come from `MASTHEAD`, which computes them from the manifest,
+     so the header cannot print a count the manifest does not carry. They sit
+     in the left cell only where there is room to read them. */
+  .masthead-note {
+    grid-area: 1 / 1;
+    justify-self: start;
+    display: none;
+    margin: 0;
+    min-width: 0;
   }
 
-  /* The page you are on is inked, the same gesture the folio makes for the
-     section you are inside. The download and the account are not sections of
-     the front page, so the folio has nothing to mark on those routes; the
-     action that owns the route carries the marker instead, or an interior
-     page is a page with no way home marked anywhere in the chrome. */
-  .masthead a[aria-current="page"] {
-    border-color: var(--color-ink);
-    background: var(--color-ink);
-    color: var(--color-ground);
+  @media (min-width: 1280px) {
+    .masthead-note {
+      display: block;
+    }
   }
 
-  /* The nameplate: the product's word, the mark that goes with it, and
-     nothing else. The link is the width of the word and the mark together,
-     not the width of the band — an invisible 900px home hotspot across the
-     top of the page is a trap, not a nameplate. */
-  .nameplate {
+  .note-line {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    line-height: 1.5;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wordmark {
+    grid-area: 1 / 2;
+    justify-self: center;
     display: inline-flex;
     align-items: center;
-    gap: var(--space-3);
-    min-height: 44px;
-    min-width: 0;
+    gap: 0.6rem;
     flex: none;
+    min-height: 44px;
     color: var(--color-ink);
     text-decoration: none;
   }
 
-  .nameplate .word {
-    font-size: clamp(1rem, 2.1vw, 1.45rem);
-    font-weight: 800;
-    letter-spacing: 0.14em;
-  }
-
-  .nameplate:hover .word {
-    color: var(--color-accent);
-  }
-
-  /* The mark: a plate with one corner cut, in the signal colour. It is the
-     only piece of ornament in the chrome, and it is the same shape as the
-     cut corner the house uses everywhere else. */
   .mark {
-    position: relative;
-    width: 12px;
-    height: 12px;
-    flex: none;
-    background: var(--color-accent);
-    clip-path: polygon(0 0, 100% 0, 100% 72%, 72% 100%, 0 100%);
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    background: var(--color-ink);
+    color: var(--color-panel);
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
   }
 
-  /* The folio: the sections, from the one list the rest of the site reads.
-     The links are flat and dim, and the current one is underlined, so the bar
-     reads as a list of places rather than as a row of buttons.
+  .mark::before {
+    content: "N";
+  }
 
-     Below the wide breakpoint the folio takes a row of its OWN, the full width
-     of the page, because a strip of nine links squeezed into the leftover
-     space beside a wordmark and two buttons is a forty-pixel slot on a phone,
-     and the reader cannot see that there is anything to scroll to. */
-  .folio {
+  .wordmark .word {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .desk-nav {
+    grid-area: 2 / 1 / 2 / 4;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
     min-width: 0;
-    order: 3;
-    flex: 1 0 100%;
   }
 
-  @media (min-width: 1280px) {
-    .folio {
-      order: 0;
-      flex: 1 1 auto;
+  @media (min-width: 1024px) {
+    .desk-nav {
+      display: flex;
     }
   }
 
-  .folio ul {
-    list-style: none;
-  }
-
-  .folio-link {
-    position: relative;
-    display: flex;
+  .nav-link {
+    display: inline-flex;
     align-items: center;
+    gap: 0.3rem;
     min-height: 44px;
-    padding: 0 var(--space-2);
-    font-family: var(--font-mono);
-    font-size: 12px;
+    padding-inline: 0.7rem;
+    color: var(--color-muted);
+    font-size: 13.5px;
     font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    text-decoration: none;
     white-space: nowrap;
-    color: var(--color-faint);
-    transition: color 200ms var(--ease-out);
+    position: relative;
+    transition: color var(--dur-1) var(--ease-out);
   }
 
-  .folio-link:hover {
+  .nav-link:hover,
+  .nav-link[aria-current] {
     color: var(--color-ink);
   }
 
-  /* The current section is carried by a drawn rule, not by a hue: the underline
-     is already there for the section the reader is inside. Hover does *not*
-     draw it — one signal per element, so the pointer can only darken the label
-     and the rule can only mean "you are here". */
-  .folio-link::after {
+  .nav-link[aria-current]::after {
     content: "";
     position: absolute;
-    left: var(--space-2);
-    right: var(--space-2);
-    bottom: 6px;
-    height: 2px;
+    left: 0.7rem;
+    right: 0.7rem;
+    bottom: 4px;
+    height: 1.5px;
+    border-radius: 2px;
     background: var(--color-accent);
-    transform: scaleX(0);
-    transform-origin: left center;
-    transition: transform 260ms var(--ease-out);
   }
 
-  .folio-link[aria-current] {
+  .menu-trigger {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: var(--font-sans);
+  }
+
+  .chev {
+    color: var(--color-faint);
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .menu-trigger[aria-expanded="true"] .chev {
+    transform: rotate(180deg);
+    color: var(--color-accent);
+  }
+
+  .courses-menu {
+    position: relative;
+  }
+
+  .courses-panel {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    width: 420px;
+    transform: translateX(-50%);
+    background: var(--color-panel);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-3);
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-2) var(--space-3) var(--space-3);
+  }
+
+  .panel-head .stamp {
+    color: var(--color-faint);
+  }
+
+  .panel-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .courses-panel ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  .courses-panel li a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0.55rem 0.65rem;
+    min-height: 54px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
     color: var(--color-ink);
+    transition: background-color var(--dur-1) var(--ease-out);
   }
 
-  .folio-link[aria-current]::after {
-    transform: scaleX(1);
+  .courses-panel li a:hover {
+    background: var(--color-raised);
   }
 
-  /* The controls sit at the right and never move. */
-  .actions {
+  .panel-copy {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .course-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .course-meta {
+    font-size: 10.5px;
+    color: var(--color-faint);
+    white-space: nowrap;
+  }
+
+  .panel-arrow {
+    margin-left: auto;
+    color: var(--color-faint);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    transition: transform var(--dur-1) var(--ease-out);
+  }
+
+  .courses-panel li a:hover .panel-arrow {
+    transform: translateX(3px);
+    color: var(--color-accent);
+  }
+
+  .nav-actions {
+    grid-area: 1 / 3;
+    justify-self: end;
     display: flex;
     align-items: center;
     gap: var(--space-2);
     flex: none;
+    min-width: 0;
+  }
+
+  .signin {
+    display: none;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 0.6rem;
+    color: var(--color-muted);
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  /* The link joins the masthead at 768px rather than 640px: between the two,
+     the third column's share is barely wider than the action, and the name
+     would end where the link begins. Below this the sheet carries it. */
+  @media (min-width: 768px) {
+    .signin {
+      display: inline-flex;
+    }
+  }
+
+  .signin:hover {
+    color: var(--color-ink);
+  }
+
+  .account {
+    display: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  @media (min-width: 640px) {
+    .account {
+      display: grid;
+    }
+  }
+
+  .account:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .nav-cta {
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .nav-cta {
+      display: inline-flex;
+    }
+  }
+
+  .cta-arrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    transition: transform var(--dur-1) var(--ease-out);
+  }
+
+  .nav-cta:hover .cta-arrow {
+    transform: translateX(2px);
+  }
+
+  .menu-button {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 0 10px;
+    background: transparent;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  @media (min-width: 1024px) {
+    .menu-button {
+      display: none;
+    }
+  }
+
+  .menu-rule {
+    display: block;
+    width: 100%;
+    height: 1.5px;
+    background: var(--color-ink);
+  }
+
+  .mobile-menu {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: var(--space-5);
+    border: 0;
+    background: var(--color-ground);
+    color: var(--color-ink);
+    overflow-y: auto;
+  }
+
+  .mobile-menu::backdrop {
+    background: color-mix(in srgb, var(--color-ink) 42%, transparent);
+  }
+
+  .mobile-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .close {
+    min-height: 44px;
+    padding-inline: var(--space-3);
+    background: transparent;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: var(--radius-chip);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .mobile-nav {
+    display: grid;
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .mobile-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 50px;
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-size: 23px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+  }
+
+  .mobile-nav a[aria-current] {
+    color: var(--color-accent);
+  }
+
+  .mobile-label {
+    margin-top: var(--space-5);
+    margin-bottom: var(--space-2);
+    color: var(--color-faint);
+  }
+
+  .mobile-courses {
+    list-style: none;
+    margin: 0 0 var(--space-5);
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .mobile-courses a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: 56px;
+    border-bottom: 1px solid var(--color-rule);
+    font-size: 14px;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .mobile-course {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-weight: 500;
+  }
+
+  .mobile-courses .num {
+    font-size: 11px;
+    color: var(--color-faint);
+  }
+
+  .mobile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-top: var(--space-2);
   }
 </style>

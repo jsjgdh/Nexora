@@ -13,6 +13,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { sitemapPaths } from "../src/lib/seo";
+import { COURSE_PAGES } from "../src/lib/content/courses";
 import * as COPY from "../src/lib/content/site";
 import * as RELEASE from "../src/lib/release";
 import * as LEGAL from "../src/lib/legal";
@@ -44,7 +45,7 @@ const srcUrl = (rel: string): URL => new URL(`../src/${rel}`, import.meta.url);
  * instead, so any count can be checked.
  */
 
-const srcFiles: string[] = []; const declaredFontFamilies = [...new Set([...readFileSync(new URL("../src/lib/fonts.css", import.meta.url), "utf8").matchAll(/font-family:\s*'([^']+)'/g)].map((m) => m[1]!))];
+const srcFiles: string[] = []; const declaredFontFamilies = [...new Set([...readFileSync(new URL("../src/lib/fonts.css", import.meta.url), "utf8").matchAll(/font-family:\s*["']([^"']+)["']/g)].map((m) => m[1]!))];
 {
   const walkSrc = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -94,8 +95,9 @@ console.log("== the front door describes the real product ==");
   );
   ok(
     "every call on the page opens the download",
-    landing.includes('const downloadHref = "/download"') &&
-      landing.split("href={downloadHref}").length - 1 >= 3
+    landing.includes('href="/download"') &&
+      landing.split('href="/download"').length - 1 >= 2 &&
+      landing.includes("{release.label}")
   );
   ok(
     "the page states that the free phases ship inside the download",
@@ -170,11 +172,30 @@ console.log("== the front door describes the real product ==");
     ok(`no route references ${banned}`, offenders.length === 0);
   }
 
-  // The crawler contract matches the emitted surface exactly: the front door
-  // plus the legal documents, no mission URLs, no classroom entries.
+  // The crawler contract matches the emitted surface exactly: the front door,
+  // the shelf, one page per reader-facing course, and the legal documents.
+  // The expected course list is typed rather than derived so a course that
+  // silently disappears from COURSE_PAGES fails here instead of shrinking the
+  // sitemap on its own.
+  const expectedCoursePaths = [
+    "/courses/task-manager",
+    "/courses/go",
+    "/courses/rust",
+    "/courses/sql",
+    "/courses/zig",
+    "/courses/ocaml",
+    "/courses/api",
+  ];
+  ok(
+    "the sitemap carries every reader-facing course",
+    expectedCoursePaths.every((p) => sitemapPaths().includes(p)) &&
+      COURSE_PAGES.map((c) => `/courses/${c.slug}`).sort().join() ===
+        expectedCoursePaths.slice().sort().join()
+  );
+
   const paths = sitemapPaths();
   ok(
-    "the sitemap is exactly the public pages and the legal documents",
+    "the sitemap is exactly the public pages, the courses and the legal documents",
     JSON.stringify([...paths].sort()) ===
       JSON.stringify(
         [
@@ -185,6 +206,7 @@ console.log("== the front door describes the real product ==");
           "/accessibility",
           "/cookies",
           "/courses",
+          ...expectedCoursePaths,
           "/download",
           "/employers",
           "/teach",
@@ -467,22 +489,29 @@ console.log("== the front door describes the real product ==");
 
 console.log("\n== identity and billing: one token boundary, one checkout path ==");
 {
-  // Phase 3 + 6.2. Clerk and Dodo join through narrow, named doors: the only
-  // module that imports clerk-js is lib/clerk.ts, the only page that mounts
-  // it is /auth, everything else reads session.token, every checkout starts
-  // in lib/billing.ts.
-  const withClerkJs = srcFiles.filter((f) => readFileSync(f, "utf8").includes("@clerk/clerk-js"));
-  ok(
-    "clerk-js is imported in exactly one module",
-    withClerkJs.length === 1 && withClerkJs[0].endsWith("lib/clerk.ts")
-  );
-  const mountingClerk = srcFiles.filter(
-    (f) => f.endsWith(".svelte") && readFileSync(f, "utf8").includes("$lib/clerk")
+  // Phase 3 + 6.2. Kinde and Dodo join through narrow, named doors: the Kinde
+  // SDK is imported only by the server boundary (the hook, the callback route
+  // and the server helper), every component reads session.token, and every
+  // checkout starts in lib/billing.ts.
+  const normalized = (f: string) => f.replaceAll("\\", "/");
+  const withKinde = srcFiles.filter((f) =>
+    readFileSync(f, "utf8").includes("@kinde-oss/kinde-auth-sveltekit")
   );
   ok(
-    "and mounted by exactly one page",
-    mountingClerk.length === 1 && mountingClerk[0].endsWith("routes/auth/+page.svelte")
+    "the Kinde SDK is imported only by the server boundary",
+    withKinde.length === 3 &&
+      withKinde.every((f) => {
+        const path = normalized(f);
+        return (
+          path.endsWith("/src/hooks.server.ts") ||
+          path.endsWith("/src/lib/server/kinde.ts") ||
+          path.endsWith("/src/routes/api/auth/[...kindeAuth]/+server.ts")
+        );
+      }),
+    withKinde.map(normalized).join("\n")
   );
+  const clerkRefs = srcFiles.filter((f) => /clerk/i.test(readFileSync(f, "utf8")));
+  ok("no Clerk import or reference remains in src", clerkRefs.length === 0, clerkRefs.map(normalized).join("\n"));
   const checkoutCallers = srcFiles.filter((f) => readFileSync(f, "utf8").includes("session.checkout("));
   ok(
     "every checkout starts in the one billing helper",
@@ -491,12 +520,36 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
 
   const sessionSrc = readFileSync(new URL("../src/lib/session.svelte.ts", import.meta.url), "utf8");
   ok(
-    "the session accepts an external token, provisions the profile row, and refreshes through a provider",
-    sessionSrc.includes("useExternalToken") &&
-      sessionSrc.includes("linkClerkProfile") &&
-      sessionSrc.includes("setTokenProvider") &&
-      sessionSrc.includes("resolveToken") &&
-      sessionSrc.includes("/api/auth/link")
+    "the session exchanges Kinde's cookie session at the app's own server",
+    sessionSrc.includes("KINDE_SESSION_PATH") &&
+      sessionSrc.includes("KINDE_LOGOUT_PATH") &&
+      sessionSrc.includes("authError") &&
+      sessionSrc.includes("resolveToken")
+  );
+  const kindeServerSrc = readFileSync(new URL("../src/lib/server/kinde.ts", import.meta.url), "utf8");
+  ok(
+    "and the server helper verifies the session, matches the subject, and provisions the profile",
+    kindeServerSrc.includes("kindeAuthClient.getToken") &&
+      kindeServerSrc.includes("kindeAuthClient.getUser") &&
+      kindeServerSrc.includes("claims?.sub !== id") &&
+      kindeServerSrc.includes("/api/auth/link")
+  );
+  ok(
+    "the Kinde callback, session bridge and completion route all exist",
+    existsSync(new URL("../src/routes/api/auth/[...kindeAuth]/+server.ts", import.meta.url)) &&
+      existsSync(new URL("../src/routes/auth/session/kinde/+server.ts", import.meta.url)) &&
+      existsSync(new URL("../src/routes/auth/session/kinde/logout/+server.ts", import.meta.url)) &&
+      existsSync(new URL("../src/routes/auth/complete/+server.ts", import.meta.url))
+  );
+  ok(
+    "provider sign-in preselects a configured connection and nothing unconfigured gets a route",
+    existsSync(new URL("../src/routes/auth/provider/[provider]/+server.ts", import.meta.url)) &&
+      existsSync(new URL("../src/routes/auth/+page.server.ts", import.meta.url)) &&
+      kindeServerSrc.includes("KINDE_CONNECTION_GOOGLE") &&
+      kindeServerSrc.includes("KINDE_CONNECTION_GITHUB") &&
+      kindeServerSrc.includes("KINDE_CONNECTION_DISCORD") &&
+      kindeServerSrc.includes("authUrlParams: { connection_id: connectionId }") &&
+      kindeServerSrc.includes("isKindeSocialProvider")
   );
 
   // L-3 + M-1. A session is two credentials with two homes: a minutes-long
@@ -603,67 +656,66 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       !headerSrc.includes("recommend(")
   );
 
-  /* The masthead. The chrome used to be a small wordmark, five inline links and a
-     button sharing one line — the shape every SaaS page has — plus a second,
-     narrow-screen copy of the same five links, which is two places for the
-     current-section marker to be wrong. It is now the shape the genre actually
-     has, and each part of that shape is here because something depends on it. */
+  /* The top edge. A masthead in two rows: the name and the action on the
+     first, the destinations beneath a full-bleed rule, closed by a double
+     rule that gains its second line on scroll. Courses is wider than a row,
+     so it is a real disclosure with a panel; the sheet below 1024px is a
+     native <dialog> carrying the same links and the same course list. Each
+     assertion names something a reader depends on. */
   ok(
-    "the masthead sets the paper's name at display size, and the way home is the word itself rather than a label",
-    headerSrc.includes('class="nameplate"') &&
-      /class="word display"/.test(headerSrc) &&
-      headerSrc.includes('<span class="sr-only">Home</span>') &&
-      // and the word is set in the display face at a display size, not in the
-      // reading face and not as a label
-      /\.word \{[^}]*font-size: clamp\(/.test(headerSrc)
+    "the wordmark is the way home and sets the name beside its mark",
+    headerSrc.includes('class="wordmark" aria-label="NEXORA, home"') &&
+      headerSrc.includes('<span class="mark" aria-hidden="true"></span>') &&
+      headerSrc.includes('<span class="word">{BRAND}</span>')
   );
   ok(
-    "the nameplate link is the width of the word, not an invisible home hotspot across the top of the page",
-    /\.nameplate\s*\{[^}]*display:\s*inline-flex/.test(headerSrc)
+    "the mark is drawn in CSS so the visible name matches the accessible name",
+    /\.mark::before\s*\{[^}]*content:\s*"N"/s.test(headerSrc)
   );
   ok(
-    "and it clears the thumb floor like every other control in the chrome",
-    /\.nameplate\s*\{[^}]*min-height:\s*44px/.test(headerSrc)
+    "the wordmark clears the thumb floor without stretching into a page-wide hotspot",
+    /\.wordmark\s*\{[^}]*display:\s*inline-flex[^}]*min-height:\s*44px/s.test(headerSrc)
   );
   ok(
-    "the status reading moved to the title block, where a fact can be checked",
-    // The bar carries the nameplate, the sections and the controls. The
-    // reading about the product's state is a fact, and the footer's title
-    // block is where the facts about the product live.
-    !headerSrc.includes("MASTHEAD.status") &&
-      readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8").includes(
-        "MASTHEAD.status"
-      )
+    "the bar is one sticky masthead and gains its second rule on scroll rather than changing height",
+    /\.site-nav\s*\{[^}]*position:\s*sticky/s.test(headerSrc) &&
+      headerSrc.includes('data-scrolled={scrolled ? "true" : "false"}') &&
+      headerSrc.includes("IntersectionObserver")
   );
   ok(
-    "and the actions are 44px targets, not the 36px house stock",
-    !/min-h-\[3[0-9]px\]/.test(headerSrc) && headerSrc.includes("min-h-[44px]")
+    "every destination is a 44px target with a visible current marker",
+    /\.nav-link\s*\{[^}]*min-height:\s*44px/s.test(headerSrc) &&
+      headerSrc.includes("aria-current={isCurrent(item.href)") &&
+      headerSrc.includes(".nav-link[aria-current]::after")
   );
   ok(
-    "the sections are one folio for every width, not a desktop row plus a narrow-screen copy of it",
-    (headerSrc.match(/<nav /g) ?? []).length === 1 && headerSrc.includes("{#each NAV as item (item.href)}")
+    "the destination list is rendered once from NAV on desktop and once in the sheet, never hand-typed",
+    (headerSrc.match(/\{#each NAV as item \(item\.href\)\}/g) ?? []).length === 2
   );
   ok(
-    "the bar is one row: the nameplate, the folio and the controls, in that order",
-    headerSrc.indexOf('class="nameplate"') < headerSrc.indexOf('class="folio"') &&
-      headerSrc.indexOf('class="folio"') < headerSrc.indexOf('class="actions"')
+    "Courses is a real disclosure: button, expanded state, panel it controls",
+    headerSrc.includes('aria-expanded={menuOpen}') &&
+      headerSrc.includes('aria-controls="courses-panel"') &&
+      headerSrc.includes('id="courses-panel"') &&
+      headerSrc.includes('event.key === "Escape"')
   );
   ok(
-    "and the sticky layer is the bar itself, so the folio cannot unstick the moment the header ends",
-    /\.masthead\s*\{[^}]*position:\s*sticky/.test(headerSrc) &&
-      headerSrc.indexOf('class="folio"') < headerSrc.indexOf("</header>")
+    "the panel lists every reader-facing course from the one data source and closes on a link",
+    headerSrc.includes("{#each COURSE_PAGES as course (course.slug)}") &&
+      headerSrc.includes('onclick={() => (menuOpen = false)}')
   );
   ok(
-    "and the page dissolves into the bar rather than stopping at a rule",
-    /\.edge\s*\{[^}]*linear-gradient/.test(headerSrc)
+    "below 1024px the same links and courses open in a native dialog that can be closed three ways",
+    headerSrc.includes('<dialog') &&
+      headerSrc.includes("mobileDialog?.showModal()") &&
+      headerSrc.includes("onclose={() => (mobileOpen = false)}") &&
+      headerSrc.includes('class="close" onclick={closeMobile}') &&
+      headerSrc.includes("onclick={closeMobile}")
   );
   ok(
-    "a folio cell is a 44px thumb target at every width, the same as a pointer target",
-    /\.folio-link\s*\{[^}]*min-height:\s*44px/.test(headerSrc)
-  );
-  ok(
-    "the current section is marked from the one list the links come from, so a link added to NAV is marked without a second edit",
-    headerSrc.includes("aria-current={currentKind(item.href)}") && headerSrc.includes("NAV.filter")
+    "the menu button is a 44px control and the desktop action appears only where there is room",
+    /\.menu-button\s*\{[^}]*width:\s*44px[^}]*height:\s*44px/s.test(headerSrc) &&
+      /@media \(min-width: 1024px\)\s*\{\s*\.menu-button\s*\{\s*display:\s*none/.test(headerSrc)
   );
 
   /* A focus ring has to be there when focus lands. Tailwind's `transition-colors`
@@ -681,7 +733,7 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   ok(
     "and the shared action vocabulary names the properties it moves, for the same reason",
     readFileSync(new URL("../src/lib/ui.ts", import.meta.url), "utf8").includes(
-      "transition-[color,background-color,border-color,transform] duration-200"
+      "transition-[color,background-color,border-color,transform,box-shadow] duration-200"
     )
   );
 
@@ -693,8 +745,15 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       authSrc.includes("bcrypt-hashed")
   );
   ok(
-    "its Clerk branch mounts both forms and names both failure states",
-    authSrc.includes("mountClerkAuth") && authSrc.includes("two ways in") && authSrc.includes("sign-in is unreachable")
+    "its Kinde branch offers both doors and names the conflict and identity failures",
+    authSrc.includes("Continue with Kinde") &&
+      authSrc.includes("Create an account") &&
+      authSrc.includes("two ways in, one account each") &&
+      authSrc.includes("the two ends do not agree") &&
+      authSrc.includes("sign-in is unreachable") &&
+      authSrc.includes("/auth/provider/") &&
+      authSrc.includes("data.socialProviders") &&
+      !authSrc.includes("mountClerkAuth")
   );
 
   const pricingSrc = readFileSync(new URL("../src/routes/pricing/+page.svelte", import.meta.url), "utf8");
@@ -1113,6 +1172,7 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       COPY.BUILD_JOURNEY,
       COPY.COURSE_PATHS,
       COPY.RELEASE_NOTES,
+      COURSE_PAGES,
     ]);
     ok("the copy names the courses and never counts them", !courseCount.test(publicCopy));
     {
@@ -1134,25 +1194,33 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
       );
     ok("and no public page counts them either", !routeCopy.some((src) => courseCount.test(src)));
 
-    // 7. The homepage shows the courses by name and by depth, and does not
-    //    print what a phase costs. A phase row with a price on it is a
-    //    catalogue, and this page is not a catalogue.
-    const courseComponents = ["CourseLedger.svelte", "PhaseMatrix.svelte", "PhaseField.svelte"].map(
-      (name) => readFileSync(new URL(`../src/lib/components/${name}`, import.meta.url), "utf8")
+    // 7. The homepage shows the courses by name and by depth, and a phase's
+    //    tier is an entitlement word, never a price. A phase row with a price
+    //    on it is a catalogue, and this page is not a catalogue.
+    const courseCardSrc = readFileSync(
+      new URL("../src/lib/components/CourseCard.svelte", import.meta.url),
+      "utf8"
+    );
+    const phaseListSrc = readFileSync(
+      new URL("../src/lib/components/PhaseList.svelte", import.meta.url),
+      "utf8"
+    );
+    const homeSrc = readFileSync(
+      new URL("../src/routes/+page.svelte", import.meta.url),
+      "utf8"
     );
     ok(
-      "the homepage prints every course by name with its phase count",
-      courseComponents[0]!.includes("{course.title}") &&
-        courseComponents[0]!.includes("{course.phases.length} phases")
+      "the homepage prints every course by name with its phase and activity counts",
+      homeSrc.includes("languageCourses") &&
+        homeSrc.includes("<CourseCard") &&
+        courseCardSrc.includes("{course.title}") &&
+        courseCardSrc.includes("phases.length") &&
+        courseCardSrc.includes("activities")
     );
     ok(
-      "and no public course surface labels a phase with its tier",
-      !courseComponents.some((src) => /phase\[2\]|picked\.tier|<TierStamp/.test(src))
-    );
-    const fieldSrc = readFileSync(new URL("../src/lib/three/field.ts", import.meta.url), "utf8");
-    ok(
-      "and the field does not colour a point by what it costs",
-      !/tier === "free"/.test(fieldSrc)
+      "and a phase's tier is an entitlement word, never a price",
+      phaseListSrc.includes('{tier === "free" ? "Free" : "Pro"}') &&
+        !/\$[0-9]/.test(phaseListSrc)
     );
   }
 
@@ -1223,8 +1291,8 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
           campus !== undefined &&
           teams.dependsOn.length > 30 &&
           campus.dependsOn.length > 30 &&
-          teams.action.label === "Let's talk" &&
-          campus.action.label === "Let's talk" &&
+          teams.action.label.includes("Teams") &&
+          campus.action.label.includes("Campus") &&
           teams.action.href.startsWith("/") &&
           campus.action.href.startsWith("/")
       );
@@ -1349,7 +1417,7 @@ console.log("\n== identity and billing: one token boundary, one checkout path ==
   }
 }
 
-console.log("\n== the contrast floor is computed from the tokens, not promised in a comment ==");
+console.log("\n== the colour floor is computed from the OKLCH tokens, not promised in a comment ==");
 {
   // app.css states the floor in prose and DESIGN.md repeats it, but nothing
   // read the tokens back. These assertions keep both halves true: the table's
@@ -1357,57 +1425,110 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
   const css = readFileSync(new URL("../src/app.css", import.meta.url), "utf8");
   const themeStart = css.indexOf("@theme");
   const theme = css.slice(themeStart, css.indexOf("\n}", themeStart));
-  const tokens = new Map<string, string>();
-  for (const m of theme.matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})/g)) {
-    if (m[1] && m[2]) tokens.set(m[1], m[2].toLowerCase());
+  const rawTokens = new Map<string, string>();
+  for (const m of theme.matchAll(/--color-([a-z0-9-]+):\s*([^;]+);/g)) {
+    if (m[1] && m[2]) rawTokens.set(m[1], m[2].trim());
   }
-  const token = (name: string): string => {
-    const value = tokens.get(name);
+  const token = (name: string, depth = 0): string => {
+    const value = rawTokens.get(name);
     assert(value, `the theme declares --color-${name}`);
+    const alias = value.match(/^var\(--color-([a-z0-9-]+)\)$/);
+    if (alias && alias[1] && depth < 4) return token(alias[1], depth + 1);
     return value;
   };
-  const linear = (v: number): number => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  // OKLCH is the source of truth, so the measurement has to read it rather
+  // than a hand-maintained hex copy that could drift from the stylesheet.
+  type Rgb = [number, number, number];
+  const oklch = (value: string): { l: number; rgb: Rgb } => {
+    const m = value.match(/oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)/);
+    assert(m, `a colour token is an OKLCH value: ${value}`);
+    const l = Number(m[1]) / 100;
+    const c = Number(m[2]);
+    const h = (Number(m[3]) * Math.PI) / 180;
+    const a = c * Math.cos(h);
+    const b = c * Math.sin(h);
+    const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+    const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+    const s_ = l - 0.0894841775 * a - 1.291485548 * b;
+    const lc = l_ ** 3;
+    const mc = m_ ** 3;
+    const sc = s_ ** 3;
+    const rgb: Rgb = [
+      4.0767416621 * lc - 3.3077115913 * mc + 0.2309699292 * sc,
+      -1.2684380046 * lc + 2.6097574011 * mc - 0.3413193965 * sc,
+      -0.0041960863 * lc - 0.7034186147 * mc + 1.707614701 * sc,
+    ];
+    return { l, rgb: rgb.map((x) => Math.min(1, Math.max(0, x))) as Rgb };
   };
-  const luminance = (hex: string): number => {
-    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
-    return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+  const encode = (x: number): number =>
+    x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055;
+  const srgb = (value: string): Rgb => oklch(value).rgb.map(encode) as Rgb;
+  const toLinear = (x: number): number =>
+    x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+  const luminance = (value: string): number => {
+    const [r, g, b] = oklch(value).rgb;
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
   const ratio = (a: string, b: string): number => {
     const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
     return (hi + 0.05) / (lo + 0.05);
   };
+  const ratioRgb = (a: Rgb, b: Rgb): number => {
+    const lum = (v: Rgb): number =>
+      0.2126 * toLinear(v[0]) + 0.7152 * toLinear(v[1]) + 0.0722 * toLinear(v[2]);
+    const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number];
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  const mix = (a: Rgb, b: Rgb, part: number): Rgb =>
+    a.map((v, i) => v * part + b[i]! * (1 - part)) as Rgb;
+  const hexOf = (value: string): string =>
+    "#" +
+    srgb(value)
+      .map((x) => Math.round(x * 255).toString(16).padStart(2, "0"))
+      .join("");
   const round2 = (n: number): number => Math.round(n * 100) / 100;
+  const lightness = (name: string): number => oklch(token(name)).l;
 
-  // The four page surfaces plus the sheet: the artefact is a surface a visitor
-  // reads on, so it is held to the same floor as the rest of the page rather
-  // than trusted because it is white.
-  // The two families are measured separately, and the reason is arithmetic
-  // rather than taste: no colour can clear 4.5:1 against both a near-black and
-  // a near-white surface, so one shared palette could only ever be measured
-  // against one of them. The room has its own ink ramp, and the sheet has its
-  // own four inks — which is why the amber lamp is never used on the sheet,
-  // and why the sheet's verdict is printed in the paper's green and red
-  // rather than in the room's.
-  const surfaces = ["ground", "panel", "raised", "raised-2", "paper"];
-  const darkSurfaces = ["ground", "panel", "raised", "raised-2"];
-  const paperInks = ["paper-ink", "paper-muted", "pen", "pass"];
+  // Four surfaces a visitor reads on: paper, sheet, inset band and the deeper
+  // band. The screen is measured separately because it is its own room.
+  const surfaces = ["ground", "panel", "raised", "raised-2"];
   const svelteFiles = srcFiles.filter((f) => f.endsWith(".svelte"));
   const shortName = (f: string): string => f.slice(f.replace(/\\/g, "/").lastIndexOf("/") + 1);
 
   ok(
-    `the theme declares every surface and the ramp (${tokens.size} colour tokens)`,
-    tokens.size >= 15 &&
-      surfaces.every((s) => tokens.has(s)) &&
-      ["ink", "muted", "faint", "rule", "control", "accent", "accent-dim"].every((t) => tokens.has(t))
+    `the theme declares every surface, ink and state token (${rawTokens.size} colour tokens)`,
+    rawTokens.size >= 25 &&
+      surfaces.every((s) => rawTokens.has(s)) &&
+      [
+        "ink",
+        "muted",
+        "faint",
+        "rule",
+        "rule-strong",
+        "control",
+        "accent",
+        "accent-strong",
+        "on-accent",
+        "screen",
+        "screen-ink",
+        "screen-muted",
+        "pass",
+        "fail",
+      ].every((t) => rawTokens.has(t))
+  );
+  ok(
+    `the page is paper rather than pure white, and no surface is pure black (ground ${round2(lightness("ground") * 100)}%, ink ${round2(lightness("ink") * 100)}%)`,
+    lightness("ground") < 0.995 &&
+      lightness("ground") > 0.95 &&
+      lightness("ink") > 0.1 &&
+      [...rawTokens.keys()].every((name) => lightness(name) > 0.02)
   );
 
-  // Three families is the ceiling: one display face, one body face, and at most
-  // one outlier for a single typographic moment. A separate body sans used to be
-  // a fourth here, doing a job the display grotesque's own text cut already
-  // does. The font request is the other half of the claim — a family the page
-  // does not draw with is still a family the visitor downloads.
+  // Two families is the ceiling: one neo-grotesk carries display and body, and
+  // one mono carries data. A third face for "editorial" contrast would be a
+  // third download for a distinction the grade already makes. The font request
+  // is the other half of the claim — a family the page does not draw with is
+  // still a family the visitor downloads.
   const themeVars = new Map<string, string>();
   for (const m of theme.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)) {
     if (m[1] && m[2]) themeVars.set(m[1], m[2].trim());
@@ -1426,26 +1547,24 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
   ];
   const htmlSrc = readFileSync(new URL("../src/app.html", import.meta.url), "utf8");
   ok(
-    `the build uses three families and no more (${families.join(" + ")}), and they are served from this site`,
-    families.length === 3 &&
+    `the build uses two families and no more (${families.join(" + ")}), and they are served from this site`,
+    families.length === 2 &&
       declaredFontFamilies.length === families.length &&
       families.every((f) => declaredFontFamilies.includes(f)) && !htmlSrc.includes("fonts.googleapis") && !htmlSrc.includes("fonts.gstatic")
   );
 
-  // A pure white surface and a pure black ground are the two values every screen
-  // already has. Beside warm newsprint they read as flat and synthetic rather
-  // than as stock, so neither belongs in the palette.
-  // Prose is stripped before the scan: the note explaining why there is no
-  // #ffffff is allowed to name it, and a rule that cannot be explained is a rule
-  // nobody can safely change.
+  // A pure black ground is the value every screen already has, and it is the
+  // line this world does not cross. A white sheet is allowed, but only as a
+  // sheet laid on the paper ground; no component may reach for the raw
+  // utilities and bypass the token table. Prose is stripped first, because the
+  // notes are allowed to name the values the rules refuse.
   const stripComments = (src: string): string =>
     src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/<!--[\s\S]*?-->/g, "");
   const cssRules = stripComments(css);
   const svelteRules = svelteFiles.map((f) => stripComments(readFileSync(f, "utf8")));
   ok(
-    "no surface is a value the screen already had: no pure white, no pure black",
-    !/#ffffff\b/i.test(cssRules) &&
-      !/#000000\b/i.test(cssRules) &&
+    "no ground is pure black, and no component reaches past the tokens for white or black",
+    !/#000000\b/i.test(cssRules) &&
       !svelteRules.some((src) => /\b(?:bg|text|border)-(?:white|black)\b/.test(src))
   );
 
@@ -1458,67 +1577,95 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
     shortControls.length === 0
   );
 
-  const rampPairs = ["ink", "muted", "faint"].flatMap((t) => darkSurfaces.map((s) => ({ t, s, r: ratio(token(t), token(s)) })));
+  const rampPairs = ["ink", "muted", "faint"].flatMap((t) =>
+    surfaces.map((s) => ({ t, s, r: ratio(token(t), token(s)) }))
+  );
   const tightestRamp = rampPairs.reduce((a, b) => (b.r < a.r ? b : a));
   ok(
     `every text role clears 4.5:1 on every surface (tightest: ${tightestRamp.t} on ${tightestRamp.s} at ${round2(tightestRamp.r)}:1)`,
     rampPairs.every((p) => p.r >= 4.5)
   );
 
-  const stateText = ["accent", "added", "review", "removed", "approved"];
-  const statePairs = stateText.flatMap((t) => darkSurfaces.map((s) => ({ t, s, r: ratio(token(t), token(s)) })));
+  const stateText = ["accent", "pass", "fail", "removed", "review", "approved"];
+  const statePairs = stateText.flatMap((t) =>
+    surfaces.map((s) => ({ t, s, r: ratio(token(t), token(s)) }))
+  );
   const tightestState = statePairs.reduce((a, b) => (b.r < a.r ? b : a));
   ok(
     `the state colours are readable as words, not only as tints (tightest: ${tightestState.t} on ${tightestState.s} at ${round2(tightestState.r)}:1)`,
     statePairs.every((p) => p.r >= 4.5)
   );
 
+  // The cobalt action is only useful if its label is readable and the same
+  // cobalt is readable as a link on the page. Both halves are measured.
   ok(
-    `accent-dim is held to 3:1 because it is only ever a border or a focus ring (${darkSurfaces.map((s) => round2(ratio(token("accent-dim"), token(s)))).join(", ")})`,
-    darkSurfaces.every((s) => ratio(token("accent-dim"), token(s)) >= 3) &&
-      srcFiles.every((f) => !readFileSync(f, "utf8").includes("text-accent-dim"))
+    `the action hue carries its own label (${round2(ratio(token("on-accent"), token("accent")))}:1) and reads as text on the page (${round2(ratio(token("accent"), token("panel")))}:1)`,
+    ratio(token("on-accent"), token("accent")) >= 4.5 &&
+      ratio(token("accent"), token("panel")) >= 4.5
+  );
+
+  // The product window is the one dark plate. It has its own two inks and
+  // nothing from the page ramp may be borrowed inside it.
+  ok(
+    `the screen's own inks are readable on the screen (${round2(ratio(token("screen-ink"), token("screen")))}:1 and ${round2(ratio(token("screen-muted"), token("screen")))}:1)`,
+    ratio(token("screen-ink"), token("screen")) >= 4.5 &&
+      ratio(token("screen-muted"), token("screen")) >= 4.5
+  );
+
+  // Course colours identify a language; they do not set running text and they
+  // never paint an action. They travel through `--course` into the mark and
+  // the tag, which mix in enough ink to clear the reading floor.
+  const courseNames = ["go", "rust", "zig", "ocaml", "sql", "api", "script"];
+  // Task Manager's identity token is named for the script it is written in,
+  // not for the course; the mapping is the one in app.css.
+  const accentToken = (accent: string): string => (accent === "task-manager" ? "script" : accent);
+  const courseUtility = new RegExp(`\\b(?:text|bg|border)-(${courseNames.join("|")})\\b`);
+  const courseOffenders = srcFiles.filter((f) => courseUtility.test(readFileSync(f, "utf8")));
+  ok(
+    "a course colour is identity, not an action or a text utility",
+    courseOffenders.length === 0 &&
+      COURSE_PAGES.every((course) => courseNames.includes(accentToken(course.accent)))
+  );
+  const panelRgb = srgb(token("panel"));
+  const inkRgb = srgb(token("ink"));
+  const coursePairs = courseNames.map((name) => {
+    const colour = srgb(token(name));
+    const tint = mix(colour, panelRgb, 0.15);
+    const text = mix(colour, inkRgb, 0.62);
+    return { name, r: ratioRgb(text, tint) };
+  });
+  const tightestCourse = coursePairs.reduce((a, b) => (b.r < a.r ? b : a));
+  ok(
+    `a course mark and its tag stay readable (tightest: ${tightestCourse.name} at ${round2(tightestCourse.r)}:1)`,
+    coursePairs.every((p) => p.r >= 4.5)
   );
 
   // WCAG 1.4.11: whatever identifies a form field has to clear 3:1 against its
-  // neighbours. Fields use their own token — darkest grey that clears 3:1 on
-  // all four surfaces.
+  // neighbours. Fields use their own token — the darkest grey that clears 3:1
+  // on every surface — either inline or through the shared field class, whose
+  // border is asserted to read the same token.
   const fieldFiles = svelteFiles.filter((f) => {
     const src = readFileSync(f, "utf8");
     return /<input[^>]*type="(text|email|password)"/.test(src) || /<input(?![^>]*type=)/.test(src);
   });
+  const usesFieldToken = (src: string): boolean =>
+    src.includes("border-control") || /field-(?:input|select|textarea)/.test(src);
   ok(
-    `a field's boundary is not decoration: ${fieldFiles.length} files with text fields each carry border-control`,
-    fieldFiles.length >= 1 && fieldFiles.every((f) => readFileSync(f, "utf8").includes("border-control"))
+    `a field's boundary is not decoration: ${fieldFiles.length} files with text fields each name the field token`,
+    fieldFiles.length >= 1 && fieldFiles.every((f) => usesFieldToken(readFileSync(f, "utf8"))) &&
+      /\.field-input[^{]*\{[^}]*border:\s*1px solid var\(--color-control\)/s.test(css)
   );
-  const controlRatios = darkSurfaces.map((s) => ratio(token("control"), token(s)));
+  const controlRatios = surfaces.map((s) => ratio(token("control"), token(s)));
   ok(
     `and that boundary clears 3:1 everywhere it can sit (${controlRatios.map(round2).join(", ")}:1)`,
-    controlRatios.every((r) => r >= 3) && ratio(token("control"), token("raised")) > ratio(token("rule"), token("raised"))
-  );
-
-  // The sheet's own ink set, measured against the sheet. This is the half of
-  // the palette the room's ramp cannot reach: the sheet is the one light
-  // surface on the page, and the amber lamp is unreadable on it.
-  const paperRatios = paperInks.map((t) => ({ t, r: ratio(token(t), token("paper")) }));
-  const tightestPaper = paperRatios.reduce((a, b) => (b.r < a.r ? b : a));
-  ok(
-    `every ink on the sheet clears 4.5:1 on the sheet (tightest: ${tightestPaper.t} at ${round2(tightestPaper.r)}:1)`,
-    paperRatios.every((p) => p.r >= 4.5)
-  );
-  // And the room's lamps never land on the sheet, where the amber one is a
-  // 1.6:1 smear. The receipt is the only object allowed on the paper, so the
-  // rule can be checked there rather than argued about everywhere.
-  ok(
-    "the sheet never borrows the room's lamps",
-    !/\b(text|bg|border)-(accent|added|removed|review|approved)\b/.test(
-      readFileSync(new URL("../src/lib/components/Receipt.svelte", import.meta.url), "utf8")
-    )
+    controlRatios.every((r) => r >= 3) &&
+      ratio(token("control"), token("raised")) > ratio(token("rule"), token("raised"))
   );
 
   ok(
-    "the focus ring is one accent hairline, and accent clears 3:1 on every surface it is drawn on",
-    /:focus-visible\s*\{[^}]*outline:\s*1px solid var\(--color-accent\)/.test(css) &&
-      darkSurfaces.every((s) => ratio(token("accent"), token(s)) >= 3)
+    "the focus ring is the 2px cobalt outline, and cobalt clears 3:1 on every surface it is drawn on",
+    /:focus-visible\s*\{[^}]*outline:\s*2px solid var\(--color-accent\)/.test(css) &&
+      surfaces.every((s) => ratio(token("accent"), token(s)) >= 3)
   );
 
   // The probe cannot prove this one from the outside: a tab that is not the
@@ -1552,9 +1699,9 @@ console.log("\n== the contrast floor is computed from the tokens, not promised i
     hexOffenders.length === 0
   );
   ok(
-    "the one literal that is not a class — the browser chrome — paints the same ground as the page",
+    `the one literal that is not a class — the browser chrome — paints the same ground as the page (${hexOf(token("ground"))})`,
     readFileSync(new URL("../src/routes/+layout.svelte", import.meta.url), "utf8").includes(
-      `<meta name="theme-color" content="${token("ground")}" />`
+      `<meta name="theme-color" content="${hexOf(token("ground"))}" />`
     )
   );
 
@@ -1658,9 +1805,15 @@ console.log("\n== a five-minute access token does not end a session: the renewal
   );
   ok(
     "and names no browser fallback when no build is published — the IDE is the only way to learn",
-    downloadSrc.includes("not published yet") &&
+    // The download link lives inside the available branch, and the other
+    // branch offers the launch list plus the curriculum, never a browser
+    // player that does not exist.
+    downloadSrc.includes("Not published yet") &&
+      downloadSrc.includes("<LaunchList") &&
       !downloadSrc.includes("Start in the browser") &&
-      downloadSrc.includes('href="/pricing"')
+      /#if available[\s\S]*href=\{release\.downloadUrl\}[\s\S]*\{:else\}[\s\S]*<LaunchList/.test(
+        downloadSrc
+      )
   );
   ok(
     "the real link comes from the configured URL, never a placeholder href",
@@ -1886,9 +2039,10 @@ console.log("\n== the design is held to the same rules as the product ==");
   // to be on the page rather than only in the pitch.
   ok(
     "the page states where the verdicts stop being certain",
-    landingSrc.includes("DISCLOSURE") &&
+    component("VerificationCard.svelte").includes("DISCLOSURE") &&
       COPY.DISCLOSURE.rows.length === 2 &&
-      COPY.DISCLOSURE.rows.some((r) => r.kind === "self")
+      COPY.DISCLOSURE.rows.some((r) => r.kind === "self") &&
+      COPY.DISCLOSURE.rows.some((r) => r.kind === "recomputed")
   );
 
   // Reduced motion is one decision, not four. The block has to settle every
@@ -1896,23 +2050,31 @@ console.log("\n== the design is held to the same rules as the product ==");
   // asked it not to.
   const reducedBlock = css.slice(css.lastIndexOf("prefers-reduced-motion: reduce"));
   ok(
-    "every motion primitive is settled, and the sheet feed collapses, under reduced motion",
+    "every reveal settles under reduced motion, including the staggered card grid",
     reducedBlock.includes(".line-mask > span") &&
       reducedBlock.includes(".fade-up") &&
       reducedBlock.includes(".draw") &&
-      reducedBlock.includes(".feed")
+      reducedBlock.includes(".feed") &&
+      reducedBlock.includes(".reveal-item")
   );
 
   // Nothing rolls its own motion check: one module owns the decision.
+  const motionUsers = srcFiles.filter((f) => {
+    if (!f.endsWith(".svelte")) return false;
+    const src = readFileSync(f, "utf8");
+    return /use:inView|inViewStagger|reduced\(\)/.test(src);
+  });
   ok(
-    "every animated component asks the one motion module rather than testing the media query itself",
-    ["Headline.svelte", "Ticker.svelte", "ScrollRail.svelte", "ProofRun.svelte", "ActionLink.svelte", "DeviceCode.svelte"].every(
-      (name) => component(name).includes("$lib/motion")
-    ) &&
-      !srcFiles.some(
-        (f) =>
-          f.endsWith(".svelte") && readFileSync(f, "utf8").includes("prefers-reduced-motion: reduce")
-      )
+    `every animated surface asks the one motion module (${motionUsers.length} files)`,
+    motionUsers.every((f) => readFileSync(f, "utf8").includes("$lib/motion")) &&
+      // A component may settle its own CSS transition in a media query; what
+      // it may not do is make the JavaScript decision itself.
+      !srcFiles.some((f) => {
+        if (!f.endsWith(".svelte") && !f.endsWith(".ts")) return false;
+        if (f.endsWith("motion.ts")) return false;
+        const code = readFileSync(f, "utf8").replace(/<style[\s\S]*?<\/style>/g, "");
+        return /matchMedia\(\s*["']\(prefers-reduced-motion/.test(code);
+      })
   );
 
   // The page has one orchestrated entrance, and the rest is structure.
@@ -1924,7 +2086,7 @@ console.log("\n== the design is held to the same rules as the product ==");
   {
     const sectionHead = component("SectionHead.svelte");
     const reveals = srcFiles.filter((f) => {
-      if (!f.endsWith(".svelte")) return false;
+      if (!f.endsWith(".svelte") || !f.includes("/routes/")) return false;
       const src = readFileSync(f, "utf8");
       return /use:inView\b/.test(src) || /use:inViewStagger\b/.test(src);
     });
@@ -1934,52 +2096,25 @@ console.log("\n== the design is held to the same rules as the product ==");
     );
     ok(
       "and the motion on the page is a budget, not a habit",
-      reveals.length <= 10,
+      reveals.length <= 4,
       `${reveals.length} components reveal on scroll: ${reveals
         .map((f) => f.split("/").pop())
         .join(", ")}`
     );
   }
 
-  // The bar's edge fades; it does not grow. A height transition is a layout
-  // transition, and the bar sits at the top of every page.
   {
-    const chrome = readFileSync(new URL("../src/lib/components/Header.svelte", import.meta.url), "utf8");
-    const edgeRule = /\.edge\s*\{([\s\S]*?)\}/.exec(chrome)?.[1] ?? "";
-    ok(
-      "the bar's edge fades rather than growing, because a height transition is a layout transition",
-      /height:\s*\d/.test(edgeRule) &&
-        /transition:\s*opacity/.test(edgeRule) &&
-        !/transition:[^;]*height/.test(chrome)
-    );
-
-    // The folio is a row of its own below the wide breakpoint. Squeezed into
-    // the space beside a wordmark and two buttons, it was forty pixels wide
-    // on a phone, and five of the site's destinations were invisible.
-    ok(
-      "the folio takes a row of its own below the wide breakpoint, so no destination is squeezed out of sight",
-      /\.folio\s*\{[^}]*flex:\s*1 0 100%/.test(chrome) &&
-        /@media \(min-width: 1280px\)/.test(chrome)
-    );
-  }
-
-  {
-    // The faces the first screen is set in are preloaded, so the download
-    // starts with the stylesheet instead of after the browser has parsed the
-    // CSS. The italic is the poster's alone, so the page that has a poster
-    // preloads it and the pages that do not are not made to pay for it.
+    // The typeface every page is set in is preloaded, and the mono is not:
+    // it sets readings, and a reading below the fold should not compete with
+    // the statement. One display face, one body cut, one data face to fetch.
     const appHtml = readFileSync(new URL("../src/app.html", import.meta.url), "utf8");
-    const landingHtml = readFileSync(new URL("../src/routes/+page.svelte", import.meta.url), "utf8");
     ok(
-      "the typefaces every page is set in are preloaded",
+      "the typeface the first screen is set in is preloaded, and only that one",
       appHtml.includes('rel="preload"') &&
-        appHtml.includes("/fonts/archivo-normal-1.woff2") &&
-        appHtml.includes("/fonts/newsreader-normal-1.woff2")
-    );
-    ok(
-      "and the poster's own italic is preloaded by the poster, not by every page",
-      landingHtml.includes("/fonts/newsreader-italic-0.woff2") &&
-        !appHtml.includes("/fonts/newsreader-italic-0.woff2")
+        appHtml.includes("/fonts/instrument-sans-latin.woff2") &&
+        !appHtml.includes("/fonts/jetbrains-mono") &&
+        !appHtml.includes("/fonts/archivo") &&
+        !appHtml.includes("/fonts/newsreader")
     );
   }
 
@@ -1994,73 +2129,85 @@ console.log("\n== the design is held to the same rules as the product ==");
       !srcFiles.some((f) => /cursor:\s*(none|url\()/.test(readFileSync(f, "utf8")))
   );
 
-  // The press's textures are drawn, not downloaded: the halftone ground and
-  // the perforated edge exist as gradients in the stylesheet, and no component
-  // loads a raster asset. A texture file is the one thing a press world would
-  // reach for and never need.
+  // The imagery is the product, not a stock photograph and not a invented
+  // screenshot. There is no raster asset in the marketing surface, no 3D scene,
+  // and no redrawn browser chrome: the window, the transcript and the receipt
+  // are markup around real data.
+  const packageJson = readFileSync(new URL("../package.json", import.meta.url), "utf8");
   ok(
-    "the bench is drawn, not downloaded — its textures are gradients, not images",
-    /\.plot\s*\{/.test(css) &&
-      /\.scale\s*\{/.test(css) &&
-      css.includes("repeating-linear-gradient") &&
-      !srcFiles.some(
-        (f) => f.endsWith(".svelte") && /\.(png|jpe?g|webp|avif)\b/.test(readFileSync(f, "utf8"))
-      )
+    "the imagery is the product: no raster asset, no 3D scene, no stock photography",
+    !srcFiles.some(
+      (f) => f.endsWith(".svelte") && /\.(png|jpe?g|webp|avif|gif)\b/.test(readFileSync(f, "utf8"))
+    ) &&
+      !srcFiles.some((f) => /from "three"|from 'three'/.test(readFileSync(f, "utf8"))) &&
+      !/"three"/.test(packageJson)
   );
 
-  // The craft floor's one absolute ban: nothing carries a kicker or an eyebrow
-  // above a heading. Asserted on the class and the prop rather than the word,
-  // so the prose explaining the ban cannot trip it.
-  const eyebrowOffenders = srcFiles.filter((f) =>
-    /class="eyebrow|eyebrow=\{|\seyebrow=/.test(readFileSync(f, "utf8"))
+  // An eyebrow is a label on a course, not a pattern on every section. The
+  // front door and the shelf have none; a course page uses one for the
+  // language and one for a track, where the word is information.
+  const eyebrowCount = (src: string): number => (src.match(/class="eyebrow/g) ?? []).length;
+  const shelfSrc = readFileSync(new URL("../src/routes/courses/+page.svelte", import.meta.url), "utf8");
+  const coursePageSrc = readFileSync(
+    new URL("../src/routes/courses/[slug]/+page.svelte", import.meta.url),
+    "utf8"
+  );
+  const eyebrowOffenders = srcFiles.filter(
+    (f) =>
+      f.endsWith(".svelte") &&
+      !f.includes("/courses/[slug]/") &&
+      /class="eyebrow/.test(readFileSync(f, "utf8"))
   );
   ok(
-    `no section or page carries an eyebrow above its heading (${srcFiles.length} files scanned)`,
-    eyebrowOffenders.length === 0,
-    eyebrowOffenders.map((f) => f.slice(f.replace(/\\/g, "/").lastIndexOf("/") + 1)).join(", ")
+    "an eyebrow labels a course identity, never a marketing section",
+    eyebrowCount(landingSrc) === 0 &&
+      eyebrowCount(shelfSrc) === 0 &&
+      eyebrowOffenders.length === 0 &&
+      eyebrowCount(coursePageSrc) > 0 &&
+      coursePageSrc.includes('class="eyebrow">{course.language}'),
+    eyebrowOffenders.map((f) => f.split("/src/").pop()).join(", ")
   );
 
+  // Every receipt shown to a reader says what it is. There are two: the home
+  // proof card and the course record strip. Each one labels itself with the
+  // shared sentence, so neither can read as the reader's own record.
+  const receiptUsers = srcFiles.filter((f) => {
+    if (!f.endsWith(".svelte")) return false;
+    const src = readFileSync(f, "utf8");
+    return src.includes("RECEIPT") && /receipt/i.test(src.replace(/<style[\s\S]*?<\/style>/g, ""));
+  });
   ok(
-    "no decorative overlay is exposed to a screen reader",
-    ["ScrollRail.svelte"].every((name) => component(name).includes("aria-hidden"))
+    `every receipt illustration is labelled as one (${receiptUsers.length} files)`,
+    receiptUsers.length >= 2 &&
+      receiptUsers.every((f) => readFileSync(f, "utf8").includes("RECEIPT.label"))
   );
 
-  // The one light surface still has exactly one owner. When the paper is on
-  // everything it stops meaning "this is the artefact worth looking at".
-  const paperUsers = srcFiles.filter(
-    (f) => f.endsWith(".svelte") && readFileSync(f, "utf8").includes('class="receipt')
-  );
+  // A phase carries its tier as a word before it carries it as a hue, and the
+  // free mark is a dot beside the word rather than the colour alone.
   ok(
-    `the printed sheet has exactly one owner (${paperUsers.length} file(s))`,
-    paperUsers.length === 1 && paperUsers[0]!.endsWith("Receipt.svelte")
-  );
-
-  // A phase carries its state in the mark and the border form before it carries
-  // it in a colour, and the tier is always printed as a word.
-  ok(
-    "a phase carries its state in form before hue, and prints its tier as a word",
-    css.includes('.phase-row[data-state="completed"]') &&
-      css.includes('.phase-row[data-state="locked"]') &&
-      css.includes(".row-mark") &&
-      component("PhaseRow.svelte").includes("data-state={state}") &&
-      component("TierStamp.svelte").includes("{tier}")
+    "a phase prints its tier as a word beside the free mark",
+    component("PhaseList.svelte").includes("data-tier={tier}") &&
+      component("PhaseList.svelte").includes('{tier === "free" ? "Free" : "Pro"}') &&
+      component("PhaseList.svelte").includes("tier-dot") &&
+      component("CourseCard.svelte").includes("course.tracks")
   );
 
-  // The hero is a document, not a canvas: one real heading, a scripted run that
-  // ships its finished state first, and a control that can replay it without a
-  // pointer.
+  // The hero is a document with one real heading and the product's own window,
+  // not a canvas. The window is made of shipped data, and the transcript line
+  // is in the server-rendered document.
   ok(
-    "the hero is one real heading and a real control, not a canvas",
-    (landingSrc.match(/as="h1"/g) ?? []).length === 1 &&
-      !landingSrc.includes("<h1") &&
-      landingSrc.includes("<ProofRun />")
+    "the hero is one heading and the product's own window, not a canvas",
+    (landingSrc.match(/<h1/g) ?? []).length === 1 &&
+      landingSrc.includes("<WorkspaceHero") &&
+      !landingSrc.includes("<canvas")
   );
-  const runSrc = component("ProofRun.svelte");
+  const workspaceSrc = component("WorkspaceHero.svelte");
   ok(
-    "the run serves its finished state first, so a no-JavaScript or reduced-motion visitor gets the whole transcript",
-    /let shown = \$state<number>\(RUN_SCRIPT\.length\)/.test(runSrc) &&
-      /let passed = \$state\(true\)/.test(runSrc) &&
-      component("Terminal.svelte").includes("{#each lines as line, i (i)}")
+    "the window is drawn from the shipped phase list and run transcript",
+    workspaceSrc.includes("PHASE_DETAIL") &&
+      workspaceSrc.includes("RUN_SCRIPT") &&
+      workspaceSrc.includes("TASK_MANAGER") &&
+      workspaceSrc.includes("<figcaption")
   );
   ok(
     "and the running order is driven from the content module, not from markup",
@@ -2087,21 +2234,15 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
   const css = readFileSync(new URL("../src/app.css", import.meta.url), "utf8");
   const footerSrc = readFileSync(new URL("../src/lib/components/Footer.svelte", import.meta.url), "utf8");
 
-  // Two audiences, one page. The selector is a control with two real states,
-//  and both arguments are full sections further down, so the switch is a
-//  convenience and never the only way in — a crawler, a reader with the
-//  script off, and a screen reader all meet the whole argument without it.
+  // Two readers, one document. There is no audience switch to hide half the
+  // argument: the hiring case is a section of the same page, and both readers
+  // meet it in the server-rendered document.
   ok(
-    "the front door answers both audiences",
-    COPY.AUDIENCES.length === 2 &&
-      landingSrc.includes("<AudienceSwitch") &&
-      landingSrc.includes("learnerHero") &&
-      landingSrc.includes("HIRING") &&
-      COPY.AUDIENCES.every((a) => nonEmpty(a.id) && nonEmpty(a.label) && nonEmpty(a.lineOne))
-  );
-  ok(
-    "the hiring argument is a section of its own, not only a hero variant",
-    landingSrc.includes('id="employers"') && landingSrc.includes("<EmployerBoard")
+    "the front door answers both readers without a switch",
+    !landingSrc.includes("AudienceSwitch") &&
+      landingSrc.includes('id="hiring"') &&
+      landingSrc.includes("EMPLOYER.checks") &&
+      COPY.EMPLOYER.checks.length >= 3
   );
   ok(
     "and it says as much about what does not exist as about what does",
@@ -2112,52 +2253,59 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
     COPY.EMPLOYER.checks.every((c) => nonEmpty(c.claim) && nonEmpty(c.evidence))
   );
 
-  // The differentiator, stated as readings rather than as an adjective.
+  // The differentiator is a table of mechanism, not a row of adjectives.
   ok(
-    "the product's differentiator is a datasheet, not a promise",
-    COPY.SPEC.length === 3 && landingSrc.includes("<SpecSheet")
-  );
-  ok(
-    "and it is grouped into clusters, so it reads as a product rather than as a list of rows",
-    COPY.SPEC.every((g) => nonEmpty(g.cluster) && g.rows.length > 0) &&
-      readFileSync(
-        new URL("../src/lib/components/SpecSheet.svelte", import.meta.url),
-        "utf8"
-      ).includes("{group.cluster}")
-  );
-  ok(
-    "every reading in the datasheet names a parameter, a value and a limit",
-    COPY.SPEC.every((g) =>
-      g.rows.every((r) => nonEmpty(r.param) && nonEmpty(r.value) && nonEmpty(r.note))
-    ) && COPY.SPEC.reduce((n, g) => n + g.rows.length, 0) >= 8
+    "the product's differentiator is a table of mechanism, not a feature row",
+    COPY.DIFFERENCES.length >= 4 &&
+      landingSrc.includes("DIFFERENCES") &&
+      COPY.DIFFERENCES.every(
+        (item) => nonEmpty(item.property) && nonEmpty(item.meaning) && nonEmpty(item.enforced)
+      )
   );
 
-  // The measurements on the bench are the real ones, drawn from the same
-  // module the drift gate reads.
+  // The counts on the front door are computed from the shipped curriculum, so
+  // a phase added to the manifest changes the page without an edit here.
   ok(
-    "the readings on the bench are drawn from the shipped content",
-    landingSrc.includes("<FactStrip") && COPY.FACTS.length === 4
+    "the front door's readings are computed from the shipped curriculum",
+    landingSrc.includes("totalPhases") &&
+      landingSrc.includes("freePhases") &&
+      /const totalPhases = ALL_PHASES\.length/.test(landingSrc) &&
+      /const freePhases = FREE_PHASE_COUNT/.test(landingSrc)
   );
   ok(
-    "the manifest is drawn as a plate of lights, from the shipped curriculum",
-    landingSrc.includes("<PhaseMatrix") && COPY.ALL_PHASES.length > 0
+    "and the window is drawn from the shipped phase list, not a hand-typed one",
+    readFileSync(new URL("../src/lib/components/WorkspaceHero.svelte", import.meta.url), "utf8").includes(
+      "TASK_MANAGER"
+    ) && COPY.ALL_PHASES.length > 0
   );
 
-  // The chrome is a title block: the product, the documents, and the record.
+  // The footer is a back cover: one statement, the action, and an index a
+  // reader leaves by. The courses and documents are both rendered from their
+  // own lists.
   ok(
-    "the footer is a drawing's title block, and the legal documents are a cell of it",
-    footerSrc.includes("the product") &&
-      footerSrc.includes("the documents") &&
+    "the footer is a back cover, and the courses and documents come from their own lists",
+    footerSrc.includes("Build the judgment. Keep the record.") &&
+      footerSrc.includes("COURSE_PAGES") &&
       footerSrc.includes("LEGAL_LINKS") &&
-      footerSrc.includes("{link.href}")
+      footerSrc.includes("{link.href}") &&
+      footerSrc.includes("release.label")
   );
 
-  // Prose is prose. The reading face is a distinct primitive, the lede uses
-  // it, and no label or control ever does — a mono label set in a serif is a
-  // label that has stopped being a label.
+  // One neo-grotesk carries display and reading, and the mono carries data.
+  // There is no second display face and no serif token: the old `.serif`
+  // class survives as an alias for the legal documents, and resolves to the
+  // same family.
   ok(
-    "the reading face is its own primitive, and the hero lede is set in it",
-    css.includes(".reading") && landingSrc.includes('class="reading')
+    "one family carries display and reading, and the serif alias is not a serif",
+    /--font-display:\s*"Instrument Sans"/.test(css) &&
+      /--font-sans:\s*"Instrument Sans"/.test(css) &&
+      /\.reading\s*\{[^}]*font-family:\s*var\(--font-sans\)/s.test(css) &&
+      /\.serif\s*\{[^}]*font-family:\s*var\(--font-sans\)/s.test(css) &&
+      !/font-family:\s*(?:Georgia|"Newsreader"|"Playfair|"EB Garamond)/.test(css)
+  );
+  ok(
+    "and the hero lede is reading text at a measure, not a label",
+    landingSrc.includes('class="hero-lede"') && !landingSrc.includes("font-serif")
   );
   ok(
     "and no label or control is set in the reading face",
@@ -2460,16 +2608,18 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
     );
   }
 
-  // A state is never carried by a colour alone. The lamp is a shape and the
-  //  state is a word, and the readout prints the word beside the lamp so the
-  //  mark is legible before it is legible as a hue.
+  // A state is never carried by a colour alone. The window prints its verdict,
+  // the phase prints its tier, and the receipt prints that it is re-derivable.
   ok(
-    "a state is always printed as a word beside its lamp",
-    readFileSync(new URL("../src/lib/components/ProofRun.svelte", import.meta.url), "utf8").includes(
-      "{readout.state}"
+    "a state is always printed as a word, not carried by its hue",
+    readFileSync(new URL("../src/lib/components/WorkspaceHero.svelte", import.meta.url), "utf8").includes(
+      "PASSED"
     ) &&
-      readFileSync(new URL("../src/lib/components/ProofRun.svelte", import.meta.url), "utf8").includes(
-        "data-state={readout.state}"
+      readFileSync(new URL("../src/lib/components/VerificationCard.svelte", import.meta.url), "utf8").includes(
+        "Re-derivable"
+      ) &&
+      readFileSync(new URL("../src/lib/components/PhaseList.svelte", import.meta.url), "utf8").includes(
+        '{tier === "free" ? "Free" : "Pro"}'
       )
   );
 }
@@ -2543,14 +2693,13 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
   );
   ok(
     "and the folio names it, from the one list the folio renders",
-    COPY.NAV.some((item) => item.href === "/universities" && item.label === "For teaching") &&
-      headerSrc.includes("{#each NAV as item (item.href)}")
+    footerSrc.includes('{ href: "/universities", label: "For teaching" }') &&
+      footerSrc.includes("{#each audienceLinks as link (link.href)}")
   );
   ok(
-    "and the footer names it too",
-    COPY.FOOTER_LINKS.some((link) => link.href === "/universities") &&
-      footerSrc.includes("FOOTER_LINKS") &&
-      footerSrc.includes("{link.href}")
+    "and the mobile sheet carries the same destinations",
+    headerSrc.includes("{#each NAV as item (item.href)}") &&
+      headerSrc.includes('id="mobile-menu"')
   );
   ok(
     "and it is in the sitemap, and in the accessibility sweep",
@@ -2724,8 +2873,9 @@ const nonEmpty = (value: string): boolean => value.trim().length > 0;
       !/\$[0-9]/.test(COPY.CAMPUS.plan.points.join(" "))
   );
   ok(
-    "and the pricing page prints four lines, the campus one among them",
-    pricingSrc.includes("[...PRICING_PLANS, ...QUOTED_PLANS]") &&
+    "and the pricing page prints both sold plans and both quoted lines, the campus one among them",
+    pricingSrc.includes("PRICING_PLANS[0]") &&
+      pricingSrc.includes("PRICING_PLANS[1]") &&
       pricingSrc.includes("QUOTED_PLANS") &&
       COPY.QUOTED_PLANS.length === 2
   );
@@ -3078,7 +3228,7 @@ console.log("\n== the front door says what is true today, and says it once ==");
   // The action is the release state, on every surface that offers it.
   ok(
     "the hero's one action is the release state's label",
-    landingSrc.includes("release.label") && landingSrc.includes("primaryHref")
+    landingSrc.includes("release.label") && landingSrc.includes('href="/download"')
   );
   ok(
     "and the header, the footer and the download page use the same label",
@@ -3094,40 +3244,42 @@ console.log("\n== the front door says what is true today, and says it once ==");
   // The homepage is a story now: the experience before the argument, and the
   // exhaustive manifest on its own page.
   ok(
-    "the homepage leads with the experience and the build, and keeps the argument for later",
-    landingSrc.indexOf('id="loop"') < landingSrc.indexOf('id="proof"') &&
-      landingSrc.indexOf('id="gap"') < landingSrc.indexOf('id="build"') &&
-      landingSrc.indexOf('id="build"') < landingSrc.indexOf('id="why"')
+    "the front door tells the story in order: the offer, the shelf, the gap, the record, the mechanism",
+    landingSrc.indexOf('class="hero"') < landingSrc.indexOf('id="courses"') &&
+      landingSrc.indexOf('id="courses"') < landingSrc.indexOf('class="gap-band"') &&
+      landingSrc.indexOf('class="gap-band"') < landingSrc.indexOf('id="proof"') &&
+      landingSrc.indexOf('id="proof"') < landingSrc.indexOf('id="why"') &&
+      landingSrc.indexOf('id="why"') < landingSrc.indexOf('id="hiring"') &&
+      landingSrc.indexOf('id="hiring"') < landingSrc.indexOf('class="price-band"')
   );
   ok(
     "and the homepage does not print the exhaustive phase list",
-    !landingSrc.includes("<CourseLedger") && landingSrc.includes("<PhaseMatrix")
+    !landingSrc.includes("<PhaseList") && landingSrc.includes("<WorkspaceHero")
   );
   {
     const coursesDir = join(routesDir, "courses");
-    const coursesSrc = readFileSync(join(coursesDir, "+page.svelte"), "utf8");
-    const ledgerSrc = readFileSync(
-      new URL("../src/lib/components/CourseLedger.svelte", import.meta.url),
-      "utf8"
-    );
-    const phaseRowSrc = readFileSync(
-      new URL("../src/lib/components/PhaseRow.svelte", import.meta.url),
+    const coursePageEntry = join(coursesDir, "[slug]", "+page.svelte");
+    const coursePageSrc = existsSync(coursePageEntry)
+      ? readFileSync(coursePageEntry, "utf8")
+      : "";
+    const phaseListSrc = readFileSync(
+      new URL("../src/lib/components/PhaseList.svelte", import.meta.url),
       "utf8"
     );
     ok(
-      "the exhaustive manifest lives on its own page, with every phase and its goal",
+      "the exhaustive manifest lives on the course pages, with every phase and its goal",
       existsSync(join(coursesDir, "+page.svelte")) &&
-        coursesSrc.includes("<CourseLedger") &&
-        coursesSrc.includes("<PhaseMatrix") &&
+        coursePageSrc.includes("<PhaseList") &&
         // the goal of a phase is the manifest's own sentence, and it is read
         // from the generated detail file rather than written on the page
-        ledgerSrc.includes("PHASE_DETAIL") &&
-        phaseRowSrc.includes("goal") &&
-        phaseRowSrc.includes("{goal}")
+        phaseListSrc.includes("PHASE_DETAIL") &&
+        phaseListSrc.includes("{#if info?.goal}") &&
+        phaseListSrc.includes("{info.goal}")
     );
     ok(
-      "and that page is in the sitemap and in the accessibility sweep",
+      "and the shelf and the course pages are in the sitemap and in the accessibility sweep",
       sitemapPaths().includes("/courses") &&
+        COURSE_PAGES.every((course) => sitemapPaths().includes(`/courses/${course.slug}`)) &&
         readFileSync(new URL("../scripts/routes.ts", import.meta.url), "utf8").includes('"/courses"')
     );
   }
@@ -3172,8 +3324,10 @@ console.log("\n== the front door says what is true today, and says it once ==");
   ok(
     "the page says what a phase is, in the shipped manifest's words",
     COPY.LEARN_CYCLE.caption.includes("Learn, then Solve, then Review") &&
-      landingSrc.includes("LEARN_CYCLE") &&
-      landingSrc.includes("<LoopCards")
+      landingSrc.includes("<WorkspaceBand") &&
+      readFileSync(new URL("../src/lib/components/WorkspaceBand.svelte", import.meta.url), "utf8").includes(
+        "LOOP_STEPS"
+      )
   );
   ok(
     "and the journey it offers names real phases",
@@ -3231,24 +3385,9 @@ console.log("\n== the front door says what is true today, and says it once ==");
     "the gap is a sequence that ends on the product",
     COPY.GAP.lines.length === 4 &&
       COPY.GAP.lines[COPY.GAP.lines.length - 1]?.includes("NEXORA") &&
-      landingSrc.includes("<GapSequence")
-  );
-
-  // The line that says who this is for, and the three facts under the button.
-  ok(
-    "the page says who it is for, and the line changes with the audience",
-    String(COPY.AUDIENCE_LINE.learner) !== String(COPY.AUDIENCE_LINE.employer) &&
-      COPY.AUDIENCE_LINE.learner.length > 20 &&
-      landingSrc.includes("<AudienceLine")
-  );
-  ok(
-    "and the three facts under the button are facts, with the shipped free count in them",
-    COPY.MICRO_FACTS.learner.length === 3 &&
-      COPY.MICRO_FACTS.employer.length === 3 &&
-      COPY.MICRO_FACTS.learner[0]?.toLowerCase().includes(
-        (COPY.numberWords(COPY.FREE_PHASE_COUNT) ?? String(COPY.FREE_PHASE_COUNT)).toLowerCase()
-      ) &&
-      landingSrc.includes("<MicroFacts")
+      landingSrc.includes("GAP.lines") &&
+      // the turn is marked on the last line rather than written twice
+      landingSrc.includes('data-turn={i === GAP.lines.length - 1 ? "true" : undefined}')
   );
 
   // A course added later has to reach the page without anybody coming back to

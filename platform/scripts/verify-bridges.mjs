@@ -1,9 +1,10 @@
 /* The three mesh bridges the IDE needs, proven over HTTP against a real
  * database.
  *
- *   1. The gateway verifies a real Clerk-shaped token against a real JWKS
+ *   1. The gateway verifies a real Kinde-shaped token against a real JWKS
  *      over HTTP, and refuses a token signed by another key, a token for
- *      another authorized party, and an expired token.
+ *      another audience, and an expired token. It also proves the IDE's
+ *      HS256 device token still reaches the local verifier in Kinde mode.
  *   2. Two accounts cannot see each other's work, and a guest's local work
  *      migrates into the account: server-wins completions, newest-draft-wins
  *      drafts, and a refused migration changes nothing.
@@ -18,8 +19,8 @@
  * created and dropped by this file.
  *
  * The services run from their own build output, the way the platform runs
- * them, and the requests are real HTTP requests to them. The Clerk proof
- * runs the gateway in Clerk mode against a JWKS served by a local HTTP
+ * them, and the requests are real HTTP requests to them. The Kinde proof
+ * runs the gateway in Kinde mode against a JWKS served by a local HTTP
  * endpoint, which is the only way to exercise the key path the deployment
  * actually uses: the JWKS is fetched over the network, not pinned.
  *
@@ -63,11 +64,12 @@ function freePort() {
 
 const MESH_KEY = randomBytes(32).toString("hex");
 const JWT_SECRET = randomBytes(32).toString("hex");
-const CLERK_SECRET = "sk_test_" + randomBytes(24).toString("base64url");
-/* The authorized party the deployment is configured with: the front door's
-   origin. A token naming another party is not this deployment's token. */
+/* The API audience the deployment is configured with. A token for another
+   audience is not this platform's token. */
+const AUDIENCE = "https://api.nexora.dev";
+const OTHER_AUDIENCE = "https://elsewhere.example";
+/* The front door's origin, used for CORS. */
 const PARTY = "https://app.nexora.dev";
-const OTHER_PARTY = "https://elsewhere.example";
 
 let db;
 let socketServer;
@@ -75,13 +77,13 @@ let pool;
 let authProc;
 let execProc;
 let gwLocal;
-let gwClerk;
+let gwKinde;
 let jwksServer;
 let jwksHits = [];
 let authPort;
 let execPort;
 let gwLocalPort;
-let gwClerkPort;
+let gwKindePort;
 let jwksPort;
 
 /* ---------- the signing key and the JWKS ---------- */
@@ -94,12 +96,11 @@ const { publicKey, privateKey } = generateKeyPairSync("rsa", {
   publicKeyEncoding: { type: "spki", format: "pem" },
   privateKeyEncoding: { type: "pkcs8", format: "pem" },
 });
-const { publicKey: otherPublicKey, privateKey: otherPrivateKey } = generateKeyPairSync("rsa", {
+const { privateKey: otherPrivateKey } = generateKeyPairSync("rsa", {
   modulusLength: 2048,
   publicKeyEncoding: { type: "spki", format: "pem" },
   privateKeyEncoding: { type: "pkcs8", format: "pem" },
 });
-void otherPublicKey;
 const KID = "ins_nexora_test";
 
 /* The JWK the way a JWKS publishes it: the public modulus and exponent,
@@ -109,16 +110,16 @@ function jwkFor(publicKeyPem) {
   return { kid: KID, kty: "RSA", alg: "RS256", use: "sig", n: jwk.n, e: jwk.e };
 }
 
-/* A Clerk-shaped session token: the claims Clerk sets on a session token
-   (azp the authorized party, iss the instance, aud the API, sub the user,
-   exp and iat), signed RS256 under the key id the JWKS publishes. */
-function clerkToken(overrides = {}, signer = privateKey) {
+/* A Kinde-shaped access token: the claims Kinde sets (iss the business, aud
+   the registered API, sub the user, jti, exp and iat), signed RS256 under the
+   key id the JWKS publishes. */
+function kindeToken(overrides = {}, signer = privateKey) {
   const now = Math.floor(Date.now() / 1000);
   const payload = {
-    azp: PARTY,
-    iss: "https://clerk.nexora.test",
-    aud: "https://api.clerk.nexora.test",
-    sub: "user_clerk_a",
+    iss: `http://127.0.0.1:${jwksPort}`,
+    aud: AUDIENCE,
+    sub: "kp_nexora_a",
+    jti: "jti_nexora_a",
     nbf: now - 60,
     iat: now - 60,
     exp: now + 300,
@@ -207,10 +208,16 @@ describe("the mesh bridges the IDE needs (real database, real HTTP)", () => {
 
     /* The JWKS the gateway fetches the signing key from, over HTTP. It
        records what it was asked, so the proof can show the key really came
-       over the network rather than from a pinned PEM. */
+       over the network rather than from a pinned PEM. The path is Kinde's own:
+       /.well-known/jwks.json. */
     jwksPort = await freePort();
     jwksServer = createHttpServer((req, res) => {
       jwksHits.push({ url: req.url, authorization: req.headers.authorization ?? null });
+      if (req.url !== "/.well-known/jwks.json") {
+        res.writeHead(404, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "not_found" }));
+        return;
+      }
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify({ keys: [jwkFor(publicKey)] }));
     });
@@ -237,8 +244,8 @@ describe("the mesh bridges the IDE needs (real database, real HTTP)", () => {
     });
     await waitForHttp(`http://127.0.0.1:${execPort}/health/ready`, execProc, "the execution service");
 
-    /* Two edges: one in local mode for the work proofs, one in Clerk mode
-       for the token proof. The Clerk one is pointed at the local JWKS. */
+    /* Two edges: one in local mode for the work proofs, one in Kinde mode
+       for the token proof. The Kinde one is pointed at the local issuer. */
     gwLocalPort = await freePort();
     gwLocal = startNode("gateway(local)", "services/gateway/dist/index.js", {
       GATEWAY_PORT: String(gwLocalPort),
@@ -251,20 +258,19 @@ describe("the mesh bridges the IDE needs (real database, real HTTP)", () => {
     });
     await waitForHttp(`http://127.0.0.1:${gwLocalPort}/health/live`, gwLocal, "the local gateway");
 
-    gwClerkPort = await freePort();
-    gwClerk = startNode("gateway(clerk)", "services/gateway/dist/index.js", {
-      GATEWAY_PORT: String(gwClerkPort),
-      AUTH_MODE: "clerk",
+    gwKindePort = await freePort();
+    gwKinde = startNode("gateway(kinde)", "services/gateway/dist/index.js", {
+      GATEWAY_PORT: String(gwKindePort),
+      AUTH_MODE: "kinde",
       AUTH_JWT_SECRET: JWT_SECRET,
       INTERNAL_API_KEY: MESH_KEY,
-      CLERK_SECRET_KEY: CLERK_SECRET,
-      CLERK_API_URL: `http://127.0.0.1:${jwksPort}`,
-      CLERK_AUTHORIZED_PARTIES: PARTY,
+      KINDE_ISSUER_URL: `http://127.0.0.1:${jwksPort}`,
+      KINDE_AUDIENCE: AUDIENCE,
       AUTH_URL: `http://127.0.0.1:${authPort}`,
       EXECUTION_URL: `http://127.0.0.1:${execPort}`,
       FRONTEND_URL: PARTY,
     });
-    await waitForHttp(`http://127.0.0.1:${gwClerkPort}/health/live`, gwClerk, "the Clerk gateway");
+    await waitForHttp(`http://127.0.0.1:${gwKindePort}/health/live`, gwKinde, "the Kinde gateway");
 
     /* The two accounts the isolation proof acts as. Seeded directly, the way
        the identity service holds them: the point of the proof is what the
@@ -284,7 +290,7 @@ describe("the mesh bridges the IDE needs (real database, real HTTP)", () => {
   });
 
   after(async () => {
-    for (const proc of [gwClerk, gwLocal, execProc, authProc]) {
+    for (const proc of [gwKinde, gwLocal, execProc, authProc]) {
       try {
         proc?.child.kill();
       } catch {
@@ -297,58 +303,54 @@ describe("the mesh bridges the IDE needs (real database, real HTTP)", () => {
     await db?.close();
   });
 
-  /* ---------- 1. the Clerk token, verified against a JWKS, over HTTP ---------- */
+  /* ---------- 1. the Kinde token, verified against a JWKS, over HTTP ---------- */
 
-  describe("the gateway verifies a real Clerk token against a real JWKS", () => {
-    const base = () => `http://127.0.0.1:${gwClerkPort}`;
+  describe("the gateway verifies a real Kinde token against a real JWKS", () => {
+    const base = () => `http://127.0.0.1:${gwKindePort}`;
 
     it("the signing key is fetched over HTTP, not pinned into the gateway", async () => {
       // One request with a good token, so the fetch has happened: the key is
       // fetched the first time a token is verified, not at boot. The route
       // asked for is the learner's own work, which answers for an account
       // that does not exist yet and writes nothing.
-      const token = clerkToken();
+      const token = kindeToken();
       const work = await api(base(), "/api/progress", { token });
       assert.equal(work.status, 200, "the token verified");
       assert.ok(
         jwksHits.length > 0,
-        "the gateway fetched the JWKS over HTTP from the configured Clerk API URL"
+        "the gateway fetched the JWKS over HTTP from the configured Kinde issuer"
       );
       const hit = jwksHits[0];
-      assert.match(hit.url, /\/jwks$/, "the key came from the JWKS endpoint");
-      assert.equal(
-        hit.authorization,
-        `Bearer ${CLERK_SECRET}`,
-        "and the fetch carried the secret key, the way the Clerk backend API is called"
-      );
+      assert.equal(hit.url, "/.well-known/jwks.json", "the key came from Kinde's published path");
+      assert.equal(hit.authorization, null, "the public key set needs no bearer credential");
     });
 
     it("a token for this deployment signs the learner in, and the platform holds the account", async () => {
-      const token = clerkToken();
+      const token = kindeToken();
       const link = await api(base(), "/api/auth/link", {
         method: "POST",
         token,
-        body: { email: "clerk@example.com", name: "Clerk Learner" },
+        body: { email: "kinde@example.com", name: "Kinde Learner" },
       });
-      assert.equal(link.status, 201, "the gateway accepted the Clerk token");
+      assert.equal(link.status, 201, "the gateway accepted the Kinde token");
 
       const { rows } = await pool.query(
         "SELECT id, email, provider FROM users WHERE id = $1",
-        ["user_clerk_a"]
+        ["kp_nexora_a"]
       );
-      assert.equal(rows.length, 1, "the Clerk subject is the platform's own user id");
-      assert.equal(rows[0].email, "clerk@example.com");
-      assert.equal(rows[0].provider, "clerk", "and the account says who manages it");
+      assert.equal(rows.length, 1, "the Kinde subject is the platform's own user id");
+      assert.equal(rows[0].email, "kinde@example.com");
+      assert.equal(rows[0].provider, "kinde", "and the account says who manages it");
 
       const me = await api(base(), "/api/auth/me", { token });
       assert.equal(me.status, 200, "the same token reads the account back");
-      assert.equal(me.json.user.id, "user_clerk_a");
+      assert.equal(me.json.user.id, "kp_nexora_a");
     });
 
     it("a token signed by another key is refused", async () => {
       // The same kid, so the key resolves from the JWKS, and a signature that
       // does not match it.
-      const token = clerkToken({}, otherPrivateKey);
+      const token = kindeToken({}, otherPrivateKey);
       const me = await api(base(), "/api/auth/me", { token });
       assert.equal(me.status, 401, "a token nobody signed is not a token");
       assert.equal(me.json.error.code, "unauthorized");
@@ -357,25 +359,33 @@ describe("the mesh bridges the IDE needs (real database, real HTTP)", () => {
       assert.equal(progress.status, 401, "and it opens no authenticated route either");
     });
 
-    it("a token for another authorized party is refused", async () => {
-      const token = clerkToken({ azp: OTHER_PARTY });
+    it("a token for another audience is refused", async () => {
+      const token = kindeToken({ aud: OTHER_AUDIENCE });
       const me = await api(base(), "/api/auth/me", { token });
-      assert.equal(me.status, 401, "this deployment's tokens name this deployment's party");
+      assert.equal(me.status, 401, "this platform's tokens name this platform's API");
       const progress = await api(base(), "/api/progress", { token });
       assert.equal(progress.status, 401);
     });
 
     it("an expired token is refused", async () => {
       const now = Math.floor(Date.now() / 1000);
-      const token = clerkToken({ exp: now - 600, iat: now - 1200, nbf: now - 1200 });
+      const token = kindeToken({ exp: now - 600, iat: now - 1200, nbf: now - 1200 });
       const me = await api(base(), "/api/auth/me", { token });
       assert.equal(me.status, 401, "a token past its expiry is not a token");
     });
 
     it("a token that names no subject is refused", async () => {
-      const token = clerkToken({ sub: "" });
+      const token = kindeToken({ sub: "" });
       const me = await api(base(), "/api/auth/me", { token });
       assert.equal(me.status, 401);
+    });
+
+    it("a platform device token approved by Kinde still opens the IDE's work", async () => {
+      // The desktop IDE receives an HS256 token from the device-code handoff,
+      // not a Kinde token. Kinde mode must keep that path open: the browser
+      // that approved the code was already authenticated by Kinde.
+      const res = await api(base(), "/api/progress", { token: localToken("u-a") });
+      assert.equal(res.status, 200, "the HS256 device token is routed to the local verifier");
     });
   });
 

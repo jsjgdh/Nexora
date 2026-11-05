@@ -34,7 +34,7 @@
     lines={["Who else touches", "the data."]}
     class="text-[clamp(2rem,5.6vw,4.2rem)] text-ink"
   />
-  <p class="mt-7 max-w-[56ch] font-serif text-[clamp(1.05rem,2vw,1.45rem)] leading-snug text-muted">
+  <p class="document-lede">
     A short, named list of the companies that process data for this service, what each one is allowed
     to touch, and where it does so: published so it can be read and challenged, not so it can be
     taken on trust.
@@ -46,7 +46,7 @@
     <p class="stamp text-[11px] text-faint">subprocessors</p>
     <DocStatus />
 
-    <p class="mt-6 max-w-[70ch] text-[13.5px] leading-relaxed text-muted">
+    <p class="mt-6 max-w-[70ch] text-[14.5px] leading-relaxed text-muted">
       A subprocessor is another company that handles personal data on our behalf, under our
       instructions, because it does a job we do not do ourselves: checking an identity, taking a
       payment, hosting the installer download. Each one is bound by a contract with
@@ -55,7 +55,7 @@
       data and we do not share it for advertising.
     </p>
 
-    <div class="mt-8 grid gap-6 text-[13.5px] leading-relaxed text-muted">
+    <div class="mt-8 grid gap-6 text-[14.5px] leading-relaxed text-muted">
       {#each SUBPROCESSORS as p (p.name)}
         <div class="border-t border-rule pt-4">
           <h2 class="text-[14.5px] font-semibold text-ink">{p.name}</h2>
@@ -77,7 +77,7 @@
       {/each}
     </div>
 
-    <div class="mt-10 grid gap-8 border-t border-rule pt-6 text-[13.5px] leading-relaxed text-muted">
+    <div class="mt-10 grid gap-8 border-t border-rule pt-6 text-[14.5px] leading-relaxed text-muted">
       <section>
         <h2 class="display text-[clamp(1.15rem,2vw,1.5rem)] text-ink">Where the data goes</h2>
         <p class="mt-3">
